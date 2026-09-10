@@ -475,7 +475,11 @@
                                     });
                                     this.busy = false;
                                     if (response.ok) {
-                                        this.quote = (await response.json()).quote;
+                                        const data = await response.json();
+                                        this.quote = data.quote;
+                                        // De kostenopbouw hieronder springt mee
+                                        // met jouw transportbedrag.
+                                        if (data.costs) this.$dispatch('shipping-quoted', data.costs);
                                     } else {
                                         this.quote = null;
                                         this.error = (await response.json())?.message ?? 'Dat lukte niet - probeer het opnieuw.';
@@ -515,10 +519,49 @@
                         <x-auction.ivy-advice :lot="$lot" />
                     @endif
 
-                    <x-lot.cost-breakdown
-                        id="kosten"
-                        :costs="$costs"
-                        :note="__('money.notes.estimate')" />
+                    {{--
+                        De kostenopbouw. Standaard met het vanaf-tarief voor
+                        transport; berekent de kijker een postcode-indicatie,
+                        dan komt de vers berekende opbouw van de server ervoor
+                        in de plaats (nooit client-side rekenen, hfst. 13.3).
+                    --}}
+                    <div x-data="{ liveCosts: null }" @shipping-quoted.window="liveCosts = $event.detail">
+                        <template x-if="! liveCosts">
+                            <div>
+                                <x-lot.cost-breakdown
+                                    id="kosten"
+                                    :costs="$costs"
+                                    :note="__('money.notes.estimate')"
+                                    transport-note="Vanaf-tarief - bereken hierboven je postcode" />
+                            </div>
+                        </template>
+
+                        <template x-if="liveCosts">
+                            <div id="kosten" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4">
+                                <p class="text-sm font-extrabold">{{ __('Kosten vóór je biedt') }}</p>
+                                <dl class="mt-3 space-y-1.5 text-sm">
+                                    <template x-for="line in liveCosts.lines" :key="line.key">
+                                        <div class="flex items-baseline justify-between gap-4">
+                                            <dt class="text-aj-muted">
+                                                <span x-text="line.label"></span>
+                                                <template x-if="line.note">
+                                                    <span class="block text-xs" x-text="line.note"></span>
+                                                </template>
+                                            </dt>
+                                            <dd class="tabular shrink-0 font-semibold" x-text="line.formatted"></dd>
+                                        </div>
+                                    </template>
+                                    <div class="flex items-baseline justify-between gap-4 border-t border-aj-border pt-2">
+                                        <dt class="font-extrabold">{{ __('money.lines.total') }}</dt>
+                                        <dd class="tabular shrink-0 text-lg font-extrabold" x-text="liveCosts.total_formatted"></dd>
+                                    </div>
+                                </dl>
+                                <p class="mt-3 text-xs text-aj-muted">
+                                    Met jouw transportindicatie - definitief na bevestiging.
+                                </p>
+                            </div>
+                        </template>
+                    </div>
 
                     <x-auction.bid-history />
                 @endif

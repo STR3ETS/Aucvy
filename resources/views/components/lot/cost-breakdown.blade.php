@@ -2,6 +2,9 @@
     'costs',
     'title' => null,
     'note' => null,
+    // Op de kavelpagina is het transportbedrag een vanaf-tarief; deze
+    // toelichting maakt dat expliciet zonder de orderweergave te raken.
+    'transportNote' => null,
 ])
 
 {{--
@@ -18,13 +21,16 @@
     <dl class="mt-3 space-y-1.5 text-sm">
         @foreach ($costs->lines() as $line)
             <div class="flex items-baseline justify-between gap-4">
+                @php $isIndicativeTransport = $transportNote !== null && $line->key === 'transport' && $costs->transportCents > 0; @endphp
                 <dt class="text-aj-muted">
                     {{ $line->label }}
                     @if ($line->note)
                         <span class="block text-xs">{{ $line->note }}</span>
+                    @elseif ($isIndicativeTransport)
+                        <span class="block text-xs">{{ $transportNote }}</span>
                     @endif
                 </dt>
-                <dd class="tabular shrink-0 font-semibold">{{ $line->formatted() }}</dd>
+                <dd class="tabular shrink-0 font-semibold">{{ $isIndicativeTransport ? 'vanaf ' : '' }}{{ $line->formatted() }}</dd>
             </div>
         @endforeach
 

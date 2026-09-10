@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\SaleType;
 use App\Http\Controllers\Controller;
 use App\Models\Lot;
+use App\Support\Money\Money;
 use App\Support\Shipping\Contracts\ShippingProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,6 +49,32 @@ final class ShippingQuoteController extends Controller
             ], 422);
         }
 
-        return response()->json(['quote' => $quote]);
+        return response()->json([
+            'quote' => $quote,
+            /*
+             | De volledige kostenopbouw met dít transportbedrag, vers
+             | berekend (de prijs kan per bod verschuiven, dus die cachen we
+             | niet mee). Client-side rekent niemand iets na (hfst. 13.3).
+             */
+            'costs' => $this->costsWith($lot, $quote['amount_cents']),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function costsWith(Lot $lot, int $transportCents): ?array
+    {
+        $auction = $lot->auction;
+
+        if ($auction === null) {
+            return null;
+        }
+
+        $priceCents = $lot->sale_type === SaleType::BuyNow && $auction->buy_now_price_cents !== null
+            ? $auction->buy_now_price_cents
+            : $auction->current_price_cents;
+
+        return Money::forOrder($lot, $priceCents, $transportCents)->toArray();
     }
 }

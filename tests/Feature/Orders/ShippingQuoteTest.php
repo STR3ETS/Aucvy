@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\LotStatus;
+use App\Models\Auction;
 use App\Models\Lot;
 
 /*
@@ -22,6 +23,24 @@ it('geeft een indicatie met houdbaarheid', function () {
         ->assertOk()
         ->assertJsonPath('quote.amount_cents', $expected)
         ->assertJsonStructure(['quote' => ['amount_cents', 'amount_formatted', 'valid_until']]);
+});
+
+it('rekent de kostenopbouw server-side mee met de indicatie', function () {
+    $lot = Lot::factory()->live()->create(['transport_from_cents' => 34_000]);
+    Auction::factory()->create([
+        'lot_id' => $lot->id,
+        'start_price_cents' => 800_000,
+        'current_price_cents' => 800_000,
+    ]);
+
+    $fromRegion = (int) substr($lot->location->postal_code, 0, 2);
+    $expectedTransport = 34_000 + abs($fromRegion - 10) * 450;
+
+    $this->postJson('/api/shipping/quote', ['lot_id' => $lot->id, 'postcode' => '1012 AB'])
+        ->assertOk()
+        ->assertJsonPath('costs.transport_cents', $expectedTransport)
+        ->assertJsonPath('costs.hammer_cents', 800_000)
+        ->assertJsonStructure(['costs' => ['lines', 'total_formatted', 'total_cents']]);
 });
 
 it('cachet per kavel en postcode - twee kijkers zien hetzelfde', function () {
