@@ -109,9 +109,10 @@
             $axisGradient = 'linear-gradient(90deg,#1c8a5b 0%,#b4690e 55%,#c0392b 100%)';
         @endphp
         <div class="mt-2">
+          {{-- Altijd één regel: het bedrag blijft heel, het label kapt af. --}}
           <div class="flex items-baseline justify-between gap-2 text-[11px]">
-            <span class="font-semibold text-aj-muted">Ivy-waarderange (indicatie)</span>
-            <span class="tnum font-bold">{{ $euro($lot->value_min_cents) }} – {{ $euro($lot->value_max_cents) }}</span>
+            <span class="min-w-0 truncate font-semibold text-aj-muted">Ivy-waarderange (indicatie)</span>
+            <span class="tnum shrink-0 whitespace-nowrap font-bold">{{ $euro($lot->value_min_cents) }} – {{ $euro($lot->value_max_cents) }}</span>
           </div>
           <div class="relative mt-1.5 h-1.5"
                title="Marktwaarde {{ $euro($lot->value_min_cents) }} – {{ $euro($lot->value_max_cents) }}">

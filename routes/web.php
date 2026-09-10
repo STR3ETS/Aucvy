@@ -48,6 +48,18 @@ Route::get('/verkoper/{user}', SellerProfileController::class)->name('sellers.sh
 // dezelfde config die de code afdwingt (hfst. 13.6).
 Route::view('/zekerheid', 'assurance')->name('assurance');
 
+// De uitlegpagina's uit v4 (hfst. 2b): verkooproute en FAQ. Statisch, maar
+// tarieven en termijnen komen uit dezelfde bron als de code.
+Route::view('/verkooproute', 'selling-guide')->name('selling.guide');
+Route::view('/faq', 'faq')->name('faq');
+
+// /zoeken uit de briefing (hfst. 7): zoeken en de Ivy-lezing wonen op de
+// veilingenpagina - deze route stuurt er netjes heen met de vraag mee.
+Route::get('/zoeken', fn (Request $request) => redirect()->route(
+    'lots.index',
+    array_filter(['q' => $request->query('q')]),
+))->name('search');
+
 // De verkoopfunnel. Toegankelijk zonder account; de accountvraag komt pas bij
 // het publiceren (hfst. 13.4).
 Route::get('/verkopen', FunnelController::class)->name('sell');
