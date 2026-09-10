@@ -7,7 +7,7 @@
     ontwerpbestand, dan hier.
 --}}
 <x-layouts.public over-hero
-    description="Aucvy is het AI-commerceplatform voor zakelijke goederen. Upload een foto, Ivy herkent, schrijft en waardeert. Veiling, afslag of koop direct - je betaalt alleen bij resultaat.">
+    description="Aucvy is het AI-commerceplatform voor zakelijke goederen. Upload een foto en het AI-team van Ivy herkent, schrijft en waardeert. Verkopen via veiling, afslag of koop direct, met geverifieerde verkopers en kosten vooraf - je betaalt alleen bij resultaat.">
 
 <div class="home">
 
@@ -24,7 +24,7 @@
         <span class="w"><span>de</span></span>
         <span class="w"><span>rest.</span></span>
       </h1>
-      <p class="lead" data-hero>Maak een foto van wat je wilt verkopen. Ivy herkent het, schrijft de advertentie en geeft een waarde-indicatie. Jij kiest de verkoopvorm en keurt goed.</p>
+      <p class="lead" data-hero>Maak een foto van wat je wilt verkopen. Ivy herkent het, Nova schrijft de advertentie en Atlas onderbouwt de waarde. Jij kiest de verkoopvorm en keurt goed.</p>
       <form class="ask" data-hero action="{{ route('lots.index') }}" method="get" role="search">
         <label>
           {{-- TOEVOEGING: Ivy's gezicht in plaats van het sterretje. --}}
@@ -40,6 +40,7 @@
         <li>Gratis plaatsen</li>
         <li>Geen opgeld voor kopers</li>
         <li>Alleen betalen bij resultaat</li>
+        <li>Geverifieerde verkopers</li>
       </ul>
     </div>
   </div>
@@ -62,7 +63,7 @@
       <div>
         <span class="live-dot"><i></i>Nu live</span>
         <h2 id="live-title">De handel van dit moment</h2>
-        <p>Kavels van geverifieerde verkopers, met een waarde-indicatie van Ivy. Tellers lopen live mee.</p>
+        <p>Kavels van geverifieerde verkopers, met de waarde-indicatie van Atlas erbij. Prijzen, bieders en kijkers lopen live mee.</p>
       </div>
       <a class="more" href="{{ route('lots.index') }}">Alles bekijken <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
     </div>
@@ -141,7 +142,7 @@
       <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Houdtermijn op uitbetaling</h3><p>De verkoper ontvangt het geld nadat de koper heeft kunnen controleren.</p></div>
       <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Geschilroute met bemiddeling</h3><p>Niet zoals beschreven? Dan bemiddelt Aucvy tussen koper en verkoper.</p></div>
       <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Bezichtiging waar mogelijk</h3><p>Kijkdagen staan bij de kavel. Plan direct een moment in.</p></div>
-      <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Reviews na elke transactie</h3><p>Koper en verkoper beoordelen elkaar. Zichtbaar op het profiel.</p></div>
+      <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Reviews en de Trust Index</h3><p>Koper en verkoper beoordelen elkaar. Samen met levering, documenten en geschilhistorie bouwt dat de Trust Index op het verkopersprofiel.</p></div>
       <div class="wip"><h3>Waar we nog aan werken</h3><p>Escrow via een gereguleerde betaaldienst en een onafhankelijke technische keuring. Zodra dat staat, staat het hier.</p></div>
     </div>
   </div>
