@@ -615,7 +615,10 @@
                         </template>
                     </div>
 
-                    <x-auction.bid-history />
+                    {{-- Bij koop direct valt er geen biedhistorie te tonen. --}}
+                    @if ($lot->sale_type !== SaleType::BuyNow)
+                        <x-auction.bid-history />
+                    @endif
                 @endif
             </aside>
         </div>
