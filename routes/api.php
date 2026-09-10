@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DraftController;
 use App\Http\Controllers\Api\DraftUploadController;
 use App\Http\Controllers\Api\DutchAcceptController;
 use App\Http\Controllers\Api\IvyTaskController;
+use App\Http\Controllers\Api\ShippingQuoteController;
 use App\Http\Controllers\Api\ViewerPresenceController;
 use App\Http\Controllers\Api\ViewingController;
 use App\Http\Controllers\Api\WatchlistController;
@@ -90,6 +91,14 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('throttle:10,10')
         ->name('lots.viewings.store');
 });
+
+/*
+ | Transportindicatie (hfst. 7): publiek, want de kostenvraag hoort vóór het
+ | bieden beantwoord te zijn - ook voor wie nog geen account heeft.
+ */
+Route::post('shipping/quote', [ShippingQuoteController::class, 'store'])
+    ->middleware('throttle:30,1')
+    ->name('shipping.quote');
 
 /*
  | De funnel. Bewust zónder auth-middleware: een concept werkt op het

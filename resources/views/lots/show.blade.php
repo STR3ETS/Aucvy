@@ -452,6 +452,65 @@
                         </div>
                     @endif
 
+                    {{-- Transportindicatie (hfst. 7): postcode in, prijs uit.
+                         Een indicatie met houdbaarheid, geen offerte. --}}
+                    @if ($lot->transport_from_cents !== null)
+                        <div class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4"
+                             x-data="{
+                                postcode: '',
+                                busy: false,
+                                quote: null,
+                                error: null,
+                                async calc() {
+                                    this.error = null;
+                                    this.busy = true;
+                                    const response = await fetch('/api/shipping/quote', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                                        },
+                                        body: JSON.stringify({ lot_id: {{ $lot->id }}, postcode: this.postcode }),
+                                    });
+                                    this.busy = false;
+                                    if (response.ok) {
+                                        this.quote = (await response.json()).quote;
+                                    } else {
+                                        this.quote = null;
+                                        this.error = (await response.json())?.message ?? 'Dat lukte niet - probeer het opnieuw.';
+                                    }
+                                },
+                             }">
+                            <p class="text-sm font-extrabold">Transportindicatie</p>
+                            <p class="mt-1 text-xs text-aj-muted">
+                                Vanaf {{ Money::format($lot->transport_from_cents) }} - vul je postcode in
+                                voor een indicatie naar jouw adres.
+                            </p>
+                            <div class="mt-3 flex gap-2">
+                                <label class="sr-only" for="shipping-postcode">Postcode</label>
+                                <input id="shipping-postcode" type="text" inputmode="text" autocomplete="postal-code"
+                                       placeholder="1234 AB" maxlength="7"
+                                       x-model="postcode" @keydown.enter.prevent="calc()"
+                                       class="tabular w-full rounded-aj-sm border border-aj-border-strong bg-white px-3 text-sm text-aj-text"
+                                       style="min-height: 44px">
+                                <button type="button" class="btn btn-ghost shrink-0" style="height:44px;font-size:13px"
+                                        :disabled="busy" @click="calc()">
+                                    <span x-show="! busy">Bereken</span>
+                                    <span x-show="busy" x-cloak>Even rekenen…</span>
+                                </button>
+                            </div>
+                            <p x-show="quote" x-cloak class="mt-2 text-sm" aria-live="polite">
+                                <span class="tabular font-extrabold" x-text="quote?.amount_formatted"></span>
+                                <span class="block text-xs text-aj-muted">
+                                    Indicatie, 24 uur geldig. Het definitieve bedrag staat in de kostenopbouw.
+                                </span>
+                            </p>
+                            <p x-show="error" x-cloak role="alert"
+                               class="mt-2 text-xs font-semibold text-aj-error" x-text="error"></p>
+                        </div>
+                    @endif
+
                     @if ($lot->sale_type === SaleType::Auction && ! $auction->isClosed() && config('aucvy.ai.enabled'))
                         <x-auction.ivy-advice :lot="$lot" />
                     @endif

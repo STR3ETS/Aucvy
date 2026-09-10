@@ -187,6 +187,16 @@ return [
     ],
 
     /*
+     | Transportindicaties (hfst. 14): providervrij. `fake` rekent een
+     | deterministische indicatie; een echte partner is één klasse erbij.
+     | De indicatie blijft per kavel-postcodecombinatie een dag gecached.
+     */
+    'shipping' => [
+        'provider' => env('AUCVY_SHIPPING_PROVIDER', 'fake'),
+        'quote_ttl_hours' => 24,
+    ],
+
+    /*
      | Bewaartermijnen (hfst. 15): vastgelegd in een verwijderjob, niet in
      | een document. `aucvy:prune-expired` dwingt ze dagelijks af.
      |
