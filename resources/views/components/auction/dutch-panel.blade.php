@@ -10,13 +10,22 @@
     <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
 
     <p class="text-xs text-white/70">Huidige prijs</p>
-    <p class="tabular text-3xl font-extrabold" x-text="formatCents(state.price_cents)"></p>
+    <p class="tabular text-3xl font-extrabold" :class="priceDropped && 'price-drop'"
+       x-text="formatCents(state.price_cents)"></p>
 
-    <template x-if="! state.dutch.floor_reached">
-        <p class="mt-1 text-xs text-white/60">
-            Daalt elke <span x-text="state.dutch.interval_seconds"></span> seconden met
-            <span class="tabular" x-text="formatCents(state.dutch.step_cents)"></span>
-        </p>
+    <template x-if="dutchDropIn !== null">
+        <div class="mt-2">
+            <p class="text-xs text-white/70">
+                Daalt over <span class="tabular font-extrabold text-white" x-text="dutchDropIn"></span>s
+                met <span class="tabular font-semibold text-white/90" x-text="formatCents(state.dutch.step_cents)"></span>
+            </p>
+            {{-- Het leeglopende balkje: je ziet de stap aankomen. --}}
+            <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
+                <div class="h-full rounded-full bg-white/80"
+                     style="transition:width 1s linear"
+                     :style="`width:${Math.max(0, Math.min(100, dutchDropIn / state.dutch.interval_seconds * 100))}%`"></div>
+            </div>
+        </div>
     </template>
 
     <template x-if="state.dutch.floor_reached">

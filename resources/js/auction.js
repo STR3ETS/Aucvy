@@ -30,7 +30,13 @@ export default function auction(initialState) {
         _pollTimer: null,
         _tickTimer: null,
         _presenceTimer: null,
+        _dropTimer: null,
         _failedReconnects: 0,
+
+        // Afslag: seconden tot de volgende prijsstap, en de korte
+        // daal-animatie op de prijs zelf.
+        dutchDropIn: null,
+        priceDropped: false,
 
         init() {
             this.clockOffset = new Date(this.state.server_time).getTime() - Date.now();
@@ -51,6 +57,7 @@ export default function auction(initialState) {
             clearInterval(this._tickTimer);
             clearInterval(this._presenceTimer);
             clearInterval(this._pollTimer);
+            clearTimeout(this._dropTimer);
 
             if (typeof window.Echo !== 'undefined') {
                 window.Echo.leave(`auction.${this.state.auction_id}`);
@@ -127,7 +134,17 @@ export default function auction(initialState) {
             // Bij een afslag telt de client zelf af met dezelfde formule als de
             // server. Er wordt niets per tik weggeschreven (hfst. 6).
             if (this.state.dutch && this.state.status !== 'closed') {
-                this.state.price_cents = this.dutchPriceNow();
+                const fresh = this.dutchPriceNow();
+
+                // Zichtbaar maken dát hij zakt: korte animatie bij elke stap.
+                if (fresh !== this.state.price_cents) {
+                    this.state.price_cents = fresh;
+                    this.priceDropped = true;
+                    clearTimeout(this._dropTimer);
+                    this._dropTimer = setTimeout(() => (this.priceDropped = false), 700);
+                }
+
+                this.dutchDropIn = this.dutchSecondsToDrop();
             }
 
             // Op nul overgekomen: de sluiting komt via de websocket, maar als
@@ -170,6 +187,23 @@ export default function auction(initialState) {
             const steps = Math.floor(elapsed / d.interval_seconds);
 
             return Math.max(d.floor_cents, d.start_cents - steps * d.step_cents);
+        },
+
+        /**
+         * Seconden tot de volgende prijsstap, of null als er niets meer
+         * daalt (bodem bereikt of gesloten).
+         */
+        dutchSecondsToDrop() {
+            const d = this.state.dutch;
+
+            if (! d || d.floor_reached || this.state.status === 'closed') return null;
+            if (this.dutchPriceNow() <= d.floor_cents) return null;
+
+            const elapsed = Math.floor((this.now() - new Date(d.starts_at).getTime()) / 1000);
+
+            if (elapsed < 0) return null;
+
+            return d.interval_seconds - (elapsed % d.interval_seconds);
         },
 
         // Verbinding ---------------------------------------------------------
