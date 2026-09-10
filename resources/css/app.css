@@ -146,6 +146,17 @@
   .demo-handle{left:calc(100% - 48px)}
 }
 
+/* Doomscrollen door kavels: de pagina schuift het scherm uit en de
+   volgende komt van de andere kant binnen (lot-nav.js). */
+@keyframes lot-out-left{to{opacity:0;transform:translateX(-100vw)}}
+@keyframes lot-out-right{to{opacity:0;transform:translateX(100vw)}}
+@keyframes lot-in-right{from{opacity:0;transform:translateX(100vw)}to{opacity:1;transform:none}}
+@keyframes lot-in-left{from{opacity:0;transform:translateX(-100vw)}to{opacity:1;transform:none}}
+.lot-nav-out-left{animation:lot-out-left .25s ease-in forwards}
+.lot-nav-out-right{animation:lot-out-right .25s ease-in forwards}
+.lot-nav-in-right{animation:lot-in-right .3s var(--ease-aj-out) both}
+.lot-nav-in-left{animation:lot-in-left .3s var(--ease-aj-out) both}
+
 /* Zachte navigatie (veilingenpagina): tijdens het ophalen dimt de inhoud
    even in plaats van een witte flits van een harde reload. */
 #lots-content[aria-busy]{opacity:.55;pointer-events:none;transition:opacity .15s ease}

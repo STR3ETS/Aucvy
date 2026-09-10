@@ -20,13 +20,17 @@
         Dat voorkomt de klassieke fout waarbij het biedpaneel iets anders toont
         dan de teller ernaast (hfst. 11).
     --}}
-    <div @if ($state) x-data="auction({{ Js::from($state) }})" @endif>
+    <div @if ($state) x-data="auction({{ Js::from($state) }})" @endif
+         data-lot-nav
+         @if ($nextLot) data-next="{{ route('lots.show', $nextLot) }}" @endif
+         @if ($previousLot) data-prev="{{ route('lots.show', $previousLot) }}" @endif>
 
         {{-- Het stippenveld van de hero als paginalaag: donkergrijs en zwak
              op de lichte achtergrond, achter alle kaarten. --}}
         <canvas class="page-dots" x-data="dotField({ color: '#0e1526', strength: 0.25 })"
                 aria-hidden="true"></canvas>
 
+        <div class="flex items-center justify-between gap-4">
         <nav aria-label="Kruimelpad" class="flex flex-wrap items-center gap-1.5 text-sm text-aj-muted">
             <a href="{{ route('lots.index') }}" class="hover:text-aj-text">Veilingen</a>
             @if ($lot->category)
@@ -44,6 +48,15 @@
             <span aria-hidden="true">/</span>
             <span class="text-aj-text">{{ Str::limit($lot->title, 45) }}</span>
         </nav>
+
+        @if ($nextLot || $previousLot)
+            <p class="hidden shrink-0 items-center gap-1 text-xs text-aj-muted lg:flex" aria-hidden="true">
+                Blader
+                <kbd class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-1.5 py-0.5 font-sans font-bold">&larr;</kbd>
+                <kbd class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-1.5 py-0.5 font-sans font-bold">&rarr;</kbd>
+            </p>
+        @endif
+        </div>
 
         {{--
             Prijswijzigingen worden voorgelezen, maar afgeknepen tot één melding

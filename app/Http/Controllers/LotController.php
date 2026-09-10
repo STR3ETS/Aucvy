@@ -92,6 +92,14 @@ final class LotController extends Controller
                 : null,
             'watcherCount' => WatchlistItem::query()->where('lot_id', $lot->id)->count(),
             'similarLots' => $this->similarLots($lot),
+            /*
+             | Bladeren met de pijltjestoetsen: de buurkavels op id-volgorde,
+             | met wrap-around - na de laatste kom je weer bij de eerste.
+             */
+            'nextLot' => Lot::query()->public()->where('id', '>', $lot->id)->orderBy('id')->first(['id', 'slug'])
+                ?? Lot::query()->public()->whereKeyNot($lot->id)->orderBy('id')->first(['id', 'slug']),
+            'previousLot' => Lot::query()->public()->where('id', '<', $lot->id)->orderByDesc('id')->first(['id', 'slug'])
+                ?? Lot::query()->public()->whereKeyNot($lot->id)->orderByDesc('id')->first(['id', 'slug']),
             'state' => $auction !== null
                 ? AuctionStateResource::make($auction, $request->user())->toArray()
                 : null,

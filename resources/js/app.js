@@ -10,6 +10,7 @@ import bidForm from './bid-form';
 import pushToggle from './push';
 import initHome from './home';
 import initLotsIndex from './lots-index';
+import initLotNav from './lot-nav';
 
 /*
  | focus levert $focus, nodig om de focus vast te houden binnen een modal of
@@ -44,6 +45,9 @@ initHome();
 
 // Zachte navigatie op de veilingenpagina: filters wisselen zonder reload.
 initLotsIndex();
+
+// Doomscrollen op de kavelpagina: pijltjestoetsen bladeren door de kavels.
+initLotNav();
 
 /**
  * Echo verzorgt de websocketverbinding. Valt hij weg, dan schakelt de
