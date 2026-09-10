@@ -306,12 +306,18 @@
                     --}}
                     @if ($lot->sale_type === SaleType::Dutch)
                         <x-auction.dutch-panel />
+                    @elseif ($lot->sale_type === SaleType::BuyNow)
+                        {{-- Koop direct heeft geen biedpaneel: vaste prijs,
+                             wie het eerst koopt (hfst. 6). --}}
+                        <x-auction.buy-now-hero />
                     @else
                         <x-auction.bid-panel :auction="$auction" />
-                    @endif
 
-                    @if ($auction->buy_now_price_cents !== null && $lot->sale_type !== SaleType::Dutch)
-                        <x-auction.buy-now-panel />
+                        {{-- Een veiling kan daarnaast een koop-direct-prijs
+                             hebben; die vervalt zodra er overheen geboden is. --}}
+                        @if ($auction->buy_now_price_cents !== null)
+                            <x-auction.buy-now-panel />
+                        @endif
                     @endif
 
                     {{-- Volgen en delen: licht, naast de zware koopacties. --}}
