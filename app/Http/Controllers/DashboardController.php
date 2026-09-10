@@ -9,6 +9,7 @@ use App\Dashboard\IntentFunnel;
 use App\Dashboard\SignalSync;
 use App\Dashboard\TeamActivity;
 use App\Enums\AiAgent;
+use App\Enums\LotStatus;
 use App\Enums\OrderStatus;
 use App\Models\AiInsight;
 use App\Models\Order;
@@ -38,8 +39,14 @@ final class DashboardController extends Controller
 
         $signals->sync($user);
 
+        /*
+         | Standaard verkopersmodus alleen bij échte kavels: wie enkel een
+         | concept in de la heeft, is (nog) een koper en ziet geen lege
+         | verkoopblokken. De toggle blijft voor iedereen werken.
+         */
         $isSeller = $request->query('rol') !== 'koper'
-            && ($user->lots()->exists() || $request->query('rol') === 'verkoper');
+            && ($user->lots()->whereNot('status', LotStatus::Draft)->exists()
+                || $request->query('rol') === 'verkoper');
 
         $insights = AiInsight::query()
             ->where('user_id', $user->id)

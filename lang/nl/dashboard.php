@@ -14,6 +14,8 @@ return [
     ],
 
     'signals' => [
+        'outbid' => 'Je bent overboden op ":lot"',
+        'outbid_body' => 'De veiling loopt nog. Bied opnieuw of laat hem lopen - jij beslist.',
         'missing_transport' => 'Transportinformatie ontbreekt bij ":lot"',
         'missing_transport_body' => 'Kopers haken af als ze niet weten waar ze aan toe zijn.',
         'missing_ownership' => 'Eigendomsbewijs ontbreekt bij ":lot"',

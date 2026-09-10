@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Dashboard;
 
 use App\Enums\AiAgent;
+use App\Enums\BidStatus;
 use App\Enums\DisputeStatus;
 use App\Enums\InsightSeverity;
 use App\Enums\LotStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PayoutStatus;
 use App\Models\AiInsight;
+use App\Models\Auction;
 use App\Models\Dispute;
 use App\Models\Lot;
 use App\Models\Order;
@@ -35,6 +37,7 @@ final class SignalSync
     public function sync(User $user): void
     {
         $desired = collect([
+            ...$this->outbidAuctions($user),
             ...$this->missingTransport($user),
             ...$this->missingOwnership($user),
             ...$this->unfinishedDrafts($user),
@@ -57,6 +60,35 @@ final class SignalSync
         $desired->diffKeys($existing)->each(
             fn (array $signal) => AiInsight::create([...$signal, 'user_id' => $user->id]),
         );
+    }
+
+    /**
+     * Overboden op een lopende veiling: hét koperssignaal. Verdwijnt vanzelf
+     * zodra je weer bovenaan staat of de veiling sluit.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function outbidAuctions(User $user): array
+    {
+        return Auction::query()
+            ->whereHas('bids', fn ($query) => $query->where('user_id', $user->id))
+            ->whereDoesntHave('bids', fn ($query) => $query
+                ->where('user_id', $user->id)
+                ->where('status', BidStatus::Winning))
+            ->whereHas('lot', fn ($query) => $query->whereIn('status', [LotStatus::Live, LotStatus::Closing]))
+            ->with('lot')
+            ->get()
+            ->map(fn (Auction $auction): array => [
+                'agent' => AiAgent::Atlas,
+                'type' => 'signal.outbid',
+                'title' => __('dashboard.signals.outbid', ['lot' => $auction->lot->title]),
+                'body' => __('dashboard.signals.outbid_body'),
+                'action_route' => 'lots.show',
+                'action_params' => ['lot' => $auction->lot->slug],
+                'action_label' => __('dashboard.actions.view'),
+                'severity' => InsightSeverity::Attention,
+            ])
+            ->all();
     }
 
     /**
