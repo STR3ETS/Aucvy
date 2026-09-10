@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.4",
         "anthropic-ai/sdk": "^0.47.0",
+        "laravel-notification-channels/webpush": "^13.0",
         "laravel/framework": "^13.17",
         "laravel/reverb": "*",
         "laravel/tinker": "^3.0"

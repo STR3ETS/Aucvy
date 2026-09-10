@@ -7,6 +7,7 @@ import slideConfirm from './slide-confirm';
 import dotField from './dot-field';
 import sellingDemo from './selling-demo';
 import bidForm from './bid-form';
+import pushToggle from './push';
 import initHome from './home';
 import initLotsIndex from './lots-index';
 
@@ -29,6 +30,7 @@ Alpine.data('slideConfirm', slideConfirm);
 Alpine.data('dotField', dotField);
 Alpine.data('sellingDemo', sellingDemo);
 Alpine.data('bidForm', bidForm);
+Alpine.data('pushToggle', pushToggle);
 
 window.Alpine = Alpine;
 

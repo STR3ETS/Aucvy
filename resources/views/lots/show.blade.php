@@ -349,6 +349,24 @@
                             </svg>
                             <span x-text="copied ? 'Gekopieerd!' : 'Delen'"></span>
                         </button>
+
+                        {{-- Web push (hfst. 14): "overboden" hoort binnen twee
+                             seconden op je scherm, ook met de site dicht. --}}
+                        @auth
+                            <button type="button" class="btn btn-ghost flex-1" x-data="pushToggle"
+                                    x-show="supported && ! denied" x-cloak
+                                    :disabled="busy" @click="toggle()"
+                                    :aria-pressed="enabled"
+                                    :title="enabled ? 'Meldingen staan aan op dit apparaat' : 'Krijg direct een melding als je overboden wordt'">
+                                <svg class="size-4" viewBox="0 0 20 20" :fill="enabled ? 'currentColor' : 'none'"
+                                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                     stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M10 3a4.5 4.5 0 0 0-4.5 4.5c0 3.2-1 4.4-1.8 5.2h12.6c-.8-.8-1.8-2-1.8-5.2A4.5 4.5 0 0 0 10 3Z"/>
+                                    <path d="M8.3 15.7a1.8 1.8 0 0 0 3.4 0"/>
+                                </svg>
+                                <span x-text="enabled ? 'Meldingen aan' : 'Meldingen'"></span>
+                            </button>
+                        @endauth
                     </div>
 
                     {{-- Bezichtiging: moment voorstellen; het adres volgt per

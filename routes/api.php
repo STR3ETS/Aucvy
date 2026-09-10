@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DraftController;
 use App\Http\Controllers\Api\DraftUploadController;
 use App\Http\Controllers\Api\DutchAcceptController;
 use App\Http\Controllers\Api\IvyTaskController;
+use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\ShippingQuoteController;
 use App\Http\Controllers\Api\ViewerPresenceController;
 use App\Http\Controllers\Api\ViewingController;
@@ -90,6 +91,13 @@ Route::middleware('auth')->group(function (): void {
     Route::post('lots/{lot:id}/viewings', [ViewingController::class, 'store'])
         ->middleware('throttle:10,10')
         ->name('lots.viewings.store');
+
+    // Web push voor "je bent overboden" (hfst. 14): per apparaat één
+    // inschrijving, gekoppeld aan het account.
+    Route::post('push/subscription', [PushSubscriptionController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('push.subscribe');
+    Route::delete('push/subscription', [PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
 });
 
 /*

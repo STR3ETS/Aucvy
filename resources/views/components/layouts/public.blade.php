@@ -12,6 +12,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @if (config('webpush.vapid.public_key'))
+        <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
+    @endif
 
     <title>{{ $title ? $title . ' · ' . config('app.name') : 'Aucvy - Upload. Ivy regelt de rest.' }}</title>
 
