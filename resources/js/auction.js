@@ -37,6 +37,41 @@ export default function auction(initialState) {
             setInterval(() => this.tick(), 1000);
 
             this.subscribe();
+            this.startPresence();
+        },
+
+        /*
+         | De kijkershartslag: dit tabblad meldt zich elke dertig seconden met
+         | een willekeurig token. De teller komt terug en vervangt de stand -
+         | geen namen, alleen een aantal (hfst. 7).
+         */
+        startPresence() {
+            const token = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 18);
+
+            const beat = async () => {
+                if (document.hidden) return;
+
+                try {
+                    const response = await fetch(`/api/auctions/${this.state.auction_id}/presence`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                        },
+                        body: JSON.stringify({ token }),
+                    });
+
+                    if (response.ok) {
+                        this.state.watching_now = (await response.json()).watching_now;
+                    }
+                } catch {
+                    // Stilte is prima: de teller is nice-to-have, geen kernfunctie.
+                }
+            };
+
+            beat();
+            setInterval(beat, 30_000);
         },
 
         // Tijd ---------------------------------------------------------------

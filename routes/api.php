@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DraftController;
 use App\Http\Controllers\Api\DraftUploadController;
 use App\Http\Controllers\Api\DutchAcceptController;
 use App\Http\Controllers\Api\IvyTaskController;
+use App\Http\Controllers\Api\ViewerPresenceController;
 use App\Http\Controllers\Api\ViewingController;
 use App\Http\Controllers\Api\WatchlistController;
 use App\Models\AiInsight;
@@ -40,6 +41,14 @@ Route::prefix('auctions/{auction}')->name('auctions.')->group(function (): void 
      */
     Route::get('state', [AuctionStateController::class, 'show'])->name('state');
     Route::get('events', [AuctionEventController::class, 'index'])->name('events');
+
+    /*
+     | De kijkershartslag ("x kijken nu"). Zonder auth: gasten tellen mee.
+     | Twee per minuut per kijker is normaal; de limiet vangt misbruik.
+     */
+    Route::post('presence', [ViewerPresenceController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('presence');
 
     Route::middleware('auth')->group(function (): void {
 

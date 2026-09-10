@@ -51,10 +51,19 @@
     <p class="mt-4 text-xs text-white/70">Huidig bod</p>
     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <p class="tabular text-3xl font-extrabold" x-text="formatCents(state.price_cents)"></p>
-        <p class="text-xs text-white/70">
-            <span x-text="state.bidder_count"></span> bieders
+        <p class="flex flex-wrap items-center gap-x-1.5 text-xs text-white/70">
+            <span><span x-text="state.bidder_count"></span> bieders</span>
             <template x-if="state.extension_count > 0">
-                <span> · <span x-text="state.extension_count"></span>× verlengd</span>
+                <span>· <span x-text="state.extension_count"></span>× verlengd</span>
+            </template>
+            <template x-if="(state.watching_now ?? 0) > 0">
+                <span class="inline-flex items-center gap-1">·
+                    <svg class="size-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10Z"/><circle cx="10" cy="10" r="2.4"/>
+                    </svg>
+                    <span x-text="state.watching_now"></span> kijken nu
+                </span>
             </template>
         </p>
     </div>

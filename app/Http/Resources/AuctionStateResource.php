@@ -7,6 +7,7 @@ namespace App\Http\Resources;
 use App\Auctions\Support\BidGuards;
 use App\Auctions\Support\DutchPriceCalculator;
 use App\Auctions\Support\IncrementTable;
+use App\Auctions\Support\ViewerPresence;
 use App\Enums\BidStatus;
 use App\Enums\SaleType;
 use App\Models\Auction;
@@ -74,6 +75,9 @@ final class AuctionStateResource
 
             'bid_count' => $auction->bid_count,
             'bidder_count' => $auction->bidder_count,
+
+            // Alleen een aantal, nooit wie (hfst. 7).
+            'watching_now' => app(ViewerPresence::class)->count($auction->id),
 
             'ends_at' => $auction->ends_at->toIso8601String(),
             'original_ends_at' => $auction->original_ends_at->toIso8601String(),

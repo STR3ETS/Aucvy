@@ -26,6 +26,16 @@
         </p>
     </template>
 
+    <template x-if="(state.watching_now ?? 0) > 0">
+        <p class="mt-1 flex items-center gap-1 text-xs text-white/70">
+            <svg class="size-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10Z"/><circle cx="10" cy="10" r="2.4"/>
+            </svg>
+            <span x-text="state.watching_now"></span> kijken nu - wie het eerst toeslaat koopt
+        </p>
+    </template>
+
     <div class="mt-4">
         @guest
             <a href="{{ route('login') }}"
