@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardListController;
 use App\Http\Controllers\DevCheckoutController;
 use App\Http\Controllers\FunnelController;
 use App\Http\Controllers\HomeController;
@@ -140,6 +141,12 @@ Route::middleware('auth')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     // Het werkplan van hfst. 13.5 - voor koper én verkoper, met een toggle.
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    // De lijstpagina's onder het dashboard (hfst. 7).
+    Route::get('/dashboard/kavels', [DashboardListController::class, 'lots'])->name('dashboard.lots');
+    Route::get('/dashboard/biedingen', [DashboardListController::class, 'bids'])->name('dashboard.bids');
+    Route::get('/dashboard/uitbetalingen', [DashboardListController::class, 'payouts'])->name('dashboard.payouts');
+    Route::get('/dashboard/geschillen', [DashboardListController::class, 'disputes'])->name('dashboard.disputes');
 
     Route::get('/bestellingen', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/bestellingen/{order}', [OrderController::class, 'show'])->name('orders.show');

@@ -23,6 +23,8 @@
             </nav>
         </div>
 
+        <x-dashboard.nav />
+
         @if ($isNew)
             {{-- Nieuwe gebruikers zien startstappen in plaats van lege blokken. --}}
             <section class="mt-6 rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Aan de slag">
