@@ -20,35 +20,23 @@
             <a href="{{ route('faq') }}" class="btn btn-ghost">Veelgestelde vragen</a>
         </div>
 
-        {{-- De zes stappen, met wie het werk doet. --}}
-        <section class="mt-10" aria-label="De zes stappen">
-            <h2 class="text-lg font-extrabold">Zo werkt het, in zes stappen</h2>
-            <ol class="mt-4 space-y-4">
-                @foreach ([
-                    ['n' => 1, 'agent' => null, 'title' => 'Upload je foto\'s', 'body' => 'Een paar foto\'s vanaf je telefoon zijn genoeg om te beginnen. Documenten zoals een aankoopfactuur kunnen later, en een account heb je pas nodig bij het publiceren.'],
-                    ['n' => 2, 'agent' => 'ivy', 'title' => 'Ivy herkent je object', 'body' => 'Merk, model, bouwjaar en conditie, met een zekerheidsscore per onderdeel zodat je weet wat je moet nakijken. Klopt iets niet, dan pas je het gewoon aan.'],
-                    ['n' => 3, 'agent' => 'nova', 'title' => 'Nova schrijft de advertentie', 'body' => 'Titel, omschrijving en specificaties staan klaar, eerlijk over gebreken. Jij past aan of keurt goed; zonder jouw akkoord gaat er niets live.'],
-                    ['n' => 4, 'agent' => 'atlas', 'title' => 'Atlas geeft een waarde-indicatie', 'body' => 'Een range op basis van vergelijkbare verkopen, altijd met de zekerheid erbij. Een indicatie is geen belofte; bij lage zekerheid zeggen we dat er ook bij.'],
-                    ['n' => 5, 'agent' => 'finn', 'title' => 'Finn adviseert de verkoopvorm', 'body' => 'Veiling als de markt de prijs mag bepalen, afslag als het snel moet, koop direct bij een vaste prijs. Finn adviseert, jij beslist.'],
-                    ['n' => 6, 'agent' => 'flow', 'title' => 'Flow handelt af', 'body' => 'Betaling, transport en uitbetaling worden geregeld. Na levering geldt een korte houdtermijn waarin de koper kan controleren; daarna wordt er uitbetaald.'],
-                ] as $step)
-                    <li class="flex items-start gap-3 rounded-aj-sm border border-aj-border bg-aj-surface p-4">
-                        <span class="tabular flex size-8 shrink-0 items-center justify-center rounded-aj-sm
-                                     bg-aj-blue/10 text-sm font-extrabold text-aj-blue-text">{{ $step['n'] }}</span>
-                        <div class="min-w-0">
-                            <p class="flex items-center gap-2 text-sm font-extrabold">
-                                @if ($step['agent'])
-                                    <x-ui.agent-avatar :agent="$step['agent']" class="size-6" />
-                                @endif
-                                {{ $step['title'] }}
-                            </p>
-                            <p class="mt-1 text-sm text-aj-muted">{{ $step['body'] }}</p>
-                        </div>
-                    </li>
-                @endforeach
-            </ol>
-        </section>
+    </div>
 
+    {{-- De zes stappen als animatie: dezelfde verkopersreis als op home,
+         op volle breedte zodat de scènes de ruimte krijgen. --}}
+    <section id="reis" class="mt-12" aria-label="De zes stappen">
+        <div class="mx-auto max-w-3xl">
+            <h2 class="text-lg font-extrabold">Zo werkt het, in zes stappen</h2>
+            <p class="mt-1 text-sm text-aj-muted">
+                Speelt vanzelf af - klik een stap om die van dichtbij te bekijken.
+            </p>
+        </div>
+        <div class="mt-6">
+            <x-marketing.seller-journey />
+        </div>
+    </section>
+
+    <div class="mx-auto max-w-3xl">
         {{-- Tarieven, rechtstreeks uit CompanyPlan. --}}
         <section class="mt-10" aria-label="Tarieven" id="tarieven">
             <h2 class="text-lg font-extrabold">Wat het kost</h2>
