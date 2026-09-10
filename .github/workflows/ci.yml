@@ -1,0 +1,67 @@
+# CI voor Aucvy: stijl (Pint), assets (Vite) en de volledige testsuite
+# tegen MySQL - dezelfde database-engine als productie, geen sqlite-verrassingen.
+#
+# De tests draaien hermetisch: phpunit.xml pint de fake AI- en betaalproviders
+# vast, dus CI heeft geen API-sleutels nodig.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: aucvy_testing
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, pdo_mysql, gd, intl, zip
+          coverage: none
+
+      - name: Composer-afhankelijkheden
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Assets bouwen (Vite-manifest is nodig voor paginatests)
+        run: |
+          npm ci
+          npm run build
+
+      - name: Omgeving
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Codestijl (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Testsuite
+        run: php artisan test --compact
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USERNAME: root
+          DB_PASSWORD: root

@@ -1,0 +1,154 @@
+@import 'tailwindcss';
+
+/*
+ | De styling van het platform komt uit aucvy-home.html en staat verbatim in
+ | site.css. Dáár wijzigen betekent afwijken van het ontwerp - niet doen.
+ |
+ | In de components-laag: zonder laag zou site.css boven álle utilities staan
+ | (ongelaagde CSS wint altijd van gelaagde) en dan doet bijvoorbeeld
+ | font-extrabold op een <button> niets meer, want button{font:inherit} uit
+ | site.css zou winnen. Zo blijft het ontwerp gelden en winnen expliciete
+ | utility-klassen, precies de bedoeling van de lagenvolgorde.
+ */
+@import './site.css' layer(components);
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+
+/*
+|------------------------------------------------------------------------------
+| Tailwind-tokens
+|------------------------------------------------------------------------------
+|
+| Dezelfde waarden als de :root-variabelen in site.css, maar dan als tokens
+| zodat de binnenpagina's (kavel, veilingen, inloggen) er met utilities mee
+| kunnen werken. Eén bron van waarheid qua wáárden is site.css; verandert daar
+| iets, verander het hier mee.
+|
+*/
+
+@theme {
+    --font-sans: 'Manrope', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+    --color-aj-bg: #f7f8fb;
+    --color-aj-surface: #ffffff;
+    --color-aj-text: #0e1526;
+    --color-aj-muted: #5c6474;
+    --color-aj-soft: #39415a;
+
+    --color-aj-blue: #2E5CC6;
+    --color-aj-blue-deep: #1F419B;
+    --color-aj-blue-ink: #152C6B;
+    --color-aj-blue-text: #2450A8;
+    --color-aj-navy: #0c1326;
+    --color-aj-violet: #7c3aed;
+
+    --color-aj-success: #1c8a5b;
+    --color-aj-success-text: #177249;
+    --color-aj-warn: #b4690e;
+    --color-aj-warn-text: #8f5209;
+    --color-aj-error: #c0392b;
+
+    /*
+     * TOEVOEGING: de zes specialistkleuren (hfst. 10/13.5). Donkere tinten,
+     * elk ruim boven 5,4:1 als tekst op licht. Komt er een definitief palet
+     * uit het ontwerp, dan vervangt dat deze waarden - niet andersom.
+     */
+    --color-aj-ivy: #6d28d9;
+    --color-aj-atlas: #1F419B;
+    --color-aj-nova: #a21caf;
+    --color-aj-finn: #177249;
+    --color-aj-flow: #8f5209;
+    --color-aj-lex: #155e75;
+
+    --color-aj-border: rgba(14, 21, 38, 0.09);
+    --color-aj-border-strong: rgba(14, 21, 38, 0.16);
+
+    --radius-aj-sm: 3px;
+    --radius-aj-s: 4px;
+    --radius-aj-m: 4px;
+    --radius-aj-l: 4px;
+
+    /* Minimale tikoppervlakte. 44x44px, overal (briefing hfst. 10). */
+    --spacing-cta: 44px;
+
+    --ease-aj-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+    /* Verbergt Alpine-elementen tot het component geïnitialiseerd is. Zonder
+       deze regel flitst een biedpaneel eerst in álle states tegelijk voorbij. */
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    /* Cijfers die live veranderen krijgen een vaste tekenbreedte; zelfde als
+       .tnum in site.css, maar deze naam gebruiken de binnenpagina's al. */
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+/* De kaartachtergrond van het biedpaneel: dezelfde blauwe gloed als de
+   home-hero (site.css .hero), maar dan op kaartformaat - inclusief het
+   ademende stippenveld (dot-field.js) achter de inhoud. */
+.panel-hero{position:relative;overflow:hidden;color:#fff;background:
+  radial-gradient(120% 90% at 85% 10%, rgba(255,255,255,.14), transparent 55%),
+  radial-gradient(90% 70% at 10% 100%, rgba(12,19,38,.45), transparent 60%),
+  linear-gradient(180deg,#2E5CC6 0%,#284FB0 55%,#1F419B 100%)}
+/* Zachter dan op de hero, en uitdovend naar het midden: de stipjes leven
+   langs de randen, de tekst erbovenop blijft rustig leesbaar. */
+/* Kavelkaart: het ontwerp pint .meta onderaan met margin-top:auto, maar in
+   onze kaart zit de <a>-wrapper ertussen - die moet meerekken, anders hangen
+   prijs en waardebalk op inhoudshoogte in plaats van onderaan. */
+.lot>a{display:flex;flex-direction:column;flex:1}
+
+/* Op de paarse Ivy-regel staat de foto van Ivy in plaats van het ruitje. */
+.lot .ivy::before{content:none}
+
+/* Home en launcher: echte gezichten in plaats van gekleurde ruitjes -
+   in het team, de Vraag Ivy-knop, het herozoekveld en de zes stappen. */
+.team img{width:38px;height:38px;border-radius:50%;object-fit:cover;flex:none}
+
+/* Het team onder elkaar in plaats van twee-aan-twee, met naam boven de
+   rol (de binnenste div erft anders de kaartrand van .team div). */
+.team{grid-template-columns:1fr}
+.team>div div{border:0;padding:0;display:block}
+
+/* Het stippenveld op het donkere zakelijk-vlak, achter de inhoud. */
+.zakelijk{position:relative;overflow:hidden}
+.zakelijk>canvas.dots{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.4}
+.zakelijk .wrap{position:relative;z-index:1}
+.ivy-launch img{width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none}
+.ask label img{width:22px;height:22px;border-radius:50%;object-fit:cover;flex:none}
+.steps h3 img{width:20px;height:20px;border-radius:50%;object-fit:cover;display:inline-block;vertical-align:-4px;margin-right:7px}
+
+/* Zachte navigatie (veilingenpagina): tijdens het ophalen dimt de inhoud
+   even in plaats van een witte flits van een harde reload. */
+#lots-content[aria-busy]{opacity:.55;pointer-events:none;transition:opacity .15s ease}
+
+/* Het stippenveld als paginalaag: vast achter alle inhoud, boven de
+   achtergrondkleur van de body (negatieve z-index). */
+canvas.page-dots{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1}
+
+.panel-hero>canvas.dots{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.45;
+  -webkit-mask-image:radial-gradient(140% 120% at 50% 30%, transparent 40%, #000 80%);
+  mask-image:radial-gradient(140% 120% at 50% 30%, transparent 40%, #000 80%)}
+.panel-hero>:not(canvas.dots){position:relative;z-index:1}
+
+/* Sleep-om-te-bieden: de bewuste handeling voor alles wat geld kost.
+   Hoogte 52px, handgreep 44px breed: ruim boven het minimum-tikoppervlak.
+   Op de blauwe kaart: doorschijnend spoor, navy vulling, witte handgreep. */
+.slide-confirm{position:relative;height:52px;border-radius:var(--radius-aj-sm);background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);overflow:hidden;user-select:none;touch-action:none;cursor:default}
+.slide-confirm .fill{position:absolute;top:0;bottom:0;left:0;background:var(--color-aj-navy);border-radius:var(--radius-aj-sm)}
+.slide-confirm .label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:rgba(255,255,255,.9);pointer-events:none;white-space:nowrap}
+.slide-confirm .label-past{color:#fff}
+.slide-confirm .handle{position:absolute;top:4px;bottom:4px;width:44px;border-radius:3px;background:#fff;color:var(--color-aj-navy);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;cursor:grab;touch-action:none;box-shadow:0 2px 8px rgba(12,19,38,.3);transition:left .25s var(--ease-aj-out)}
+.slide-confirm .handle.dragging{cursor:grabbing;transition:none}
+.slide-confirm .fill{transition:width .25s var(--ease-aj-out)}
+.slide-confirm .handle.dragging + .fill,.slide-confirm:has(.handle.dragging) .fill{transition:none}
+@media (prefers-reduced-motion:reduce){.slide-confirm .handle,.slide-confirm .fill{transition:none}}

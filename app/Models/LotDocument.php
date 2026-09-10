@@ -1,0 +1,47 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Enums\DocumentKind;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/**
+ * Staat altijd op een private disk. Het `path` mag nooit rechtstreeks in een
+ * URL belanden - uitsluitend via een getekende URL van maximaal vijf minuten
+ * (hfst. 15).
+ */
+#[Fillable([
+    'lot_id', 'kind', 'path', 'original_filename', 'mime_type', 'size_bytes',
+])]
+class LotDocument extends Model
+{
+    use HasFactory;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'kind' => DocumentKind::class,
+            'size_bytes' => 'integer',
+            'ai_checked_at' => 'datetime',
+            'ai_findings' => 'array',
+        ];
+    }
+
+    public function lot(): BelongsTo
+    {
+        return $this->belongsTo(Lot::class);
+    }
+
+    public function wasCheckedByIvy(): bool
+    {
+        return $this->ai_checked_at !== null;
+    }
+}

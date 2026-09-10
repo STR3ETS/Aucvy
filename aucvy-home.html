@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aucvy — Upload. Ivy regelt de rest.</title>
+<meta name="description" content="Aucvy is het AI-commerceplatform voor zakelijke goederen. Upload een foto, Ivy herkent, schrijft en waardeert. Veiling, afslag of koop direct — je betaalt alleen bij resultaat.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fb; --surface:#ffffff; --ink:#0e1526; --muted:#5c6474; --soft:#39415a;
+  --blue:#2f6bff; --blue-deep:#1848d9; --blue-ink:#0f2f9e; --blue-text:#1e56e0;
+  --navy:#0c1326; --violet:#7c3aed;
+  --ok:#1c8a5b; --ok-text:#177249; --warn:#b4690e; --warn-text:#8f5209; --err:#c0392b;
+  --line:rgba(14,21,38,.09); --line-strong:rgba(14,21,38,.16);
+  --r:3px; --cta-h:44px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --font:"Manrope",Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --wrap:1240px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+img{display:block;max-width:100%}
+:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--blue);border-radius:var(--r)}
+.hero :focus-visible{box-shadow:0 0 0 2px var(--blue-deep),0 0 0 4px #fff}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 32px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:var(--cta-h);padding:0 20px;border-radius:var(--r);border:1px solid transparent;font-weight:700;font-size:15px;letter-spacing:-.005em;transition:background .2s,color .2s,border-color .2s,transform .2s var(--ease);white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-deep)}
+.btn-dark{background:var(--ink);color:#fff}
+.btn-dark:hover{background:#1c2540}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+.btn-ghost:hover{border-color:var(--ink)}
+.btn-white{background:#fff;color:var(--blue-ink)}
+.btn-white:hover{background:#eaf0ff}
+.btn-outline-white{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}
+.btn-outline-white:hover{border-color:#fff}
+.btn svg{width:16px;height:16px;flex:none}
+
+/* ---------- header ---------- */
+.header{position:absolute;inset:0 0 auto 0;z-index:20;color:#fff}
+.header .wrap{display:flex;align-items:center;justify-content:space-between;height:76px;gap:24px}
+.brand{font-weight:800;font-size:22px;letter-spacing:-.03em;display:flex;align-items:center;gap:10px}
+.brand i{display:block;width:10px;height:10px;background:#fff;border-radius:1px;transform:rotate(45deg)}
+.nav{display:flex;gap:30px;font-weight:600;font-size:14.5px;opacity:.92}
+.nav a{padding:6px 0;border-bottom:1px solid transparent;transition:border-color .2s}
+.nav a:hover{border-bottom-color:rgba(255,255,255,.7)}
+.header-actions{display:flex;align-items:center;gap:8px}
+.header-actions .link{font-weight:600;font-size:14.5px;padding:0 12px;height:40px;display:inline-flex;align-items:center}
+.header .btn{height:40px;font-size:14px;padding:0 16px}
+.burger{display:none;width:44px;height:44px;background:transparent;border:1px solid rgba(255,255,255,.35);border-radius:var(--r);color:#fff}
+
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:100svh;background:var(--blue);color:#fff;overflow:hidden;display:flex;flex-direction:column}
+.hero::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(120% 90% at 85% 10%, rgba(255,255,255,.14), transparent 55%),
+  radial-gradient(90% 70% at 10% 100%, rgba(12,19,38,.45), transparent 60%),
+  linear-gradient(180deg,#2f6bff 0%,#2860f4 55%,#1f52e0 100%);pointer-events:none}
+#dots{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0}
+.hero .wrap{position:relative;z-index:2;flex:1;display:grid;grid-template-columns:minmax(0,1fr);align-content:center;justify-items:start;padding-top:120px;padding-bottom:88px}
+.hero-inner{width:100%;max-width:none}
+.kicker{font-weight:600;font-size:14.5px;opacity:.85;margin:0 0 22px;display:inline-flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:22px;height:1px;background:#fff;opacity:.7}
+.hero h1{max-width:12ch;font-size:clamp(44px,7.4vw,104px);line-height:.98;letter-spacing:-.045em;font-weight:800;margin:0 0 26px}
+.hero h1 .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em;margin-bottom:-.08em}
+.hero h1 .w span{display:inline-block;will-change:transform}
+.hero h1 .w span::before{content:"";}
+.hero p.lead{font-size:clamp(17px,1.4vw,20px);line-height:1.5;max-width:560px;margin:0 0 34px;opacity:.9;font-weight:500}
+.ask{display:flex;align-items:stretch;background:#fff;border-radius:var(--r);max-width:760px;width:100%;height:60px;box-shadow:0 30px 60px -30px rgba(6,20,70,.55)}
+.ask label{flex:1;display:flex;align-items:center;gap:14px;padding:0 6px 0 20px;color:var(--ink)}
+.ask label svg{width:20px;height:20px;color:var(--blue);flex:none}
+.ask input{flex:1;border:0;background:transparent;font:inherit;font-size:17px;font-weight:500;color:var(--ink);outline:none;min-width:0}
+.ask input::placeholder{color:#8a92a6}
+.ask .btn{height:auto;margin:6px;padding:0 22px;font-size:15px}
+.hero .ask :focus-visible{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--blue)}
+.trust{display:flex;flex-wrap:wrap;gap:12px 32px;margin:26px 0 0;padding:0;list-style:none;font-weight:600;font-size:14.5px;opacity:.9}
+.trust li{display:flex;align-items:center;gap:9px}
+.trust li::before{content:"";width:6px;height:6px;background:#fff;flex:none}
+.hero-foot{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.18)}
+.hero-foot .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-top:0;padding-bottom:0;height:64px;flex:none;grid-template-columns:none}
+.cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.cats::-webkit-scrollbar{display:none}
+.cats a{white-space:nowrap;font-size:13.5px;font-weight:600;padding:0 14px;height:36px;display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.28);border-radius:var(--r);opacity:.95;transition:background .2s,border-color .2s}
+.cats a:hover{background:rgba(255,255,255,.12);border-color:#fff}
+.scroll-hint{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;opacity:.75;white-space:nowrap}
+.scroll-hint i{display:block;width:1px;height:26px;background:#fff;position:relative;overflow:hidden}
+.scroll-hint i::after{content:"";position:absolute;inset:0;background:var(--blue);animation:hint 1.8s var(--ease) infinite}
+@keyframes hint{0%{transform:translateY(-100%)}60%,100%{transform:translateY(100%)}}
+
+/* ---------- sections ---------- */
+section{padding:104px 0}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:40px}
+.sec-head h2{font-size:clamp(30px,3.6vw,46px);letter-spacing:-.035em;line-height:1.05;font-weight:800;margin:0}
+.sec-head p{margin:10px 0 0;color:var(--muted);font-size:17px;max-width:52ch}
+.sec-head .more{font-weight:700;font-size:15px;color:var(--blue-text);display:inline-flex;align-items:center;gap:8px;white-space:nowrap;padding-bottom:6px}
+.sec-head .more svg{width:16px;height:16px;transition:transform .25s var(--ease)}
+.sec-head .more:hover svg{transform:translateX(4px)}
+
+/* ---------- live lots ---------- */
+.live{background:var(--bg)}
+.live-dot{display:inline-flex;align-items:center;gap:8px;color:var(--err);font-weight:700;font-size:13px;margin-bottom:12px}
+.live-dot i{width:8px;height:8px;background:var(--err);border-radius:50%;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.45)}60%{box-shadow:0 0 0 7px rgba(192,57,43,0)}}
+.lots{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.lot{background:var(--surface);border:1px solid var(--line);border-radius:4px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s,transform .35s var(--ease)}
+.lot:hover{border-color:var(--line-strong);transform:translateY(-3px)}
+.lot .media{aspect-ratio:4/3;position:relative;background:#e6e9f1;overflow:hidden}
+.lot .media .ph{position:absolute;inset:0}
+.lot .media .ph svg{width:100%;height:100%}
+.lot .status{position:absolute;left:12px;top:12px;height:28px;padding:0 10px;display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;background:#fff;border-radius:2px;color:var(--ink)}
+.lot .status.live{color:var(--err)}
+.lot .status.live i{width:7px;height:7px;background:var(--err);border-radius:50%}
+.lot .status.last{background:#fff5e6;color:var(--warn-text)}
+.lot .status.dutch{background:#eaf0ff;color:var(--blue-text)}
+.lot .status.buy{background:#e9f6ef;color:var(--ok-text)}
+.lot .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px;flex:1}
+.lot .cat{font-size:12.5px;color:var(--muted);font-weight:600}
+.lot h3{font-size:16.5px;line-height:1.3;margin:2px 0 0;letter-spacing:-.015em;font-weight:700}
+.lot .meta{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
+.lot .label{font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px}
+.lot .price{font-size:22px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.lot .time{text-align:right;font-size:14px;font-weight:700}
+.lot .time.hot{color:var(--warn-text)}
+.lot .ivy{font-size:12.5px;color:var(--violet);font-weight:700;display:flex;align-items:center;gap:6px}
+.lot .ivy::before{content:"";width:8px;height:8px;background:var(--violet);border-radius:1px;transform:rotate(45deg)}
+
+/* ---------- reis (sellers' journey) ---------- */
+.reis{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.reis-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:64px;align-items:start}
+.steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.steps li{border-bottom:1px solid var(--line);padding:18px 0 18px 56px;position:relative;cursor:pointer;transition:padding .35s var(--ease)}
+.steps li .n{position:absolute;left:0;top:19px;width:34px;height:34px;border:1px solid var(--line-strong);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--muted);transition:all .3s}
+.steps li h3{margin:0;font-size:18px;letter-spacing:-.02em;font-weight:700;padding-top:6px;color:var(--soft);transition:color .3s}
+.steps li p{margin:6px 0 0;color:var(--muted);font-size:15px;max-height:0;overflow:hidden;opacity:0;transition:max-height .5s var(--ease),opacity .4s}
+.steps li .bar{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--blue)}
+.steps li.on .n{background:var(--blue);color:#fff;border-color:var(--blue)}
+.steps li.on h3{color:var(--ink)}
+.steps li.on p{max-height:120px;opacity:1}
+.reis-ctrl{display:flex;align-items:center;gap:14px;margin-top:22px}
+.reis-ctrl .btn{height:40px;padding:0 14px;font-size:14px}
+.reis-ctrl span{font-size:13.5px;color:var(--muted);font-weight:600}
+.stage{position:sticky;top:96px;background:var(--navy);border-radius:4px;aspect-ratio:5/4;overflow:hidden;color:#fff}
+.stage .scene{position:absolute;inset:0;padding:36px;display:flex;flex-direction:column;justify-content:flex-end;opacity:0;visibility:hidden}
+.stage .scene.on{opacity:1;visibility:visible}
+.stage .scene .art{position:absolute;inset:36px 36px 128px;border:1px solid rgba(255,255,255,.12);border-radius:2px;background:rgba(255,255,255,.03)}
+.stage .cap{position:relative;font-size:22px;font-weight:700;letter-spacing:-.025em;max-width:26ch;line-height:1.25}
+.stage .cap small{display:block;font-size:14px;font-weight:600;color:#9fb4ff;margin-bottom:8px}
+.stage .grid{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.12) 1px,transparent 1.2px);background-size:22px 22px;opacity:.5}
+/* mini art pieces inside scenes */
+.art .box{position:absolute;border-radius:2px}
+.art .frame{position:absolute;inset:18% 22%;border:2px dashed rgba(255,255,255,.4);border-radius:2px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#c9d6ff;background:rgba(47,107,255,.08)}
+.art .tag{position:absolute;background:#7c3aed;color:#fff;font-size:12px;font-weight:700;padding:6px 10px;border-radius:2px}
+.art .tag.b{background:#2f6bff}.art .tag.g{background:#1c8a5b}.art .tag.c{background:#0891b2}
+.art .line{position:absolute;height:8px;background:rgba(255,255,255,.18);border-radius:1px}
+.art .line.s{background:rgba(255,255,255,.35)}
+.art .big{position:absolute;font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.art .conf{position:absolute;left:12%;bottom:14%;right:12%;height:6px;background:rgba(255,255,255,.14)}
+.art .conf i{position:absolute;left:0;top:0;bottom:0;width:0;background:#2f6bff}
+.art .card{position:absolute;background:#121a30;border:1px solid rgba(255,255,255,.14);border-radius:2px;padding:14px;color:#fff}
+.art .card b{display:block;font-size:12px;color:#9fb4ff;margin-bottom:6px}
+.art .card span{font-size:20px;font-weight:800;letter-spacing:-.03em}
+
+/* ---------- verkoopvormen ---------- */
+.vormen{background:var(--bg)}
+.forms{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.form{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:30px 30px 28px;display:flex;flex-direction:column;gap:14px;min-height:340px;position:relative;overflow:hidden}
+.form .fee{position:absolute;right:26px;top:26px;font-size:13px;font-weight:700;color:var(--muted)}
+.form .fee b{font-size:20px;color:var(--ink);letter-spacing:-.03em;display:block;line-height:1}
+.form .glyph{width:44px;height:44px;border:1px solid var(--line-strong);border-radius:var(--r);display:flex;align-items:center;justify-content:center;color:var(--blue-text)}
+.form .glyph svg{width:22px;height:22px}
+.form h3{font-size:22px;letter-spacing:-.03em;margin:8px 0 0;font-weight:800}
+.form p{margin:0;color:var(--muted);font-size:15px;line-height:1.55}
+.form ul{margin:auto 0 0;padding:0;list-style:none;font-size:14.5px;font-weight:600;display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid var(--line)}
+.form ul li{display:flex;gap:10px;align-items:baseline}
+.form ul li::before{content:"";width:6px;height:6px;background:var(--blue);flex:none;transform:translateY(-2px)}
+.fee-note{margin:26px 0 0;color:var(--muted);font-size:14.5px;max-width:70ch}
+
+/* ---------- zekerheid ---------- */
+.zeker{background:var(--surface);border-top:1px solid var(--line)}
+.zeker-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:64px}
+.zeker h2{font-size:clamp(30px,3.6vw,46px);letter-spacing:-.035em;line-height:1.05;font-weight:800;margin:0 0 16px}
+.zeker .intro{color:var(--muted);font-size:17px;margin:0 0 26px;max-width:40ch}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:0 40px;border-top:1px solid var(--line)}
+.checks div{padding:18px 0;border-bottom:1px solid var(--line)}
+.checks h3{margin:0 0 4px;font-size:16px;letter-spacing:-.015em;display:flex;align-items:center;gap:10px}
+.checks h3 svg{width:18px;height:18px;color:var(--ok);flex:none}
+.checks p{margin:0;font-size:14.5px;color:var(--muted)}
+.wip{grid-column:1/-1;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:18px 20px;margin-top:22px}
+.wip h3{margin:0 0 4px;font-size:15px;color:var(--soft)}
+.wip p{margin:0;font-size:14.5px;color:var(--muted)}
+
+/* ---------- zakelijk ---------- */
+.zakelijk{background:var(--navy);color:#fff;padding:0}
+.zakelijk .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:64px;padding-top:104px;padding-bottom:104px;align-items:center}
+.zakelijk h2{font-size:clamp(32px,4vw,54px);letter-spacing:-.04em;line-height:1.02;font-weight:800;margin:0 0 20px}
+.zakelijk p{font-size:17px;color:#b8c2dc;max-width:48ch;margin:0 0 30px}
+.zakelijk .actions{display:flex;gap:10px;flex-wrap:wrap}
+.team{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.team div{border:1px solid rgba(255,255,255,.12);border-radius:2px;padding:18px;display:flex;gap:12px;align-items:flex-start}
+.team i{width:12px;height:12px;border-radius:1px;transform:rotate(45deg);flex:none;margin-top:5px}
+.team b{display:block;font-size:15px;margin-bottom:2px}
+.team span{font-size:13.5px;color:#9aa6c4;line-height:1.4;display:block}
+
+/* ---------- footer ---------- */
+footer{background:var(--navy);color:#9aa6c4;border-top:1px solid rgba(255,255,255,.1);padding:56px 0 34px;font-size:14px}
+.foot{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px}
+.foot .brand{color:#fff;margin-bottom:12px}
+.foot .brand i{background:var(--blue)}
+.foot h4{color:#fff;font-size:13.5px;margin:0 0 12px;font-weight:700}
+.foot ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.foot a:hover{color:#fff}
+.foot-bottom{margin-top:44px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px}
+
+/* ---------- Ivy launcher ---------- */
+.ivy-launch{position:fixed;right:24px;bottom:24px;z-index:30;height:52px;padding:0 18px 0 14px;display:inline-flex;align-items:center;gap:10px;background:var(--navy);color:#fff;border:0;border-radius:var(--r);font-weight:700;font-size:14.5px;box-shadow:0 20px 40px -18px rgba(12,19,38,.6);transition:transform .25s var(--ease),background .2s}
+.ivy-launch:hover{transform:translateY(-2px);background:#18223f}
+.ivy-launch i{width:12px;height:12px;background:var(--violet);border-radius:1px;transform:rotate(45deg)}
+
+/* ---------- reveal (ScrollTrigger sets initial states via JS) ---------- */
+.rv{opacity:0;transform:translateY(24px)}
+.no-js .rv{opacity:1;transform:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:1080px){
+  .lots{grid-template-columns:repeat(2,1fr)}
+  .forms{grid-template-columns:1fr}
+  .reis-grid,.zeker-grid,.zakelijk .wrap{grid-template-columns:1fr;gap:40px}
+  .stage{position:relative;top:auto;aspect-ratio:16/10}
+  .foot{grid-template-columns:1fr 1fr}
+}
+@media (max-width:760px){
+  .wrap{padding:0 20px}
+  .nav,.header-actions .link,.header-actions .btn-outline-white{display:none}
+  .burger{display:inline-flex;align-items:center;justify-content:center}
+  .hero .wrap{padding-top:110px;padding-bottom:56px}
+  .hero h1{font-size:clamp(40px,12vw,64px)}
+  .ask{flex-direction:column;height:auto;padding:6px}
+  .ask label{height:52px;padding-left:12px}
+  .ask .btn{margin:0;height:48px}
+  .hero-foot .wrap{height:auto;padding:14px 20px;flex-direction:column;align-items:stretch}
+  .scroll-hint{display:none}
+  section{padding:72px 0}
+  .sec-head{flex-direction:column;align-items:flex-start}
+  .lots{grid-template-columns:1fr}
+  .checks{grid-template-columns:1fr}
+  .team{grid-template-columns:1fr}
+  .foot{grid-template-columns:1fr}
+  .ivy-launch{right:16px;bottom:16px}
+  .sticky-cta{display:flex}
+}
+/* mobile sticky choice bar — sits above the Ivy launcher, never hides the buy/sell choice */
+.sticky-cta{display:none;position:fixed;left:0;right:0;bottom:0;z-index:25;background:#fff;border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));gap:10px}
+.sticky-cta .btn{flex:1}
+@media (max-width:760px){.ivy-launch{bottom:84px}footer{padding-bottom:110px}}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}
+  .steps li p{max-height:none;opacity:1}
+  .steps li.on p{max-height:none}
+}
+</style>
+</head>
+<body class="no-js">
+
+<header class="header">
+  <div class="wrap">
+    <a class="brand" href="#" aria-label="Aucvy — home"><i></i>Aucvy</a>
+    <nav class="nav" aria-label="Hoofdnavigatie">
+      <a href="#live">Veilingen</a>
+      <a href="#vormen">Categorieën</a>
+      <a href="#reis">Hoe het werkt</a>
+      <a href="#zakelijk">Zakelijk</a>
+    </nav>
+    <div class="header-actions">
+      <a class="link" href="#">Zoeken</a>
+      <a class="link" href="#">Inloggen</a>
+      <a class="btn btn-white" href="#">Kavel plaatsen</a>
+      <button class="burger" aria-label="Menu openen">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 5h14M2 9h14M2 13h14"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <canvas id="dots" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="hero-inner">
+      <p class="kicker" data-hero>Het AI-commerceplatform voor zakelijke goederen</p>
+      <h1 id="hero-title">
+        <span class="w"><span>Upload.</span></span>
+        <span class="w"><span>Ivy</span></span>
+        <span class="w"><span>regelt</span></span>
+        <span class="w"><span>de</span></span>
+        <span class="w"><span>rest.</span></span>
+      </h1>
+      <p class="lead" data-hero>Maak een foto van wat je wilt verkopen. Ivy herkent het, schrijft de advertentie en geeft een waarde-indicatie. Jij kiest de verkoopvorm en keurt goed.</p>
+      <form class="ask" data-hero action="/zoeken" method="get" role="search">
+        <label>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2l1.8 4.6L16.5 8l-4.7 1.4L10 14l-1.8-4.6L3.5 8l4.7-1.4L10 2z"/></svg>
+          <span class="sr">Wat wil je vandaag verhandelen?</span>
+          <input id="q" name="q" type="text" placeholder="Wat wil je vandaag verhandelen?" autocomplete="off">
+        </label>
+        <button class="btn btn-primary" type="submit">Vraag aan Ivy
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </button>
+      </form>
+      <ul class="trust" data-hero>
+        <li>Gratis plaatsen</li>
+        <li>Geen opgeld voor kopers</li>
+        <li>Alleen betalen bij resultaat</li>
+      </ul>
+    </div>
+  </div>
+  <div class="hero-foot" data-hero>
+    <div class="wrap">
+      <nav class="cats" aria-label="Categorieën">
+        <a href="#">Horeca &amp; keukens</a>
+        <a href="#">Kantoor &amp; ICT</a>
+        <a href="#">Machines &amp; productie</a>
+        <a href="#">Transport &amp; voertuigen</a>
+        <a href="#">Bouw &amp; installatie</a>
+        <a href="#">Retail &amp; inventaris</a>
+        <a href="#">Faillissementen</a>
+      </nav>
+      <div class="scroll-hint"><i></i>Live op Aucvy</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LIVE ================= -->
+<section class="live" id="live" aria-labelledby="live-title">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div>
+        <span class="live-dot"><i></i>Nu live</span>
+        <h2 id="live-title">De handel van dit moment</h2>
+        <p>Kavels van geverifieerde verkopers, met een waarde-indicatie van Ivy. Tellers lopen live mee.</p>
+      </div>
+      <a class="more" href="#">Alles bekijken <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    </div>
+
+    <div class="lots" aria-live="polite">
+      <!-- 1 · laatste kans -->
+      <article class="lot rv">
+        <div class="media">
+          <div class="ph"><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="#e3e7f0"/><rect x="40" y="150" width="320" height="90" fill="#cfd5e2"/><rect x="60" y="80" width="120" height="70" fill="#b9c2d4"/><rect x="220" y="60" width="140" height="90" fill="#c5cddc"/><rect x="40" y="240" width="320" height="8" fill="#aab3c7"/></svg></div>
+          <span class="status last">Laatste kans</span>
+        </div>
+        <div class="body">
+          <span class="cat">Keukens &amp; interieur · Utrecht</span>
+          <h3>Complete designkeuken met Siemens-apparatuur</h3>
+          <span class="ivy">12% onder waarde-indicatie</span>
+          <div class="meta">
+            <div><span class="label">Huidig bod</span><span class="price tnum">€ 9.400</span></div>
+            <div class="time hot tnum" data-countdown="1080">nog 18:00</div>
+          </div>
+        </div>
+      </article>
+      <!-- 2 · live -->
+      <article class="lot rv">
+        <div class="media">
+          <div class="ph"><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="#e6e9f1"/><g fill="#c3cbdb"><rect x="50" y="90" width="60" height="120"/><rect x="130" y="90" width="60" height="120"/><rect x="210" y="90" width="60" height="120"/><rect x="290" y="90" width="60" height="120"/></g><rect x="40" y="210" width="320" height="6" fill="#aab3c7"/></svg></div>
+          <span class="status live"><i></i>Live</span>
+        </div>
+        <div class="body">
+          <span class="cat">Kantoor &amp; ICT · Eindhoven</span>
+          <h3>48 ergonomische bureaustoelen, HÅG Capisco</h3>
+          <span class="ivy">7 bieders</span>
+          <div class="meta">
+            <div><span class="label">Huidig bod</span><span class="price tnum">€ 2.150</span></div>
+            <div class="time tnum" data-countdown="181440">nog 2 dagen</div>
+          </div>
+        </div>
+      </article>
+      <!-- 3 · afslag -->
+      <article class="lot rv">
+        <div class="media">
+          <div class="ph"><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="#e2e6ef"/><rect x="60" y="120" width="280" height="110" fill="#c0c8d8"/><circle cx="110" cy="240" r="26" fill="#9ea9bf"/><circle cx="290" cy="240" r="26" fill="#9ea9bf"/><rect x="240" y="70" width="100" height="50" fill="#b4bdce"/></svg></div>
+          <span class="status dutch">Afslag</span>
+        </div>
+        <div class="body">
+          <span class="cat">Machines &amp; productie · Zwolle</span>
+          <h3>CNC-freesbank Haas VF-2, bouwjaar 2019</h3>
+          <span class="ivy">Binnen waarde-range</span>
+          <div class="meta">
+            <div><span class="label">Prijs nu</span><span class="price tnum" data-dutch="13750" data-step="150" data-floor="11500">€ 13.750</span></div>
+            <div class="time tnum" data-dutch-timer>daalt over 20s</div>
+          </div>
+        </div>
+      </article>
+      <!-- 4 · koop direct -->
+      <article class="lot rv">
+        <div class="media">
+          <div class="ph"><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="#e7eaf2"/><g fill="#c7cfde"><rect x="50" y="60" width="90" height="180"/><rect x="155" y="60" width="90" height="180"/><rect x="260" y="60" width="90" height="180"/></g><g fill="#aab3c7"><rect x="50" y="120" width="300" height="4"/><rect x="50" y="180" width="300" height="4"/></g></svg></div>
+          <span class="status buy">Koop direct</span>
+        </div>
+        <div class="body">
+          <span class="cat">Retail &amp; inventaris · Rotterdam</span>
+          <h3>Winkelstellingen, 24 meter, incl. verlichting</h3>
+          <span class="ivy">Transport beschikbaar</span>
+          <div class="meta">
+            <div><span class="label">Vaste prijs</span><span class="price tnum">€ 780</span></div>
+            <div class="time">Direct kopen</div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= VERKOPERSREIS ================= -->
+<section class="reis" id="reis" aria-labelledby="reis-title">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div>
+        <h2 id="reis-title">Van foto tot uitbetaling in zes stappen</h2>
+        <p>Jij levert de foto en het akkoord. Ivy en haar team doen het werk ertussen.</p>
+      </div>
+    </div>
+    <div class="reis-grid">
+      <div class="rv">
+        <ol class="steps" id="steps">
+          <li class="on"><span class="n">1</span><h3>Upload</h3><p>Een paar foto's vanaf je telefoon zijn genoeg. Documenten kunnen later.</p><span class="bar"></span></li>
+          <li><span class="n">2</span><h3>Ivy herkent</h3><p>Merk, model, bouwjaar en conditie — met een zekerheidsscore, zodat je weet wat je moet nakijken.</p><span class="bar"></span></li>
+          <li><span class="n">3</span><h3>Advertentie</h3><p>Titel, omschrijving en specificaties staan klaar. Jij past aan of keurt goed.</p><span class="bar"></span></li>
+          <li><span class="n">4</span><h3>Waarde-indicatie</h3><p>Een range op basis van vergelijkbare verkopen, met de bron erbij.</p><span class="bar"></span></li>
+          <li><span class="n">5</span><h3>Kies de verkoopvorm</h3><p>Veiling, afslag of koop direct. Ivy adviseert, jij beslist.</p><span class="bar"></span></li>
+          <li><span class="n">6</span><h3>Verkocht &amp; uitbetaald</h3><p>Betaling, transport en uitbetaling worden voor je afgehandeld.</p><span class="bar"></span></li>
+        </ol>
+        <div class="reis-ctrl">
+          <button class="btn btn-ghost" id="reisToggle" aria-pressed="false">
+            <svg id="icoPause" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12"/><rect x="9.5" y="2" width="3.5" height="12"/></svg>
+            <svg id="icoPlay" viewBox="0 0 16 16" fill="currentColor" style="display:none"><path d="M4 2l10 6-10 6z"/></svg>
+            <span id="reisLabel">Pauze</span>
+          </button>
+          <span>Speelt automatisch af</span>
+        </div>
+      </div>
+
+      <div class="stage rv" id="stage" aria-hidden="true">
+        <div class="grid"></div>
+        <div class="scene on">
+          <div class="art"><div class="frame">Sleep foto's hierheen</div><span class="tag b" style="left:8%;top:10%">IMG_4821.jpg</span><span class="tag b" style="right:8%;top:16%">IMG_4822.jpg</span><span class="tag b" style="left:14%;bottom:12%">IMG_4823.jpg</span></div>
+          <div class="cap"><small>Stap 1</small>Drie foto's, gemaakt in de werkplaats.</div>
+        </div>
+        <div class="scene">
+          <div class="art"><span class="tag" style="left:8%;top:12%">Haas VF-2</span><span class="tag" style="left:8%;top:28%">CNC-freesbank</span><span class="tag" style="left:8%;top:44%">Bouwjaar 2019</span><span class="tag c" style="right:8%;top:12%">Conditie: gebruikt-goed</span><div class="conf"><i data-conf="82"></i></div></div>
+          <div class="cap"><small>Stap 2</small>Ivy herkent met 82% zekerheid. Bouwjaar nakijken.</div>
+        </div>
+        <div class="scene">
+          <div class="art"><span class="line s" style="left:8%;top:14%;width:60%"></span><span class="line" style="left:8%;top:26%;width:80%"></span><span class="line" style="left:8%;top:34%;width:72%"></span><span class="line" style="left:8%;top:42%;width:78%"></span><span class="line" style="left:8%;top:50%;width:40%"></span><span class="tag g" style="right:8%;bottom:10%">Klaar om te keuren</span></div>
+          <div class="cap"><small>Stap 3</small>Advertentie geschreven. Eerlijk over de twee krassen op de tafel.</div>
+        </div>
+        <div class="scene">
+          <div class="art"><div class="big" style="left:8%;top:22%">€ 15.000 – € 19.500</div><span class="tag b" style="left:8%;top:52%">Zekerheid: midden</span><span class="tag" style="left:8%;top:66%">Bron: 14 vergelijkbare verkopen</span></div>
+          <div class="cap"><small>Stap 4</small>Een range, geen belofte. Met de bron erbij.</div>
+        </div>
+        <div class="scene">
+          <div class="art"><div class="card" style="left:8%;top:14%;width:40%"><b>Veiling</b><span>7 dagen</span></div><div class="card" style="right:8%;top:14%;width:40%;border-color:#2f6bff"><b>Afslag</b><span>Daalt elke 20s</span></div><div class="card" style="left:8%;bottom:14%;width:40%"><b>Koop direct</b><span>Vaste prijs</span></div><span class="tag b" style="right:8%;bottom:16%">Ivy adviseert: afslag</span></div>
+          <div class="cap"><small>Stap 5</small>Snel geld nodig? Dan is afslag de verstandige keuze.</div>
+        </div>
+        <div class="scene">
+          <div class="art"><div class="big" style="left:8%;top:22%">€ 13.750</div><span class="tag g" style="left:8%;top:52%">Verkocht</span><span class="tag" style="left:8%;top:66%;background:#1c2540">Uitbetaling na houdtermijn</span><span class="tag c" style="right:8%;top:52%">Transport ingepland</span></div>
+          <div class="cap"><small>Stap 6</small>Afgemijnd op € 13.750. Uitbetaald na de houdtermijn.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= VERKOOPVORMEN ================= -->
+<section class="vormen" id="vormen" aria-labelledby="vormen-title">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div>
+        <h2 id="vormen-title">Drie manieren om te verkopen</h2>
+        <p>Elke kavel krijgt de vorm die bij het doel past. Je betaalt pas als er verkocht is.</p>
+      </div>
+    </div>
+    <div class="forms">
+      <article class="form rv">
+        <span class="fee"><b>7,5%</b>bij verkoop</span>
+        <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18h16M6 18V9l6-4 6 4v9"/><path d="M12 5v13"/></svg></div>
+        <h3>Veiling</h3>
+        <p>Oplopend bieden met proxy-bieden en een verlengregel in de slotfase. De markt bepaalt de prijs.</p>
+        <ul><li>Automatisch meebieden tot je maximum</li><li>Verlenging bij een bod in de laatste minuten</li><li>Geen opgeld voor de koper</li></ul>
+      </article>
+      <article class="form rv">
+        <span class="fee"><b>3,5%</b>bij verkoop</span>
+        <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6l7 7 4-4 5 5"/><path d="M20 10v4h-4"/></svg></div>
+        <h3>Afslag</h3>
+        <p>De prijs start hoog en daalt in vaste stappen. Wie als eerste afmijnt, koopt. Snel en transparant.</p>
+        <ul><li>Daalt elke 20 seconden</li><li>Bodemprijs stel jij in</li><li>Ideaal bij een deadline</li></ul>
+      </article>
+      <article class="form rv">
+        <span class="fee"><b>2,5%</b>bij verkoop</span>
+        <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14l-1.5 9h-11z"/><path d="M9 7V5a3 3 0 016 0v2"/></svg></div>
+        <h3>Koop direct</h3>
+        <p>Een vaste prijs, meteen te kopen. Voor kavels waar geen veiling nodig is.</p>
+        <ul><li>Vaste prijs, geen wachttijd</li><li>Reserveren mogelijk met betaling</li><li>Transport direct te boeken</li></ul>
+      </article>
+    </div>
+    <p class="fee-note rv">Plaatsen is gratis. Het tarief wordt alleen ingehouden op een geslaagde verkoop en staat vooraf per kavel in de kostenopbouw.</p>
+  </div>
+</section>
+
+<!-- ================= ZEKERHEID ================= -->
+<section class="zeker" id="zekerheid" aria-labelledby="zeker-title">
+  <div class="wrap zeker-grid">
+    <div class="rv">
+      <h2 id="zeker-title">Wat er geregeld is</h2>
+      <p class="intro">Handel tussen bedrijven vraagt om duidelijke afspraken. Dit is wat Aucvy vandaag voor elke transactie regelt — en waar we nog aan werken.</p>
+      <a class="btn btn-dark" href="#">Lees hoe zekerheid werkt</a>
+    </div>
+    <div class="checks rv">
+      <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Geverifieerde verkopers</h3><p>KVK-controle en identiteitscheck voordat een kavel live kan.</p></div>
+      <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Kosten vooraf zichtbaar</h3><p>Bod, transport en btw-regeling staan bij elkaar vóórdat je biedt.</p></div>
+      <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Houdtermijn op uitbetaling</h3><p>De verkoper ontvangt het geld nadat de koper heeft kunnen controleren.</p></div>
+      <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Geschilroute met bemiddeling</h3><p>Niet zoals beschreven? Dan bemiddelt Aucvy tussen koper en verkoper.</p></div>
+      <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Bezichtiging waar mogelijk</h3><p>Kijkdagen staan bij de kavel. Plan direct een moment in.</p></div>
+      <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Reviews na elke transactie</h3><p>Koper en verkoper beoordelen elkaar. Zichtbaar op het profiel.</p></div>
+      <div class="wip"><h3>Waar we nog aan werken</h3><p>Escrow via een gereguleerde betaaldienst en een onafhankelijke technische keuring. Zodra dat staat, staat het hier.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ZAKELIJK ================= -->
+<section class="zakelijk" id="zakelijk" aria-labelledby="zakelijk-title">
+  <div class="wrap">
+    <div class="rv">
+      <h2 id="zakelijk-title">Een verkoopteam dat nooit slaapt.</h2>
+      <p>Voor bedrijven met een doorlopende stroom aan inventaris, overtollig materieel of een liquidatie. Ivy coördineert zes specialisten en jij houdt de regie.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#">Zakelijk verkopen</a>
+        <a class="btn btn-outline-white" href="#">Plan een gesprek</a>
+      </div>
+    </div>
+    <div class="team rv">
+      <div><i style="background:#a78bfa"></i><div><b>Ivy</b><span>Coördineert, herkent en adviseert.</span></div></div>
+      <div><i style="background:#60a5fa"></i><div><b>Atlas</b><span>Waarde-indicaties en marktdata.</span></div></div>
+      <div><i style="background:#f472b6"></i><div><b>Nova</b><span>Advertentietekst en promotie.</span></div></div>
+      <div><i style="background:#34d399"></i><div><b>Finn</b><span>Prijsadvies en verkoopvorm.</span></div></div>
+      <div><i style="background:#22d3ee"></i><div><b>Flow</b><span>Transport en planning.</span></div></div>
+      <div><i style="background:#818cf8"></i><div><b>Lex</b><span>Documenten en voorwaarden.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <div class="brand"><i></i>Aucvy</div>
+        <p style="margin:0;max-width:34ch">Het AI-commerceplatform voor zakelijke goederen. Nederland.</p>
+      </div>
+      <div><h4>Kopen</h4><ul><li><a href="#">Veilingen</a></li><li><a href="#">Categorieën</a></li><li><a href="#">Hoe bieden werkt</a></li><li><a href="#">Zekerheid</a></li></ul></div>
+      <div><h4>Verkopen</h4><ul><li><a href="#">Kavel plaatsen</a></li><li><a href="#">Verkooproute</a></li><li><a href="#">Tarieven</a></li><li><a href="#">Zakelijk</a></li></ul></div>
+      <div><h4>Aucvy</h4><ul><li><a href="#">Over ons</a></li><li><a href="#">Veelgestelde vragen</a></li><li><a href="#">Contact</a></li><li><a href="#">Privacy</a></li></ul></div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Aucvy B.V.</span>
+      <span>Voorwaarden · Privacy · Cookies</span>
+    </div>
+  </div>
+</footer>
+
+<div class="sticky-cta" role="group" aria-label="Kopen of verkopen">
+  <a class="btn btn-ghost" href="#live">Kopen</a>
+  <a class="btn btn-primary" href="#">Kavel plaatsen</a>
+</div>
+
+<button class="ivy-launch" aria-label="Open Ivy"><i></i>Vraag Ivy</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  document.body.classList.remove('no-js');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGsap = typeof gsap !== 'undefined';
+  if (hasGsap && typeof ScrollTrigger !== 'undefined') gsap.registerPlugin(ScrollTrigger);
+
+  /* ============ 1. DOT FIELD (hero) ============ */
+  const canvas = document.getElementById('dots');
+  const ctx = canvas.getContext('2d');
+  let W=0,H=0,dpr=1,cols=0,rows=0,gap=26;
+  const mouse={x:-9999,y:-9999,tx:-9999,ty:-9999};
+  const ripples=[];
+  let t=0, running=true;
+
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=W*dpr; canvas.height=H*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    gap = W<760?22:26;
+    cols=Math.ceil(W/gap)+1; rows=Math.ceil(H/gap)+1;
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    t+=reduce?0:0.012;
+    mouse.x+=(mouse.tx-mouse.x)*0.12; mouse.y+=(mouse.ty-mouse.y)*0.12;
+    for(let i=ripples.length-1;i>=0;i--){ ripples[i].r+=7; ripples[i].a*=0.965; if(ripples[i].a<0.02) ripples.splice(i,1); }
+    for(let j=0;j<rows;j++){
+      for(let i=0;i<cols;i++){
+        const x=i*gap, y=j*gap;
+        // two slow interfering waves -> organic breathing field
+        const w = Math.sin(i*0.28 + t*1.1) * Math.cos(j*0.22 - t*0.8);
+        const w2 = Math.sin((i+j)*0.12 - t*0.6);
+        let v = 0.32 + 0.28*w + 0.18*w2;           // 0..~0.78
+        // cursor lens
+        const dx=x-mouse.x, dy=y-mouse.y, d=Math.sqrt(dx*dx+dy*dy);
+        if(d<220){ const k=1-d/220; v+= k*k*0.9; }
+        // click ripples
+        for(const rp of ripples){ const dd=Math.abs(Math.hypot(x-rp.x,y-rp.y)-rp.r); if(dd<28){ v+= (1-dd/28)*rp.a; } }
+        v=Math.max(0.08,Math.min(1.25,v));
+        const r = 0.8 + v*1.9;
+        ctx.globalAlpha = Math.min(1, 0.18 + v*0.65);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(x,y,r,0,6.2832); ctx.fill();
+      }
+    }
+    ctx.globalAlpha=1;
+    if(running && !reduce) requestAnimationFrame(draw);
+  }
+  resize(); window.addEventListener('resize',resize,{passive:true});
+  const hero=document.querySelector('.hero');
+  hero.addEventListener('pointermove',e=>{const b=canvas.getBoundingClientRect(); mouse.tx=e.clientX-b.left; mouse.ty=e.clientY-b.top;},{passive:true});
+  hero.addEventListener('pointerleave',()=>{mouse.tx=-9999;mouse.ty=-9999;});
+  hero.addEventListener('pointerdown',e=>{ if(e.target.closest('a,button,input,label')) return; const b=canvas.getBoundingClientRect(); ripples.push({x:e.clientX-b.left,y:e.clientY-b.top,r:0,a:1}); });
+  // pause the loop when hero is off-screen
+  if('IntersectionObserver' in window){ new IntersectionObserver(es=>{ const on=es[0].isIntersecting; if(on && !running){running=true; draw();} else if(!on){running=false;} }).observe(hero); }
+  draw();
+
+  /* ============ 2. HERO LOAD SEQUENCE ============ */
+  if(hasGsap && !reduce){
+    const tl=gsap.timeline({defaults:{ease:'expo.out'}});
+    tl.to('#dots',{opacity:1,duration:1.6,ease:'power2.out'},0)
+      .from('.header',{y:-16,opacity:0,duration:.9},0.1)
+      .from('.hero h1 .w span',{yPercent:110,duration:1.1,stagger:.07},0.25)
+      .from('[data-hero]',{y:18,opacity:0,duration:.9,stagger:.09},0.7);
+    // ripple burst from the headline once it's landed
+    tl.add(()=>{ ripples.push({x:W*0.28,y:H*0.5,r:0,a:.8}); },1.1);
+    gsap.to('#dots',{yPercent:12,ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}});
+  } else {
+    canvas.style.opacity=1;
+    document.querySelectorAll('.hero h1 .w span').forEach(s=>s.style.transform='none');
+  }
+
+  /* ============ 3. SCROLL REVEALS (one pass, no per-card hover fx) ============ */
+  if(hasGsap && !reduce && typeof ScrollTrigger!=='undefined'){
+    ScrollTrigger.batch('.rv',{
+      start:'top 88%',
+      onEnter:b=>gsap.to(b,{opacity:1,y:0,duration:1,ease:'expo.out',stagger:.09,overwrite:true}),
+      once:true
+    });
+  } else { document.querySelectorAll('.rv').forEach(el=>{el.style.opacity=1;el.style.transform='none';}); }
+
+  /* ============ 4. TYPING PLACEHOLDER ============ */
+  const q=document.getElementById('q');
+  const examples=['Een complete horecakeuken','40 bureaustoelen uit een kantoorpand','Een Volvo FH uit 2019','De inventaris van een failliete bakkerij','Een CNC-freesbank Haas VF-2'];
+  if(!reduce){
+    let ei=0, ci=0, del=false, timer;
+    function type(){
+      if(document.activeElement===q || q.value){ timer=setTimeout(type,1200); return; }
+      const s=examples[ei];
+      if(!del){ ci++; if(ci>s.length){ del=true; timer=setTimeout(type,1700); q.placeholder=s; return; } }
+      else { ci--; if(ci<0){ del=false; ci=0; ei=(ei+1)%examples.length; } }
+      q.placeholder = ci===0 && !del ? 'Wat wil je vandaag verhandelen?' : s.slice(0,ci);
+      timer=setTimeout(type, del?28:55);
+    }
+    setTimeout(type,2600);
+  }
+
+  /* ============ 5. COUNTDOWNS (local, would sync with /api/auctions/state every 60s) ============ */
+  const pad=n=>String(n).padStart(2,'0');
+  const cds=[...document.querySelectorAll('[data-countdown]')].map(el=>({el,end:Date.now()+parseInt(el.dataset.countdown,10)*1000}));
+  function tick(){
+    const now=Date.now();
+    cds.forEach(({el,end})=>{
+      let s=Math.max(0,Math.round((end-now)/1000));
+      if(s>=86400){ el.textContent='nog '+Math.round(s/86400)+' dagen'; return; }
+      if(s>=3600){ el.textContent='nog '+Math.floor(s/3600)+' u '+pad(Math.floor(s%3600/60))+' min'; return; }
+      el.textContent='nog '+pad(Math.floor(s/60))+':'+pad(s%60);
+      if(s<300) el.classList.add('hot');
+    });
+  }
+  tick(); setInterval(tick,1000);
+
+  /* ============ 6. DUTCH AUCTION PRICE DROP ============ */
+  const dutch=document.querySelector('[data-dutch]'); const dutchT=document.querySelector('[data-dutch-timer]');
+  if(dutch){
+    let price=parseInt(dutch.dataset.dutch,10), step=parseInt(dutch.dataset.step,10), floor=parseInt(dutch.dataset.floor,10), left=20;
+    const fmt=n=>'€ '+n.toLocaleString('nl-NL');
+    setInterval(()=>{
+      left--;
+      if(left<=0){
+        left=20;
+        if(price-step>=floor){
+          const from=price; price-=step;
+          if(hasGsap && !reduce){ const o={v:from}; gsap.to(o,{v:price,duration:.7,ease:'expo.out',onUpdate:()=>dutch.textContent=fmt(Math.round(o.v))});
+            gsap.fromTo(dutch,{color:'#1e56e0'},{color:'#0e1526',duration:1.2}); }
+          else dutch.textContent=fmt(price);
+        } else { dutchT.textContent='bodem bereikt'; return; }
+      }
+      dutchT.textContent='daalt over '+left+'s';
+    },1000);
+  }
+
+  /* ============ 7. VERKOPERSREIS — autoplay with pause ============ */
+  const steps=[...document.querySelectorAll('#steps li')];
+  const scenes=[...document.querySelectorAll('#stage .scene')];
+  const toggle=document.getElementById('reisToggle');
+  let cur=0, playing=!reduce, bar=null, stageVisible=false;
+  const DUR=4.2;
+
+  function show(i){
+    steps[cur].classList.remove('on'); scenes[cur].classList.remove('on');
+    cur=i; steps[cur].classList.add('on'); scenes[cur].classList.add('on');
+    if(hasGsap && !reduce){
+      const art=scenes[cur].querySelector('.art');
+      gsap.fromTo(scenes[cur].querySelectorAll('.art > *, .cap'),{y:14,opacity:0},{y:0,opacity:1,duration:.7,ease:'expo.out',stagger:.06,overwrite:true});
+      const conf=art.querySelector('[data-conf]'); if(conf) gsap.fromTo(conf,{width:0},{width:conf.dataset.conf+'%',duration:1.1,ease:'expo.out',delay:.3});
+    }
+    runBar();
+  }
+  function runBar(){
+    if(bar) bar.kill();
+    steps.forEach(s=>s.querySelector('.bar').style.width='0');
+    if(!playing || !hasGsap || reduce) return;
+    bar=gsap.fromTo(steps[cur].querySelector('.bar'),{width:'0%'},{width:'100%',duration:DUR,ease:'none',onComplete:()=>show((cur+1)%steps.length)});
+    if(!stageVisible) bar.pause();
+  }
+  steps.forEach((li,i)=>{ li.addEventListener('click',()=>{ if(i!==cur) show(i); }); li.tabIndex=0; li.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault(); if(i!==cur) show(i);} }); });
+  toggle.addEventListener('click',()=>{
+    playing=!playing; toggle.setAttribute('aria-pressed',String(!playing));
+    document.getElementById('icoPause').style.display=playing?'':'none';
+    document.getElementById('icoPlay').style.display=playing?'none':'';
+    document.getElementById('reisLabel').textContent=playing?'Pauze':'Afspelen';
+    toggle.nextElementSibling.textContent=playing?'Speelt automatisch af':'Gepauzeerd';
+    runBar();
+  });
+  if(reduce){ // all steps visible, nothing moves
+    steps.forEach(s=>s.classList.add('on')); toggle.style.display='none'; toggle.nextElementSibling.textContent='Klik een stap om het voorbeeld te zien';
+  } else {
+    // only run while the section is on screen
+    new IntersectionObserver(es=>{ stageVisible=es[0].isIntersecting; if(bar){ stageVisible?bar.play():bar.pause(); } },{threshold:.25}).observe(document.getElementById('reis'));
+    runBar();
+  }
+})();
+</script>
+</body>
+</html>

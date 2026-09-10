@@ -1,0 +1,380 @@
+@use('App\Enums\DocumentKind')
+@use('App\Enums\SaleType')
+@use('App\Support\Money\Money')
+
+<x-layouts.public :title="$lot->title" :description="Str::limit($lot->description, 155)">
+    <x-slot:actions>
+        @auth
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <x-ui.button type="submit" variant="text">Uitloggen</x-ui.button>
+            </form>
+        @endauth
+        @guest
+            <x-ui.button variant="text" :href="route('login')">Inloggen</x-ui.button>
+        @endguest
+    </x-slot:actions>
+
+    {{--
+        Eén Alpine-component bezit de stand; alles eronder leest eruit.
+        Dat voorkomt de klassieke fout waarbij het biedpaneel iets anders toont
+        dan de teller ernaast (hfst. 11).
+    --}}
+    <div @if ($state) x-data="auction({{ Js::from($state) }})" @endif>
+
+        {{-- Het stippenveld van de hero als paginalaag: donkergrijs en zwak
+             op de lichte achtergrond, achter alle kaarten. --}}
+        <canvas class="page-dots" x-data="dotField({ color: '#0e1526', strength: 0.25 })"
+                aria-hidden="true"></canvas>
+
+        <nav aria-label="Kruimelpad" class="flex flex-wrap items-center gap-1.5 text-sm text-aj-muted">
+            <a href="{{ route('lots.index') }}" class="hover:text-aj-text">Veilingen</a>
+            @if ($lot->category)
+                <span aria-hidden="true">/</span>
+                @if ($lot->category->parent)
+                    <a href="{{ route('lots.category', $lot->category->parent) }}" class="hover:text-aj-text">
+                        {{ $lot->category->parent->name }}
+                    </a>
+                    <span aria-hidden="true">/</span>
+                @endif
+                <a href="{{ route('lots.category', $lot->category) }}" class="hover:text-aj-text">
+                    {{ $lot->category->name }}
+                </a>
+            @endif
+            <span aria-hidden="true">/</span>
+            <span class="text-aj-text">{{ Str::limit($lot->title, 45) }}</span>
+        </nav>
+
+        {{--
+            Prijswijzigingen worden voorgelezen, maar afgeknepen tot één melding
+            per drie seconden. Elke bieding voorlezen maakt de pagina onbruikbaar
+            met een schermlezer (hfst. 11).
+        --}}
+        <div aria-live="polite" class="sr-only" x-text="announcement"></div>
+
+        {{--
+            Op mobiel: foto's eerst, dan pas prijs en bod. Je moet eerst zien
+            wát je koopt (hfst. 12). Op desktop staat het biedpaneel rechts.
+        --}}
+        <div class="mt-4 grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+
+            <div class="space-y-6">
+                <x-lot.media-gallery :lot="$lot" />
+
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{{ $lot->title }}</h1>
+
+                    <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                        @if ($lot->location)
+                            <li class="rounded-full bg-aj-bg px-3 py-1">{{ $lot->location->publicLabel() }}</li>
+                        @endif
+                        @if ($lot->transport_from_cents)
+                            <li class="rounded-full bg-aj-bg px-3 py-1">
+                                Transport vanaf {{ Money::format($lot->transport_from_cents) }}
+                            </li>
+                        @endif
+                        <li class="rounded-full bg-aj-bg px-3 py-1">{{ $lot->condition?->label() }}</li>
+                        @if ($lot->documents->contains(fn ($document) => $document->kind === DocumentKind::Invoice))
+                            <li class="rounded-full bg-aj-bg px-3 py-1">Aankoopfactuur aanwezig</li>
+                        @endif
+                    </ul>
+                </div>
+
+                <x-lot.seller-card :lot="$lot" :stats="$sellerStats" />
+
+                {{-- Waarde-indicatie: alleen als alle drie de velden er zijn, en
+                     nooit als exact bedrag bij lage zekerheid (hfst. 8). --}}
+                @if ($lot->hasValueEstimate())
+                    <div class="rounded-aj-s border border-aj-violet/20 bg-aj-violet/5 p-4">
+                        <div class="flex items-start gap-3">
+                            <x-ui.agent-avatar agent="ivy" class="size-9 shrink-0" />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                                    <p class="text-sm font-extrabold text-aj-violet">
+                                        Marktadvies van Ivy
+                                        <span class="block text-xs font-normal text-aj-muted">AI-specialist</span>
+                                    </p>
+                                    <p class="text-right text-sm font-bold">
+                                        Marktwaarde
+                                        <span class="font-normal text-aj-muted">
+                                            (indicatie) · {{ $lot->value_confidence->label() }}
+                                        </span>
+                                        <span class="tabular block">
+                                            {{ Money::format($lot->value_min_cents) }} –
+                                            {{ Money::format($lot->value_max_cents) }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{--
+                            De prijsas als balk, over de volle kaartbreedte: groen
+                            (onder de indicatie, gunstig voor de koper) via amber
+                            naar rood (erboven). Het felle, afgeronde segment ís de
+                            marktwaarde; de vage baan is de volledige as. Het donkere
+                            streepje is het huidige bod - alleen bij voldoende
+                            zekerheid, want bij lage zekerheid is die vergelijking
+                            geen koopargument (hfst. 8).
+                        --}}
+                        @php
+                            $axisMin = (int) floor($lot->value_min_cents * 0.7);
+                            $axisMax = max((int) ceil($lot->value_max_cents * 1.3), $axisMin + 100);
+                            $axisPosition = fn (int $cents): float => round(max(2, min(98, ($cents - $axisMin) / ($axisMax - $axisMin) * 100)), 1);
+                            $bandLeft = $axisPosition($lot->value_min_cents);
+                            $bandWidth = max(2, $axisPosition($lot->value_max_cents) - $bandLeft);
+                            $axisGradient = 'linear-gradient(90deg,#1c8a5b 0%,#b4690e 55%,#c0392b 100%)';
+                        @endphp
+                        <div class="mt-3">
+                            <div class="relative h-2.5"
+                                 title="Marktwaarde {{ Money::format($lot->value_min_cents) }} – {{ Money::format($lot->value_max_cents) }}">
+                                <div class="absolute inset-0 rounded-full opacity-25"
+                                     style="background:{{ $axisGradient }}"></div>
+
+                                {{-- Zelfde verloop, uitgelijnd op de as (background-size
+                                     en -position), zodat de kleuren exact doorlopen. --}}
+                                <div class="absolute inset-y-0 rounded-full"
+                                     style="left:{{ $bandLeft }}%;width:{{ $bandWidth }}%;
+                                            background-image:{{ $axisGradient }};
+                                            background-size:{{ round(10000 / $bandWidth, 2) }}% 100%;
+                                            background-position-x:{{ round(100 * $bandLeft / (100 - $bandWidth), 2) }}%"></div>
+
+                                @if ($state !== null && $lot->mayShowValueComparison())
+                                    <div class="absolute -top-2 h-[26px] w-[3px] -translate-x-1/2 rounded-full bg-aj-navy"
+                                         :style="`left: ${Math.max(2, Math.min(98, ((state.price_cents ?? 0) - {{ $axisMin }}) / {{ $axisMax - $axisMin }} * 100))}%`"
+                                         title="Huidig bod"></div>
+                                @endif
+                            </div>
+
+                            @if ($state !== null && $lot->mayShowValueComparison())
+                                <p class="mt-1.5 text-[11px] text-aj-muted">
+                                    <span class="inline-flex items-center gap-1">
+                                        <span class="inline-block h-3 w-[3px] rounded-full bg-aj-navy"></span>
+                                        huidig bod
+                                    </span>
+                                </p>
+                            @endif
+                        </div>
+
+                        @unless ($lot->mayShowValueComparison())
+                            <p class="mt-1 text-xs text-aj-muted">
+                                Te weinig vergelijkbare verkopen voor een scherpe schatting -
+                                een bezichtiging is hier verstandig.
+                            </p>
+                        @endunless
+
+                    </div>
+                @endif
+
+                {{-- Beschrijving naast het vertrouwensblok, zoals in het ontwerp. --}}
+                <div class="grid gap-5 sm:grid-cols-[1.4fr_1fr] sm:items-start">
+                    <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5">
+                        <h2 class="text-lg font-extrabold">Omschrijving</h2>
+                        <p class="mt-2 whitespace-pre-line text-sm text-aj-soft">{{ $lot->description }}</p>
+                    </section>
+
+                    <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Vertrouwen">
+                        <h2 class="text-lg font-extrabold">Vertrouwen</h2>
+                        <ul class="mt-3 space-y-2.5 text-sm">
+                            @php
+                                $trustPoints = array_values(array_filter([
+                                    $lot->company?->isVerified() ? 'Verkoper geverifieerd' : null,
+                                    'Kosten vóór het bieden',
+                                    $auction !== null ? 'Biedhistorie vastgelegd' : null,
+                                    $lot->viewing_available ? 'Bezichtiging mogelijk' : null,
+                                    $lot->pickup_only ? 'Zelf ophalen in overleg' : 'Transport- en ophaalopties',
+                                    'Support bij geschillen',
+                                ]));
+                            @endphp
+                            @foreach ($trustPoints as $point)
+                                <li class="flex items-center gap-2.5">
+                                    <svg class="size-4 shrink-0 text-aj-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $point }}
+                                </li>
+                            @endforeach
+                        </ul>
+                        <a href="{{ route('assurance') }}" class="mt-4 inline-block text-sm font-bold text-aj-blue-text underline">
+                            Hoe werkt zekerheid bij Aucvy?
+                        </a>
+                    </section>
+                </div>
+
+                @if ($lot->specifications)
+                    <section>
+                        <h2 class="text-lg font-extrabold">Specificaties</h2>
+                        <dl class="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                            @foreach ($lot->category?->effectiveSpecificationsSchema() ?? [] as $field)
+                                @php $value = $lot->specifications[$field['key']] ?? null; @endphp
+                                @if ($value !== null)
+                                    <div class="flex justify-between gap-3 border-b border-aj-border py-1">
+                                        <dt class="text-aj-muted">{{ $field['label'] }}</dt>
+                                        <dd class="font-semibold">
+                                            @if (is_bool($value['value']))
+                                                {{ $value['value'] ? 'Ja' : 'Nee' }}
+                                            @else
+                                                {{ $value['value'] }}{{ isset($field['unit']) ? ' '.$field['unit'] : '' }}
+                                            @endif
+                                            {{-- De herkomst blijft navolgbaar: door Ivy ingevuld
+                                                 of door de verkoper (hfst. 5). --}}
+                                            @if (($value['source'] ?? null) === 'ai')
+                                                <span class="text-xs font-normal text-aj-violet">· door Ivy</span>
+                                            @endif
+                                        </dd>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </dl>
+                    </section>
+                @endif
+
+                {{--
+                    Documenten staan op een private disk (hfst. 15); hier staat
+                    wát er is en of Lex het bekeken heeft, niet het bestand zelf.
+                --}}
+                @if ($lot->documents->isNotEmpty())
+                    <section id="documenten" aria-label="Documenten">
+                        <h2 class="text-lg font-extrabold">Documenten</h2>
+                        <ul class="mt-2 space-y-2">
+                            @foreach ($lot->documents as $document)
+                                <li class="flex flex-wrap items-center gap-3 rounded-aj-sm border border-aj-border bg-aj-surface p-3 text-sm">
+                                    <svg class="size-5 shrink-0 text-aj-muted" viewBox="0 0 20 20" fill="none"
+                                         stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                                         stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M11.5 2.5h-6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-10m-4-4 4 4m-4-4v4h4"/>
+                                    </svg>
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block font-semibold">{{ $document->kind->label() }}</span>
+                                        <span class="block truncate text-xs text-aj-muted">
+                                            {{ $document->original_filename }}
+                                            · {{ number_format($document->size_bytes / 1024, 0, ',', '.') }} kB
+                                        </span>
+                                    </span>
+                                    @if ($document->wasCheckedByIvy())
+                                        <span class="flex shrink-0 items-center gap-1.5 text-xs font-bold text-aj-success-text">
+                                            <x-ui.agent-avatar agent="lex" class="size-5" />
+                                            Gecontroleerd door Lex
+                                        </span>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </section>
+                @endif
+            </div>
+
+            {{-- Zijkolom ---------------------------------------------------- --}}
+            <aside class="space-y-4 lg:sticky lg:top-4">
+                @if ($state === null)
+                    <x-ui.empty-state
+                        title="Deze kavel loopt nog niet"
+                        body="Er is nog geen verkooproute gekoppeld." />
+                @else
+                    {{--
+                        Eén verkoopvorm tegelijk. Drie tabs plus biedpaneel plus
+                        koop-direct naast elkaar is keuzestress op 390px
+                        (hfst. 12).
+                    --}}
+                    @if ($lot->sale_type === SaleType::Dutch)
+                        <x-auction.dutch-panel />
+                    @else
+                        <x-auction.bid-panel :auction="$auction" />
+                    @endif
+
+                    @if ($auction->buy_now_price_cents !== null && $lot->sale_type !== SaleType::Dutch)
+                        <x-auction.buy-now-panel />
+                    @endif
+
+                    {{-- Volgen en delen: licht, naast de zware koopacties. --}}
+                    <div class="flex gap-2"
+                         x-data="{
+                            watching: {{ $isWatching ? 'true' : 'false' }},
+                            count: {{ $watcherCount }},
+                            busy: false,
+                            copied: false,
+                            async toggle() {
+                                if (this.busy) return;
+                                this.busy = true;
+                                const response = await fetch('/api/lots/{{ $lot->id }}/watch', {
+                                    method: this.watching ? 'DELETE' : 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                                        'Accept': 'application/json',
+                                    },
+                                });
+                                if (response.ok) {
+                                    this.watching = ! this.watching;
+                                    this.count += this.watching ? 1 : -1;
+                                }
+                                this.busy = false;
+                            },
+                            async share() {
+                                const url = window.location.href;
+                                if (navigator.share) {
+                                    try { await navigator.share({ title: {{ Js::from($lot->title) }}, url }); } catch (error) {}
+                                    return;
+                                }
+                                await navigator.clipboard.writeText(url);
+                                this.copied = true;
+                                setTimeout(() => this.copied = false, 2000);
+                            },
+                         }">
+                        @auth
+                            <button type="button" class="btn btn-ghost flex-1" @click="toggle()"
+                                    :aria-pressed="watching">
+                                <svg class="size-4" viewBox="0 0 20 20" :fill="watching ? 'currentColor' : 'none'"
+                                     stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M10 17s-6.5-4.1-6.5-8.6a3.6 3.6 0 0 1 6.5-2.1 3.6 3.6 0 0 1 6.5 2.1C16.5 12.9 10 17 10 17Z"/>
+                                </svg>
+                                <span x-text="watching ? 'Gevolgd' : 'Volgen'"></span>
+                                <span class="tabular text-aj-muted" x-show="count > 0" x-text="count"></span>
+                            </button>
+                        @endauth
+                        @guest
+                            <a href="{{ route('login') }}" class="btn btn-ghost flex-1">
+                                <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                                     stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M10 17s-6.5-4.1-6.5-8.6a3.6 3.6 0 0 1 6.5-2.1 3.6 3.6 0 0 1 6.5 2.1C16.5 12.9 10 17 10 17Z"/>
+                                </svg>
+                                Volgen
+                            </a>
+                        @endguest
+
+                        <button type="button" class="btn btn-ghost flex-1" @click="share()">
+                            <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="5" cy="10" r="2.2"/><circle cx="15" cy="4.5" r="2.2"/><circle cx="15" cy="15.5" r="2.2"/>
+                                <path d="m7 9 6-3.6M7 11l6 3.6"/>
+                            </svg>
+                            <span x-text="copied ? 'Gekopieerd!' : 'Delen'"></span>
+                        </button>
+                    </div>
+
+                    @if ($lot->sale_type === SaleType::Auction && ! $auction->isClosed() && config('aucvy.ai.enabled'))
+                        <x-auction.ivy-advice :lot="$lot" />
+                    @endif
+
+                    <x-lot.cost-breakdown
+                        id="kosten"
+                        :costs="$costs"
+                        :note="__('money.notes.estimate')" />
+
+                    <x-auction.bid-history />
+                @endif
+            </aside>
+        </div>
+
+        {{-- Vergelijkbare kavels: dezelfde kaart als op de veilingenpagina. --}}
+        @if ($similarLots->isNotEmpty())
+            <section id="vergelijkbaar" class="mt-12" aria-label="Vergelijkbare kavels">
+                <h2 class="text-xl font-extrabold tracking-tight">Vergelijkbare kavels</h2>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    @foreach ($similarLots as $similarLot)
+                        <x-lot.card :lot="$similarLot" />
+                    @endforeach
+                </div>
+            </section>
+        @endif
+    </div>
+</x-layouts.public>

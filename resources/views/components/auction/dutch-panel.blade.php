@@ -1,0 +1,109 @@
+{{--
+    Afslag: de prijs zakt, jij beslist wanneer je toeslaat.
+
+    Geen schuifknop om af te mijnen - een knop plus een expliciete bevestiging.
+    Per ongeluk € 13.750 uitgeven mag niet één tik kosten (mobiele buildlijst).
+--}}
+<div class="panel-hero rounded-aj-s p-5" x-cloak x-data="{ confirming: false }">
+
+    {{-- Het stippenveld uit de hero, achter de inhoud. --}}
+    <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
+
+    <p class="text-xs text-white/70">Huidige prijs</p>
+    <p class="tabular text-3xl font-extrabold" x-text="formatCents(state.price_cents)"></p>
+
+    <template x-if="! state.dutch.floor_reached">
+        <p class="mt-1 text-xs text-white/60">
+            Daalt elke <span x-text="state.dutch.interval_seconds"></span> seconden met
+            <span class="tabular" x-text="formatCents(state.dutch.step_cents)"></span>
+        </p>
+    </template>
+
+    <template x-if="state.dutch.floor_reached">
+        {{-- Een teller die nergens heen loopt is erger dan geen teller. --}}
+        <p class="mt-1 text-xs text-amber-200">
+            De bodemprijs is bereikt. Lager wordt hij niet.
+        </p>
+    </template>
+
+    <div class="mt-4">
+        @guest
+            <a href="{{ route('login') }}"
+               class="flex w-full items-center justify-center rounded-aj-sm bg-white px-5 text-sm font-semibold text-aj-navy"
+               style="min-height: var(--spacing-cta)">
+                Inloggen om af te mijnen
+            </a>
+        @endguest
+
+        @auth
+            <template x-if="state.viewer?.is_seller">
+                <p class="rounded-aj-sm bg-white/10 px-3 py-3 text-sm">
+                    Dit is je eigen kavel.
+                </p>
+            </template>
+
+            <template x-if="state.status === 'closed'">
+                <p class="rounded-aj-sm bg-white/10 px-3 py-3 text-sm">
+                    Deze kavel is al afgemijnd.
+                </p>
+            </template>
+
+            <template x-if="! state.viewer?.can_bid && ! state.viewer?.is_seller && state.status !== 'closed'">
+                <p class="rounded-aj-sm bg-white/10 px-3 py-3 text-sm">
+                    Rond eerst je verificatie af - dat duurt twee minuten.
+                </p>
+            </template>
+
+            <template x-if="state.viewer?.can_bid && ! state.viewer?.is_seller && state.status !== 'closed'">
+                <div>
+                    <template x-if="! confirming">
+                        <button type="button" :disabled="isBlocked" @click="confirming = true"
+                                class="flex w-full items-center justify-center rounded-aj-sm bg-white px-5
+                                       text-sm font-semibold text-aj-navy disabled:opacity-60"
+                                style="min-height: var(--spacing-cta)">
+                            Mijn af voor <span class="tabular ml-1" x-text="formatCents(state.price_cents)"></span>
+                        </button>
+                    </template>
+
+                    <template x-if="confirming">
+                        <div class="rounded-aj-sm bg-white/10 p-3">
+                            <p class="text-sm">
+                                Je koopt deze kavel voor
+                                <span class="tabular font-semibold" x-text="formatCents(state.price_cents)"></span>.
+                                De veiling sluit daarmee direct.
+                            </p>
+                            <p class="mt-1 text-xs text-white/60">
+                                Zakt de prijs precies nu, dan reken je af tegen de nieuwe, lagere prijs.
+                            </p>
+                            <div class="mt-3 flex gap-2">
+                                <button type="button" @click="acceptDutch()"
+                                        class="flex flex-1 items-center justify-center rounded-aj-sm bg-white px-4
+                                               text-sm font-semibold text-aj-navy"
+                                        style="min-height: var(--spacing-cta)">
+                                    Ja, afmijnen
+                                </button>
+                                <button type="button" @click="confirming = false"
+                                        class="flex items-center justify-center rounded-aj-sm bg-white/10 px-4 text-sm"
+                                        style="min-height: var(--spacing-cta)">
+                                    Annuleren
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        @endauth
+    </div>
+
+    <template x-if="error">
+        <p role="alert" class="mt-3 rounded-aj-sm bg-aj-navy/40 px-3 py-2 text-sm font-semibold text-red-200"
+           x-text="error.message"></p>
+    </template>
+
+    {{-- Hoe deze verkoopvorm werkt, in één regel ---------------------------- --}}
+    <p class="mt-4 border-t border-white/15 pt-3 text-xs text-white/70">
+        <span class="font-bold text-white">Afslag:</span>
+        de prijs zakt vanzelf, wie het eerst toeslaat koopt.
+        <a href="{{ route('assurance') }}" class="font-semibold text-white underline">Hoe werkt dit?</a>
+    </p>
+</div>
