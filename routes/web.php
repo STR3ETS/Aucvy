@@ -18,6 +18,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\Staff\DisputeReviewController;
+use App\Http\Controllers\ViewingResponseController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -170,6 +171,15 @@ Route::middleware(['auth', 'can:staff'])->prefix('beheer')->name('staff.')->grou
     Route::get('/geschillen', [DisputeReviewController::class, 'index'])->name('disputes.index');
     Route::get('/geschillen/{dispute}', [DisputeReviewController::class, 'show'])->name('disputes.show');
     Route::post('/geschillen/{dispute}', [DisputeReviewController::class, 'resolve'])->name('disputes.resolve');
+});
+
+/*
+ | De verkoper reageert op een bezichtigingsaanvraag via getekende links uit
+ | zijn mail - zonder inloggen, net als de e-mailbevestiging (hfst. 7).
+ */
+Route::middleware('signed')->group(function (): void {
+    Route::get('/bezichtigingen/{viewing}/bevestigen', [ViewingResponseController::class, 'confirm'])->name('viewings.confirm');
+    Route::get('/bezichtigingen/{viewing}/afwijzen', [ViewingResponseController::class, 'decline'])->name('viewings.decline');
 });
 
 /*

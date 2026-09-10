@@ -150,8 +150,11 @@
             </li>
         @endif
         @if ($lot->viewing_available)
-            <li class="rounded-full border border-aj-border-strong bg-aj-surface px-3 py-1 font-semibold">
-                Bezichtiging mogelijk
+            <li>
+                <a href="#bezichtiging"
+                   class="block rounded-full border border-aj-border-strong bg-aj-surface px-3 py-1 font-semibold">
+                    Bezichtiging plannen
+                </a>
             </li>
         @endif
     </ul>

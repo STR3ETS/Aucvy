@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DraftController;
 use App\Http\Controllers\Api\DraftUploadController;
 use App\Http\Controllers\Api\DutchAcceptController;
 use App\Http\Controllers\Api\IvyTaskController;
+use App\Http\Controllers\Api\ViewingController;
 use App\Http\Controllers\Api\WatchlistController;
 use App\Models\AiInsight;
 use Illuminate\Http\Request;
@@ -73,6 +74,12 @@ Route::prefix('auctions/{auction}')->name('auctions.')->group(function (): void 
 Route::middleware('auth')->group(function (): void {
     Route::post('lots/{lot:id}/watch', [WatchlistController::class, 'store'])->name('lots.watch');
     Route::delete('lots/{lot:id}/watch', [WatchlistController::class, 'destroy'])->name('lots.unwatch');
+
+    // Bezichtiging aanvragen (hfst. 7): het adres volgt per mail, pas nadat
+    // de verkoper het moment bevestigd heeft.
+    Route::post('lots/{lot:id}/viewings', [ViewingController::class, 'store'])
+        ->middleware('throttle:10,10')
+        ->name('lots.viewings.store');
 });
 
 /*

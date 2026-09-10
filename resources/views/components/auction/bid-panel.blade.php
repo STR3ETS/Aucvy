@@ -192,14 +192,16 @@
                     </div>
 
                     <label class="sr-only" for="bid-amount">Bedrag in euro's</label>
-                    <div class="mt-2 flex gap-2">
+                    <div class="relative mt-2">
+                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-aj-muted"
+                              aria-hidden="true">&euro;</span>
                         <input id="bid-amount" type="text" inputmode="decimal" autocomplete="off"
                                x-model="amountText"
                                x-ref="amountInput"
                                @input="reformat($event, 'amountText')"
                                :disabled="isBlocked"
                                @blur="if (tooLow) setAmountCents(state.minimum_bid_cents)"
-                               class="tabular w-full rounded-aj-sm border border-aj-border-strong bg-white px-3 text-lg font-bold text-aj-text"
+                               class="tabular w-full rounded-aj-sm border border-aj-border-strong bg-white pl-9 pr-3 text-lg font-bold text-aj-text"
                                style="min-height: var(--spacing-cta)">
                     </div>
 
@@ -243,11 +245,15 @@
 
                         <div x-show="showMax && ! state.viewer?.max_amount_cents" x-cloak class="mt-2 flex gap-2">
                             <label class="sr-only" for="max-amount">Maximum in euro's</label>
-                            <input id="max-amount" type="text" inputmode="decimal" autocomplete="off"
-                                   x-model="maxText"
-                                   @input="reformat($event, 'maxText')"
-                                   class="tabular w-full rounded-aj-sm border border-aj-border-strong bg-white px-3 text-aj-text"
-                                   style="min-height: var(--spacing-cta)">
+                            <div class="relative w-full">
+                                <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-aj-muted"
+                                      aria-hidden="true">&euro;</span>
+                                <input id="max-amount" type="text" inputmode="decimal" autocomplete="off"
+                                       x-model="maxText"
+                                       @input="reformat($event, 'maxText')"
+                                       class="tabular w-full rounded-aj-sm border border-aj-border-strong bg-white pl-8 pr-3 text-aj-text"
+                                       style="min-height: var(--spacing-cta)">
+                            </div>
                             <button type="button" @click="setMaxBid(maxCents)"
                                     class="shrink-0 rounded-aj-sm bg-white px-4 text-sm font-semibold text-aj-navy"
                                     style="min-height: var(--spacing-cta)">

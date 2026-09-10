@@ -6,10 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
 use App\Enums\SaleType;
+use App\Enums\ViewingStatus;
 use App\Http\Resources\AuctionStateResource;
 use App\Models\Lot;
 use App\Models\Order;
 use App\Models\Review;
+use App\Models\Viewing;
 use App\Models\WatchlistItem;
 use App\Support\Money\Money;
 use Illuminate\Http\Request;
@@ -65,6 +67,18 @@ final class LotController extends Controller
                 ->where('user_id', $request->user()->id)
                 ->where('lot_id', $lot->id)
                 ->exists(),
+            /*
+             | De lopende bezichtigingsaanvraag van de kijker zelf: het
+             | formulier verdwijnt dan en de status komt ervoor in de plaats.
+             */
+            'viewerViewing' => $request->user() !== null
+                ? Viewing::query()
+                    ->where('lot_id', $lot->id)
+                    ->where('user_id', $request->user()->id)
+                    ->whereIn('status', [ViewingStatus::Requested, ViewingStatus::Confirmed])
+                    ->latest('id')
+                    ->first()
+                : null,
             'watcherCount' => WatchlistItem::query()->where('lot_id', $lot->id)->count(),
             'similarLots' => $this->similarLots($lot),
             'state' => $auction !== null

@@ -117,4 +117,35 @@ return [
         'action' => 'Bekijk je verkopen',
     ],
 
+    /*
+     | Bezichtigingen (hfst. 7): het adres gaat pas naar de koper nadat de
+     | verkoper bevestigd heeft - en uitsluitend per mail.
+     */
+    'viewing_requested' => [
+        'seller' => [
+            'subject' => 'Bezichtigingsaanvraag voor ":lot"',
+            'line' => ':name wil komen kijken op :moment. Bevestig je het moment, dan sturen wij het adres door.',
+            'note' => 'Bericht erbij: ":note"',
+            'action' => 'Moment bevestigen',
+            'decline' => 'Komt het niet uit? [Wijs het moment af](:url) - de aanvrager kan dan een nieuw moment voorstellen.',
+        ],
+    ],
+
+    'viewing_confirmed' => [
+        'buyer' => [
+            'subject' => 'Bezichtiging bevestigd voor ":lot"',
+            'line' => 'Je bent welkom op :moment.',
+            'address' => 'Het adres: :address.',
+            'action' => 'Naar de kavel',
+        ],
+    ],
+
+    'viewing_cancelled' => [
+        'buyer' => [
+            'subject' => 'Bezichtiging voor ":lot" komt niet uit',
+            'line' => 'De verkoper kan niet op :moment. Stel gerust een nieuw moment voor op de kavelpagina.',
+            'action' => 'Nieuw moment voorstellen',
+        ],
+    ],
+
 ];

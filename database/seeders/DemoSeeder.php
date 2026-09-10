@@ -175,6 +175,7 @@ class DemoSeeder extends Seeder
             'value_max_cents' => 1_950_000,
             'value_confidence' => ValueConfidence::Medium,
             'transport_from_cents' => 34_000,
+            'viewing_available' => true,
             'completeness_score' => 94,
             'specifications' => [
                 'kitchen_brand' => ['value' => 'Siemens', 'source' => 'seller'],
@@ -222,6 +223,7 @@ class DemoSeeder extends Seeder
             'value_min_cents' => 2_800_000,
             'value_max_cents' => 3_400_000,
             'value_confidence' => ValueConfidence::High,
+            'viewing_available' => true,
             'completeness_score' => 88,
             'specifications' => [
                 'operating_hours' => ['value' => 4200, 'source' => 'seller'],
