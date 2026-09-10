@@ -52,6 +52,16 @@
         </p>
     </div>
 
+    @if (($stats['trust_score'] ?? null) !== null)
+        <span class="flex shrink-0 items-center gap-1 rounded-full bg-aj-success/10 px-2.5 py-1 text-xs font-extrabold text-aj-success-text"
+              title="Berekend uit afgeronde transacties, documenten, reviews en levering - geen garantie">
+            <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/>
+            </svg>
+            Trust Index {{ $stats['trust_score'] }}
+        </span>
+    @endif
+
     <a href="{{ route('sellers.show', $lot->seller) }}"
        class="btn btn-ghost shrink-0" style="height:40px;font-size:13px">
         Bekijk profiel

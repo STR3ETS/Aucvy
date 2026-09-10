@@ -25,7 +25,7 @@ export default function funnel(initial, feePercentage) {
 
         // Ivy (stap 3): de drie taken lopen na elkaar; elke afgeronde run
         // komt als notitie in de lijst. `failed` betekent: verder zonder Ivy.
-        ivy: { running: false, current: null, notes: [] },
+        ivy: { running: false, current: null, notes: [], sharpened: false },
 
         _pending: {},
         _timer: null,
@@ -188,7 +188,13 @@ export default function funnel(initial, feePercentage) {
             await this.flush();
             await this.ensureDraft();
 
-            this.ivy = { running: true, current: null, notes: [] };
+            // Onthoud de vorige schatting: wordt de range smaller doordat er
+            // meer is aangeleverd, dan vieren we dat expliciet.
+            const previousSpread = this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
+                ? this.draft.value_max_cents - this.draft.value_min_cents
+                : null;
+
+            this.ivy = { running: true, current: null, notes: [], sharpened: false };
 
             const tasks = ['recognise_lot', 'draft_listing', 'estimate_value'];
 
@@ -214,6 +220,12 @@ export default function funnel(initial, feePercentage) {
 
             this.ivy.running = false;
             this.ivy.current = null;
+
+            const spread = this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
+                ? this.draft.value_max_cents - this.draft.value_min_cents
+                : null;
+
+            this.ivy.sharpened = previousSpread !== null && spread !== null && spread < previousSpread;
         },
 
         /** Pollen tot de run klaar is; de taken zelf draaien op de queue. */

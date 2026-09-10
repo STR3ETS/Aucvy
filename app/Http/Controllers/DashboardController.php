@@ -9,8 +9,12 @@ use App\Dashboard\IntentFunnel;
 use App\Dashboard\SignalSync;
 use App\Dashboard\TeamActivity;
 use App\Enums\AiAgent;
+use App\Enums\OrderStatus;
 use App\Models\AiInsight;
+use App\Models\Order;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -45,6 +49,9 @@ final class DashboardController extends Controller
 
         return view('dashboard.index', [
             'isSeller' => $isSeller,
+            'greeting' => $this->greeting(),
+            'firstName' => Str::before(trim($user->name), ' '),
+            'revenueTrend' => $isSeller ? $this->revenueTrend($user) : null,
             'agents' => AiAgent::cases(),
             // Vraagt aandacht: kaarten mét actie. Geen kaart zonder knop.
             'attention' => $insights->filter(fn (AiInsight $insight): bool => $insight->hasAction()),
@@ -57,5 +64,43 @@ final class DashboardController extends Controller
                 && ! $user->purchases()->exists()
                 && ! $user->bids()->exists(),
         ]);
+    }
+
+    private function greeting(): string
+    {
+        $hour = (int) now()->timezone(config('aucvy.display_timezone'))->format('H');
+
+        return match (true) {
+            $hour < 6 => 'Goedenacht',
+            $hour < 12 => 'Goedemorgen',
+            $hour < 18 => 'Goedemiddag',
+            default => 'Goedenavond',
+        };
+    }
+
+    /**
+     * De opbrengsttrend uit preview v4: afgeronde verkopen van de laatste
+     * dertig dagen tegenover de dertig dagen ervoor. Zonder eerdere omzet is
+     * er geen trend - dan zeggen we ook niets.
+     */
+    private function revenueTrend(User $user): ?int
+    {
+        $current = (int) Order::query()
+            ->where('seller_id', $user->id)
+            ->where('status', OrderStatus::Completed)
+            ->where('completed_at', '>=', now()->subDays(30))
+            ->sum('hammer_cents');
+
+        $previous = (int) Order::query()
+            ->where('seller_id', $user->id)
+            ->where('status', OrderStatus::Completed)
+            ->whereBetween('completed_at', [now()->subDays(60), now()->subDays(30)])
+            ->sum('hammer_cents');
+
+        if ($previous === 0) {
+            return null;
+        }
+
+        return (int) round(($current - $previous) / $previous * 100);
     }
 }

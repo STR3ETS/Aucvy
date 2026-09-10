@@ -10,7 +10,18 @@
     <div x-data="{ agent: null }">
 
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <h1 class="text-3xl font-extrabold tracking-[-0.03em]">Dashboard</h1>
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-[-0.03em]">{{ $greeting }} {{ $firstName }}</h1>
+                @if ($revenueTrend !== null)
+                    <p class="mt-1 text-sm text-aj-muted">
+                        Je opbrengst ligt
+                        <span class="font-extrabold {{ $revenueTrend >= 0 ? 'text-aj-success-text' : 'text-aj-warn-text' }}">
+                            {{ abs($revenueTrend) }}% {{ $revenueTrend >= 0 ? 'hoger' : 'lager' }}
+                        </span>
+                        dan de dertig dagen ervoor.
+                    </p>
+                @endif
+            </div>
 
             {{-- Eén dashboard, een toggle. De blokken verschillen, het raamwerk niet. --}}
             <nav class="flex gap-2" aria-label="Rol">

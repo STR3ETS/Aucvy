@@ -11,6 +11,7 @@ use App\Models\Lot;
 use App\Models\Order;
 use App\Models\Review;
 use App\Models\User;
+use App\Support\Trust\TrustIndex;
 use Illuminate\View\View;
 
 /**
@@ -23,7 +24,7 @@ use Illuminate\View\View;
  */
 final class SellerProfileController extends Controller
 {
-    public function __invoke(User $user): View
+    public function __invoke(User $user, TrustIndex $trustIndex): View
     {
         $reviews = Review::query()
             ->where('seller_id', $user->id)
@@ -32,9 +33,14 @@ final class SellerProfileController extends Controller
             ->latest('published_at')
             ->get();
 
+        $trust = $trustIndex->forSeller($user);
+
         return view('sellers.show', [
             'seller' => $user,
             'company' => $user->company,
+            'trust' => $trust,
+            // De verloopgrafiek alleen als er ook een score ís.
+            'trustHistory' => $trust !== null ? $trustIndex->historyForSeller($user) : [],
             'reviews' => $reviews,
             'averageRating' => $reviews->isEmpty() ? null : round($reviews->avg('rating'), 1),
             // Alle vijf de sterren, ook waar nul staat - dat is het punt.

@@ -187,6 +187,15 @@ return [
     ],
 
     /*
+     | De Trust Index (preview v4, briefing hfst. 19): onder dit aantal
+     | afgeronde transacties tonen we bewust géén score - er valt dan te
+     | weinig te meten om eerlijk te zijn.
+     */
+    'trust' => [
+        'minimum_transactions' => 10,
+    ],
+
+    /*
      | Transportindicaties (hfst. 14): providervrij. `fake` rekent een
      | deterministische indicatie; een echte partner is één klasse erbij.
      | De indicatie blijft per kavel-postcodecombinatie een dag gecached.

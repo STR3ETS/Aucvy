@@ -19,6 +19,9 @@ use App\Models\Company;
 use App\Models\Deposit;
 use App\Models\Location;
 use App\Models\Lot;
+use App\Models\LotDocument;
+use App\Models\Order;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -56,6 +59,9 @@ class DemoSeeder extends Seeder
         $this->buyNowLot($seller, $company);
         // Bewust onder de borgdrempel: laat ook de route zónder borg zien.
         $this->quietAuction($seller, $company);
+        // Twaalf afgeronde verkopen over een jaar: genoeg om de Trust Index
+        // eerlijk te kunnen tonen (drempel: tien transacties).
+        $this->salesHistory($seller, $company, $bidders);
 
         $this->command?->newLine();
         $this->command?->info('Demodata klaar. Inloggen kan met:');
@@ -330,6 +336,70 @@ class DemoSeeder extends Seeder
             'start_price_cents' => 120_000,
             'ends_at' => now()->addDays(6),
         ]);
+    }
+
+    /**
+     * De verkoophistorie achter de Trust Index: twaalf afgeronde verkopen,
+     * verspreid over een jaar, met documenten en overwegend goede reviews.
+     * De index groeit daardoor zichtbaar in de verloopgrafiek.
+     *
+     * @param  array<string, User>  $bidders
+     */
+    private function salesHistory(User $seller, Company $company, array $bidders): void
+    {
+        if (Order::query()->where('order_number', 'like', 'DEMO-H%')->exists()) {
+            return;
+        }
+
+        $buyers = [$bidders['anna'], $bidders['bram'], $bidders['carla']];
+        // Vroege maanden een enkele mindere review; daarna structureel goed.
+        $ratings = [4, 3, 4, 5, 4, 5, 5, 4, 5, 5, 5, 5];
+
+        foreach (range(0, 11) as $index) {
+            $moment = now()->subMonths(11 - $index)->subDays(3);
+            $buyer = $buyers[$index % 3];
+            $hammer = 45_000 + $index * 30_000;
+
+            $lot = $this->lot($seller, $company, [
+                'public_id' => '91'.str_pad((string) $index, 2, '0', STR_PAD_LEFT),
+                'title' => 'Verkochte partij kantoorinventaris #'.($index + 1),
+                'description' => 'Afgeronde demoverkoop uit de historie van deze verkoper.',
+                'category' => 'kantoor-inventaris-complete-inventaris',
+                'status' => LotStatus::Sold,
+                'condition' => LotCondition::Used,
+                'vat_regime' => VatRegime::Margin,
+                'completeness_score' => 90,
+                'published_at' => $moment->copy()->subDays(7),
+                'created_at' => $moment->copy()->subDays(10),
+            ]);
+
+            if ($lot->documents()->count() === 0) {
+                LotDocument::factory()->create(['lot_id' => $lot->id]);
+            }
+
+            $order = Order::factory()->completed()->create([
+                'order_number' => 'DEMO-H'.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
+                'lot_id' => $lot->id,
+                'buyer_id' => $buyer->id,
+                'seller_id' => $seller->id,
+                'hammer_cents' => $hammer,
+                'total_cents' => $hammer,
+                'created_at' => $moment,
+                'paid_at' => $moment->copy()->addHours(4),
+                'shipped_at' => $moment->copy()->addDays($index === 1 ? 9 : 2),
+                'delivered_at' => $moment->copy()->addDays($index === 1 ? 10 : 3),
+                'completed_at' => $moment->copy()->addDays($index === 1 ? 12 : 5),
+            ]);
+
+            Review::factory()->create([
+                'order_id' => $order->id,
+                'reviewer_id' => $buyer->id,
+                'seller_id' => $seller->id,
+                'company_id' => $company->id,
+                'rating' => $ratings[$index],
+                'published_at' => $moment->copy()->addDays(6),
+            ]);
+        }
     }
 
     /**

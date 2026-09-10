@@ -160,6 +160,18 @@
                                     <span x-text="(ivy.current ? ivyLabel(ivy.current) : 'Bezig') + '…'"></span>
                                 </li>
                             </ul>
+
+                            {{-- Meer aangeleverd = scherpere schatting: dat
+                                 moment benoemen we expliciet (preview v4). --}}
+                            <p x-show="ivy.sharpened" x-cloak
+                               class="mt-3 flex items-center gap-1.5 rounded-aj-sm bg-aj-success/10 px-3 py-2 text-sm font-semibold text-aj-success-text">
+                                <svg class="size-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Je waarde-indicatie werd scherper:
+                                    <span class="tabular" x-text="'€ ' + euro(draft?.value_min_cents) + ' – € ' + euro(draft?.value_max_cents)"></span>
+                                </span>
+                            </p>
                         @else
                             {{-- Noodrem om (hfst. 8): geen knop die niets gaat
                                  doen, wel de eerlijke handmatige route. --}}
@@ -422,6 +434,7 @@
                             <div class="flex justify-between gap-4"><dt class="text-aj-muted">Verkoopvorm</dt><dd class="font-bold" x-text="({auction: 'Veiling', dutch: 'Afslag', buy_now: 'Koop direct'})[meta.sale_type] ?? '-'"></dd></div>
                             <div class="flex justify-between gap-4"><dt class="text-aj-muted">Foto's</dt><dd class="tabular font-bold" x-text="draft?.media.length ?? 0"></dd></div>
                             <div class="flex justify-between gap-4"><dt class="text-aj-muted">Documenten</dt><dd class="tabular font-bold" x-text="draft?.documents.length ?? 0"></dd></div>
+                            <div class="flex justify-between gap-4"><dt class="text-aj-muted">Waarde-indicatie</dt><dd class="tabular font-bold" x-text="draft?.value_min_cents != null ? '€ ' + euro(draft.value_min_cents) + ' – € ' + euro(draft.value_max_cents) : 'nog geen'"></dd></div>
                             <div class="flex justify-between gap-4"><dt class="text-aj-muted">Compleetheid</dt><dd class="tabular font-bold" x-text="completeness.score + '%'"></dd></div>
                         </dl>
 

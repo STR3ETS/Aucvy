@@ -14,8 +14,10 @@ use App\Models\Review;
 use App\Models\Viewing;
 use App\Models\WatchlistItem;
 use App\Support\Money\Money;
+use App\Support\Trust\TrustIndex;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -62,6 +64,15 @@ final class LotController extends Controller
                     ->where('seller_id', $lot->seller_id)
                     ->where('status', OrderStatus::Completed)
                     ->count(),
+                /*
+                 | De Trust Index als chip op de verkoperskaart. Een uur
+                 | gecached: het cijfer beweegt traag, de kavelpagina niet.
+                 */
+                'trust_score' => Cache::remember(
+                    "trust:{$lot->seller_id}",
+                    now()->addHour(),
+                    fn (): array => ['score' => app(TrustIndex::class)->forSeller($lot->seller)['score'] ?? null],
+                )['score'],
             ],
             'isWatching' => $request->user() !== null && WatchlistItem::query()
                 ->where('user_id', $request->user()->id)
