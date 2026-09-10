@@ -87,7 +87,14 @@ export default function funnel(initial, feePercentage) {
             this.saving = false;
 
             if (response) {
-                this.apply(response);
+                /*
+                 | Bewust NIET de hele draft uit de respons overnemen: wie
+                 | tijdens een trage opslag verder klikt of typt, zou zijn
+                 | nieuwere invoer teruggedraaid zien worden. De velden zijn
+                 | van de gebruiker; de server levert alleen wat hij berekent.
+                 */
+                this.completeness = response.completeness;
+                this.loggedIn = response.logged_in;
                 this.saved = true;
                 setTimeout(() => (this.saved = false), 2000);
             }
