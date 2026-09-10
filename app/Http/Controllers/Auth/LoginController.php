@@ -6,9 +6,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Lots\DraftAccess;
+use App\Notifications\TwoFactorCode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -46,6 +49,27 @@ final class LoginController extends Controller
         }
 
         RateLimiter::clear($this->throttleKey($request));
+
+        /*
+         | Tweede factor bij een gekoppelde uitbetaling (hfst. 15): nog niet
+         | ingelogd blijven, code per mail, en verder bij /inloggen/code.
+         */
+        $user = Auth::user();
+
+        if ($user->requiresSecondFactor()) {
+            Auth::logout();
+
+            $request->session()->put('two_factor', [
+                'id' => $user->id,
+                'remember' => $request->boolean('remember'),
+            ]);
+
+            $code = (string) random_int(100_000, 999_999);
+            Cache::put('two_factor_code:'.$user->id, Hash::make($code), now()->addMinutes(10));
+            $user->notify(new TwoFactorCode($code));
+
+            return redirect()->route('two-factor.challenge');
+        }
 
         // Voorkomt session fixation: de sessie krijgt een nieuw id.
         $request->session()->regenerate();

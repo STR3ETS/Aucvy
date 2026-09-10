@@ -39,3 +39,11 @@ Schedule::command('orders:advance')
 Schedule::command('ivy:weekly-insights')
     ->weeklyOn(1, '07:00')
     ->withoutOverlapping();
+
+/*
+ | De bewaartermijnen uit hfst. 15: in code afgedwongen, niet in een
+ | document beloofd. 's Nachts, buiten de drukte.
+ */
+Schedule::command('aucvy:prune-expired')
+    ->dailyAt('04:00')
+    ->withoutOverlapping();

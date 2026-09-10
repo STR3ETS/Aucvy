@@ -57,6 +57,15 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->save();
     }
 
+    /**
+     * 2FA is verplicht zodra er een uitbetaling aan het account hangt
+     * (hfst. 15): wie geld kan ontvangen, logt in twee stappen in.
+     */
+    public function requiresSecondFactor(): bool
+    {
+        return $this->company?->payout_iban_last4 !== null;
+    }
+
     // Relaties -------------------------------------------------------------
 
     public function company(): BelongsTo

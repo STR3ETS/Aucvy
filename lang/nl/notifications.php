@@ -148,4 +148,21 @@ return [
         ],
     ],
 
+    /*
+     | AVG (hfst. 15): inzage-export en de tweede inlogstap voor accounts
+     | met een gekoppelde uitbetaling.
+     */
+    'data_export' => [
+        'subject' => 'Je gegevensexport staat klaar',
+        'line' => 'Alles wat Aucvy over je bewaart, in een leesbaar bestand.',
+        'action' => 'Download je gegevens',
+        'expires' => 'De link werkt 24 uur en alleen als je ingelogd bent.',
+    ],
+
+    'two_factor' => [
+        'subject' => 'Je inlogcode: :code',
+        'line' => 'Je inlogcode is :code. Hij is tien minuten geldig.',
+        'warning' => 'Vroeg jij dit niet aan? Verander dan je wachtwoord.',
+    ],
+
 ];

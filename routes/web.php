@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevCheckoutController;
@@ -19,9 +20,12 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\Staff\DisputeReviewController;
 use App\Http\Controllers\ViewingResponseController;
+use App\Models\User;
+use App\Support\Privacy\ExportUserData;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,6 +78,10 @@ Route::get('/verkopen', FunnelController::class)->name('sell');
 Route::middleware('guest')->group(function (): void {
     Route::get('/inloggen', [LoginController::class, 'create'])->name('login');
     Route::post('/inloggen', [LoginController::class, 'store'])->name('login.store');
+
+    // De tweede inlogstap bij een gekoppelde uitbetaling (hfst. 15).
+    Route::get('/inloggen/code', [TwoFactorController::class, 'create'])->name('two-factor.challenge');
+    Route::post('/inloggen/code', [TwoFactorController::class, 'store'])->middleware('throttle:10,1')->name('two-factor.store');
 
     Route::get('/registreren', [RegisterController::class, 'create'])->name('register');
     Route::post('/registreren', [RegisterController::class, 'store'])->middleware('throttle:10,10')->name('register.store');
@@ -150,6 +158,19 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/reviews/{review}/reactie', [ReviewController::class, 'reply'])
         ->middleware('throttle:5,10')
         ->name('reviews.reply');
+
+    /*
+     | De inzage-export (hfst. 15): tijdelijk getekende link uit de mail,
+     | en alleen voor de gebruiker zelf - dubbel slot.
+     */
+    Route::get('/account/gegevens-export/{user}', function (Request $request, User $user) {
+        abort_unless($request->user()->is($user), 403);
+
+        $path = ExportUserData::path($user);
+        abort_unless(Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->download($path, 'aucvy-gegevens.json');
+    })->middleware('signed')->name('account.export.download');
 
     /*
      | De nepcheckout van de FakePaymentProvider. Met Mollie geconfigureerd is

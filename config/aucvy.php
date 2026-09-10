@@ -186,4 +186,18 @@ return [
         ],
     ],
 
+    /*
+     | Bewaartermijnen (hfst. 15): vastgelegd in een verwijderjob, niet in
+     | een document. `aucvy:prune-expired` dwingt ze dagelijks af.
+     |
+     |   financieel (biedingen, orders)  7 jaar  - fiscale bewaarplicht
+     |   veilingevents                   13 maanden
+     |   AI-runs                         12 maanden
+     */
+    'retention' => [
+        'financial_years' => 7,
+        'auction_events_months' => 13,
+        'ai_runs_months' => 12,
+    ],
+
 ];
