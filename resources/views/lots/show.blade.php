@@ -20,15 +20,20 @@
         Dat voorkomt de klassieke fout waarbij het biedpaneel iets anders toont
         dan de teller ernaast (hfst. 11).
     --}}
+    {{--
+        Het stippenveld als paginalaag: bewust BUITEN het wisselblok van het
+        doomscrollen. Binnen dat blok zou de schuif-transform het
+        referentiekader van position:fixed worden en meet de canvas zich
+        tegen het blok in plaats van het scherm - uitgerekte stipjes. Zo
+        blijft hij bovendien gewoon doorademen tijdens het bladeren.
+    --}}
+    <canvas class="page-dots" x-data="dotField({ color: '#0e1526', strength: 0.25 })"
+            aria-hidden="true"></canvas>
+
     <div @if ($state) x-data="auction({{ Js::from($state) }})" @endif
          data-lot-nav
          @if ($nextLot) data-next="{{ route('lots.show', $nextLot) }}" @endif
          @if ($previousLot) data-prev="{{ route('lots.show', $previousLot) }}" @endif>
-
-        {{-- Het stippenveld van de hero als paginalaag: donkergrijs en zwak
-             op de lichte achtergrond, achter alle kaarten. --}}
-        <canvas class="page-dots" x-data="dotField({ color: '#0e1526', strength: 0.25 })"
-                aria-hidden="true"></canvas>
 
         <div class="flex items-center justify-between gap-4">
         <nav aria-label="Kruimelpad" class="flex flex-wrap items-center gap-1.5 text-sm text-aj-muted">
