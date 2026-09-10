@@ -5,6 +5,7 @@ import funnel from './funnel';
 import { ivyAdvice, searchInterpret } from './ivy-tasks';
 import slideConfirm from './slide-confirm';
 import dotField from './dot-field';
+import sellingDemo from './selling-demo';
 import initHome from './home';
 import initLotsIndex from './lots-index';
 
@@ -25,6 +26,7 @@ Alpine.data('ivyAdvice', ivyAdvice);
 Alpine.data('searchInterpret', searchInterpret);
 Alpine.data('slideConfirm', slideConfirm);
 Alpine.data('dotField', dotField);
+Alpine.data('sellingDemo', sellingDemo);
 
 window.Alpine = Alpine;
 

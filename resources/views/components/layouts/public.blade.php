@@ -111,7 +111,7 @@
                     <p style="margin:0;max-width:34ch">Het AI-commerceplatform voor zakelijke goederen. Nederland.</p>
                 </div>
                 <div><h4>Kopen</h4><ul><li><a href="{{ route('lots.index') }}">Veilingen</a></li><li><a href="{{ route('lots.index') }}">Categorieën</a></li><li><a href="{{ route('home') }}#reis">Hoe bieden werkt</a></li><li><a href="{{ route('assurance') }}">Zekerheid</a></li></ul></div>
-                <div><h4>Verkopen</h4><ul><li><a href="{{ route('sell') }}">Kavel plaatsen</a></li><li><a href="{{ route('selling.guide') }}">Verkooproute</a></li><li><a href="{{ route('selling.guide') }}#tarieven">Tarieven</a></li><li><a href="{{ route('home') }}#zakelijk">Zakelijk</a></li></ul></div>
+                <div><h4>Verkopen</h4><ul><li><a href="{{ route('sell') }}">Kavel plaatsen</a></li><li><a href="{{ route('selling.guide') }}">Verkooproute</a></li><li><a href="{{ route('faq') }}">Tarieven</a></li><li><a href="{{ route('home') }}#zakelijk">Zakelijk</a></li></ul></div>
                 <div><h4>Aucvy</h4><ul><li><a href="{{ route('home') }}">Over ons</a></li><li><a href="{{ route('faq') }}">Veelgestelde vragen</a></li><li><a href="{{ route('home') }}">Contact</a></li><li><a href="{{ route('home') }}">Privacy</a></li></ul></div>
             </div>
             <div class="foot-bottom">

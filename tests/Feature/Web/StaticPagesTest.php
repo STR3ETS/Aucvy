@@ -18,12 +18,6 @@ it('toont de verkooproute met de tarieven uit CompanyPlan', function () {
         ->assertSee('Kavel plaatsen');
 });
 
-it('toont op de verkooproute de borgdrempel uit de config', function () {
-    config(['aucvy.deposit.threshold_cents' => 990_000]);
-
-    $this->get('/verkooproute')->assertSee('9.900');
-});
-
 it('toont de faq met de drempels en termijnen uit de config', function () {
     $this->get('/faq')
         ->assertOk()

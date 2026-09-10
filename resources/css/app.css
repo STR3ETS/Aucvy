@@ -127,6 +127,25 @@
 .ask label img{width:22px;height:22px;border-radius:50%;object-fit:cover;flex:none}
 .steps h3 img{width:20px;height:20px;border-radius:50%;object-fit:cover;display:inline-block;vertical-align:-4px;margin-right:7px}
 
+/* Systeemdemo op de verkooproute: elementen komen getrapt binnen. De scenes
+   worden per beurt opnieuw gemonteerd (template x-if), dus de keyframes
+   spelen elke ronde opnieuw af. */
+@keyframes demo-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.demo-in{animation:demo-in .5s var(--ease-aj-out) both}
+.demo-d1{animation-delay:.5s}.demo-d2{animation-delay:1.1s}.demo-d3{animation-delay:1.8s}
+.demo-d4{animation-delay:2.6s}.demo-d5{animation-delay:3.5s}.demo-d6{animation-delay:4.4s}
+@keyframes demo-grow{from{width:0}}
+.demo-grow{animation:demo-grow 1.4s .9s var(--ease-aj-out) both}
+@keyframes demo-fillw{0%,55%{width:8px}100%{width:100%}}
+.demo-fill{animation:demo-fillw 4.6s var(--ease-aj-out) both}
+@keyframes demo-slide{0%,55%{left:4px}100%{left:calc(100% - 48px)}}
+.demo-handle{animation:demo-slide 4.6s var(--ease-aj-out) both}
+@media (prefers-reduced-motion:reduce){
+  .demo-in,.demo-grow,.demo-fill,.demo-handle{animation:none}
+  .demo-fill{width:100%}
+  .demo-handle{left:calc(100% - 48px)}
+}
+
 /* Zachte navigatie (veilingenpagina): tijdens het ophalen dimt de inhoud
    even in plaats van een witte flits van een harde reload. */
 #lots-content[aria-busy]{opacity:.55;pointer-events:none;transition:opacity .15s ease}
