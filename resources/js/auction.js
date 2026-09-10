@@ -46,7 +46,21 @@ export default function auction(initialState) {
          | geen namen, alleen een aantal (hfst. 7).
          */
         startPresence() {
-            const token = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 18);
+            /*
+             | Het token overleeft een herlaad (sessionStorage is per tabblad),
+             | anders telt elke refresh als een extra kijker totdat het oude
+             | token uit de cache verlopen is.
+             */
+            let token;
+            try {
+                token = sessionStorage.getItem('aucvy_viewer_token');
+                if (! token) {
+                    token = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 18);
+                    sessionStorage.setItem('aucvy_viewer_token', token);
+                }
+            } catch {
+                token = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 18);
+            }
 
             const beat = async () => {
                 if (document.hidden) return;
