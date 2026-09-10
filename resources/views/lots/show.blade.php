@@ -142,6 +142,17 @@
                             $bandLeft = $axisPosition($lot->value_min_cents);
                             $bandWidth = max(2, $axisPosition($lot->value_max_cents) - $bandLeft);
                             $axisGradient = 'linear-gradient(90deg,#1c8a5b 0%,#b4690e 55%,#c0392b 100%)';
+
+                            // Het streepje wijst naar de prijs die hier telt: de
+                            // vaste prijs bij koop direct, anders de live stand.
+                            $markerPriceExpression = $lot->sale_type === SaleType::BuyNow
+                                ? '(state.buy_now?.price_cents ?? state.price_cents)'
+                                : 'state.price_cents';
+                            $markerLabel = match ($lot->sale_type) {
+                                SaleType::BuyNow => 'vaste prijs',
+                                SaleType::Dutch => 'huidige prijs',
+                                default => 'huidig bod',
+                            };
                         @endphp
                         <div class="mt-3">
                             <div class="relative h-2.5"
@@ -159,8 +170,8 @@
 
                                 @if ($state !== null && $lot->mayShowValueComparison())
                                     <div class="absolute -top-2 h-[26px] w-[3px] -translate-x-1/2 rounded-full bg-aj-navy"
-                                         :style="`left: ${Math.max(2, Math.min(98, ((state.price_cents ?? 0) - {{ $axisMin }}) / {{ $axisMax - $axisMin }} * 100))}%`"
-                                         title="Huidig bod"></div>
+                                         :style="`left: ${Math.max(2, Math.min(98, (({{ $markerPriceExpression }} ?? 0) - {{ $axisMin }}) / {{ $axisMax - $axisMin }} * 100))}%`"
+                                         title="{{ ucfirst($markerLabel) }}"></div>
                                 @endif
                             </div>
 
@@ -168,7 +179,7 @@
                                 <p class="mt-1.5 text-[11px] text-aj-muted">
                                     <span class="inline-flex items-center gap-1">
                                         <span class="inline-block h-3 w-[3px] rounded-full bg-aj-navy"></span>
-                                        huidig bod
+                                        {{ $markerLabel }}
                                     </span>
                                 </p>
                             @endif
