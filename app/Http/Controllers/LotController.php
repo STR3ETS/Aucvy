@@ -93,13 +93,15 @@ final class LotController extends Controller
             'watcherCount' => WatchlistItem::query()->where('lot_id', $lot->id)->count(),
             'similarLots' => $this->similarLots($lot),
             /*
-             | Bladeren met de pijltjestoetsen: de buurkavels op id-volgorde,
-             | met wrap-around - na de laatste kom je weer bij de eerste.
+             | Bladeren met de pijltjestoetsen: alleen langs kavels die nú
+             | lopen (live of slotfase), op id-volgorde met wrap-around.
+             | Verkochte en gesloten kavels blijven bereikbaar via hun URL,
+             | maar horen niet in de bladerstroom.
              */
-            'nextLot' => Lot::query()->public()->where('id', '>', $lot->id)->orderBy('id')->first(['id', 'slug'])
-                ?? Lot::query()->public()->whereKeyNot($lot->id)->orderBy('id')->first(['id', 'slug']),
-            'previousLot' => Lot::query()->public()->where('id', '<', $lot->id)->orderByDesc('id')->first(['id', 'slug'])
-                ?? Lot::query()->public()->whereKeyNot($lot->id)->orderByDesc('id')->first(['id', 'slug']),
+            'nextLot' => Lot::query()->live()->where('id', '>', $lot->id)->orderBy('id')->first(['id', 'slug'])
+                ?? Lot::query()->live()->whereKeyNot($lot->id)->orderBy('id')->first(['id', 'slug']),
+            'previousLot' => Lot::query()->live()->where('id', '<', $lot->id)->orderByDesc('id')->first(['id', 'slug'])
+                ?? Lot::query()->live()->whereKeyNot($lot->id)->orderByDesc('id')->first(['id', 'slug']),
             'state' => $auction !== null
                 ? AuctionStateResource::make($auction, $request->user())->toArray()
                 : null,

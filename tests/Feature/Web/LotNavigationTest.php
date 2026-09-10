@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\LotStatus;
 use App\Models\Lot;
 
 /*
@@ -23,6 +24,16 @@ it('geeft de buurkavels mee met wrap-around', function () {
 
     $this->get('/kavel/'.$first->slug)
         ->assertSee('data-prev="'.route('lots.show', $last).'"', false);
+});
+
+it('slaat verkochte en gesloten kavels over bij het bladeren', function () {
+    [$first, , $last] = Lot::factory()->live()->count(3)->create()->all();
+
+    // De middelste is inmiddels verkocht: de stroom springt eroverheen.
+    Lot::query()->whereKeyNot([$first->id, $last->id])->update(['status' => LotStatus::Sold]);
+
+    $this->get('/kavel/'.$first->slug)
+        ->assertSee('data-next="'.route('lots.show', $last).'"', false);
 });
 
 it('laat de bladerattributen weg als er niets te bladeren valt', function () {

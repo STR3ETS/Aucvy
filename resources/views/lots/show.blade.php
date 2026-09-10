@@ -280,9 +280,19 @@
             {{-- Zijkolom ---------------------------------------------------- --}}
             <aside class="space-y-4 lg:sticky lg:top-4">
                 @if ($state === null)
-                    <x-ui.empty-state
-                        title="Deze kavel loopt nog niet"
-                        body="Er is nog geen verkooproute gekoppeld." />
+                    @if ($lot->status === \App\Enums\LotStatus::Sold)
+                        <x-ui.empty-state
+                            title="Deze kavel is verkocht"
+                            body="De verkoop is afgerond. Bekijk vergelijkbare kavels hieronder of blader verder.">
+                            <x-slot:action>
+                                <x-ui.button :href="route('lots.index')">Naar de veilingen</x-ui.button>
+                            </x-slot:action>
+                        </x-ui.empty-state>
+                    @else
+                        <x-ui.empty-state
+                            title="Deze kavel loopt nog niet"
+                            body="Er is nog geen verkooproute gekoppeld." />
+                    @endif
                 @else
                     {{--
                         Eén verkoopvorm tegelijk. Drie tabs plus biedpaneel plus
