@@ -144,13 +144,36 @@
 
             {{-- Gesloten: gewonnen of verloren --}}
             <template x-if="state.status === 'closed'">
-                <p class="rounded-aj-sm bg-white/12 px-3 py-3 text-sm text-white/90">
-                    <span x-show="state.viewer?.state === 'won'">Je hebt gewonnen.</span>
-                    <span x-show="state.viewer?.state === 'lost'">Je hebt niet gewonnen.</span>
-                    <span x-show="! ['won','lost'].includes(state.viewer?.state)">
-                        Deze veiling is gesloten.
-                    </span>
-                </p>
+                <div>
+                    <template x-if="state.viewer?.state === 'won'">
+                        <div class="celebrate rounded-aj-sm bg-white/15 p-5 text-center">
+                            <svg class="mx-auto size-10 text-amber-300" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                                 stroke-linejoin="round" aria-hidden="true">
+                                <path d="M8 21h8m-4-4v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/>
+                                <path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/>
+                            </svg>
+                            <p class="mt-2 text-xl font-extrabold">Gewonnen - hij is van jou!</p>
+                            <p class="mt-1 text-sm text-white/85">
+                                Het hoogste bod was van jou. Rond de betaling af, dan komt hij jouw kant op.
+                            </p>
+                            <template x-if="state.viewer?.won_order_number">
+                                <a :href="'/bestellingen/' + state.viewer.won_order_number"
+                                   class="mt-4 inline-flex items-center justify-center rounded-aj-sm bg-white px-5 text-sm font-extrabold text-aj-navy"
+                                   style="min-height: var(--spacing-cta)">
+                                    Naar je bestelling
+                                </a>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="state.viewer?.state !== 'won'">
+                        <p class="rounded-aj-sm bg-white/12 px-3 py-3 text-sm text-white/90">
+                            <span x-show="state.viewer?.state === 'lost'">Je hebt niet gewonnen.</span>
+                            <span x-show="state.viewer?.state !== 'lost'">Deze veiling is gesloten.</span>
+                        </p>
+                    </template>
+                </div>
             </template>
 
             {{-- Kan bieden --}}

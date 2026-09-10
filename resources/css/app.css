@@ -146,6 +146,12 @@
   .demo-handle{left:calc(100% - 48px)}
 }
 
+/* Het winnaarsblok: komt binnen met een kleine overshoot - je hebt zojuist
+   iets gekocht, dat mag even voelen. */
+@keyframes celebrate-pop{0%{opacity:0;transform:scale(.85)}60%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+.celebrate{animation:celebrate-pop .5s var(--ease-aj-out) both}
+@media (prefers-reduced-motion:reduce){.celebrate{animation:none}}
+
 /* De afslagprijs die zichtbaar zakt: korte pop met een warme flits bij
    elke prijsstap. */
 @keyframes price-drop{0%{transform:scale(1)}30%{transform:scale(1.06);color:#fde68a}100%{transform:scale(1)}}

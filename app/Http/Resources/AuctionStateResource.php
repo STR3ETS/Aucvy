@@ -14,6 +14,7 @@ use App\Models\Auction;
 use App\Models\AutoBid;
 use App\Models\Bid;
 use App\Models\Deposit;
+use App\Models\Order;
 use App\Models\User;
 use App\Support\Money\Money;
 
@@ -235,6 +236,14 @@ final class AuctionStateResource
             'can_bid' => $this->viewer->kyc_status->allowsBidding(),
             'is_seller' => $this->auction->lot->seller_id === $this->viewer->id,
             'max_amount_cents' => $autoBid?->max_amount_cents,
+
+            // Gewonnen? Dan hoort daar een directe route naar de bestelling bij.
+            'won_order_number' => $this->auction->isClosed() && $isLeading
+                ? Order::query()
+                    ->where('auction_id', $this->auction->id)
+                    ->where('buyer_id', $this->viewer->id)
+                    ->value('order_number')
+                : null,
 
             /*
              | De borg, vooraf op de pagina en niet pas bij het klikken
