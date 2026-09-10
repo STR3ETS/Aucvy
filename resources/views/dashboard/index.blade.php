@@ -69,7 +69,12 @@
         {{-- Dit heeft het team al gedaan - vóór de vragen, dat is het ontwerp. --}}
         @if ($done !== [])
             <section class="mt-6" aria-label="Al gedaan">
-                <h2 class="text-lg font-extrabold">✔ Dit heeft het team al gedaan</h2>
+                <h2 class="flex items-center gap-2 text-lg font-extrabold">
+                    <svg class="size-5 text-aj-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/>
+                    </svg>
+                    Dit heeft het team al gedaan
+                </h2>
                 <p class="text-sm text-aj-muted">Zonder dat je iets hoefde te doen - geteld over de laatste 30 dagen.</p>
                 <ul class="mt-3 grid gap-2 sm:grid-cols-2">
                     @foreach ($done as $activity)
@@ -118,11 +123,17 @@
                                href="{{ route($insight->action_route, $insight->action_params ?? []) }}">
                                 {{ $insight->action_label }}
                             </a>
-                            <button type="button" class="text-aj-muted" aria-label="Signaal verbergen"
+                            <button type="button" class="flex size-8 items-center justify-center text-aj-muted"
+                                    aria-label="Signaal verbergen"
                                     @click="gone = true; fetch('/api/insights/{{ $insight->id }}/dismiss', {
                                         method: 'POST',
                                         headers: {'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''},
-                                    })">×</button>
+                                    })">
+                                <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                    <path d="m5 5 10 10M15 5 5 15"/>
+                                </svg>
+                            </button>
                         </li>
                     @endforeach
                 </ul>

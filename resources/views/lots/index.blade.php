@@ -62,9 +62,13 @@
                  mét de rest maar zonder dit onderdeel. --}}
             <template x-for="chip in chips" :key="chip.label">
                 <a :href="applyUrl(chip.remove)"
-                   class="rounded-aj-sm border border-aj-border-strong px-2 py-1 text-xs font-bold"
+                   class="inline-flex items-center gap-1 rounded-aj-sm border border-aj-border-strong px-2 py-1 text-xs font-bold"
                    :aria-label="'Zoek zonder ' + chip.label">
-                    <span x-text="chip.label"></span> <span aria-hidden="true">×</span>
+                    <span x-text="chip.label"></span>
+                    <svg class="size-3 text-aj-muted" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                         stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                        <path d="m5 5 10 10M15 5 5 15"/>
+                    </svg>
                 </a>
             </template>
 

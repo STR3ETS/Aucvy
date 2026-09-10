@@ -72,8 +72,13 @@
                                 <li class="relative">
                                     <img :src="item.url" alt="" class="aspect-square w-full rounded-aj-sm object-cover">
                                     <button type="button" @click="removePhoto(item)"
-                                            class="absolute right-1 top-1 rounded-aj-sm bg-aj-navy/80 px-2 py-1 text-xs font-bold text-white"
-                                            aria-label="Foto verwijderen">×</button>
+                                            class="absolute right-1 top-1 flex size-7 items-center justify-center rounded-aj-sm bg-aj-navy/80 text-white"
+                                            aria-label="Foto verwijderen">
+                                        <svg class="size-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                                             stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                            <path d="m5 5 10 10M15 5 5 15"/>
+                                        </svg>
+                                    </button>
                                 </li>
                             </template>
                         </ul>
@@ -438,7 +443,13 @@
 
                 {{-- Navigatie: terug werkt, elke stap is omkeerbaar. --}}
                 <div class="flex items-center gap-3">
-                    <button type="button" class="btn btn-ghost" x-show="step > 0" @click="step--">← Terug</button>
+                    <button type="button" class="btn btn-ghost" x-show="step > 0" @click="step--">
+                        <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M16 10H4m5-5-5 5 5 5"/>
+                        </svg>
+                        Terug
+                    </button>
                     <span class="text-sm text-aj-muted" x-show="saving" x-cloak>Opslaan…</span>
                     <span class="text-sm text-aj-success-text" x-show="saved" x-cloak>Opgeslagen</span>
                     <button type="button" class="btn btn-primary ml-auto" x-show="step < 7" @click="step++">Volgende</button>
