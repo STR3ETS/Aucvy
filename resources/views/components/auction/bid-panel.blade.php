@@ -151,32 +151,8 @@
                     kan sowieso niet), pas daarna de borg (die is alleen
                     relevant voor een bod dat anders geldig zou zijn).
                 --}}
-                <div x-data="{
-                        open: false,
-                        amount: state.minimum_bid_cents / 100,
-                        showMax: false,
-                        max: '',
-                        get amountCents() { return Math.round(this.amount * 100) },
-                        get tooLow() { return this.amountCents < this.state.minimum_bid_cents },
-                        get needsDeposit() {
-                            return ! this.state.viewer?.deposit?.covered
-                                && this.amountCents > (this.state.viewer?.deposit?.threshold_cents ?? Infinity);
-                        },
-                        init() {
-                            // Word je overboden, dan stijgt het minimum en zou
-                            // je oude bedrag het sleepspoor verbergen. Het veld
-                            // springt mee naar het nieuwe minimum - behalve
-                            // terwijl je zelf aan het typen bent.
-                            this.$watch('state.minimum_bid_cents', (minimum) => {
-                                if (minimum == null) return;
-
-                                if (document.activeElement !== this.$refs.amountInput
-                                    && this.amountCents < minimum) {
-                                    this.amount = minimum / 100;
-                                }
-                            });
-                        },
-                     }">
+                {{-- De formulierlogica en het geldformaat staan in bid-form.js. --}}
+                <div x-data="bidForm">
 
                     {{-- Dicht: één duidelijke actie. Het formulier komt pas
                          na de klik - dat houdt de kaart in rust overzichtelijk. --}}
@@ -205,7 +181,7 @@
                          staffelstappen, rechtstreeks uit de veilingstand. --}}
                     <div class="flex gap-2">
                         <template x-for="quick in (state.quick_bid_cents ?? [])" :key="quick">
-                            <button type="button" @click="amount = quick / 100"
+                            <button type="button" @click="setAmountCents(quick)"
                                     class="tabular flex-1 rounded-aj-sm border px-2 text-sm font-bold"
                                     :class="amountCents === quick
                                         ? 'border-white bg-white text-aj-navy'
@@ -217,11 +193,12 @@
 
                     <label class="sr-only" for="bid-amount">Bedrag in euro's</label>
                     <div class="mt-2 flex gap-2">
-                        <input id="bid-amount" type="number" step="0.01" x-model.number="amount"
+                        <input id="bid-amount" type="text" inputmode="decimal" autocomplete="off"
+                               x-model="amountText"
                                x-ref="amountInput"
-                               :min="state.minimum_bid_cents / 100"
+                               @input="reformat($event, 'amountText')"
                                :disabled="isBlocked"
-                               @blur="if (tooLow) amount = state.minimum_bid_cents / 100"
+                               @blur="if (tooLow) setAmountCents(state.minimum_bid_cents)"
                                class="tabular w-full rounded-aj-sm border border-aj-border-strong bg-white px-3 text-lg font-bold text-aj-text"
                                style="min-height: var(--spacing-cta)">
                     </div>
@@ -266,10 +243,12 @@
 
                         <div x-show="showMax && ! state.viewer?.max_amount_cents" x-cloak class="mt-2 flex gap-2">
                             <label class="sr-only" for="max-amount">Maximum in euro's</label>
-                            <input id="max-amount" type="number" step="0.01" x-model.number="max"
+                            <input id="max-amount" type="text" inputmode="decimal" autocomplete="off"
+                                   x-model="maxText"
+                                   @input="reformat($event, 'maxText')"
                                    class="tabular w-full rounded-aj-sm border border-aj-border-strong bg-white px-3 text-aj-text"
                                    style="min-height: var(--spacing-cta)">
-                            <button type="button" @click="setMaxBid(Math.round(max * 100))"
+                            <button type="button" @click="setMaxBid(maxCents)"
                                     class="shrink-0 rounded-aj-sm bg-white px-4 text-sm font-semibold text-aj-navy"
                                     style="min-height: var(--spacing-cta)">
                                 Instellen
