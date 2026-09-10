@@ -28,16 +28,33 @@ export default function auction(initialState) {
 
         _lastAnnouncedAt: 0,
         _pollTimer: null,
+        _tickTimer: null,
+        _presenceTimer: null,
         _failedReconnects: 0,
 
         init() {
             this.clockOffset = new Date(this.state.server_time).getTime() - Date.now();
 
             this.tick();
-            setInterval(() => this.tick(), 1000);
+            this._tickTimer = setInterval(() => this.tick(), 1000);
 
             this.subscribe();
             this.startPresence();
+        },
+
+        /*
+         | Bij het doomscrollen wordt deze component vervangen door die van de
+         | volgende kavel; alles wat tikt moet dan echt stoppen, anders
+         | stapelen de timers zich op met elke kavel die je doorbladert.
+         */
+        destroy() {
+            clearInterval(this._tickTimer);
+            clearInterval(this._presenceTimer);
+            clearInterval(this._pollTimer);
+
+            if (typeof window.Echo !== 'undefined') {
+                window.Echo.leave(`auction.${this.state.auction_id}`);
+            }
         },
 
         /*
@@ -85,7 +102,7 @@ export default function auction(initialState) {
             };
 
             beat();
-            setInterval(beat, 30_000);
+            this._presenceTimer = setInterval(beat, 30_000);
         },
 
         // Tijd ---------------------------------------------------------------

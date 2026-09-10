@@ -1,49 +1,110 @@
 /*
- | Doomscrollen door de kavels: pijltje rechts schuift deze kavel het
- | scherm uit naar links en haalt de volgende van rechts binnen; pijltje
- | links precies andersom. De richtingen komen als data-attributen van de
- | server (met wrap-around, dus het houdt nooit op).
+ | Doomscrollen door de kavels, zonder zichtbare herlaad: de buurkavels
+ | worden op de achtergrond alvast opgehaald, en een pijltje wisselt alleen
+ | de pagina-inhoud - de oude schuift het scherm uit, de nieuwe komt van de
+ | andere kant binnen. De URL en de titel gaan netjes mee (pushState), en
+ | Alpine initialiseert de verse componenten vanzelf; de oude ruimen hun
+ | timers op via hun destroy().
  |
  | De pijltjes blijven van alles af wat ze zelf nodig heeft: invoervelden,
  | het sleepspoor (role=slider) en open vensters zoals de fotoviewer.
  */
 export default function initLotNav() {
-    const host = document.querySelector('[data-lot-nav]');
-    const main = document.getElementById('hoofdinhoud');
+    let host = document.querySelector('[data-lot-nav]');
 
-    if (! host || ! main) return;
+    if (! host) return;
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // De inkomende beweging, op basis van hoe we hier kwamen.
-    const arrived = sessionStorage.getItem('aucvy_lot_nav');
-    sessionStorage.removeItem('aucvy_lot_nav');
-
-    if (arrived && ! reduce) {
-        const inClass = arrived === 'next' ? 'lot-nav-in-right' : 'lot-nav-in-left';
-        main.classList.add(inClass);
-        main.addEventListener('animationend', () => main.classList.remove(inClass), { once: true });
-    }
-
+    const cache = new Map();
     let busy = false;
 
-    const go = (direction) => {
+    const prefetch = (url) => {
+        if (! url || cache.has(url)) return;
+
+        cache.set(url, fetch(url)
+            .then((response) => (response.ok ? response.text() : null))
+            .catch(() => null));
+
+        // Nooit meer dan een handvol pagina's vasthouden.
+        while (cache.size > 6) {
+            cache.delete(cache.keys().next().value);
+        }
+    };
+
+    const prefetchNeighbours = () => {
+        prefetch(host.dataset.next);
+        prefetch(host.dataset.prev);
+    };
+
+    const swap = async (url, direction) => {
+        prefetch(url);
+
+        const outClass = direction === 'next' ? 'lot-nav-out-left' : 'lot-nav-out-right';
+        const inClass = direction === 'next' ? 'lot-nav-in-right' : 'lot-nav-in-left';
+
+        const started = performance.now();
+        if (! reduce) host.classList.add(outClass);
+
+        const html = await cache.get(url);
+        // De opgehaalde stand kan even oud zijn; de veilingcomponent haalt
+        // zelf direct de verse stand op. Niet hergebruiken voor een tweede keer.
+        cache.delete(url);
+
+        if (! html) {
+            window.location.assign(url);
+
+            return false;
+        }
+
+        // De uit-animatie mag afmaken, maar langer wachten we niet.
+        if (! reduce) {
+            const remaining = 200 - (performance.now() - started);
+            if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
+        }
+
+        const fresh = new DOMParser().parseFromString(html, 'text/html');
+        const content = fresh.querySelector('[data-lot-nav]');
+
+        if (! content) {
+            window.location.assign(url);
+
+            return false;
+        }
+
+        document.title = fresh.title;
+        window.scrollTo(0, 0);
+
+        if (! reduce) content.classList.add(inClass);
+        host.replaceWith(content);
+        host = content;
+        host.addEventListener('animationend', () => host.classList.remove(inClass), { once: true });
+
+        prefetchNeighbours();
+
+        return true;
+    };
+
+    const go = async (direction) => {
         const url = host.dataset[direction];
 
         if (! url || busy) return;
         busy = true;
 
-        sessionStorage.setItem('aucvy_lot_nav', direction);
+        window.history.pushState({ lot: true }, '', url);
+        await swap(url, direction);
 
-        if (reduce) {
-            window.location.assign(url);
-
-            return;
-        }
-
-        main.classList.add(direction === 'next' ? 'lot-nav-out-left' : 'lot-nav-out-right');
-        setTimeout(() => window.location.assign(url), 230);
+        busy = false;
     };
+
+    // Terug en vooruit van de browser: zelfde wissel, andere richting.
+    window.addEventListener('popstate', async () => {
+        if (! window.location.pathname.startsWith('/kavel/')) return;
+        if (busy || ! document.contains(host)) return;
+
+        busy = true;
+        await swap(window.location.href, 'prev');
+        busy = false;
+    });
 
     window.addEventListener('keydown', (event) => {
         if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
@@ -62,4 +123,7 @@ export default function initLotNav() {
         event.preventDefault();
         go(event.key === 'ArrowRight' ? 'next' : 'prev');
     });
+
+    // Alvast klaarstaan: zodra de pagina rustig is, halen we de buren op.
+    ('requestIdleCallback' in window ? requestIdleCallback : setTimeout)(prefetchNeighbours);
 }
