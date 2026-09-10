@@ -4,7 +4,18 @@
     Geen schuifknop om af te mijnen - een knop plus een expliciete bevestiging.
     Per ongeluk € 13.750 uitgeven mag niet één tik kosten (mobiele buildlijst).
 --}}
-<div class="panel-hero rounded-aj-s p-5" x-cloak x-data="{ confirming: false }">
+<div class="panel-hero rounded-aj-s p-5" x-cloak
+     x-data="{
+        confirming: false,
+        /*
+         | De borg beweegt mee met de dalende prijs: zakt hij onder de
+         | drempel, dan is er geen borg meer nodig en verdwijnt de vraag.
+         */
+        get needsDeposit() {
+            return ! this.state.viewer?.deposit?.covered
+                && this.state.price_cents > (this.state.viewer?.deposit?.threshold_cents ?? Infinity);
+        },
+     }">
 
     {{-- Het stippenveld uit de hero, achter de inhoud. --}}
     <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
@@ -75,7 +86,26 @@
 
             <template x-if="state.viewer?.can_bid && ! state.viewer?.is_seller && state.status !== 'closed'">
                 <div>
-                    <template x-if="! confirming">
+                    {{-- De borg vóóraf, niet pas bij het afmijnen (hfst. 9). --}}
+                    <template x-if="needsDeposit">
+                        <div class="rounded-aj-sm bg-white/12 p-3 text-sm">
+                            <p>
+                                Boven <span class="tabular" x-text="formatCents(state.viewer?.deposit?.threshold_cents)"></span>
+                                vragen we eerst een borg van
+                                <span class="tabular" x-text="formatCents(state.viewer?.deposit?.threshold_cents)"></span> -
+                                die je terugkrijgt als je niet koopt.
+                            </p>
+                            <button type="button" @click="arrangeDeposit()"
+                                    class="mt-2 rounded-aj-sm bg-white px-3 py-2 text-xs font-extrabold text-aj-navy">
+                                Borg regelen
+                            </button>
+                            <p class="mt-2 text-xs text-white/60">
+                                Daarna kun je direct afmijnen - of wacht tot de prijs onder de drempel zakt.
+                            </p>
+                        </div>
+                    </template>
+
+                    <template x-if="! needsDeposit && ! confirming">
                         <button type="button" :disabled="isBlocked" @click="confirming = true"
                                 class="flex w-full items-center justify-center rounded-aj-sm bg-white px-5
                                        text-sm font-semibold text-aj-navy disabled:opacity-60"
@@ -84,7 +114,7 @@
                         </button>
                     </template>
 
-                    <template x-if="confirming">
+                    <template x-if="! needsDeposit && confirming">
                         <div class="rounded-aj-sm bg-white/10 p-3">
                             <p class="text-sm">
                                 Je koopt deze kavel voor
