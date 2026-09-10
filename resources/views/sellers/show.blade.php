@@ -53,36 +53,6 @@
                             geen garantie; de staat van een individueel object beoordeelt Ivy per kavel.
                         </p>
 
-                        @if ($trustHistory !== [])
-                            @php
-                                $scores = array_filter(array_column($trustHistory, 'score'), fn ($score) => $score !== null);
-                            @endphp
-                            @if (count($scores) >= 2)
-                                @php
-                                    $minScore = max(0, min($scores) - 4);
-                                    $maxScore = min(100, max($scores) + 2);
-                                    $span = max(1, $maxScore - $minScore);
-                                    $points = collect($trustHistory)->values()
-                                        ->map(function ($point, $index) use ($trustHistory, $minScore, $span) {
-                                            if ($point['score'] === null) {
-                                                return null;
-                                            }
-                                            $x = 6 + $index / (count($trustHistory) - 1) * 588;
-                                            $y = 40 - ($point['score'] - $minScore) / $span * 34;
-
-                                            return round($x, 1).','.round($y, 1);
-                                        })->filter()->implode(' ');
-                                @endphp
-                                <div class="mt-3 rounded-aj-sm border border-aj-border bg-aj-bg p-3">
-                                    <svg viewBox="0 0 600 46" class="h-12 w-full" preserveAspectRatio="none" role="img"
-                                         aria-label="Verloop van de Trust Index over twaalf maanden">
-                                        <polyline points="{{ $points }}" fill="none" stroke="var(--color-aj-success)"
-                                                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <p class="mt-1 text-[11px] text-aj-muted">Verloop over de laatste twaalf maanden</p>
-                                </div>
-                            @endif
-                        @endif
                     </div>
                 </div>
 

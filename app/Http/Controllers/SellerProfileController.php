@@ -39,8 +39,6 @@ final class SellerProfileController extends Controller
             'seller' => $user,
             'company' => $user->company,
             'trust' => $trust,
-            // De verloopgrafiek alleen als er ook een score ís.
-            'trustHistory' => $trust !== null ? $trustIndex->historyForSeller($user) : [],
             'reviews' => $reviews,
             'averageRating' => $reviews->isEmpty() ? null : round($reviews->avg('rating'), 1),
             // Alle vijf de sterren, ook waar nul staat - dat is het punt.

@@ -70,28 +70,6 @@ final class TrustIndex
     }
 
     /**
-     * Het verloop van de afgelopen twaalf maanden, telkens berekend met
-     * alleen de gegevens van vóór dat moment.
-     *
-     * @return array<int, array{label: string, score: int|null}>
-     */
-    public function historyForSeller(User $seller): array
-    {
-        $points = [];
-
-        for ($monthsBack = 11; $monthsBack >= 0; $monthsBack--) {
-            $moment = CarbonImmutable::now()->subMonths($monthsBack)->endOfMonth();
-
-            $points[] = [
-                'label' => $moment->timezone(config('aucvy.display_timezone'))->isoFormat('MMM'),
-                'score' => $this->forSeller($seller, $moment)['score'] ?? null,
-            ];
-        }
-
-        return $points;
-    }
-
-    /**
      * @return array{key: string, label: string, weight: int, score: int, measures: string}|null
      */
     private function transactions(User $seller, CarbonImmutable $asOf, int $completed): ?array
