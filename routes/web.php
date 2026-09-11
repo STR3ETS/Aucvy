@@ -209,12 +209,18 @@ Route::middleware(['auth', 'can:staff'])->prefix('beheer')->name('staff.')->grou
  */
 Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('/', [BackofficeController::class, 'index'])->name('index');
+    Route::get('/activiteit', [BackofficeController::class, 'activity'])->name('activity');
     Route::get('/kavels', [BackofficeController::class, 'lots'])->name('lots');
+    Route::post('/kavels/concepten-verwijderen', [BackofficeController::class, 'destroyDraftLots'])->name('lots.destroy-drafts');
+    Route::get('/kavels/{lot:id}', [BackofficeController::class, 'showLot'])->name('lots.show')->withTrashed();
+    Route::post('/ai-runs/verwijderen', [BackofficeController::class, 'destroyAiRuns'])->name('ai-runs.destroy');
     Route::get('/veilingen', [BackofficeController::class, 'auctions'])->name('auctions');
     Route::get('/biedingen', [BackofficeController::class, 'bids'])->name('bids');
     Route::get('/orders', [BackofficeController::class, 'orders'])->name('orders');
+    Route::get('/orders/{order:id}', [BackofficeController::class, 'showOrder'])->name('orders.show');
     Route::get('/uitbetalingen', [BackofficeController::class, 'payouts'])->name('payouts');
     Route::get('/gebruikers', [BackofficeController::class, 'users'])->name('users');
+    Route::get('/gebruikers/{user:id}', [BackofficeController::class, 'showUser'])->name('users.show')->withTrashed();
     Route::get('/bedrijven', [BackofficeController::class, 'companies'])->name('companies');
     Route::get('/reviews', [BackofficeController::class, 'reviews'])->name('reviews');
     Route::get('/bezichtigingen', [BackofficeController::class, 'viewings'])->name('viewings');

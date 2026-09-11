@@ -8,6 +8,7 @@ import dotField from './dot-field';
 import sellingDemo from './selling-demo';
 import bidForm from './bid-form';
 import pushToggle from './push';
+import adminLive from './admin-live';
 import initHome from './home';
 import initLotsIndex from './lots-index';
 import initLotNav from './lot-nav';
@@ -32,6 +33,7 @@ Alpine.data('dotField', dotField);
 Alpine.data('sellingDemo', sellingDemo);
 Alpine.data('bidForm', bidForm);
 Alpine.data('pushToggle', pushToggle);
+Alpine.data('adminLive', adminLive);
 
 window.Alpine = Alpine;
 

@@ -1,12 +1,11 @@
-<x-layouts.public :title="'Geschil · '.$dispute->order->order_number">
-    <div class="mx-auto max-w-3xl">
+<x-layouts.admin :title="$dispute->order->lot->title" :subtitle="'Geschil bij order '.$dispute->order->order_number">
+    <div class="max-w-3xl">
         <p class="text-sm text-aj-muted">
             <a href="{{ route('staff.disputes.index') }}" class="underline">Geschillen</a>
             · {{ $dispute->order->order_number }}
         </p>
-        <h1 class="mt-1 text-2xl font-extrabold tracking-tight">{{ $dispute->order->lot->title }}</h1>
 
-        <dl class="mt-6 space-y-4">
+        <dl class="mt-4 space-y-4">
             <div class="rounded-aj-sm border border-aj-border bg-aj-surface p-4">
                 <dt class="text-xs font-extrabold text-aj-soft">
                     Melding van {{ $dispute->reporter->publicName() }}
@@ -72,4 +71,4 @@
             <button type="submit" class="btn btn-primary">Uitkomst vastleggen</button>
         </form>
     </div>
-</x-layouts.public>
+</x-layouts.admin>

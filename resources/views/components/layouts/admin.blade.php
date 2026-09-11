@@ -1,4 +1,4 @@
-@props(['title'])
+@props(['title', 'subtitle' => null])
 
 {{--
     De backoffice-layout: hetzelfde ontwerp als de rest van het platform,
@@ -51,7 +51,6 @@
             <a href="{{ route('admin.index') }}" class="flex items-center gap-2.5 px-5 pb-4 pt-5">
                 <span class="size-2.5 rotate-45 rounded-[2px] bg-aj-blue" aria-hidden="true"></span>
                 <span class="text-lg font-extrabold tracking-tight">Aucvy</span>
-                <span class="text-[10px] font-bold uppercase tracking-[0.12em] text-white/50">Backoffice</span>
             </a>
 
             <nav class="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="Beheer">
@@ -60,20 +59,25 @@
                         <p class="px-2 pb-1.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#9DB9FF]/80">{{ $label }}</p>
                         <ul class="space-y-0.5">
                             @foreach ($items as [$routeName, $itemLabel])
+                                @php $isActive = request()->routeIs($routeName, $routeName.'.*'); @endphp
                                 <li>
                                     <a href="{{ route($routeName) }}"
                                        @class([
                                            'block rounded-aj-sm px-3 py-2 text-sm font-semibold',
-                                           'bg-aj-blue text-white' => request()->routeIs($routeName),
-                                           'text-white/70 hover:bg-white/5 hover:text-white' => ! request()->routeIs($routeName),
+                                           'bg-aj-blue text-white' => $isActive,
+                                           'text-white/70 hover:bg-white/5 hover:text-white' => ! $isActive,
                                        ])
-                                       @if (request()->routeIs($routeName)) aria-current="page" @endif>{{ $itemLabel }}</a>
+                                       @if ($isActive) aria-current="page" @endif>{{ $itemLabel }}</a>
                                 </li>
                             @endforeach
                             @if ($label === 'Operatie')
                                 <li>
                                     <a href="{{ route('staff.disputes.index') }}"
-                                       class="block rounded-aj-sm px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/5 hover:text-white">Geschillen</a>
+                                       @class([
+                                           'block rounded-aj-sm px-3 py-2 text-sm font-semibold',
+                                           'bg-aj-blue text-white' => request()->routeIs('staff.disputes.*'),
+                                           'text-white/70 hover:bg-white/5 hover:text-white' => ! request()->routeIs('staff.disputes.*'),
+                                       ])>Geschillen</a>
                                 </li>
                             @endif
                         </ul>
@@ -102,19 +106,28 @@
                 </a>
                 <nav class="chip-row -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4" aria-label="Beheer">
                     @foreach (collect($groups)->flatten(1) as [$routeName, $itemLabel])
+                        @php $isActive = request()->routeIs($routeName, $routeName.'.*'); @endphp
                         <a href="{{ route($routeName) }}"
                            @class([
                                'shrink-0 rounded-aj-sm px-3 py-1.5 text-xs font-bold',
-                               'bg-aj-blue text-white' => request()->routeIs($routeName),
-                               'bg-white/10 text-white/80' => ! request()->routeIs($routeName),
+                               'bg-aj-blue text-white' => $isActive,
+                               'bg-white/10 text-white/80' => ! $isActive,
                            ])>{{ $itemLabel }}</a>
                     @endforeach
                 </nav>
             </div>
 
-            <main class="px-4 py-8 sm:px-6 lg:px-10">
+            <main class="px-4 py-6 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-6xl">
-                    <h1 class="text-3xl font-extrabold tracking-[-0.03em]">{{ $title }}</h1>
+                    {{-- De paginakop als heroband: het blauwe verloop met de
+                         ademende stipjes, net als op het platform zelf. --}}
+                    <div class="panel-hero rounded-aj-s p-6">
+                        <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
+                        <h1 class="text-2xl font-extrabold tracking-[-0.03em] text-white sm:text-3xl">{{ $title }}</h1>
+                        @if ($subtitle)
+                            <p class="mt-1 text-sm text-white/75">{{ $subtitle }}</p>
+                        @endif
+                    </div>
 
                     @if (session('status'))
                         <p class="mt-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm font-semibold text-aj-success-text">

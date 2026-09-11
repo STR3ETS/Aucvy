@@ -7,9 +7,11 @@
             <tr>
                 <td class="tabular text-aj-muted">{{ $review->id }}</td>
                 <td class="tabular text-right font-extrabold">{{ $review->rating }}</td>
-                <td class="max-w-[24ch] truncate">{{ $review->order->lot->title }}</td>
-                <td>{{ $review->reviewer->name }}</td>
-                <td>{{ $review->seller->name }}</td>
+                <td class="max-w-[24ch] truncate">
+                    <a href="{{ route('admin.orders.show', $review->order) }}" class="underline">{{ $review->order->lot->title }}</a>
+                </td>
+                <td><a href="{{ route('admin.users.show', $review->reviewer) }}" class="underline">{{ $review->reviewer->name }}</a></td>
+                <td><a href="{{ route('admin.users.show', $review->seller) }}" class="underline">{{ $review->seller->name }}</a></td>
                 <td class="whitespace-nowrap text-aj-muted">{{ $review->published_at?->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM YYYY') ?? 'nog niet' }}</td>
             </tr>
         @endforeach

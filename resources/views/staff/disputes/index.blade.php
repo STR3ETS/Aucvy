@@ -1,8 +1,6 @@
-<x-layouts.public title="Geschillen">
-    <div class="mx-auto max-w-4xl">
-        <h1 class="text-3xl font-extrabold tracking-[-0.03em]">Geschillen</h1>
-        <p class="mt-1 text-sm text-aj-muted">Open meldingen, gesorteerd op de reactietermijn van de verkoper.</p>
-
+{{-- In de backoffice-layout: geschillen zijn beheerwerk, geen aparte omgeving. --}}
+<x-layouts.admin title="Geschillen" subtitle="Open meldingen, gesorteerd op de reactietermijn van de verkoper.">
+    <div>
         @if ($disputes->isEmpty())
             <p class="mt-6 text-sm text-aj-muted">Geen open geschillen.</p>
         @else
@@ -31,4 +29,4 @@
             </ul>
         @endif
     </div>
-</x-layouts.public>
+</x-layouts.admin>
