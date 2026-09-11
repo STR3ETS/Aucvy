@@ -53,7 +53,7 @@
                 @auth
                     {{-- TOEVOEGING t.o.v. het ontwerp: ingelogd moet je bij je
                          dashboard en bestellingen kunnen (stap 10/11). --}}
-                    <a class="link" href="{{ route('dashboard') }}">Dashboard</a>
+                    <a class="link" href="{{ auth()->user()->is_staff ? url('/admin') : route('dashboard') }}">Dashboard</a>
                     <a class="link" href="{{ route('orders.index') }}">Bestellingen</a>
                     <form method="POST" action="{{ route('logout') }}" style="display:contents">
                         @csrf
@@ -79,7 +79,7 @@
             <a href="{{ route('home') }}#reis">Hoe het werkt</a>
             <a href="{{ route('assurance') }}">Zekerheid</a>
             @auth
-                <a href="{{ route('dashboard') }}">Dashboard</a>
+                <a href="{{ auth()->user()->is_staff ? url('/admin') : route('dashboard') }}">Dashboard</a>
                 <a href="{{ route('orders.index') }}">Bestellingen</a>
                 <form method="POST" action="{{ route('logout') }}" style="display:contents">
                     @csrf

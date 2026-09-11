@@ -30,6 +30,10 @@ it('laat een medewerker binnen', function () {
     $this->actingAs(staffMember())->get('/admin')->assertOk();
 });
 
+it('stuurt een medewerker van het werkplan door naar de backoffice', function () {
+    $this->actingAs(staffMember())->get('/dashboard')->assertRedirect('/admin');
+});
+
 it('toont de beheerlijsten', function (string $path) {
     Lot::factory()->live()->create();
 

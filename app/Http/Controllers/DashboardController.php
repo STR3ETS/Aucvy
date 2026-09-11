@@ -14,6 +14,7 @@ use App\Enums\OrderStatus;
 use App\Models\AiInsight;
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -34,8 +35,13 @@ final class DashboardController extends Controller
         TeamActivity $activity,
         IntentFunnel $funnel,
         DemandForecast $forecast,
-    ): View {
+    ): View|RedirectResponse {
         $user = $request->user();
+
+        // Beheer koopt en verkoopt niet: het werkplan is niet hun plek.
+        if ($user->is_staff) {
+            return redirect('/admin');
+        }
 
         $signals->sync($user);
 
