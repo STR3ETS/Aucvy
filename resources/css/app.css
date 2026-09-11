@@ -169,6 +169,13 @@
 .lot-nav-in-right{animation:lot-in-right .28s var(--ease-aj-out) both}
 .lot-nav-in-left{animation:lot-in-left .28s var(--ease-aj-out) both}
 
+/* Backoffice-tabellen: rustig, dicht op de dashboardlijsten. */
+.admin-table{width:100%;font-size:14px;border-collapse:collapse}
+.admin-table th{padding:10px 16px;text-align:left;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--color-aj-muted);border-bottom:1px solid var(--color-aj-border);white-space:nowrap}
+.admin-table td{padding:10px 16px;border-top:1px solid var(--color-aj-border);vertical-align:middle}
+.admin-table tbody tr:first-child td{border-top:0}
+.admin-table .tnum,.admin-table .tabular{font-variant-numeric:tabular-nums}
+
 /* Zachte navigatie (veilingenpagina): tijdens het ophalen dimt de inhoud
    even in plaats van een witte flits van een harde reload. */
 #lots-content[aria-busy]{opacity:.55;pointer-events:none;transition:opacity .15s ease}

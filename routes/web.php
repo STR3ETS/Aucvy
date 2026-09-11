@@ -19,6 +19,8 @@ use App\Http\Controllers\OrderActionController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SellerProfileController;
+use App\Http\Controllers\Staff\BackofficeController;
+use App\Http\Controllers\Staff\CategoryAdminController;
 use App\Http\Controllers\Staff\DisputeReviewController;
 use App\Http\Controllers\ViewingResponseController;
 use App\Models\User;
@@ -199,6 +201,29 @@ Route::middleware(['auth', 'can:staff'])->prefix('beheer')->name('staff.')->grou
     Route::get('/geschillen', [DisputeReviewController::class, 'index'])->name('disputes.index');
     Route::get('/geschillen/{dispute}', [DisputeReviewController::class, 'show'])->name('disputes.show');
     Route::post('/geschillen/{dispute}', [DisputeReviewController::class, 'resolve'])->name('disputes.resolve');
+});
+
+/*
+ | De backoffice op /admin: alles inzien in de huisstijl, met het menu
+ | links. Zelfde staff-gate als de geschillenroute.
+ */
+Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('/', [BackofficeController::class, 'index'])->name('index');
+    Route::get('/kavels', [BackofficeController::class, 'lots'])->name('lots');
+    Route::get('/veilingen', [BackofficeController::class, 'auctions'])->name('auctions');
+    Route::get('/biedingen', [BackofficeController::class, 'bids'])->name('bids');
+    Route::get('/orders', [BackofficeController::class, 'orders'])->name('orders');
+    Route::get('/uitbetalingen', [BackofficeController::class, 'payouts'])->name('payouts');
+    Route::get('/gebruikers', [BackofficeController::class, 'users'])->name('users');
+    Route::get('/bedrijven', [BackofficeController::class, 'companies'])->name('companies');
+    Route::get('/reviews', [BackofficeController::class, 'reviews'])->name('reviews');
+    Route::get('/bezichtigingen', [BackofficeController::class, 'viewings'])->name('viewings');
+    Route::get('/ai-runs', [BackofficeController::class, 'aiRuns'])->name('ai-runs');
+
+    Route::get('/categorieen', [CategoryAdminController::class, 'index'])->name('categories');
+    Route::post('/categorieen', [CategoryAdminController::class, 'store'])->name('categories.store');
+    Route::put('/categorieen/{category:id}', [CategoryAdminController::class, 'update'])->name('categories.update');
+    Route::delete('/categorieen/{category:id}', [CategoryAdminController::class, 'destroy'])->name('categories.destroy');
 });
 
 /*

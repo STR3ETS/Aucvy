@@ -1,0 +1,137 @@
+@props(['title'])
+
+{{--
+    De backoffice-layout: hetzelfde ontwerp als de rest van het platform,
+    maar met het menu links in het navy van de donkere vlakken. Geen eigen
+    designsysteem - gewoon de aj-tokens en Manrope.
+--}}
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ $title }} · Aucvy Backoffice</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="bg-aj-bg text-aj-text" style="font-family:'Manrope',Inter,system-ui,sans-serif">
+
+    @php
+        $groups = [
+            'Operatie' => [
+                ['admin.index', 'Overzicht'],
+                ['admin.lots', 'Kavels'],
+                ['admin.auctions', 'Veilingen'],
+                ['admin.bids', 'Biedingen'],
+                ['admin.orders', 'Orders'],
+                ['admin.payouts', 'Uitbetalingen'],
+                ['admin.viewings', 'Bezichtigingen'],
+            ],
+            'Mensen' => [
+                ['admin.users', 'Gebruikers'],
+                ['admin.companies', 'Bedrijven'],
+                ['admin.reviews', 'Reviews'],
+            ],
+            'Systeem' => [
+                ['admin.categories', 'Categorieën'],
+                ['admin.ai-runs', 'AI-runs'],
+            ],
+        ];
+    @endphp
+
+    <div class="flex min-h-screen">
+
+        {{-- Linkermenu ------------------------------------------------------ --}}
+        <aside class="hidden w-60 shrink-0 flex-col bg-aj-navy text-white lg:flex">
+            <a href="{{ route('admin.index') }}" class="flex items-center gap-2.5 px-5 pb-4 pt-5">
+                <span class="size-2.5 rotate-45 rounded-[2px] bg-aj-blue" aria-hidden="true"></span>
+                <span class="text-lg font-extrabold tracking-tight">Aucvy</span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.12em] text-white/50">Backoffice</span>
+            </a>
+
+            <nav class="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="Beheer">
+                @foreach ($groups as $label => $items)
+                    <div>
+                        <p class="px-2 pb-1.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#9DB9FF]/80">{{ $label }}</p>
+                        <ul class="space-y-0.5">
+                            @foreach ($items as [$routeName, $itemLabel])
+                                <li>
+                                    <a href="{{ route($routeName) }}"
+                                       @class([
+                                           'block rounded-aj-sm px-3 py-2 text-sm font-semibold',
+                                           'bg-aj-blue text-white' => request()->routeIs($routeName),
+                                           'text-white/70 hover:bg-white/5 hover:text-white' => ! request()->routeIs($routeName),
+                                       ])
+                                       @if (request()->routeIs($routeName)) aria-current="page" @endif>{{ $itemLabel }}</a>
+                                </li>
+                            @endforeach
+                            @if ($label === 'Operatie')
+                                <li>
+                                    <a href="{{ route('staff.disputes.index') }}"
+                                       class="block rounded-aj-sm px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/5 hover:text-white">Geschillen</a>
+                                </li>
+                            @endif
+                        </ul>
+                    </div>
+                @endforeach
+            </nav>
+
+            <div class="space-y-1 border-t border-white/10 px-3 py-4">
+                <a href="{{ route('home') }}" class="block rounded-aj-sm px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/5 hover:text-white">Naar de site</a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="block w-full rounded-aj-sm px-3 py-2 text-left text-sm font-semibold text-white/70 hover:bg-white/5 hover:text-white">Uitloggen</button>
+                </form>
+            </div>
+        </aside>
+
+        {{-- Inhoud ----------------------------------------------------------- --}}
+        <div class="min-w-0 flex-1">
+
+            {{-- Mobiel: het menu als scrollende chips bovenaan. --}}
+            <div class="border-b border-aj-border bg-aj-navy px-4 py-3 lg:hidden">
+                <a href="{{ route('admin.index') }}" class="flex items-center gap-2 text-white">
+                    <span class="size-2 rotate-45 rounded-[2px] bg-aj-blue" aria-hidden="true"></span>
+                    <span class="font-extrabold">Aucvy</span>
+                    <span class="text-[10px] font-bold uppercase tracking-[0.12em] text-white/50">Backoffice</span>
+                </a>
+                <nav class="chip-row -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4" aria-label="Beheer">
+                    @foreach (collect($groups)->flatten(1) as [$routeName, $itemLabel])
+                        <a href="{{ route($routeName) }}"
+                           @class([
+                               'shrink-0 rounded-aj-sm px-3 py-1.5 text-xs font-bold',
+                               'bg-aj-blue text-white' => request()->routeIs($routeName),
+                               'bg-white/10 text-white/80' => ! request()->routeIs($routeName),
+                           ])>{{ $itemLabel }}</a>
+                    @endforeach
+                </nav>
+            </div>
+
+            <main class="px-4 py-8 sm:px-6 lg:px-10">
+                <div class="mx-auto max-w-6xl">
+                    <h1 class="text-3xl font-extrabold tracking-[-0.03em]">{{ $title }}</h1>
+
+                    @if (session('status'))
+                        <p class="mt-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm font-semibold text-aj-success-text">
+                            {{ session('status') }}
+                        </p>
+                    @endif
+
+                    @if ($errors->any())
+                        <p role="alert" class="mt-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm font-semibold text-aj-error">
+                            {{ $errors->first() }}
+                        </p>
+                    @endif
+
+                    {{ $slot }}
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>
