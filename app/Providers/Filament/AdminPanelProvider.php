@@ -29,7 +29,12 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->brandName('Aucvy Backoffice')
+            ->brandLogo(fn () => view('filament.brand'))
+            ->font('Manrope')
+            // Eén consistente look; het thema is op licht gestyled.
+            ->darkMode(false)
             ->login()
             ->colors([
                 // Het saffierblauw van het platform.
