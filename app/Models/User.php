@@ -7,6 +7,8 @@ namespace App\Models;
 use App\Enums\KycStatus;
 use App\Enums\UserType;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -24,7 +26,7 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
     'phone', 'kyc_status', 'notification_prefs',
 ])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasPushSubscriptions, Notifiable, SoftDeletes;
@@ -65,6 +67,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function requiresSecondFactor(): bool
     {
         return $this->company?->payout_iban_last4 !== null;
+    }
+
+    /**
+     * De backoffice op /admin is uitsluitend voor medewerkers - dezelfde
+     * vlag als de geschillenroute (hfst. 9).
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->is_staff === true;
     }
 
     // Relaties -------------------------------------------------------------
