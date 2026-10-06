@@ -222,6 +222,7 @@ Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group
     Route::get('/gebruikers', [BackofficeController::class, 'users'])->name('users');
     Route::get('/gebruikers/{user:id}', [BackofficeController::class, 'showUser'])->name('users.show')->withTrashed();
     Route::get('/bedrijven', [BackofficeController::class, 'companies'])->name('companies');
+    Route::get('/bedrijven/{company:id}', [BackofficeController::class, 'showCompany'])->name('companies.show')->withTrashed();
     Route::get('/reviews', [BackofficeController::class, 'reviews'])->name('reviews');
     Route::get('/bezichtigingen', [BackofficeController::class, 'viewings'])->name('viewings');
     Route::get('/ai-runs', [BackofficeController::class, 'aiRuns'])->name('ai-runs');

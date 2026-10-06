@@ -267,9 +267,21 @@ final class BackofficeController extends Controller
             'companies' => Company::query()
                 ->when($request->query('q'), fn ($query, $term) => $query
                     ->where('name', 'like', "%{$term}%")->orWhere('kvk_number', 'like', "%{$term}%"))
+                ->when($request->query('status') === 'geverifieerd', fn ($query) => $query->whereNotNull('verified_at'))
+                ->when($request->query('status') === 'ongeverifieerd', fn ($query) => $query->whereNull('verified_at'))
                 ->latest('id')
                 ->paginate(25)
                 ->withQueryString(),
+        ]);
+    }
+
+    public function showCompany(Company $company): View
+    {
+        return view('admin.companies.show', [
+            'company' => $company,
+            'users' => $company->users()->withCount(['lots', 'bids'])->get(),
+            'lots' => $company->lots()->with('category')->latest('id')->limit(10)->get(),
+            'reviews' => $company->reviews()->with('reviewer')->latest('id')->limit(8)->get(),
         ]);
     }
 

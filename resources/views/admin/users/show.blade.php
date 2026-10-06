@@ -21,7 +21,15 @@
         <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Bedrijf en cijfers">
             <h2 class="text-sm font-extrabold">Bedrijf en cijfers</h2>
             <dl class="mt-3 space-y-2 text-sm">
-                <div class="flex justify-between gap-3"><dt class="text-aj-muted">Bedrijf</dt><dd class="font-semibold">{{ $user->company?->name ?? '-' }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-aj-muted">Bedrijf</dt>
+                    <dd class="font-semibold">
+                        @if ($user->company)
+                            <a href="{{ route('admin.companies.show', $user->company) }}" class="text-aj-blue-text underline">{{ $user->company->name }}</a>
+                        @else
+                            -
+                        @endif
+                    </dd>
+                </div>
                 <div class="flex justify-between gap-3"><dt class="text-aj-muted">KvK</dt><dd class="tabular font-semibold">{{ $user->company?->kvk_number ?? '-' }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-aj-muted">Kavels</dt><dd class="tabular font-semibold">{{ $user->lots_count }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-aj-muted">Biedingen</dt><dd class="tabular font-semibold">{{ $user->bids_count }}</dd></div>

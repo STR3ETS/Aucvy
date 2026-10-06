@@ -71,6 +71,15 @@ it('toont het gebruikersdetail binnen de backoffice', function () {
         ->assertSee($user->name);
 });
 
+it('toont het bedrijfsdetail binnen de backoffice', function () {
+    $user = User::factory()->verified()->business()->create();
+
+    $this->actingAs(staffMember())->get('/admin/bedrijven/'.$user->company->id)
+        ->assertOk()
+        ->assertSee($user->company->name)
+        ->assertSee('Bedrijfsgegevens');
+});
+
 it('toont het orderdetail binnen de backoffice', function () {
     $order = Order::factory()->create();
 

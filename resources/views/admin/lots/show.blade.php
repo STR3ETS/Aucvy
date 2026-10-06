@@ -58,7 +58,15 @@
                 <div class="flex justify-between gap-3"><dt class="text-aj-muted">Verkoper</dt>
                     <dd class="font-semibold"><a href="{{ route('admin.users.show', $lot->seller) }}" class="text-aj-blue-text underline">{{ $lot->seller->name }}</a></dd>
                 </div>
-                <div class="flex justify-between gap-3"><dt class="text-aj-muted">Bedrijf</dt><dd class="font-semibold">{{ $lot->company?->name ?? '-' }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-aj-muted">Bedrijf</dt>
+                    <dd class="font-semibold">
+                        @if ($lot->company)
+                            <a href="{{ route('admin.companies.show', $lot->company) }}" class="text-aj-blue-text underline">{{ $lot->company->name }}</a>
+                        @else
+                            -
+                        @endif
+                    </dd>
+                </div>
                 @if ($lot->auction)
                     <div class="flex justify-between gap-3"><dt class="text-aj-muted">Huidige stand</dt><dd class="tabular font-semibold">{{ Money::format($lot->currentPriceCents()) }}</dd></div>
                     @if ($lot->sale_type === SaleType::Auction)
@@ -70,7 +78,7 @@
                         <div class="flex justify-between gap-3"><dt class="text-aj-muted">Koop direct-prijs</dt><dd class="tabular font-semibold">{{ Money::format($lot->auction->buy_now_price_cents) }}</dd></div>
                     @endif
                     @if ($lot->sale_type === SaleType::Dutch)
-                        <div class="flex justify-between gap-3"><dt class="text-aj-muted">Afslag</dt><dd class="tabular font-semibold">{{ Money::format($lot->auction->dutch_start_cents ?? 0) }} → {{ Money::format($lot->auction->dutch_floor_cents ?? 0) }}</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="text-aj-muted">Afslag</dt><dd class="tabular font-semibold">{{ Money::format($lot->auction->dutch_start_cents ?? 0) }} tot {{ Money::format($lot->auction->dutch_floor_cents ?? 0) }}</dd></div>
                     @endif
                     <div class="flex justify-between gap-3"><dt class="text-aj-muted">Eindigt</dt><dd class="font-semibold">{{ $lot->auction->ends_at?->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') ?? '-' }}</dd></div>
                     <div class="flex justify-between gap-3"><dt class="text-aj-muted">Gesloten</dt><dd class="font-semibold">{{ $lot->auction->closed_at?->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') ?? 'loopt nog' }}</dd></div>
