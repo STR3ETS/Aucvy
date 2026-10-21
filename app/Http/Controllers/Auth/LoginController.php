@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Lots\DraftAccess;
+use App\Models\User;
 use App\Notifications\TwoFactorCode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,7 +41,12 @@ final class LoginController extends Controller
 
         $this->guardAgainstBruteForce($request);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        /*
+         | Eerst alleen controleren, nog niet inloggen: wie een code moet geven
+         | is pas ingelogd ná die code, en een inlog-plus-uitlog zou de
+         | herinneringstoken van al zijn andere apparaten wissen.
+         */
+        if (! Auth::validate($credentials)) {
             RateLimiter::hit($this->throttleKey($request));
 
             // Bewust niet verklappen of het e-mailadres bestaat.
@@ -51,19 +57,15 @@ final class LoginController extends Controller
 
         RateLimiter::clear($this->throttleKey($request));
 
+        /** @var User $user */
+        $user = Auth::getProvider()->retrieveByCredentials($credentials);
+
         /*
          | Tweede factor bij een gekoppelde uitbetaling (hfst. 15): nog niet
-         | ingelogd blijven, code per mail, en verder bij /inloggen/code.
+         | ingelogd, code per mail, en verder bij /inloggen/code.
          */
-        $user = Auth::user();
-
         if ($user->requiresSecondFactor()) {
-            Auth::logout();
-
-            $request->session()->put('two_factor', [
-                'id' => $user->id,
-                'remember' => $request->boolean('remember'),
-            ]);
+            $request->session()->put('two_factor', ['id' => $user->id]);
 
             $code = (string) random_int(100_000, 999_999);
             Cache::put('two_factor_code:'.$user->id, Hash::make($code), now()->addMinutes(10));
@@ -71,6 +73,8 @@ final class LoginController extends Controller
 
             return redirect()->route('two-factor.challenge');
         }
+
+        Auth::login($user, $request->boolean('remember'));
 
         // Voorkomt session fixation: de sessie krijgt een nieuw id.
         $request->session()->regenerate();

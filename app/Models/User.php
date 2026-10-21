@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
 #[Fillable([
@@ -226,6 +228,24 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return Lot::query()->where('seller_id', $this->id)->public()->exists()
             || Review::query()->where('seller_id', $this->id)->exists();
+    }
+
+    /**
+     * Alle andere sessies van deze gebruiker beëindigen en de
+     * herinneringstoken wisselen, zodat ook een "ingelogd blijven"-cookie op
+     * een ander apparaat niets meer waard is. De huidige sessie blijft.
+     */
+    public function revokeOtherSessions(?string $keepSessionId = null): void
+    {
+        if (config('session.driver') === 'database') {
+            DB::table((string) config('session.table', 'sessions'))
+                ->where('user_id', $this->id)
+                ->when($keepSessionId !== null, fn ($query) => $query->where('id', '!=', $keepSessionId))
+                ->delete();
+        }
+
+        $this->setRememberToken(Str::random(60));
+        $this->save();
     }
 
     public function publicName(): string

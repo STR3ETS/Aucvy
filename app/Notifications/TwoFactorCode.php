@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
  * De tweede stap bij het inloggen voor accounts met een gekoppelde
  * uitbetaling (hfst. 15). Tien minuten geldig.
+ *
+ * Bewust niet via de wachtrij: een stilstaande worker zou anders elke
+ * medewerker en elk bedrijf met een uitbetaalrekening buiten de deur houden.
  */
-final class TwoFactorCode extends Notification implements ShouldQueue
+final class TwoFactorCode extends Notification
 {
-    use Queueable;
-
     public function __construct(public readonly string $code) {}
 
     /**

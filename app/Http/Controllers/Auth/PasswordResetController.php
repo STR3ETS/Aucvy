@@ -9,7 +9,6 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -56,15 +55,22 @@ final class PasswordResetController extends Controller
             $validated,
             function ($user, string $password): void {
                 $user->password = $password;
-                $user->setRememberToken(Str::random(60));
                 $user->save();
+
+                // Wie zijn wachtwoord herstelt, wil iedereen die nog ingelogd
+                // was eruit hebben: sessies weg en herinneringstoken gewisseld.
+                $user->revokeOtherSessions();
 
                 event(new PasswordReset($user));
             },
         );
 
         if ($status !== Password::PasswordReset) {
-            throw ValidationException::withMessages(['email' => __($status)]);
+            // Eén melding voor "onbekend adres" en "ongeldig token": het
+            // formulier verklapt niet welke accounts bestaan.
+            $generic = in_array($status, [Password::InvalidUser, Password::InvalidToken], true);
+
+            throw ValidationException::withMessages(['email' => __($generic ? 'passwords.token' : $status)]);
         }
 
         return redirect()->route('login')->with('status', __('verification.password_reset'));

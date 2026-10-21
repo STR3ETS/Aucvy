@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -58,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDates();
         $this->configureRateLimiting();
         $this->configureAuthMails();
+        $this->configurePasswords();
 
         // "Een medewerker beoordeelt - geen algoritme" (hfst. 9). Dit is die
         // medewerker.
@@ -96,6 +98,18 @@ class AppServiceProvider extends ServiceProvider
      * veiling sluit. En bewust per veiling, want meebieden op drie kavels
      * tegelijk is normaal gedrag (hfst. 6).
      */
+    /**
+     * Acht tekens is geen wachtwoord voor een account dat geld ontvangt. In
+     * productie minstens tien met letters en cijfers; lokaal en in tests
+     * blijft de korte regel, anders wordt elke fixture een wachtwoordles.
+     */
+    private function configurePasswords(): void
+    {
+        Password::defaults(fn (): Password => $this->app->isProduction()
+            ? Password::min(10)->letters()->numbers()
+            : Password::min(8));
+    }
+
     private function configureRateLimiting(): void
     {
         RateLimiter::for('bidding', function (Request $request): Limit {

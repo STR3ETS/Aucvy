@@ -135,7 +135,9 @@ Route::get('/verkopen', FunnelController::class)->name('sell');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/inloggen', [LoginController::class, 'create'])->name('login');
-    Route::post('/inloggen', [LoginController::class, 'store'])->name('login.store');
+    // Naast de rem per e-mailadres (5 per minuut) ook één per adres, tegen
+    // het proberen van gelekte wachtwoorden over veel accounts tegelijk.
+    Route::post('/inloggen', [LoginController::class, 'store'])->middleware('throttle:20,1')->name('login.store');
 
     // De tweede inlogstap bij een gekoppelde uitbetaling (hfst. 15).
     Route::get('/inloggen/code', [TwoFactorController::class, 'create'])->name('two-factor.challenge');

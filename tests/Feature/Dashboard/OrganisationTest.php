@@ -65,11 +65,11 @@ it('laat alleen de eigenaar een geldig IBAN vastleggen en bewaart enkel de laats
     $this->actingAs($admin)->patch(route('organisation.payout'), ['iban' => 'NL91ABNA0417164300', 'iban_name' => 'Keukenhuis'])->assertForbidden();
 
     $this->actingAs($owner)
-        ->patch(route('organisation.payout'), ['iban' => 'NL91ABNA0417164301', 'iban_name' => 'Keukenhuis'])
+        ->patch(route('organisation.payout'), ['current_password' => 'password', 'iban' => 'NL91ABNA0417164301', 'iban_name' => 'Keukenhuis'])
         ->assertSessionHasErrors('iban');
 
     $this->actingAs($owner)
-        ->patch(route('organisation.payout'), ['iban' => 'nl91 abna 0417 1643 00', 'iban_name' => 'Keukenhuis Utrecht BV'])
+        ->patch(route('organisation.payout'), ['current_password' => 'password', 'iban' => 'nl91 abna 0417 1643 00', 'iban_name' => 'Keukenhuis Utrecht BV'])
         ->assertRedirect(route('organisation.show'))
         ->assertSessionHasNoErrors();
 

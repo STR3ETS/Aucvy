@@ -63,7 +63,9 @@ final class TwoFactorController extends Controller
         Cache::forget('two_factor_code:'.$pending['id']);
         $request->session()->forget('two_factor');
 
-        Auth::loginUsingId($pending['id'], $pending['remember'] ?? false);
+        // Geen "ingelogd blijven" voor wie een code moet geven: die cookie
+        // zou de volgende keer zonder code inloggen (hfst. 15).
+        Auth::loginUsingId($pending['id'], false);
         $request->session()->regenerate();
 
         app(DraftAccess::class)->claimFor($request);

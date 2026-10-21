@@ -204,7 +204,9 @@ return [
      | Zonder eigen adres valt hij terug op de afzender van de app.
      */
     'support' => [
-        'email' => env('AUCVY_SUPPORT_EMAIL', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+        // `?:` en niet een standaardwaarde: een lege regel in .env is anders
+        // een leeg adres, en een mail naar '' verdwijnt zonder fout.
+        'email' => env('AUCVY_SUPPORT_EMAIL') ?: env('MAIL_FROM_ADDRESS', 'hello@example.com'),
     ],
 
     /*

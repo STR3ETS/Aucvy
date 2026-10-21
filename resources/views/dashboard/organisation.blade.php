@@ -62,6 +62,12 @@
                             <span class="font-bold">Tenaamstelling</span>
                             <input type="text" name="iban_name" value="{{ old('iban_name', $company->payout_iban_name) }}" required maxlength="120" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:42px">
                         </label>
+                        <label class="grid gap-1 text-sm">
+                            <span class="font-bold">Je wachtwoord</span>
+                            <span class="text-xs text-aj-muted">Ter bevestiging: dit is waar het geld heen gaat.</span>
+                            <input type="password" name="current_password" required autocomplete="current-password" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:42px">
+                            @error('current_password')<span class="text-xs text-aj-error">{{ $message }}</span>@enderror
+                        </label>
                         <div class="sm:col-span-2"><button type="submit" class="btn btn-primary">{{ $company->payout_iban_last4 ? 'Rekening wijzigen' : 'Rekening vastleggen' }}</button></div>
                     </form>
                 @else

@@ -192,6 +192,43 @@ final class Health
             $problems[] = 'Ivy draait op de nepprovider';
         }
 
+        /*
+         | Instellingen die in productie geld of identiteit raken: met de
+         | nepbetaalprovider kan elke koper zijn eigen betaling "afronden",
+         | met zelfgoedkeuring verifieert iedereen zichzelf, zonder Reverb
+         | ziet niemand een bod live, met een sync-queue sluit niets op tijd,
+         | en zonder supportadres verdwijnt elke alarmmail in het niets.
+         */
+        if ($production && config('aucvy.payments.provider') === 'fake') {
+            $problems[] = 'betalingen lopen via de nepprovider';
+        }
+
+        if ($production && config('aucvy.verification.auto_approve')) {
+            $problems[] = 'verificatie keurt zichzelf goed';
+        }
+
+        if ($production && config('broadcasting.default') !== 'reverb') {
+            $problems[] = 'broadcasting staat niet op reverb';
+        }
+
+        if ($production && config('queue.default') === 'sync') {
+            $problems[] = 'de wachtrij draait synchroon';
+        }
+
+        $supportEmail = (string) config('aucvy.support.email');
+
+        if ($supportEmail === '' || str_ends_with($supportEmail, '@example.com')) {
+            $problems[] = 'geen supportadres (AUCVY_SUPPORT_EMAIL)';
+        }
+
+        if ($production && str_ends_with((string) config('mail.from.address'), '@example.com')) {
+            $problems[] = 'afzender is nog hello@example.com';
+        }
+
+        if ($production && config('session.secure') !== true) {
+            $problems[] = 'SESSION_SECURE_COOKIE staat niet aan';
+        }
+
         if (app()->isDownForMaintenance()) {
             $problems[] = 'onderhoudsmodus staat aan';
         }

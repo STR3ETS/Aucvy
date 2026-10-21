@@ -67,6 +67,10 @@ final class AccountSettingsController extends Controller
         $user->password = $validated['password'];
         $user->save();
 
+        // Een nieuw wachtwoord betekent: alleen dít apparaat blijft ingelogd.
+        $user->revokeOtherSessions($request->session()->getId());
+        $this->renewRecaller($request);
+
         Audit::record('user.password_changed', $user, $user, ip: $request->ip());
 
         return back()->with('status', 'Je wachtwoord is gewijzigd.');
@@ -97,16 +101,26 @@ final class AccountSettingsController extends Controller
 
         Auth::logoutOtherDevices($request->input('password'));
 
-        if (config('session.driver') === 'database') {
-            DB::table(config('session.table', 'sessions'))
-                ->where('user_id', $request->user()->id)
-                ->where('id', '!=', $request->session()->getId())
-                ->delete();
-        }
+        // Ook de herinneringscookies van die apparaten: anders logt het
+        // tweede apparaat zichzelf bij het volgende verzoek weer in.
+        $request->user()->revokeOtherSessions($request->session()->getId());
+        $this->renewRecaller($request);
 
         Audit::record('user.sessions_revoked', $request->user(), $request->user(), ip: $request->ip());
 
         return back()->with('status', 'Je bent op alle andere apparaten uitgelogd.');
+    }
+
+    /**
+     * Was dit apparaat zelf met een herinneringscookie ingelogd, dan krijgt
+     * het een nieuwe met de gewisselde token; anders zou het bij het
+     * volgende bezoek ook uitgelogd zijn.
+     */
+    private function renewRecaller(Request $request): void
+    {
+        if ($request->cookies->has(Auth::guard()->getRecallerName())) {
+            Auth::login($request->user(), remember: true);
+        }
     }
 
     /**

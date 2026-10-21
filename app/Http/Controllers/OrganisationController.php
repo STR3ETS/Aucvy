@@ -69,7 +69,10 @@ final class OrganisationController extends Controller
         $company = $this->company($user);
         abort_unless($user->companyRole() === CompanyRole::Owner, 403);
 
+        // De bestemming van het geld: een gekaapte of achtergebleven sessie
+        // mag die niet kunnen omzetten zonder het wachtwoord opnieuw.
         $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
             'iban' => ['required', 'string', 'max:40', fn (string $attribute, mixed $value, Closure $fail) => Iban::isValid((string) $value) || $fail('Dit is geen geldig IBAN. Controleer de cijfers.')],
             'iban_name' => ['required', 'string', 'max:120'],
         ]);

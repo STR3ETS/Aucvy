@@ -22,7 +22,9 @@ use Illuminate\Support\Facades\Schedule;
  */
 Schedule::command('auctions:close-overdue')
     ->everyMinute()
-    ->withoutOverlapping()
+    // Vijf minuten: een gedode run (herstart, OOM) mag de volgende minuut
+    // niet een dag lang blokkeren, en langer dan dit duurt hij nooit.
+    ->withoutOverlapping(5)
     ->runInBackground();
 
 /*
@@ -32,7 +34,9 @@ Schedule::command('auctions:close-overdue')
  */
 Schedule::command('orders:advance')
     ->everyMinute()
-    ->withoutOverlapping()
+    // Vijf minuten: een gedode run (herstart, OOM) mag de volgende minuut
+    // niet een dag lang blokkeren, en langer dan dit duurt hij nooit.
+    ->withoutOverlapping(5)
     ->runInBackground();
 
 // Dead-letter-alarm (briefing sectie 8): één mail naar support als er sinds de vorige controle jobs mislukten.
@@ -61,7 +65,7 @@ Schedule::command('system:health --notify')->everyFifteenMinutes();
  */
 Schedule::command('ivy:weekly-insights')
     ->weeklyOn(1, '07:00')
-    ->withoutOverlapping();
+    ->withoutOverlapping(60);
 
 /*
  | Alerts en volglijst (briefing sectie 3): bewaarde zoekopdrachten langs de
@@ -69,11 +73,11 @@ Schedule::command('ivy:weekly-insights')
  */
 Schedule::command('alerts:match')
     ->hourly()
-    ->withoutOverlapping();
+    ->withoutOverlapping(60);
 
 Schedule::command('watchlist:notify-ending')
     ->everyFifteenMinutes()
-    ->withoutOverlapping();
+    ->withoutOverlapping(60);
 
 /*
  | De bewaartermijnen uit hfst. 15: in code afgedwongen, niet in een
@@ -81,4 +85,4 @@ Schedule::command('watchlist:notify-ending')
  */
 Schedule::command('aucvy:prune-expired')
     ->dailyAt('04:00')
-    ->withoutOverlapping();
+    ->withoutOverlapping(60);
