@@ -11,6 +11,7 @@ use App\Ivy\Tasks\DraftListing;
 use App\Ivy\Tasks\EstimateValue;
 use App\Ivy\Tasks\InterpretSearch;
 use App\Ivy\Tasks\RecogniseLot;
+use App\Ivy\Tasks\TranslateListing;
 use App\Ivy\Tasks\WeeklyInsights;
 use App\Models\Lot;
 use App\Models\User;
@@ -39,9 +40,14 @@ final class TaskRegistry
         'bid_advice' => BidAdvice::class,
     ];
 
+    /** Taken die de applicatie zelf start (publicatie, bewerking); niet via de API. */
+    private const SYSTEM_TASKS = [
+        'translate_listing' => TranslateListing::class,
+    ];
+
     public static function knows(string $name): bool
     {
-        return isset(self::DRAFT_TASKS[$name]) || isset(self::LIVE_LOT_TASKS[$name]);
+        return isset(self::DRAFT_TASKS[$name]) || isset(self::LIVE_LOT_TASKS[$name]) || isset(self::SYSTEM_TASKS[$name]);
     }
 
     public static function isDraftScoped(string $name): bool
@@ -51,7 +57,7 @@ final class TaskRegistry
 
     public static function forLot(string $name, Lot $lot): AiTask
     {
-        $class = self::DRAFT_TASKS[$name] ?? self::LIVE_LOT_TASKS[$name];
+        $class = self::DRAFT_TASKS[$name] ?? self::LIVE_LOT_TASKS[$name] ?? self::SYSTEM_TASKS[$name];
 
         return new $class($lot);
     }

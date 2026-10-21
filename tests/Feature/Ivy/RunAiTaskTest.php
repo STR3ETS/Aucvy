@@ -88,7 +88,9 @@ describe('het gelukkige pad', function () {
 
         expect($lot->brand)->toBe('Siemens')
             ->and($lot->condition)->toBeInstanceOf(LotCondition::class)
-            ->and($lot->specifications['objecttype'])->toBe('Professionele keuken');
+            // Kenmerken van Ivy dragen hun bron en zekerheid (briefing sectie 5).
+            ->and($lot->specifications['objecttype']['value'])->toBe('Professionele keuken')
+            ->and($lot->specifications['objecttype']['source'])->toBe('ai');
     });
 
     it('overschrijft nooit wat de verkoper zelf invulde', function () {

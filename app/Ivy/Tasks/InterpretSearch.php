@@ -98,10 +98,12 @@ final class InterpretSearch implements AiTask
                 'filters' => [
                     'type' => 'object',
                     'properties' => [
-                        'categorie' => ['type' => ['string', 'null'], 'maxLength' => 80],
+                        // Het schema dwingt af wat de prompt belooft: alleen een
+                        // slug of conditie die bestaat, anders null.
+                        'categorie' => ['type' => ['string', 'null'], 'maxLength' => 80, 'enum' => $this->input()['categories']],
                         'vanaf' => ['type' => ['integer', 'null']],
                         'tot' => ['type' => ['integer', 'null']],
-                        'conditie' => ['type' => ['string', 'null'], 'maxLength' => 20],
+                        'conditie' => ['type' => ['string', 'null'], 'maxLength' => 20, 'enum' => array_column(LotCondition::cases(), 'value')],
                     ],
                 ],
                 'confidence' => ['type' => 'number'],

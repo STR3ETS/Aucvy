@@ -35,6 +35,7 @@ final class FakeProvider implements LlmProvider
             'bid_advice' => $this->advice($input),
             'check_documents' => $this->checkDocuments($input),
             'interpret_search' => $this->interpret($input),
+            'translate_listing' => $this->translate($input),
             default => ['confidence' => 0.5],
         };
 
@@ -87,6 +88,13 @@ final class FakeProvider implements LlmProvider
             'condition' => ['good', 'used', 'like_new'][$seed % 3],
             'specifications' => $brand !== null ? ['merk' => $brand] : [],
             'confidence' => $confidence,
+            // Een merk dat letterlijk in de omschrijving staat is zeker; de
+            // conditie uit foto's alleen is dat zelden - die vraagt om een
+            // bevestiging van de verkoper.
+            'field_confidence' => [
+                'brand' => $brand !== null ? 0.95 : 0.0,
+                'condition' => round(min(0.75, $confidence), 2),
+            ],
         ];
     }
 
@@ -114,6 +122,23 @@ final class FakeProvider implements LlmProvider
             'title' => mb_substr($title, 0, 120),
             'description' => $body,
             'confidence' => $description !== '' ? 0.75 : 0.55,
+        ];
+    }
+
+    /**
+     * Nep-vertaling: herkenbaar aan het voorvoegsel, verder de bron.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    private function translate(array $input): array
+    {
+        $tag = '['.strtoupper((string) ($input['locale'] ?? 'en')).'] ';
+
+        return [
+            'title' => $tag.(string) ($input['title'] ?? ''),
+            'description' => $tag.(string) ($input['description'] ?? ''),
+            'confidence' => 0.9,
         ];
     }
 

@@ -110,8 +110,13 @@ export function searchInterpret(query, enabled) {
         applyUrl(overrides) {
             const url = new URL(window.location.href);
             const filters = this.reading?.output?.filters ?? {};
+            // Alleen de filters die de zoekpagina kent; nooit de zoekterm
+            // zelf of een sleutel die het model erbij verzint.
+            const known = ['categorie', 'vanaf', 'tot', 'conditie'];
 
             for (const [key, value] of Object.entries({ ...filters, ...overrides })) {
+                if (! known.includes(key)) continue;
+
                 if (value === null || value === undefined || value === '') {
                     url.searchParams.delete(key);
                 } else {

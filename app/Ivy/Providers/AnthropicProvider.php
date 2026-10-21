@@ -19,6 +19,17 @@ use App\Ivy\Contracts\LlmProvider;
  */
 final class AnthropicProvider implements LlmProvider
 {
+    /** Wat de Messages API als foto accepteert, en tot welke grootte. */
+    private const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+    private const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+    /**
+     * Een advertentie of vertaling van een lange omschrijving past niet in
+     * 2048 tokens; afgekapte JSON is een mislukte (en betaalde) run.
+     */
+    private const LONG_TEXT_TASKS = ['draft_listing', 'translate_listing'];
+
     public function complete(AiTask $task, string $prompt): AiResult
     {
         $client = new Client(apiKey: (string) config('services.anthropic.key'));
@@ -29,7 +40,15 @@ final class AnthropicProvider implements LlmProvider
         // Maximaal acht foto's mee: genoeg voor herkenning, en het houdt de
         // tokenkosten van een fotorijk concept begrensd.
         foreach (array_slice($task->images(), 0, 8) as $path) {
-            if (! is_file($path)) {
+            if (! is_file($path) || filesize($path) > self::MAX_IMAGE_BYTES) {
+                continue;
+            }
+
+            // De API neemt alleen jpeg, png, gif en webp aan; één heic in de
+            // reeks zou anders élke analyse van dit concept laten mislukken.
+            $mime = (string) (mime_content_type($path) ?: '');
+
+            if (! in_array($mime, self::IMAGE_TYPES, true)) {
                 continue;
             }
 
@@ -37,7 +56,7 @@ final class AnthropicProvider implements LlmProvider
                 'type' => 'image',
                 'source' => [
                     'type' => 'base64',
-                    'mediaType' => mime_content_type($path) ?: 'image/jpeg',
+                    'mediaType' => $mime,
                     'data' => base64_encode((string) file_get_contents($path)),
                 ],
             ];
@@ -65,7 +84,7 @@ final class AnthropicProvider implements LlmProvider
 
         $message = $client->messages->create(
             model: $model,
-            maxTokens: 2048,
+            maxTokens: in_array($task->name(), self::LONG_TEXT_TASKS, true) ? 8192 : 2048,
             system: [[
                 'type' => 'text',
                 'text' => 'Je bent Ivy, de analyse-assistent van veilingplatform Aucvy. '

@@ -16,6 +16,7 @@ use App\Models\AiRun;
 use App\Models\Lot;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 /**
@@ -42,6 +43,8 @@ final class IvyTaskController extends Controller
             'query' => ['required_if:task,interpret_search', 'string', 'min:2', 'max:120'],
         ]);
 
+        $this->guardGuestAllowance($request);
+
         $task = match (true) {
             // Zoeken is publiek; het onderwerp is de zoekvraag, geen kavel.
             $validated['task'] === 'interpret_search' => TaskRegistry::searchFor($validated['query'], $request->user()),
@@ -64,15 +67,34 @@ final class IvyTaskController extends Controller
         };
 
         $subject = $task->subject();
+        $cacheKey = $task->cacheKey();
+        $userId = $request->user()?->id;
+
+        /*
+         | Twee tabbladen of een dubbele klik: dezelfde invoer die al in de
+         | wachtrij staat of draait wordt niet nog een keer betaald. De cache
+         | vangt alleen afgeronde runs; dit vangt de lopende.
+         */
+        $inFlight = AiRun::query()
+            ->where('cache_key', $cacheKey)
+            ->whereIn('status', [AiRunStatus::Queued, AiRunStatus::Running])
+            ->when($userId === null, fn ($query) => $query->whereNull('user_id'), fn ($query) => $query->where('user_id', $userId))
+            ->where('created_at', '>=', now()->subMinutes(15))
+            ->latest('id')
+            ->first();
+
+        if ($inFlight !== null) {
+            return response()->json(['run' => $this->runPayload($inFlight)], 200);
+        }
 
         $run = AiRun::create([
             'subject_type' => $subject?->getMorphClass(),
             'subject_id' => $subject?->getKey(),
-            'user_id' => $request->user()?->id,
+            'user_id' => $userId,
             'agent' => $task->agent(),
             'task' => $task->name(),
             'input' => $task->input(),
-            'cache_key' => $task->cacheKey(),
+            'cache_key' => $cacheKey,
             'status' => AiRunStatus::Queued,
         ]);
 
@@ -102,7 +124,7 @@ final class IvyTaskController extends Controller
         // conceptstand gaat mee zodat de funnel hem als autosave-respons kan
         // toepassen.
         if ($lot !== null && TaskRegistry::isDraftScoped($run->task) && $run->status === AiRunStatus::Completed) {
-            $response += $this->draftPayload->for($lot->fresh(), auth()->check());
+            $response += $this->draftPayload->for($lot->fresh(), $request->user());
         }
 
         return response()->json($response);
@@ -129,12 +151,38 @@ final class IvyTaskController extends Controller
             $payload['confidence_hint'] = $this->confidence->hint($run->confidence);
         }
 
-        if (in_array($run->status, [AiRunStatus::Failed, AiRunStatus::Skipped], true)) {
-            // Eigen tekst, geen modeluitvoer - mag naar de client.
+        if ($run->status === AiRunStatus::Skipped) {
+            // Eigen tekst (noodrem, budget) - mag naar de client.
             $payload['error'] = $run->error;
         }
 
+        if ($run->status === AiRunStatus::Failed) {
+            // De echte fout (een providerantwoord, een SQL-fout) staat in het
+            // log en op de systeempagina; de client krijgt één eigen zin.
+            $payload['error'] = __('ivy.failed');
+        }
+
         return $payload;
+    }
+
+    /**
+     * Zonder account telt alleen het omgevingsbudget; één adres dat de
+     * zoekpagina in een lus opvraagt zou dat in een uur leegtrekken en zo
+     * Ivy voor elke verkoper uitzetten. Daarom een dagplafond per adres.
+     */
+    private function guardGuestAllowance(Request $request): void
+    {
+        if ($request->user() !== null) {
+            return;
+        }
+
+        $key = 'ivy:guest:'.hash('xxh128', (string) $request->ip()).':'.now()->format('Y-m-d');
+
+        Cache::add($key, 0, now()->endOfDay());
+
+        if ((int) Cache::increment($key) > (int) config('aucvy.ai.daily_runs_per_guest_ip')) {
+            abort(429, __('ivy.guest_limit'));
+        }
     }
 
     /**

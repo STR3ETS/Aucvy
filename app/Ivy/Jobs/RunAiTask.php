@@ -110,11 +110,32 @@ final class RunAiTask implements ShouldQueue
                 'cost_cents' => $result->costCents(),
                 'latency_ms' => $this->elapsedMs($startedAt),
             ]);
-
-            $this->task->apply($this->run);
         } catch (Throwable $exception) {
             report($exception);
             $this->fail_(null, $startedAt, 'Provider faalde: '.$exception->getMessage());
+
+            return;
+        }
+
+        $this->applySafely();
+    }
+
+    /**
+     * Toepassen buiten de providerfout: een fout hier (een bouwjaar dat niet
+     * in de kolom past) is na een betaalde aanroep. De run blijft dan met
+     * zijn kosten in het log staan, als mislukt, zonder de uitvoer op het
+     * concept te zetten.
+     */
+    private function applySafely(): void
+    {
+        try {
+            $this->task->apply($this->run);
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->run->update([
+                'status' => AiRunStatus::Failed,
+                'error' => 'Toepassen mislukt: het resultaat kon niet op het concept gezet worden.',
+            ]);
         }
     }
 
@@ -161,7 +182,7 @@ final class RunAiTask implements ShouldQueue
             'latency_ms' => 0,
         ]);
 
-        $this->task->apply($this->run);
+        $this->applySafely();
 
         return true;
     }

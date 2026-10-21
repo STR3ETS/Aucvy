@@ -29,7 +29,20 @@ final readonly class AiResult
         $pricing = config('aucvy.ai.pricing.'.$this->model);
 
         if (! is_array($pricing)) {
-            return 0;
+            // Een echt model zonder prijsregel (AUCVY_AI_MODEL naar een nieuw
+            // id) mag de budgetten niet stilletjes uitzetten: reken dan met
+            // het duurste bekende tarief. Alleen nep- en stubmodellen zijn gratis.
+            if (! str_starts_with($this->model, 'claude')) {
+                return 0;
+            }
+
+            $pricing = collect((array) config('aucvy.ai.pricing', []))
+                ->sortByDesc(fn (array $row): int => (int) $row['output_cents_per_mtok'])
+                ->first();
+
+            if (! is_array($pricing)) {
+                return 0;
+            }
         }
 
         $total = $this->tokensIn * (int) $pricing['input_cents_per_mtok']

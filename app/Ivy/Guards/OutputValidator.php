@@ -72,12 +72,32 @@ final class OutputValidator
      */
     public function forbiddenPhrases(array $output): array
     {
-        $haystack = mb_strtolower(json_encode($output, JSON_UNESCAPED_UNICODE) ?: '');
+        $haystack = mb_strtolower(json_encode($this->withoutEchoedInput($output), JSON_UNESCAPED_UNICODE) ?: '');
 
         return array_values(array_filter(
             self::FORBIDDEN_PHRASES,
             fn (string $phrase): bool => str_contains($haystack, $phrase),
         ));
+    }
+
+    /**
+     * Velden die het schema het model laat overschrijven uit de invoer
+     * (de bestandsnaam van de verkoper) zijn geen formulering van Ivy.
+     *
+     * @param  array<string, mixed>  $output
+     * @return array<string, mixed>
+     */
+    private function withoutEchoedInput(array $output): array
+    {
+        foreach ($output as $key => $value) {
+            if ($key === 'filename') {
+                unset($output[$key]);
+            } elseif (is_array($value)) {
+                $output[$key] = $this->withoutEchoedInput($value);
+            }
+        }
+
+        return $output;
     }
 
     /**
