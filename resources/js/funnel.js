@@ -10,14 +10,29 @@
  *  - de compleetheidsscore komt van de server (geteld in PHP), nooit uit
  *    deze component.
  */
-export default function funnel(initial, feePercentage) {
+const CHUNK_SIZE = 1024 * 1024;
+
+export default function funnel(initial, feePercentage, schemas = {}) {
     return {
         draft: initial.draft,
+        // Kenmerkenschema's per categorie, voor de editor in stap 4.
+        schemas,
+        // Lopende uploads met voortgang; fouten blijven staan tot ze gelezen zijn.
+        uploads: [],
+        dragOver: false,
+        newSpecKey: '',
         completeness: initial.completeness,
+        // Herkomst per veld en de preflight van stap 8: beide van de server,
+        // bij elke autosave vers (briefing sectie 5).
+        fields: initial.fields ?? {},
+        preflight: initial.preflight ?? { ok: false, blocking: [], checks: [] },
         loggedIn: initial.logged_in,
         fee: feePercentage,
 
         step: 0,
+        dictating: null,
+        recognition: null,
+        scan: { busy: false, result: null, error: null },
         saving: false,
         saved: false,
         error: null,
@@ -47,20 +62,26 @@ export default function funnel(initial, feePercentage) {
 
             // Direct lokaal bijwerken zodat de invoer niet "terugspringt"
             // voordat de server geantwoord heeft.
-            if (this.draft) {
-                const metaFields = [
-                    'sale_type', 'start_price_cents', 'reserve_price_cents',
-                    'buy_now_price_cents', 'dutch_start_cents', 'dutch_floor_cents',
-                    'dutch_step_cents', 'dutch_interval_s', 'duration_days',
-                ];
-
-                metaFields.includes(field)
-                    ? (this.draft.meta = { ...this.meta, [field]: value })
-                    : (this.draft[field] = value);
-            }
+            this.mirror(field, value);
 
             clearTimeout(this._timer);
             this._timer = setTimeout(() => this.flush(), 800);
+        },
+
+        /** Eén veld in de lokale staat zetten, als het concept al bestaat. */
+        mirror(field, value) {
+            if (! this.draft) return;
+
+            const metaFields = [
+                'sale_type', 'start_price_cents', 'reserve_price_cents',
+                'buy_now_price_cents', 'dutch_start_cents', 'dutch_floor_cents',
+                'dutch_step_cents', 'dutch_interval_s', 'duration_days',
+                'ownership_declared',
+            ];
+
+            metaFields.includes(field)
+                ? (this.draft.meta = { ...this.meta, [field]: value })
+                : (this.draft[field] = value);
         },
 
         setEuro(field, value) {
@@ -94,6 +115,8 @@ export default function funnel(initial, feePercentage) {
                  | van de gebruiker; de server levert alleen wat hij berekent.
                  */
                 this.completeness = response.completeness;
+                this.fields = response.fields ?? this.fields;
+                this.preflight = response.preflight ?? this.preflight;
                 this.loggedIn = response.logged_in;
                 this.saved = true;
                 setTimeout(() => (this.saved = false), 2000);
@@ -117,28 +140,107 @@ export default function funnel(initial, feePercentage) {
         apply(response) {
             this.draft = response.draft;
             this.completeness = response.completeness;
+            this.fields = response.fields ?? {};
+            this.preflight = response.preflight ?? this.preflight;
             this.loggedIn = response.logged_in;
+
+            // Wat al getypt was voordat het concept bestond, hoort nu in de
+            // lokale staat; de server krijgt het bij de eerstvolgende flush.
+            for (const [field, value] of Object.entries(this._pending)) {
+                this.mirror(field, value);
+            }
+        },
+
+        /**
+         * Alleen wat de server berekent verversen (compleetheid, herkomst,
+         * preflight) zonder de invoer van de gebruiker aan te raken.
+         */
+        async refreshStatus() {
+            if (! this.draft) return;
+
+            const response = await this.request(`/api/drafts/${this.draft.id}`, 'GET');
+
+            if (response) {
+                this.completeness = response.completeness;
+                this.fields = response.fields ?? this.fields;
+                this.preflight = response.preflight ?? this.preflight;
+            }
+        },
+
+        // Herkomst ------------------------------------------------------------
+
+        /** De verkoper bevestigt wat Ivy met weinig zekerheid invulde. */
+        async confirm(fields) {
+            await this.ensureDraft();
+
+            const response = await this.request(`/api/drafts/${this.draft.id}/confirm`, 'POST', { fields });
+
+            if (response) {
+                this.completeness = response.completeness;
+                this.fields = response.fields ?? {};
+                this.preflight = response.preflight ?? this.preflight;
+            }
+        },
+
+        async confirmAll() {
+            await this.confirm(this.unconfirmed);
+        },
+
+        get unconfirmed() {
+            return Object.entries(this.fields)
+                .filter(([, info]) => info.needs_confirmation)
+                .map(([field]) => field);
+        },
+
+        /** Publiceren mag als alles behalve de accountvraag in orde is. */
+        get canPublish() {
+            return this.preflight.blocking.filter((key) => key !== 'account').length === 0;
         },
 
         // Uploads ------------------------------------------------------------
 
+        /**
+         * Foto's uploaden met voortgang per bestand (XMLHttpRequest, want
+         * fetch geeft geen uploadvoortgang). Wat geen foto is of te groot,
+         * blijft als fout in de lijst staan; de rest verdwijnt na een tel.
+         */
         async uploadPhotos(files) {
             await this.ensureDraft();
             this.uploading = true;
+            this.dragOver = false;
 
             for (const file of files) {
-                const body = new FormData();
-                body.append('file', file);
+                if (! file.type.startsWith('image/')) {
+                    this.uploads.push({ name: file.name, pct: 100, error: 'Geen foto: alleen JPG, PNG of WebP.' });
+                    continue;
+                }
 
-                const response = await this.request(`/api/drafts/${this.draft.id}/media`, 'POST', body);
+                if (file.size > 10 * 1024 * 1024) {
+                    this.uploads.push({ name: file.name, pct: 100, error: 'Groter dan 10 MB.' });
+                    continue;
+                }
 
-                if (response) {
-                    this.draft.media.push(response.media);
+                const upload = { name: file.name, pct: 0, error: null };
+                this.uploads.push(upload);
+
+                try {
+                    // Grote foto's gaan in delen en zijn hervatbaar (briefing stap 1);
+                    // kleine in één keer.
+                    const response = file.size > CHUNK_SIZE * 2
+                        ? await this.uploadChunked(file, upload)
+                        : await this.uploadWhole(file, upload);
+                    this.draft.media = response.all;
                     this.completeness = response.completeness;
+                    upload.pct = 100;
+                } catch (message) {
+                    upload.error = message;
+                    upload.pct = 100;
                 }
             }
 
             this.uploading = false;
+            setTimeout(() => (this.uploads = this.uploads.filter((upload) => upload.error)), 1200);
+            await this.refreshStatus();
         },
 
         async removePhoto(media) {
@@ -147,9 +249,234 @@ export default function funnel(initial, feePercentage) {
             );
 
             if (response) {
-                this.draft.media = this.draft.media.filter((item) => item.id !== media.id);
+                this.draft.media = response.all;
                 this.completeness = response.completeness;
+                await this.refreshStatus();
             }
+        },
+
+        /** Deze foto als omslag: naar voren, de rest schuift op. */
+        async setCover(media) {
+            const response = await this.request(`/api/drafts/${this.draft.id}/media/${media.id}/cover`, 'POST', {});
+
+            if (response) {
+                this.draft.media = response.all;
+            }
+        },
+
+        uploadWhole(file, upload) {
+            const body = new FormData();
+            body.append('file', file);
+
+            return this.upload(`/api/drafts/${this.draft.id}/media`, body, (pct) => (upload.pct = pct));
+        },
+
+        /**
+         * In delen van een megabyte, met de stand in localStorage: valt de
+         * verbinding weg of herlaadt de pagina, dan gaat dezelfde foto verder
+         * bij het eerste deel dat nog ontbreekt.
+         */
+        async uploadChunked(file, upload) {
+            const key = `aucvy_upload_${this.draft.id}_${file.name}_${file.size}_${file.lastModified}`;
+            const chunks = Math.ceil(file.size / CHUNK_SIZE);
+            let id = null;
+            let received = [];
+
+            try { id = localStorage.getItem(key); } catch (error) {}
+
+            if (id) {
+                const status = await this.request(`/api/drafts/${this.draft.id}/uploads/${id}`, 'GET');
+                if (status && status.chunks === chunks) received = status.received; else id = null;
+            }
+
+            if (! id) {
+                const started = await this.request(`/api/drafts/${this.draft.id}/uploads`, 'POST', { name: file.name, size: file.size, type: file.type, chunks });
+                if (! started) throw this.error ?? 'Upload kon niet starten.';
+                id = started.upload;
+                try { localStorage.setItem(key, id); } catch (error) {}
+            }
+
+            if (received.length) upload.pct = Math.round((received.length / chunks) * 95);
+
+            for (let index = 0; index < chunks; index++) {
+                if (received.includes(index)) continue;
+
+                const body = new FormData();
+                body.append('chunk', file.slice(index * CHUNK_SIZE, (index + 1) * CHUNK_SIZE), file.name);
+                await this.upload(`/api/drafts/${this.draft.id}/uploads/${id}/${index}`, body, (pct) => (upload.pct = Math.round(((index + pct / 100) / chunks) * 95)));
+            }
+
+            const response = await this.request(`/api/drafts/${this.draft.id}/uploads/${id}/complete`, 'POST', {});
+            if (! response) throw this.error ?? 'Samenvoegen mislukt.';
+
+            try { localStorage.removeItem(key); } catch (error) {}
+
+            return response;
+        },
+
+        upload(url, body, onProgress) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', url);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]')?.content ?? '');
+                xhr.upload.addEventListener('progress', (event) => {
+                    if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+                });
+                xhr.addEventListener('load', () => {
+                    let data = {};
+                    try { data = JSON.parse(xhr.responseText); } catch (error) {}
+
+                    if (xhr.status >= 200 && xhr.status < 300) return resolve(data);
+
+                    reject(data.message ?? Object.values(data.errors ?? {}).flat()[0] ?? 'Er ging iets mis.');
+                });
+                xhr.addEventListener('error', () => reject('Geen verbinding.'));
+                xhr.send(body);
+            });
+        },
+
+        // Kenmerken ----------------------------------------------------------
+
+        /** De velden uit het schema van de gekozen categorie. */
+        get schemaFields() {
+            return this.schemas[this.draft?.category_id] ?? [];
+        },
+
+        /** Kenmerken buiten het schema: van Ivy of zelf toegevoegd. */
+        get extraSpecs() {
+            const known = new Set(this.schemaFields.map((field) => field.key));
+
+            return Object.entries(this.draft?.specifications ?? {})
+                .filter(([key]) => ! known.has(key))
+                .map(([key, entry]) => ({ key, value: entry?.value ?? entry, source: entry?.source ?? 'seller' }));
+        },
+
+        spec(key) {
+            const entry = this.draft?.specifications?.[key];
+
+            return entry == null ? '' : (entry.value ?? entry);
+        },
+
+        specSource(key) {
+            return this.draft?.specifications?.[key]?.source ?? null;
+        },
+
+        setSpec(key, value) {
+            if (! this.draft) return;
+
+            const specs = { ...(this.draft.specifications ?? {}) };
+
+            if (value === '' || value === null) {
+                delete specs[key];
+            } else {
+                specs[key] = { value, source: 'seller' };
+            }
+
+            this.draft.specifications = specs;
+            this.set('specifications', Object.fromEntries(Object.entries(specs).map(([k, entry]) => [k, entry.value ?? entry])));
+        },
+
+        addSpec() {
+            const key = this.newSpecKey.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+
+            if (! key || this.draft?.specifications?.[key]) return;
+
+            this.setSpec(key, '-');
+            this.newSpecKey = '';
+        },
+
+        specLabel(key) {
+            const labels = { ean: 'Barcode (EAN)', barcode: 'Barcode', build_year: 'Bouwjaar' };
+
+            return labels[key] ?? key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+        },
+
+        // Spraak en barcode (briefing sectie 5, stap 1) -------------------------
+        // Beide via wat de browser zelf kan: geen bibliotheek, en knoppen die
+        // verdwijnen waar het niet werkt.
+
+        get canDictate() {
+            return typeof window !== 'undefined' && Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
+        },
+
+        dictate(field) {
+            if (this.dictating === field) {
+                this.recognition?.stop();
+
+                return;
+            }
+
+            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!Recognition) return;
+
+            const recognition = new Recognition();
+            recognition.lang = 'nl-NL';
+            recognition.continuous = true;
+            recognition.interimResults = false;
+
+            const base = (this.draft?.[field] ?? '').trim();
+            recognition.onresult = (event) => {
+                const spoken = Array.from(event.results).filter((r) => r.isFinal).map((r) => r[0].transcript.trim()).join(' ');
+                this.set(field, (base ? base + ' ' : '') + spoken);
+            };
+            recognition.onend = () => { this.dictating = null; this.recognition = null; };
+            recognition.onerror = () => { this.dictating = null; this.recognition = null; };
+
+            this.recognition = recognition;
+            this.dictating = field;
+            recognition.start();
+        },
+
+        get canScan() {
+            return typeof window !== 'undefined' && 'BarcodeDetector' in window;
+        },
+
+        async scanBarcode(file) {
+            if (!file || !this.canScan) return;
+            this.scan = { busy: true, result: null, error: null };
+
+            try {
+                const bitmap = await createImageBitmap(file);
+                const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code', 'data_matrix'] });
+                const codes = await detector.detect(bitmap);
+
+                if (!codes.length) {
+                    this.scan = { busy: false, result: null, error: 'Geen barcode gevonden. Probeer een scherpere foto van dichtbij.' };
+
+                    return;
+                }
+
+                const code = String(codes[0].rawValue).trim();
+
+                // Het kenmerk kan pas op een concept; de eerste actie in een
+                // verse wizard kan deze scan zijn.
+                await this.ensureDraft();
+                this.setSpec(/^\d{8,14}$/.test(code) ? 'ean' : 'barcode', code);
+                this.scan = { busy: false, result: code, error: null };
+
+                // Het label hoort bij de kavel: de foto gaat gewoon mee.
+                this.uploadPhotos([file]);
+            } catch (error) {
+                this.scan = { busy: false, result: null, error: 'Scannen lukte niet op dit apparaat.' };
+            }
+        },
+
+        // SEO-voorbeeld ---------------------------------------------------------
+
+        get seoSlug() {
+            const slug = (this.draft?.title ?? '')
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+            return (slug || 'kavel') + '-' + (this.draft?.public_id ?? '');
+        },
+
+        get seoDescription() {
+            const text = (this.draft?.description ?? '').replace(/\s+/g, ' ').trim();
+
+            return text.length > 155 ? text.slice(0, 152).trimEnd() + '...' : text;
         },
 
         async uploadDocument(file, kind) {
@@ -168,6 +495,7 @@ export default function funnel(initial, feePercentage) {
             }
 
             this.uploading = false;
+            await this.refreshStatus();
         },
 
         // Ivy ----------------------------------------------------------------
@@ -283,7 +611,23 @@ export default function funnel(initial, feePercentage) {
             await this.flush();
             await this.ensureDraft();
 
-            const response = await this.request(`/api/drafts/${this.draft.id}/publish`, 'POST', {});
+            // De preflight is de waarheid: staat er iets open, dan spring je
+            // naar de stap waar het op te lossen is in plaats van een 422.
+            const open = this.preflight.checks.find((check) => check.blocking && ! check.ok && check.key !== 'account');
+
+            if (open) {
+                this.error = open.hint ?? open.label;
+                this.step = open.step;
+
+                return;
+            }
+
+            // Dezelfde sleutel bij een herhaling: twee keer klikken of een retry
+            // na een timeout geeft dezelfde publicatie terug.
+            this._publishKey ??= crypto.randomUUID();
+            const response = await this.request(`/api/drafts/${this.draft.id}/publish`, 'POST', {}, {
+                'Idempotency-Key': this._publishKey,
+            });
 
             if (response?.published) {
                 window.location.href = response.url;
@@ -296,7 +640,7 @@ export default function funnel(initial, feePercentage) {
 
         // Vervoer ------------------------------------------------------------
 
-        async request(url, method, body) {
+        async request(url, method, body, extraHeaders = {}) {
             this.error = null;
 
             try {
@@ -305,6 +649,7 @@ export default function funnel(initial, feePercentage) {
                 const response = await fetch(url, {
                     method: isForm ? 'POST' : method,
                     headers: {
+                        ...extraHeaders,
                         Accept: 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                         ...(isForm || method === 'GET' ? {} : { 'Content-Type': 'application/json' }),

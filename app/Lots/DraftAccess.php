@@ -38,11 +38,30 @@ final class DraftAccess
 
         $token = (string) $request->cookie(self::COOKIE, '');
 
-        if ($token !== '' && $lot->draft_token !== null && hash_equals($lot->draft_token, $token)) {
+        // De cookie opent een concept zolang het nog van niemand is; is het
+        // op naam gezet, dan telt alleen die naam (gedeelde browser).
+        if ($token !== '' && $lot->draft_token !== null && hash_equals($lot->draft_token, $token) && ($user === null || $lot->seller_id === null)) {
             return $lot;
         }
 
         throw new NotFoundHttpException;
+    }
+
+    /**
+     * Voor foto's geldt een ruimere poort: ook de eigenaar van een kavel die
+     * al live is mag zijn foto's beheren (briefing sectie 4: object
+     * bewerken). Voor al het andere blijft het concept de grens.
+     */
+    public function resolveForMedia(Request $request, Lot $lot): Lot
+    {
+        $user = $request->user();
+
+        if ($lot->status !== LotStatus::Draft && $user !== null && $lot->isManagedBy($user)
+            && in_array($lot->status, Management\UpdateLot::EDITABLE, true)) {
+            return $lot;
+        }
+
+        return $this->resolve($request, $lot);
     }
 
     /**

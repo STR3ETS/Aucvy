@@ -75,6 +75,12 @@ final class CompletenessScore
 
         $score = min(100, $score);
 
+        // De kolom is de cache van deze telling, voor lijsten en het
+        // conceptoverzicht; de telling zelf blijft hier.
+        if ($lot->exists && $lot->completeness_score !== $score) {
+            $lot->forceFill(['completeness_score' => $score])->saveQuietly();
+        }
+
         return [
             'score' => $score,
             'label' => $this->label($score),

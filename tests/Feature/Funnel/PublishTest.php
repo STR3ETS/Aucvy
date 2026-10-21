@@ -9,24 +9,31 @@ use App\Lots\DraftAccess;
 use App\Lots\PublishLot;
 use App\Models\Category;
 use App\Models\Lot;
+use App\Models\LotMedia;
 use App\Models\User;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 
 function draftFor(?User $seller = null, array $meta = []): Lot
 {
-    return Lot::factory()->anonymousDraft()->create([
+    // De preflight (sectie 5) eist een foto en een eigendomsverklaring; de
+    // prijsstelling is per test anders.
+    $lot = Lot::factory()->anonymousDraft()->create([
         'seller_id' => $seller?->id,
         'status' => LotStatus::Draft,
         'title' => 'Complete horecakeuken',
         'slug' => null,
         'category_id' => Category::factory()->create()->id,
-        'draft_meta' => $meta ?: [
+        'draft_meta' => ['ownership_declared' => true] + ($meta ?: [
             'sale_type' => 'auction',
             'start_price_cents' => 80_000,
             'duration_days' => 7,
-        ],
+        ]),
     ]);
+
+    LotMedia::factory()->create(['lot_id' => $lot->id]);
+
+    return $lot;
 }
 
 describe('publiceren', function () {

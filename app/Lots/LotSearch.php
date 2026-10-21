@@ -9,8 +9,10 @@ use App\Enums\LotStatus;
 use App\Enums\SaleType;
 use App\Enums\ValueConfidence;
 use App\Models\Lot;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -54,6 +56,23 @@ final class LotSearch
     public function count(LotFilters $filters): int
     {
         return $this->query($filters)->count();
+    }
+
+    /**
+     * De kavels die sinds een moment zijn gepubliceerd en aan de filters
+     * voldoen: de treffers van een alert.
+     *
+     * @return Collection<int, Lot>
+     */
+    public function newSince(LotFilters $filters, ?CarbonInterface $since, int $limit = 10, ?CarbonInterface $until = null): Collection
+    {
+        return $this->query($filters)
+            ->when($since !== null, fn (Builder $query) => $query->where('lots.published_at', '>', $since))
+            ->when($until !== null, fn (Builder $query) => $query->where('lots.published_at', '<=', $until))
+            ->with(['auction', 'category'])
+            ->reorder('lots.published_at', 'asc')
+            ->limit($limit)
+            ->get();
     }
 
     /**
@@ -192,7 +211,8 @@ final class LotSearch
          | Dit is precies het punt waar Meilisearch later verschil maakt -
          | "graafmachiene" vindt hier niets.
          */
-        $term = '%'.str_replace(['%', '_'], ['\%', '\_'], $filters->query).'%';
+        // De backslash eerst: die is zelf het ontsnappingsteken van LIKE.
+        $term = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $filters->query).'%';
 
         $query->where(function (Builder $query) use ($term): void {
             $query->where('lots.title', 'like', $term)
