@@ -33,6 +33,9 @@ enum BidRejectionReason: string
     /** Verificatie is nog niet rond. */
     case NotVerified = 'not_verified';
 
+    /** Het account is door beheer geblokkeerd. */
+    case Blocked = 'blocked';
+
     /** Boven de drempel is een borg nodig vóór het eerste bod. */
     case DepositRequired = 'deposit_required';
 
@@ -63,7 +66,7 @@ enum BidRejectionReason: string
         return match ($this) {
             self::AuctionNotOpen, self::AuctionEnded,
             self::PriceMoved, self::BuyNowUnavailable => 409,
-            self::OwnLot, self::SameCompany, self::NotVerified, self::DepositRequired => 403,
+            self::OwnLot, self::SameCompany, self::NotVerified, self::Blocked, self::DepositRequired => 403,
             self::TooLow, self::AlreadyHighest,
             self::AutoBidNotIncreasing, self::SaleTypeMismatch => 422,
         };

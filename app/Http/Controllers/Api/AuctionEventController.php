@@ -9,6 +9,7 @@ use App\Models\Auction;
 use App\Models\AuctionEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 final class AuctionEventController extends Controller
 {
@@ -45,7 +46,9 @@ final class AuctionEventController extends Controller
             'events' => $hasMore ? [] : $events->map(fn (AuctionEvent $event): array => [
                 'sequence' => $event->sequence,
                 'type' => $event->type->value,
-                'payload' => $event->payload,
+                // Het ordernummer in het sluitevent is van de winnaar alleen;
+                // die krijgt het via zijn eigen veilingstand (hfst. 7).
+                'payload' => Arr::except($event->payload ?? [], ['order_number']),
                 'created_at' => $event->created_at->toIso8601String(),
             ])->all(),
         ]);

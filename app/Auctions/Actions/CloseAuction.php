@@ -29,11 +29,16 @@ use Illuminate\Support\Facades\DB;
  */
 final class CloseAuction
 {
-    public function handle(Auction $auction): ?Order
+    /**
+     * @param  bool  $onlyIfDue  Alleen sluiten als de eindtijd echt voorbij is (de
+     *                           geplande sluiting en het vangnet); koop-direct en
+     *                           afmijnen sluiten per direct.
+     */
+    public function handle(Auction $auction, bool $onlyIfDue = false): ?Order
     {
         $announcement = null;
 
-        $order = DB::transaction(function () use ($auction, &$announcement): ?Order {
+        $order = DB::transaction(function () use ($auction, $onlyIfDue, &$announcement): ?Order {
             $locked = Auction::query()
                 ->whereKey($auction->id)
                 ->lockForUpdate()
@@ -43,6 +48,18 @@ final class CloseAuction
             // ingeplande job kunnen elkaar overlappen.
             if ($locked->isClosed()) {
                 return $locked->order()->first();
+            }
+
+            // Gepauzeerd: de tijd staat stil, dus de eindtijd telt niet. Bij
+            // hervatten schuift hij op en wordt de sluiting opnieuw ingepland.
+            if ($locked->paused_at !== null) {
+                return null;
+            }
+
+            // Verlengd terwijl wij op de lock wachtten (antisnipe op de laatste
+            // seconde): dan is het nog niet voorbij. De job plant zich opnieuw in.
+            if ($onlyIfDue && $locked->ends_at->isFuture()) {
+                return null;
             }
 
             $locked->setRelation('lot', $locked->lot()->sole());

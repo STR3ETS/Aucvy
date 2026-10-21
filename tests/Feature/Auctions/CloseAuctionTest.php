@@ -183,6 +183,16 @@ describe('de ingeplande job', function () {
         expect($auction->fresh()->closed_at)->toBeNull();
     });
 
+    it('plant zichzelf niet opnieuw in als hij synchroon draait, en laat het aan het vangnet', function () {
+        // Zonder Queue::fake draait de job op de synchrone testwachtrij: het
+        // opnieuw inplannen zou dan meteen weer hier uitkomen, eindeloos.
+        $auction = Auction::factory()->endingIn(300)->create();
+
+        CloseAuctionJob::dispatch($auction->id)->delay($auction->ends_at);
+
+        expect($auction->fresh()->closed_at)->toBeNull();
+    });
+
     it('sluit wel als de eindtijd echt verstreken is', function () {
         $lot = Lot::factory()->live()->create();
         $auction = Auction::factory()->create(['lot_id' => $lot->id]);

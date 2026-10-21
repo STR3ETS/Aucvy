@@ -11,7 +11,9 @@ use App\Enums\SaleType;
 use App\Models\Auction;
 use App\Models\Bid;
 use App\Models\User;
+use App\Support\Audit\Audit;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * De enige plek waar een bod ontstaat.
@@ -55,7 +57,7 @@ final class PlaceBid
          | Binnen de transactie wordt het nog eens gecontroleerd - dáár is het
          | pas waterdicht; hier scheelt het alleen een lock.
          */
-        if ($existing = Bid::firstWhere('idempotency_key', $idempotencyKey)) {
+        if ($existing = $this->replay($auction, $user, $idempotencyKey)) {
             return $existing;
         }
 
@@ -75,7 +77,7 @@ final class PlaceBid
 
                 // Twee gelijktijdige verzoeken met dezelfde sleutel serialiseren
                 // op de lock hierboven; de tweede ziet de rij van de eerste.
-                if ($existing = Bid::firstWhere('idempotency_key', $idempotencyKey)) {
+                if ($existing = $this->replay($locked, $user, $idempotencyKey)) {
                     return $existing;
                 }
 
@@ -103,6 +105,13 @@ final class PlaceBid
 
                 $result = $this->writer->commit($locked, $outcome, $idempotencyKey, $ip, $userAgent);
 
+                // Bewijs in het auditlog, in dezelfde transactie als het bod.
+                Audit::record('bid.placed', $result->challengerBid(), $user, after: [
+                    'auction_id' => $locked->id,
+                    'amount_cents' => $amountCents,
+                    'current_price_cents' => $locked->refresh()->current_price_cents,
+                ], ip: $ip);
+
                 $announcement = fn () => $this->writer->announce($locked, $outcome, $result);
 
                 // De rij van de uitdager zelf: die vertelt of hij leidt of
@@ -114,6 +123,27 @@ final class PlaceBid
 
         if ($announcement !== null) {
             DB::afterCommit($announcement);
+        }
+
+        return $bid;
+    }
+
+    /**
+     * Een sleutel geldt per gebruiker en per veiling: een hergebruikte sleutel
+     * van iemand anders of van een andere veiling geeft nooit een bod terug.
+     */
+    private function replay(Auction $auction, User $user, string $idempotencyKey): ?Bid
+    {
+        $bid = Bid::query()->where('idempotency_key', $idempotencyKey)->first();
+
+        if ($bid === null) {
+            return null;
+        }
+
+        // Dezelfde sleutel van iemand anders of van een andere veiling: nooit
+        // andermans bod teruggeven, en ook niet stil een nieuw bod plaatsen.
+        if ($bid->user_id !== $user->id || $bid->auction_id !== $auction->id) {
+            throw ValidationException::withMessages(['idempotency_key' => __('auctions.errors.key_in_use')]);
         }
 
         return $bid;

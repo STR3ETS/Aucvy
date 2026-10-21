@@ -97,7 +97,9 @@ final class DutchPriceCalculator
     {
         $actual = $this->priceAt($auction, $at);
 
-        return abs($seenPriceCents - $actual) <= $auction->dutch_step_cents;
+        // Alleen omlaag: wie één stap te hoog zag, betaalt de lagere echte prijs;
+        // wie te laag zag, koopt niet voor meer dan hij zag.
+        return $actual <= $seenPriceCents && $seenPriceCents - $actual <= $auction->dutch_step_cents;
     }
 
     /**

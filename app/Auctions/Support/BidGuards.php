@@ -6,6 +6,9 @@ namespace App\Auctions\Support;
 
 use App\Auctions\Exceptions\BidRejected;
 use App\Auctions\Exceptions\BidRejectionReason;
+use App\Compliance\DenialReason;
+use App\Compliance\Permission;
+use App\Compliance\PermissionEngine;
 use App\Enums\BidStatus;
 use App\Enums\SaleType;
 use App\Models\Auction;
@@ -23,6 +26,8 @@ use App\Models\User;
  */
 final class BidGuards
 {
+    public function __construct(private readonly PermissionEngine $permissions) {}
+
     public function ensureOpen(Auction $auction): void
     {
         if ($auction->isClosed() || ! $auction->lot->status->acceptsBids()) {
@@ -57,8 +62,12 @@ final class BidGuards
      */
     public function ensureVerified(User $user): void
     {
-        if (! $user->kyc_status->allowsBidding()) {
-            throw BidRejected::because(BidRejectionReason::NotVerified);
+        $decision = $this->permissions->decide($user, Permission::Bid);
+
+        if ($decision->denied()) {
+            throw BidRejected::because($decision->reason === DenialReason::Blocked
+                ? BidRejectionReason::Blocked
+                : BidRejectionReason::NotVerified);
         }
     }
 

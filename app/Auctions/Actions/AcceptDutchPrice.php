@@ -15,6 +15,7 @@ use App\Models\Bid;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use LogicException;
 
 /**
@@ -48,7 +49,7 @@ final class AcceptDutchPrice
     ): Order {
         // Een retry na een timeout mag niet nóg een keer afrekenen. Expliciet
         // opvragen in plaats van via de relatie: lazy loading staat uit.
-        if ($existing = Bid::firstWhere('idempotency_key', $idempotencyKey)) {
+        if ($existing = $this->replay($auction, $user, $idempotencyKey)) {
             return Order::where('auction_id', $existing->auction_id)->sole();
         }
 
@@ -61,6 +62,12 @@ final class AcceptDutchPrice
                 ->firstOrFail();
 
             $locked->setRelation('lot', $locked->lot()->sole());
+
+            // Twee gelijke verzoeken tegelijk: de tweede wacht op de lock en
+            // krijgt dezelfde order terug in plaats van "al gesloten".
+            if ($existing = $this->replay($locked, $user, $idempotencyKey)) {
+                return Order::where('auction_id', $existing->auction_id)->sole();
+            }
 
             $this->guards->ensureSaleType($locked, SaleType::Dutch);
             // Een gesloten veiling is al afgemijnd door iemand anders: de
@@ -102,5 +109,22 @@ final class AcceptDutchPrice
                 "Afmijnen op veiling {$locked->id} leverde geen order op."
             );
         }, attempts: 3);
+    }
+
+    private function replay(Auction $auction, User $user, string $idempotencyKey): ?Bid
+    {
+        $bid = Bid::query()->where('idempotency_key', $idempotencyKey)->first();
+
+        if ($bid === null) {
+            return null;
+        }
+
+        // Dezelfde sleutel van iemand anders of van een andere veiling: nooit
+        // andermans bod teruggeven, en ook niet stil een nieuw bod plaatsen.
+        if ($bid->user_id !== $user->id || $bid->auction_id !== $auction->id) {
+            throw ValidationException::withMessages(['idempotency_key' => __('auctions.errors.key_in_use')]);
+        }
+
+        return $bid;
     }
 }

@@ -46,7 +46,7 @@ final class CloseOverdueAuctions extends Command
 
         foreach ($overdue as $auction) {
             try {
-                $closeAuction->handle($auction);
+                $closeAuction->handle($auction, onlyIfDue: true);
                 $this->warn("Veiling {$auction->id} alsnog gesloten.");
             } catch (Throwable $exception) {
                 $failed++;

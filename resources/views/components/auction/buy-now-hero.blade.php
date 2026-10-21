@@ -10,7 +10,7 @@
 
     {{-- Statusbalk ------------------------------------------------------- --}}
     <div class="flex flex-wrap items-center justify-between gap-2">
-        <template x-if="state.status !== 'closed'">
+        <template x-if="isOpen">
             <span class="flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-extrabold text-aj-navy">
                 <span class="size-1.5 rounded-full bg-aj-success" aria-hidden="true"></span>
                 Koop direct
@@ -67,7 +67,7 @@
                 </p>
             </template>
 
-            <template x-if="! state.viewer?.is_seller && ! state.viewer?.can_bid && state.status !== 'closed'">
+            <template x-if="! state.viewer?.is_seller && ! state.viewer?.can_bid && isOpen">
                 <div class="rounded-aj-sm bg-white/12 p-3 text-sm">
                     <p>Rond eerst je verificatie af - dat duurt twee minuten.</p>
                     <a href="{{ route('verification.overview') }}"
@@ -110,7 +110,7 @@
             </template>
 
             {{-- Kan kopen: eerst de kostenopbouw, dan pas de koop (hfst. 6) --}}
-            <template x-if="state.status !== 'closed' && state.viewer?.can_bid && ! state.viewer?.is_seller">
+            <template x-if="isOpen && state.viewer?.can_bid && ! state.viewer?.is_seller">
                 <div>
                     <template x-if="! costs">
                         <button type="button"

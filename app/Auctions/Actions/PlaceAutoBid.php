@@ -76,6 +76,9 @@ final class PlaceAutoBid
                  */
                 if (! $isLeading) {
                     $this->guards->ensureMeetsMinimum($locked, $maxAmountCents);
+                } elseif ($maxAmountCents < $locked->current_price_cents) {
+                    // Wie leidt mag zijn plafond niet onder zijn eigen bod zetten.
+                    throw BidRejected::autoBidNotIncreasing($locked->current_price_cents);
                 }
 
                 $autoBid = $this->store($locked, $user, $maxAmountCents, $existing);

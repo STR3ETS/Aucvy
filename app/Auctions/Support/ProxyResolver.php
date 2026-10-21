@@ -120,6 +120,8 @@ final class ProxyResolver
             ->where('auction_id', $auction->id)
             ->where('user_id', '!=', $challengerId)
             ->where('active', true)
+            // Een maximum van wie intussen geblokkeerd of afgewezen is, telt niet meer.
+            ->whereHas('user', fn ($query) => $query->whereNull('blocked_at')->where('can_bid', true))
             ->orderByDesc('max_amount_cents')
             // Gelijkspel: wie het eerst instelde.
             ->orderBy('id')

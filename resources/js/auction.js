@@ -124,8 +124,13 @@ export default function auction(initialState) {
 
         get status() {
             if (this.state.status === 'closed') return 'closed';
+            if (this.state.status === 'paused') return 'paused';
 
             return this.secondsLeft() <= this.state.anti_snipe_window_seconds ? 'closing' : 'live';
+        },
+
+        get isOpen() {
+            return this.state.status !== 'closed' && this.state.status !== 'paused';
         },
 
         tick() {
@@ -133,7 +138,7 @@ export default function auction(initialState) {
 
             // Bij een afslag telt de client zelf af met dezelfde formule als de
             // server. Er wordt niets per tik weggeschreven (hfst. 6).
-            if (this.state.dutch && this.state.status !== 'closed') {
+            if (this.state.dutch && this.isOpen) {
                 const fresh = this.dutchPriceNow();
 
                 // Zichtbaar maken dát hij zakt: korte animatie bij elke stap.
@@ -149,13 +154,14 @@ export default function auction(initialState) {
 
             // Op nul overgekomen: de sluiting komt via de websocket, maar als
             // die weg is willen we niet eeuwig "nog 0 seconden" tonen.
-            if (this.secondsLeft() === 0 && this.state.status !== 'closed') {
+            if (this.secondsLeft() === 0 && this.isOpen) {
                 this.refreshState();
             }
         },
 
         formatCountdown(seconds) {
             if (this.state.status === 'closed') return 'Gesloten';
+            if (this.state.status === 'paused') return 'Gepauzeerd';
 
             const days = Math.floor(seconds / 86400);
             if (days >= 1) return `nog ${days} ${days === 1 ? 'dag' : 'dagen'}`;
@@ -274,12 +280,17 @@ export default function auction(initialState) {
 
                 const data = await response.json();
 
-                if (data.reload_required) {
+                // Iets gemist, of te veel om bij te werken: de hele stand
+                // opnieuw ophalen. Niets gemist: alleen het volgnummer
+                // bijwerken en verder - geen tweede verzoek.
+                if (data.reload_required || (data.events ?? []).length > 0) {
                     await this.refreshState();
                     return;
                 }
 
-                await this.refreshState();
+                this.state.sequence = data.current_sequence ?? this.state.sequence;
+                this.connection = 'live';
+                this._failedReconnects = 0;
             } catch {
                 this.connection = 'stale';
             }
@@ -431,7 +442,28 @@ export default function auction(initialState) {
             }
         },
 
+        /*
+         | Eén sleutel per bedoeling: dezelfde actie met dezelfde inhoud houdt
+         | dezelfde sleutel tot de server geantwoord heeft. Zo levert een
+         | retry na een timeout hetzelfde bod op in plaats van een tweede.
+         | Een nieuwe sleutel per verzoek zou de server-side deduplicatie
+         | precies uitschakelen.
+         */
+        idempotencyKeyFor(method, url, body) {
+            const intent = `${method} ${url} ${JSON.stringify(body)}`;
+
+            this._intentKeys ??= new Map();
+
+            if (! this._intentKeys.has(intent)) {
+                this._intentKeys.set(intent, crypto.randomUUID());
+            }
+
+            return { intent, key: this._intentKeys.get(intent) };
+        },
+
         async post(url, body, method = 'POST') {
+            const { intent, key } = this.idempotencyKeyFor(method, url, body);
+
             try {
                 const response = await fetch(url, {
                     method,
@@ -439,13 +471,16 @@ export default function auction(initialState) {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                        // Maakt een dubbele submit of een retry onschadelijk.
-                        'Idempotency-Key': crypto.randomUUID(),
+                        'Idempotency-Key': key,
                     },
                     body: JSON.stringify(body),
                 });
 
                 const data = await response.json();
+
+                // Antwoord binnen: de volgende klik is een nieuwe bedoeling.
+                // Bij een netwerkfout (catch) blijft de sleutel staan.
+                this._intentKeys.delete(intent);
 
                 if (! response.ok) {
                     this.error = data;

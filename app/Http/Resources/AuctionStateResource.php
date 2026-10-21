@@ -105,6 +105,12 @@ final class AuctionStateResource
             return 'closed';
         }
 
+        // Stilgezet: geen klok, geen minimumbod, en de client stopt met
+        // aftellen in plaats van elke tik de stand op te vragen.
+        if ($this->auction->isPaused()) {
+            return 'paused';
+        }
+
         return $this->auction->isInAntiSnipeWindow() ? 'closing' : 'live';
     }
 
@@ -123,7 +129,7 @@ final class AuctionStateResource
 
     private function minimumBid(SaleType $saleType): ?int
     {
-        if ($saleType !== SaleType::Auction || $this->auction->isClosed()) {
+        if ($saleType !== SaleType::Auction || $this->auction->isClosed() || $this->auction->isPaused()) {
             return null;
         }
 
@@ -162,7 +168,7 @@ final class AuctionStateResource
         }
 
         return [
-            'active' => $this->auction->buy_now_active && ! $this->auction->isClosed(),
+            'active' => $this->auction->buy_now_active && ! $this->auction->isClosed() && ! $this->auction->isPaused(),
             'price_cents' => $this->auction->buy_now_price_cents,
             'price_formatted' => Money::format($this->auction->buy_now_price_cents),
         ];

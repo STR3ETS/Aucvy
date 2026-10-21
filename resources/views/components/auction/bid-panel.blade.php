@@ -36,6 +36,11 @@
                 Gesloten
             </span>
         </template>
+        <template x-if="status === 'paused'">
+            <span class="rounded-full bg-white/20 px-2.5 py-1 text-xs font-extrabold text-white">
+                Gepauzeerd
+            </span>
+        </template>
 
         <span class="flex items-center gap-1.5 text-sm text-white/80">
             <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"
@@ -69,7 +74,7 @@
     </div>
 
     {{-- Jouw positie, direct bij de prijs waar hij over gaat. --}}
-    <template x-if="state.viewer?.state === 'highest' && state.status !== 'closed'">
+    <template x-if="state.viewer?.state === 'highest' && isOpen">
         <p class="mt-2 flex items-center gap-2 rounded-aj-sm bg-white/12 px-3 py-2 text-sm font-semibold text-emerald-200">
             <svg class="size-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/>
@@ -78,7 +83,7 @@
         </p>
     </template>
 
-    <template x-if="state.viewer?.state === 'outbid' && state.status !== 'closed'">
+    <template x-if="state.viewer?.state === 'outbid' && isOpen">
         <p class="mt-2 flex items-center gap-2 rounded-aj-sm bg-white/12 px-3 py-2 text-sm font-semibold text-amber-200">
             <svg class="size-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -177,7 +182,7 @@
             </template>
 
             {{-- Kan bieden --}}
-            <template x-if="state.status !== 'closed' && state.viewer?.can_bid && ! state.viewer?.is_seller">
+            <template x-if="isOpen && state.viewer?.can_bid && ! state.viewer?.is_seller">
                 {{--
                     De meldingen kennen een rangorde: eerst "te laag" (dat bod
                     kan sowieso niet), pas daarna de borg (die is alleen

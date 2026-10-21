@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Auctions\Exceptions;
 
+use Illuminate\Contracts\Debug\ShouldntReport;
 use RuntimeException;
 
 /**
@@ -13,7 +14,7 @@ use RuntimeException;
  * dat wél had gemogen - zodat het biedpaneel niet alleen kan zeggen dat het
  * misging, maar ook wat de gebruiker nu moet doen.
  */
-final class BidRejected extends RuntimeException
+final class BidRejected extends RuntimeException implements ShouldntReport
 {
     public function __construct(
         public readonly BidRejectionReason $reason,

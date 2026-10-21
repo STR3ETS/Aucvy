@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Support\Money\Money;
 use App\Support\Money\OrderCosts;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use LogicException;
 
 /**
@@ -60,7 +61,7 @@ final class BuyNow
     ): Order {
         // Een retry na een timeout mag niet nóg een keer afrekenen. Expliciet
         // opvragen in plaats van via de relatie: lazy loading staat uit.
-        if ($existing = Bid::firstWhere('idempotency_key', $idempotencyKey)) {
+        if ($existing = $this->replay($auction, $user, $idempotencyKey)) {
             return Order::where('auction_id', $existing->auction_id)->sole();
         }
 
@@ -71,6 +72,12 @@ final class BuyNow
                 ->firstOrFail();
 
             $locked->setRelation('lot', $locked->lot()->sole());
+
+            // Twee gelijke verzoeken tegelijk: de tweede wacht op de lock en
+            // krijgt dezelfde order terug in plaats van "al gesloten".
+            if ($existing = $this->replay($locked, $user, $idempotencyKey)) {
+                return Order::where('auction_id', $existing->auction_id)->sole();
+            }
 
             $this->guards->ensureOpen($locked);
             $this->guards->ensureNotSeller($locked, $user);
@@ -112,5 +119,22 @@ final class BuyNow
         if (! $auction->buy_now_active || $auction->buy_now_price_cents === null) {
             throw BidRejected::because(BidRejectionReason::BuyNowUnavailable);
         }
+    }
+
+    private function replay(Auction $auction, User $user, string $idempotencyKey): ?Bid
+    {
+        $bid = Bid::query()->where('idempotency_key', $idempotencyKey)->first();
+
+        if ($bid === null) {
+            return null;
+        }
+
+        // Dezelfde sleutel van iemand anders of van een andere veiling: nooit
+        // andermans bod teruggeven, en ook niet stil een nieuw bod plaatsen.
+        if ($bid->user_id !== $user->id || $bid->auction_id !== $auction->id) {
+            throw ValidationException::withMessages(['idempotency_key' => __('auctions.errors.key_in_use')]);
+        }
+
+        return $bid;
     }
 }

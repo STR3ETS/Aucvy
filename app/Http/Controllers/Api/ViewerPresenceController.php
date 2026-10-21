@@ -25,7 +25,7 @@ final class ViewerPresenceController extends Controller
         ]);
 
         return response()->json([
-            'watching_now' => $this->presence->beat($auction->id, $validated['token']),
+            'watching_now' => $this->presence->beat($auction->id, $validated['token'], $request->ip()),
         ]);
     }
 }
