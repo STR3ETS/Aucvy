@@ -33,7 +33,7 @@
             ['Zekerheid', route('assurance')],
             ['Veelgestelde vragen', route('faq')],
             ['Over ons', route('home')],
-            ['Contact', route('home')],
+            ['Contact', route('contact')],
             ['Inloggen', route('login')],
             ['Registreren', route('register')],
         ],
@@ -69,7 +69,7 @@
             <aside class="footer-c-panel" aria-labelledby="footer-c-panel-title">
                 <div class="photo" aria-hidden="true" style="background-image:url('{{ asset('images/v4/footer-gavel.jpg') }}')"></div>
                 <div class="shade" aria-hidden="true"></div>
-                <h2 id="footer-c-panel-title">Slim bieden.<br><span class="g">Zeker van je zaak.</span></h2>
+                <h2 id="footer-c-panel-title">Slim bieden.<br><span class="g">Weten waar je aan toe bent.</span></h2>
                 <p>Waarde-indicaties, biedadvies en live biedingen van Ivy en haar team geven je het overzicht dat je zoekt.</p>
                 <a class="btn btn-primary" href="{{ route('lots.index') }}">Ontdek de veilingen
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>

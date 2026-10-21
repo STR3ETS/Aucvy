@@ -73,9 +73,13 @@
           <div>
             <span class="label">Prijs nu</span>
             <span class="price tnum"
-                  data-dutch="{{ intdiv($price, 100) }}"
-                  data-step="{{ intdiv($auction->dutch_step_cents, 100) }}"
-                  data-floor="{{ intdiv($auction->dutch_floor_cents, 100) }}">{{ $euro($price) }}</span>
+                  data-dutch="{{ $price }}"
+                  data-dutch-start="{{ $auction->dutch_start_cents }}"
+                  data-dutch-floor="{{ $auction->dutch_floor_cents }}"
+                  data-dutch-step="{{ $auction->dutch_step_cents }}"
+                  data-dutch-interval="{{ $auction->dutch_interval_s }}"
+                  data-dutch-starts-at="{{ $auction->starts_at->toIso8601String() }}"
+                  data-dutch-now="{{ now()->toIso8601String() }}">{{ $euro($price) }}</span>
           </div>
           <div class="time tnum" data-dutch-timer>daalt over {{ $auction->dutch_interval_s }}s</div>
         @elseif ($isBuyNow)

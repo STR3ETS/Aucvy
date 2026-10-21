@@ -23,7 +23,7 @@ return [
         'unfinished_draft' => '{1} Eén concept staat klaar om afgemaakt te worden|[2,*] :count concepten staan klaar om afgemaakt te worden',
         'unfinished_draft_body' => 'Een concept in de la trekt geen bieders.',
         'payout_ready' => ':amount staat klaar voor uitbetaling',
-        'payout_ready_body' => 'De houdtermijn is verstreken; het bedrag wordt overgemaakt.',
+        'payout_ready_body' => 'De houdtermijn is verstreken; het bedrag is vrijgegeven voor uitbetaling.',
         'order_to_ship' => '":lot" is betaald - regel de levering',
         'order_to_ship_body' => 'Zet hem klaar om op te halen of meld hem verzonden. Na zeven dagen stilte geldt hij als geleverd.',
         'dispute_response' => 'Geschil op bestelling :order wacht op je reactie',
@@ -65,7 +65,7 @@ return [
         'intro' => 'Drie stappen om te beginnen:',
         'step_sell' => 'Plaats je eerste kavel - een paar foto\'s zijn genoeg, Ivy helpt met de rest.',
         'step_browse' => 'Bekijk de lopende veilingen en volg wat je interessant vindt.',
-        'step_bid' => 'Bied mee - boven € 2.500 vragen we eenmalig een borg die je terugkrijgt als je niet wint.',
+        'step_bid' => 'Bied mee - boven de borgdrempel vragen we eerst een borgreservering die vrijkomt als je niet wint.',
     ],
 
 ];

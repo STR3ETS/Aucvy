@@ -251,5 +251,5 @@
             </div>
         </template>
     </div>
-    <p style="margin:8px 4px 0;font-size:11px;color:rgba(255,255,255,.5);text-align:center">Demo-weergave met fictieve bedragen · AI-inschattingen zijn indicaties, geen garanties</p>
+    <p style="margin:8px 4px 0;font-size:11px;color:rgba(255,255,255,.5);text-align:center">Demo-weergave met fictieve bedragen · promotie op andere kanalen, kopers uitnodigen en biedplannen zijn in ontwikkeling · AI-inschattingen zijn indicaties, geen garanties</p>
 </div>

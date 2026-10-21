@@ -32,7 +32,7 @@
             ['Retail', route('home').'#zakelijk'],
             ['Lease en remarketing', route('home').'#zakelijk'],
             ['Overheden', route('home').'#zakelijk'],
-            ['Veilingvoorstel aanvragen', route('home').'#zakelijk'],
+            ['Veilingvoorstel aanvragen', route('contact')],
         ]],
     ];
 

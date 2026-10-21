@@ -25,7 +25,7 @@
             <div>
                 <span class="v4-pill"><x-v4.icon name="sparkles" :size="13" stroke="2.4" /> Het AI-commerceplatform</span>
                 <h1 id="hero-title" style="margin:20px 0 0;font-size:clamp(40px,5.6vw,64px);font-weight:800;letter-spacing:-.03em;line-height:1.02">Upload.<br><span class="v4-grad-text">Ivy regelt de rest.</span></h1>
-                <p style="margin:18px 0 0;font-size:17px;color:rgba(255,255,255,.68);line-height:1.6;max-width:46ch">Van foto's naar een professionele veiling, relevante kopers en een veilige uitbetaling.</p>
+                <p style="margin:18px 0 0;font-size:17px;color:rgba(255,255,255,.68);line-height:1.6;max-width:46ch">Van foto's naar een professionele veiling, met een uitbetaling na de houdtermijn.</p>
                 <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:28px">
                     <x-v4.button :href="route('sell')" size="lg" arrow>Plaats gratis een kavel</x-v4.button>
                     <x-v4.button :href="route('lots.index')" variant="ghost" size="lg">Ontdek veilingen</x-v4.button>
@@ -36,7 +36,7 @@
                         <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop" alt="" width="30" height="30" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #1a2440;margin-left:-9px">
                         <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&auto=format&fit=crop" alt="" width="30" height="30" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #1a2440;margin-left:-9px">
                     </div>
-                    <span style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.72)">Geverifieerde kopers en verkopers uit heel Nederland</span>
+                    <span style="font-size:12.5px;font-weight:700;color:rgba(255,255,255,.72)">Voor kopers en verkopers uit heel Nederland</span>
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:18px;margin-top:18px">
                     <span class="v4-trust-item"><x-v4.check :size="16" />Geen opgeld voor kopers</span>
@@ -59,7 +59,7 @@
                 <p>Maak binnen minuten een professionele kavel.</p>
             </div>
             <ul>
-                <li><x-v4.check />Ivy maakt advertentie, waardering en promotie</li>
+                <li><x-v4.check />Ivy maakt advertentie, waardering en Engelse vertaling</li>
                 <li><x-v4.check />Gratis plaatsen, succesfee alleen bij verkoop</li>
                 <li><x-v4.check />Van bod tot uitbetaling begeleid</li>
             </ul>
@@ -68,7 +68,7 @@
         <div class="v4-card v4-route v4-reveal" style="--d:.1s">
             <div>
                 <h2>Ik wil kopen</h2>
-                <p>Vertel Ivy wat je zoekt. Zij bewaakt de markt.</p>
+                <p>Vertel Ivy wat je zoekt. Zij zoekt mee.</p>
             </div>
             <ul>
                 <li><x-v4.check />Zoeken in gewone taal, matches met uitleg</li>
@@ -99,7 +99,7 @@
                 <div>
                     <span class="v4-pill" style="backdrop-filter:none"><x-v4.icon name="sparkles" :size="13" stroke="2.4" /> Zoeken met Ivy</span>
                     <h2 id="zoeken-title" style="margin:18px 0 0;font-size:clamp(30px,4.2vw,46px);font-weight:800;letter-spacing:-.03em;line-height:1.06;max-width:16ch">Vertel wat je zoekt. <span class="v4-grad-text">Ivy doet de rest.</span></h2>
-                    <p style="margin:14px 0 0;font-size:16px;color:rgba(255,255,255,.68);line-height:1.6;max-width:46ch">Geen filters aanvinken en geen trefwoorden gokken. Eén gewone zin is genoeg: zij structureert, zoekt, onderzoekt en blijft bewaken.</p>
+                    <p style="margin:14px 0 0;font-size:16px;color:rgba(255,255,255,.68);line-height:1.6;max-width:46ch">Geen filters aanvinken en geen trefwoorden gokken. Eén gewone zin is genoeg: zij vertaalt je vraag naar filters en zoekt.</p>
                     <form action="{{ route('lots.index') }}" method="get" role="search" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;max-width:620px">
                         <div style="flex:1 1 0;min-width:280px;display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.08);backdrop-filter:blur(12px);padding:0 20px;min-height:62px;box-shadow:0 18px 44px -20px rgba(0,0,0,.6)">
                             <x-v4.icon name="search" :size="18" stroke="2.4" style="flex-shrink:0;opacity:.8" />
@@ -229,7 +229,7 @@
         $tiles = [
             ['q' => 'keuken', 'photo' => 'https://images.unsplash.com/photo-1556911220-bff31c812dba?q=80&w=900&auto=format&fit=crop', 'lead' => 'Designer keukens.', 'rest' => 'Voor een fractie van de prijs.', 'points' => ['Topmerken', 'Zo goed als nieuw', 'Direct beschikbaar'], 'cta' => 'Bekijk keukens'],
             ['q' => 'bureaustoel', 'photo' => 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=900&auto=format&fit=crop', 'lead' => 'Bureaus en kantoor.', 'rest' => 'Sterk in kwaliteit, scherp in prijs.', 'points' => ['Ergonomisch', 'Duurzaam', 'Direct leverbaar'], 'cta' => 'Bekijk bureaus'],
-            ['q' => 'boot', 'photo' => 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=900&auto=format&fit=crop', 'lead' => 'Boten en jachten.', 'rest' => 'Klaar voor nieuwe avonturen.', 'points' => ['Vaarklaar gecontroleerd', 'Scherpe veilingen', 'Van sloep tot jacht'], 'cta' => 'Bekijk boten'],
+            ['q' => 'boot', 'photo' => 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=900&auto=format&fit=crop', 'lead' => 'Boten en jachten.', 'rest' => 'Klaar voor nieuwe avonturen.', 'points' => ['Documenten en bezichtiging', 'Scherpe veilingen', 'Van sloep tot jacht'], 'cta' => 'Bekijk boten'],
         ];
     @endphp
     <div class="v4-adrow">
@@ -261,19 +261,19 @@
         ['icon' => 'upload', 'title' => 'Upload', 'text' => 'Foto\'s, video, documenten of een spraakbericht: wat je hebt is genoeg.', 'panel' => ['label' => 'Upload', 'rows' => [['l' => '12 foto\'s toegevoegd', 'done' => true], ['l' => 'Aankoopfactuur.pdf', 'done' => true], ['l' => 'Spraakbericht 0:42', 'done' => true]], 'footer' => 'Geen account nodig vóór de eerste analyse.']],
         ['icon' => 'camera', 'title' => 'Herkend', 'text' => 'Ivy herkent object, merk en conditie, met zekerheid per onderdeel.', 'panel' => ['label' => 'Herkenning', 'rows' => [['l' => 'Siemens apparatuur', 'v' => '98%', 'bar' => .98], ['l' => 'Conditie: zeer goed', 'v' => '86%', 'bar' => .86], ['l' => 'Nieuwprijs ± € 18.400', 'v' => 'schatting', 'tone' => 'warn']], 'footer' => 'Zekerheid per onderdeel. Een schatting blijft een schatting.']],
         ['icon' => 'file-text', 'title' => 'Gemaakt', 'text' => 'Titel, beschrijving, specificaties en SEO staan klaar om goed te keuren.', 'panel' => ['label' => 'Advertentie', 'rows' => [['l' => '“Complete designkeuken · Siemens · 2021”', 'quote' => true], ['l' => 'Specificaties', 'v' => '14 velden'], ['l' => 'SEO-score', 'v' => '94', 'bar' => .94]], 'footer' => 'Jij keurt goed: pas aan · vraag Ivy · dit klopt.']],
-        ['icon' => 'megaphone', 'title' => 'Promotie', 'text' => 'Kanaalspecifieke uitingen op Aucvy, socials, Google en e-mail.', 'panel' => ['label' => 'Promotie', 'rows' => [['l' => 'Aucvy + 6 kanalen', 'v' => 'actief', 'tone' => 'ok'], ['l' => 'Geschat bereik', 'v' => '24k – 31k', 'tone' => 'warn'], ['l' => 'Totale kosten', 'v' => '€ 149 vooraf']], 'footer' => 'De kosten staan vast vóórdat je bevestigt.']],
-        ['icon' => 'trending-up', 'title' => 'Biedingen', 'text' => 'Ivy matcht kopers, volgt de veiling en adviseert op het juiste moment.', 'panel' => ['label' => 'Biedingen', 'rows' => [['l' => 'Views', 'v' => '1.842'], ['l' => 'Bieders', 'v' => '24'], ['l' => 'Huidig bod', 'v' => '€ 8.900', 'tone' => 'ok']], 'footer' => 'Ivy adviseert; jij beslist over elke actie.']],
-        ['icon' => 'banknote', 'title' => 'Betaling', 'text' => 'Betaling, factuur en transport begeleid: uitbetaling zonder verrassingen.', 'panel' => ['label' => 'Afhandeling', 'rows' => [['l' => 'Verkocht voor', 'v' => '€ 9.400', 'tone' => 'ok'], ['l' => 'Succesfee', 'v' => 'vooraf bekend'], ['l' => 'Factuur en transport', 'done' => true]], 'footer' => 'Alles op één plek: je weet vooraf wat er onder de streep overblijft.']],
+        ['icon' => 'megaphone', 'title' => 'Promotie', 'text' => 'Vindbaar op Aucvy en in Google, met een Engelse versie. Meer kanalen volgen.', 'panel' => ['label' => 'Promotie', 'rows' => [['l' => 'Aucvy + 6 kanalen', 'v' => 'actief', 'tone' => 'ok'], ['l' => 'Geschat bereik', 'v' => '24k – 31k', 'tone' => 'warn'], ['l' => 'Totale kosten', 'v' => '€ 149 vooraf']], 'footer' => 'De kosten staan vast vóórdat je bevestigt.']],
+        ['icon' => 'trending-up', 'title' => 'Biedingen', 'text' => 'Ivy volgt de veiling en geeft bieders advies op het juiste moment.', 'panel' => ['label' => 'Biedingen', 'rows' => [['l' => 'Views', 'v' => '1.842'], ['l' => 'Bieders', 'v' => '24'], ['l' => 'Huidig bod', 'v' => '€ 8.900', 'tone' => 'ok']], 'footer' => 'Ivy adviseert; jij beslist over elke actie.']],
+        ['icon' => 'banknote', 'title' => 'Betaling', 'text' => 'Betaling via het platform, uitbetaling na de houdtermijn: zonder verrassingen.', 'panel' => ['label' => 'Afhandeling', 'rows' => [['l' => 'Verkocht voor', 'v' => '€ 9.400', 'tone' => 'ok'], ['l' => 'Succesfee', 'v' => 'vooraf bekend'], ['l' => 'Factuur en transport', 'done' => true]], 'footer' => 'Alles op één plek: je weet vooraf wat er onder de streep overblijft.']],
     ];
 
     $buyerSteps = [
         ['icon' => 'message-circle', 'title' => 'Vertel Ivy', 'text' => 'Eén zin in gewone taal is genoeg om te starten.', 'panel' => ['label' => 'Vertel Ivy', 'rows' => [['l' => '“20 bureaustoelen, max € 4.000”', 'quote' => true], ['l' => 'Criteria herkend', 'v' => '6'], ['l' => 'Regio', 'v' => 'Nederland']], 'footer' => 'Klopt er iets niet? Corrigeer haar interpretatie met één tik.']],
         ['icon' => 'target', 'title' => 'Match', 'text' => 'Relevante kavels met matchscore en uitleg waarom.', 'panel' => ['label' => 'Matches', 'rows' => [['l' => 'Herman Miller · 24 stuks', 'v' => '96%', 'bar' => .96], ['l' => 'Steelcase · 20 stuks', 'v' => '88%', 'bar' => .88], ['l' => 'Binnen jouw budget', 'v' => '9 van 12']], 'footer' => 'Bij elke match staat waarom hij past.']],
         ['icon' => 'scan-search', 'title' => 'Vergelijk', 'text' => 'Zij-aan-zij op prijs, conditie en transport.', 'panel' => ['label' => 'Vergelijking', 'rows' => [['l' => 'Prijs per stuk', 'v' => '€ 115 vs € 160'], ['l' => 'Conditie', 'v' => 'goed vs nieuw'], ['l' => 'Transport', 'v' => '€ 340 vs € 90']], 'footer' => 'Zij-aan-zij, zonder ruis.']],
-        ['icon' => 'shield-check', 'title' => 'Onderzoek', 'text' => 'Documenten, verkoper en foto\'s gecheckt, inclusief aandachtspunten.', 'panel' => ['label' => 'Onderzoek', 'rows' => [['l' => 'Verkoper geverifieerd', 'done' => true], ['l' => 'Aankoopfactuur aanwezig', 'done' => true], ['l' => 'Aandachtspunt', 'v' => '3× gebruikssporen', 'tone' => 'warn']], 'footer' => 'Ook wat níet perfect is, staat er gewoon bij.']],
-        ['icon' => 'sparkles', 'title' => 'Advies', 'text' => 'Waarde-indicatie, verwacht eindbod en een verstandig biedplan.', 'panel' => ['label' => 'Advies', 'rows' => [['l' => 'Marktwaarde', 'v' => '€ 5.4k – € 7.2k', 'tone' => 'warn'], ['l' => 'Verwacht eindbod', 'v' => '€ 3.5k – € 4.1k', 'tone' => 'warn'], ['l' => 'Openingsbod', 'v' => '€ 2.900']], 'footer' => 'Indicaties, nooit garanties.']],
-        ['icon' => 'trending-up', 'title' => 'Bied', 'text' => 'Zelf bieden, gewaarschuwd worden, of automatisch meestappen tot jouw limiet.', 'panel' => ['label' => 'Bieden', 'rows' => [['l' => 'Jouw maximum', 'v' => '€ 4.000'], ['l' => 'Modus', 'v' => 'automatisch meestappen'], ['l' => 'Status', 'v' => 'hoogste bod', 'tone' => 'ok']], 'footer' => 'Nooit meer dan jouw limiet. Jij zet hem, jij haalt hem weg.']],
-        ['icon' => 'truck', 'title' => 'Ontvang', 'text' => 'Betalen, transport of ophalen: alles op één plek geregeld.', 'panel' => ['label' => 'Ontvangst', 'rows' => [['l' => 'Gewonnen voor', 'v' => '€ 3.850', 'tone' => 'ok'], ['l' => 'Transport', 'v' => '€ 90'], ['l' => 'Totaal', 'v' => '€ 3.940']], 'footer' => 'Het complete bedrag staat er vóórdat je betaalt.']],
+        ['icon' => 'shield-check', 'title' => 'Onderzoek', 'text' => 'Documenten op leesbaarheid gecontroleerd, verkoper geverifieerd.', 'panel' => ['label' => 'Onderzoek', 'rows' => [['l' => 'Verkoper geverifieerd', 'done' => true], ['l' => 'Aankoopfactuur aanwezig', 'done' => true], ['l' => 'Aandachtspunt', 'v' => '3× gebruikssporen', 'tone' => 'warn']], 'footer' => 'Ook wat níet perfect is, staat er gewoon bij.']],
+        ['icon' => 'sparkles', 'title' => 'Advies', 'text' => 'Waarde-indicatie met zekerheid en nuchter biedadvies.', 'panel' => ['label' => 'Advies', 'rows' => [['l' => 'Marktwaarde', 'v' => '€ 5.4k – € 7.2k', 'tone' => 'warn'], ['l' => 'Verwacht eindbod', 'v' => '€ 3.5k – € 4.1k', 'tone' => 'warn'], ['l' => 'Openingsbod', 'v' => '€ 2.900']], 'footer' => 'Indicaties, nooit garanties.']],
+        ['icon' => 'trending-up', 'title' => 'Bied', 'text' => 'Zelf bieden of automatisch meestappen tot jouw maximum.', 'panel' => ['label' => 'Bieden', 'rows' => [['l' => 'Jouw maximum', 'v' => '€ 4.000'], ['l' => 'Modus', 'v' => 'automatisch meestappen'], ['l' => 'Status', 'v' => 'hoogste bod', 'tone' => 'ok']], 'footer' => 'Nooit meer dan jouw limiet. Jij zet hem, jij haalt hem weg.']],
+        ['icon' => 'truck', 'title' => 'Ontvang', 'text' => 'Betalen via het platform; transport of ophalen regel je met de verkoper.', 'panel' => ['label' => 'Ontvangst', 'rows' => [['l' => 'Gewonnen voor', 'v' => '€ 3.850', 'tone' => 'ok'], ['l' => 'Transport', 'v' => '€ 90'], ['l' => 'Totaal', 'v' => '€ 3.940']], 'footer' => 'Het complete bedrag staat er vóórdat je betaalt.']],
     ];
 @endphp
 
@@ -296,7 +296,7 @@
             <p class="v4-sub v4-sub--dark">Geen kleine lettertjes: dit is wat er bij elke kavel geregeld en vastgelegd is, zichtbaar vlak bij elke bied- en betaalactie.</p>
         </div>
         <div class="v4-trust v4-reveal">
-            @foreach (['Identiteit verkoper gecontroleerd', 'Heldere eigendoms- en objectinformatie', 'Veilige betaalflow', 'Transparante kosten vóór het bieden', 'Biedhistorie vastgelegd', 'Documenten centraal beschikbaar', 'Transport- en ophaalopties', 'Support bij geschillen'] as $item)
+            @foreach (['Identiteit verkoper gecontroleerd', 'Eigendomsverklaring en objectinformatie', 'Betalen via de betaalprovider', 'Transparante kosten vóór het bieden', 'Biedhistorie vastgelegd', 'Documenten bij de kavel', 'Transport- en ophaalopties', 'Support bij geschillen'] as $item)
                 <div class="v4-trust-card"><x-v4.check :size="18" /><span>{{ $item }}</span></div>
             @endforeach
         </div>
@@ -328,11 +328,13 @@
 
 {{-- ================= TARIEVEN ================= --}}
 @php
-    // De percentages komen uit CompanyPlan; de maandbedragen uit het ontwerp.
+    // De percentages komen uit CompanyPlan. Maandbedragen voor Pro en
+    // Enterprise zijn nog niet vastgesteld (zie /prijzen): die staan hier
+    // dus niet, ook niet als ontwerpvoorbeeld.
     $plans = [
-        ['plan' => CompanyPlan::Start, 'price' => '€ 0', 'for' => 'Voor losse kavels', 'hot' => false],
-        ['plan' => CompanyPlan::Pro, 'price' => '€ 149', 'for' => 'Voor structurele verkopers', 'hot' => true],
-        ['plan' => CompanyPlan::Enterprise, 'price' => '€ 349', 'for' => 'Voor voorraden en complete veilingen', 'hot' => false],
+        ['plan' => CompanyPlan::Start, 'price' => '€ 0', 'per' => 'per maand', 'for' => 'Voor losse kavels', 'hot' => false],
+        ['plan' => CompanyPlan::Pro, 'price' => 'Volgt', 'per' => 'prijs nog niet vastgesteld', 'for' => 'Voor structurele verkopers', 'hot' => false],
+        ['plan' => CompanyPlan::Enterprise, 'price' => 'Volgt', 'per' => 'prijs nog niet vastgesteld', 'for' => 'Voor voorraden en complete veilingen', 'hot' => false],
     ];
 @endphp
 <section id="tarieven" class="v4-section" aria-labelledby="tarieven-title">
@@ -346,7 +348,7 @@
             <div class="v4-price v4-reveal {{ $item['hot'] ? 'v4-price--hot' : '' }}" style="--d:{{ $index * 0.1 }}s">
                 @if ($item['hot'])<span class="v4-price-tag">Meest gekozen</span>@endif
                 <span class="v4-price-name">{{ $item['plan']->label() }}</span>
-                <div class="v4-price-amount"><b class="v4-tnum">{{ $item['price'] }}</b><span>per maand</span></div>
+                <div class="v4-price-amount"><b class="v4-tnum">{{ $item['price'] }}</b><span>{{ $item['per'] }}</span></div>
                 <span class="v4-price-fee">{{ number_format($item['plan']->defaultFeePercentage(), 1, ',', '.') }}% bij verkoop</span>
                 <span class="v4-price-for">{{ $item['for'] }}</span>
             </div>

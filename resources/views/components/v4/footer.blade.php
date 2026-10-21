@@ -67,7 +67,7 @@
             <div class="v4-footer-brand">
                 <div class="photo" aria-hidden="true" style="background-image:url('{{ asset('images/v4/footer-gavel.jpg') }}')"></div>
                 <div class="shade" aria-hidden="true"></div>
-                <h2>Slim bieden.<br><span>Zeker winnen.</span></h2>
+                <h2>Slim bieden.<br><span>Goed geïnformeerd.</span></h2>
                 <p>Real-time data en Ivy's inzichten geven jou het voordeel dat je zoekt.</p>
                 <a href="{{ route('lots.index') }}" class="cta">Ontdek Aucvy<i aria-hidden="true"><x-v4.icon name="arrow-right" :size="17" stroke="2.6" /></i></a>
             </div>

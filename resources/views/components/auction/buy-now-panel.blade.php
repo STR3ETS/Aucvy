@@ -32,7 +32,8 @@
                         </template>
 
                         <template x-if="costs">
-                            <div>
+                            <div role="group" aria-label="Bevestig je koop"
+                                 x-init="$nextTick(() => $el.querySelector('button')?.focus())">
                                 <dl class="space-y-1 text-sm">
                                     <template x-for="line in costs.lines" :key="line.key">
                                         <div class="flex justify-between gap-3">
@@ -51,11 +52,12 @@
                                     </div>
                                 </dl>
 
-                                <button type="button" @click="buyNow(true)"
+                                <button type="button" @click="buyNow(true)" :disabled="isBlocked || busy"
                                         class="mt-3 flex w-full items-center justify-center rounded-aj-sm
-                                               bg-aj-blue px-4 text-sm font-semibold text-white"
+                                               bg-aj-blue px-4 text-sm font-semibold text-white disabled:opacity-60"
                                         style="min-height: var(--spacing-cta)">
-                                    Bevestigen en kopen
+                                    <span x-show="! busy">Bevestigen en kopen</span>
+                                    <span x-show="busy" x-cloak>Even geduld…</span>
                                 </button>
                                 <button type="button" @click="costs = null"
                                         class="mt-1 w-full text-xs text-aj-muted underline">

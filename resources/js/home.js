@@ -117,42 +117,56 @@ export default function initHome() {
   /* ============ 5. COUNTDOWNS (local, sync via /api/auctions/state) ============ */
   const pad = n => String(n).padStart(2, '0');
   // data-short: de compacte notatie van de v4-kaarten ("2d 04u", "01:42").
-  const cds = [...document.querySelectorAll('[data-countdown]')].map(el => ({ el, end: Date.now() + parseInt(el.dataset.countdown, 10) * 1000, short: 'short' in el.dataset }));
-  if (cds.length) {
-    function tick() {
-      const now = Date.now();
-      cds.forEach(({ el, end, short }) => {
-        let s = Math.max(0, Math.round((end - now) / 1000));
-        if (s >= 86400) { el.textContent = short ? Math.floor(s / 86400) + 'd ' + pad(Math.floor(s % 86400 / 3600)) + 'u' : 'nog ' + Math.round(s / 86400) + ' dagen'; return; }
-        if (s >= 3600) { el.textContent = short ? Math.floor(s / 3600) + 'u ' + pad(Math.floor(s % 3600 / 60)) + 'm' : 'nog ' + Math.floor(s / 3600) + ' u ' + pad(Math.floor(s % 3600 / 60)) + ' min'; return; }
-        el.textContent = (short ? '' : 'nog ') + pad(Math.floor(s / 60)) + ':' + pad(s % 60);
-        if (s < 300) el.classList.add('hot');
-      });
-    }
-    tick(); setInterval(tick, 1000);
+  // Elke tik opnieuw de elementen opzoeken: na een filter- of
+  // paginawissel (lots-index) staan er nieuwe kaarten, en de oude zijn weg.
+  // Het eindtijdstip staat op het element zelf, zodat het één keer wordt
+  // bepaald en niet bij elke tik opnieuw vanaf "nu" telt.
+  function tick() {
+    const now = Date.now();
+    document.querySelectorAll('[data-countdown]').forEach(el => {
+      if (! el.dataset.end) el.dataset.end = String(now + parseInt(el.dataset.countdown, 10) * 1000);
+      const short = 'short' in el.dataset;
+      let s = Math.max(0, Math.round((parseInt(el.dataset.end, 10) - now) / 1000));
+      if (s >= 86400) { const d = Math.floor(s / 86400); el.textContent = short ? d + 'd ' + pad(Math.floor(s % 86400 / 3600)) + 'u' : 'nog ' + d + (d === 1 ? ' dag' : ' dagen'); return; }
+      if (s >= 3600) { el.textContent = short ? Math.floor(s / 3600) + 'u ' + pad(Math.floor(s % 3600 / 60)) + 'm' : 'nog ' + Math.floor(s / 3600) + ' u ' + pad(Math.floor(s % 3600 / 60)) + ' min'; return; }
+      el.textContent = (short ? '' : 'nog ') + pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+      if (s < 300) el.classList.add('hot');
+    });
   }
+  tick(); setInterval(tick, 1000);
 
   /* ============ 6. DUTCH AUCTION PRICE DROP ============ */
-  document.querySelectorAll('[data-dutch]').forEach(dutch => {
-    const dutchT = dutch.closest('.meta')?.querySelector('[data-dutch-timer]');
-    let price = parseInt(dutch.dataset.dutch, 10), step = parseInt(dutch.dataset.step, 10), floor = parseInt(dutch.dataset.floor, 10), left = 20;
-    const fmt = n => '€ ' + n.toLocaleString('nl-NL');
-    setInterval(() => {
-      left--;
-      if (left <= 0) {
-        left = 20;
-        if (price - step >= floor) {
-          const from = price; price -= step;
-          if (hasGsap && !reduce) {
-            const o = { v: from }; gsap.to(o, { v: price, duration: .7, ease: 'expo.out', onUpdate: () => dutch.textContent = fmt(Math.round(o.v)) });
-            gsap.fromTo(dutch, { color: '#2450A8' }, { color: '#0e1526', duration: 1.2 });
-          }
-          else dutch.textContent = fmt(price);
-        } else { if (dutchT) dutchT.textContent = 'bodem bereikt'; return; }
+  /*
+   | Dezelfde formule als DutchPriceCalculator op de server: de prijs is
+   | een functie van de tijd sinds de start, met de interval en de stap van
+   | de kavel zelf. Geen simulatie vanaf het laden van de pagina: dan laat
+   | de kaart een ander bedrag zien dan de kavelpagina.
+   */
+  const fmtCents = cents => '€ ' + Math.round(cents / 100).toLocaleString('nl-NL');
+  function dutchTick() {
+    document.querySelectorAll('[data-dutch]').forEach(dutch => {
+      const d = dutch.dataset;
+      if (! d.dutchStartsAt || ! d.dutchInterval) return;
+      if (! d.offset) d.offset = String(new Date(d.dutchNow).getTime() - Date.now());
+      const now = Date.now() + parseInt(d.offset, 10);
+      const elapsed = Math.floor((now - new Date(d.dutchStartsAt).getTime()) / 1000);
+      const start = parseInt(d.dutchStart, 10), floor = parseInt(d.dutchFloor, 10), step = parseInt(d.dutchStep, 10), interval = parseInt(d.dutchInterval, 10);
+      const timer = dutch.closest('.meta')?.querySelector('[data-dutch-timer]');
+      if (elapsed < 0) { if (timer) timer.textContent = 'start over ' + (-elapsed) + 's'; return; }
+      const price = Math.max(floor, start - Math.floor(elapsed / interval) * step);
+      const shown = parseInt(d.shown || d.dutchStart, 10);
+      if (price !== shown) {
+        d.shown = String(price);
+        if (hasGsap && !reduce) {
+          const o = { v: shown }; gsap.to(o, { v: price, duration: .7, ease: 'expo.out', onUpdate: () => dutch.textContent = fmtCents(o.v) });
+          gsap.fromTo(dutch, { color: '#2450A8' }, { color: '#0e1526', duration: 1.2 });
+        } else dutch.textContent = fmtCents(price);
       }
-      if (dutchT) dutchT.textContent = 'daalt over ' + left + 's';
-    }, 1000);
-  });
+      if (! timer) return;
+      timer.textContent = price <= floor ? 'bodem bereikt' : 'daalt over ' + (interval - (elapsed % interval)) + 's';
+    });
+  }
+  dutchTick(); setInterval(dutchTick, 1000);
 
   /* ============ 7. VERKOPERSREIS - autoplay with pause ============ */
   const steps = [...document.querySelectorAll('#steps li')];

@@ -84,7 +84,10 @@ it('legt het telefoonnummer vast', function () {
         ->post('/verificatie/telefoon', ['phone' => '+31 6 12345678'])
         ->assertRedirect(route('verification.overview'));
 
-    expect($user->fresh()->phone_verified_at)->not->toBeNull();
+    // Opgeslagen, niet geverifieerd: er is geen sms-controle, dus geen vinkje
+    // dat iets belooft wat niet gecontroleerd is.
+    expect($user->fresh()->phone)->toBe('+31 6 12345678')
+        ->and($user->fresh()->phone_verified_at)->toBeNull();
 });
 
 it('koppelt de kvk alleen voor zakelijke accounts', function () {

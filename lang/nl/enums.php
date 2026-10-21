@@ -136,7 +136,7 @@ return [
         'auction_ended' => 'De veiling is zojuist gesloten.',
         'own_lot' => 'Je kunt niet bieden op je eigen kavel.',
         'same_company' => 'Bieden op een kavel van je eigen bedrijf kan niet.',
-        'not_verified' => 'Rond eerst je verificatie af - dat duurt twee minuten.',
+        'not_verified' => 'Rond eerst je verificatie af; een medewerker beoordeelt die, meestal binnen een werkdag.',
         'blocked' => 'Dit account is geblokkeerd. Neem contact op met Aucvy als je denkt dat dit niet klopt.',
         'deposit_required' => 'Voor dit bedrag vragen we eerst een borg, die je terugkrijgt als je niet wint.',
         'too_low' => 'Dit bod is lager dan de volgende biedstap.',

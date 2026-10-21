@@ -49,9 +49,10 @@ final class VerificationController extends Controller
             'phone' => ['required', 'string', 'regex:/^\+?[0-9 ]{8,20}$/'],
         ]);
 
+        // Alleen opgeslagen: er is geen sms-controle, dus ook geen "geverifieerd".
         $user = $request->user();
         $user->phone = $validated['phone'];
-        $user->phone_verified_at = now();
+        $user->phone_verified_at = null;
         $user->save();
 
         return redirect()->route('verification.overview');

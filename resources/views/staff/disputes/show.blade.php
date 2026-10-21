@@ -41,7 +41,7 @@
         {{-- De uitkomst, altijd met motivering - die gaat het auditlog in. --}}
         <form method="POST" action="{{ route('staff.disputes.resolve', $dispute) }}"
               class="mt-6 space-y-4 rounded-aj-s border border-aj-border bg-aj-surface p-6"
-              x-data="{ resolution: '{{ old('resolution', 'alsnog_leveren') }}' }">
+              x-data="{ resolution: {{ Js::from(old('resolution', 'alsnog_leveren')) }} }">
             @csrf
             <h2 class="text-lg font-extrabold">Uitkomst</h2>
 

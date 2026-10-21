@@ -33,7 +33,8 @@ async function request(url, method, body) {
 }
 
 async function awaitRun(run) {
-    for (let attempt = 0; attempt < 40; attempt++) {
+    // Even lang als de server de taak gunt (180 s).
+    for (let attempt = 0; attempt < 120; attempt++) {
         if (['completed', 'failed', 'skipped'].includes(run.status)) return run;
 
         await new Promise((resolve) => setTimeout(resolve, 1500));

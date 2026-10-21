@@ -46,9 +46,11 @@ export default function initLotNav() {
         if (! reduce) host.classList.add(outClass);
 
         const html = await cache.get(url);
-        // De opgehaalde stand kan even oud zijn; de veilingcomponent haalt
-        // zelf direct de verse stand op. Niet hergebruiken voor een tweede keer.
+        // De opgehaalde stand kan even oud zijn; de veilingcomponent ziet aan
+        // deze vlag dat hij direct de verse stand moet ophalen. Niet
+        // hergebruiken voor een tweede keer.
         cache.delete(url);
+        window.__aucvyStaleState = true;
 
         if (! html) {
             window.location.assign(url);

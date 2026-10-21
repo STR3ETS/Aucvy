@@ -9,7 +9,7 @@
         <x-v4.particles :count="9" />
         <div class="v4-mark v4-anim-float-slow" aria-hidden="true" style="bottom:-110px;left:-60px;opacity:.1"><x-v4.logo :size="320" /></div>
         <h2 id="start-title" style="position:relative;margin:0 auto;max-width:20ch;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.025em;line-height:1.1">Wat wil je vandaag verhandelen?</h2>
-        <p style="position:relative;margin:14px auto 0;max-width:48ch;font-size:14.5px;color:rgba(255,255,255,.65)">Gratis starten, zonder creditcard. Je eerste kavel staat in ±3 minuten online, of Ivy gaat direct voor je zoeken.</p>
+        <p style="position:relative;margin:14px auto 0;max-width:48ch;font-size:14.5px;color:rgba(255,255,255,.65)">Gratis starten, zonder creditcard. Je eerste kavel staat in een paar minuten klaar om te publiceren, of Ivy gaat direct voor je zoeken.</p>
         <div style="position:relative;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:30px">
             <x-v4.button :href="route('sell')" size="lg" arrow>Plaats gratis een kavel</x-v4.button>
             <x-v4.button :href="route('lots.index')" variant="ghost" size="lg">Vraag Ivy om te zoeken</x-v4.button>

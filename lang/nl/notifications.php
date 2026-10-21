@@ -94,7 +94,7 @@ return [
     'cancelled' => [
         'buyer' => [
             'subject' => 'Bestelling ":lot" is geannuleerd',
-            'line' => 'Deze koop gaat niet door. Heb je al betaald, dan wordt het bedrag teruggestort.',
+            'line' => 'Deze koop gaat niet door. Heb je al betaald, dan regelt support de terugbetaling via de betaalprovider; je hoort van ons.',
             'action' => 'Naar je bestelling',
         ],
         'seller' => [
@@ -113,7 +113,7 @@ return [
 
     'payout_released' => [
         'subject' => 'Je uitbetaling van :amount is vrijgegeven',
-        'line' => 'De houdtermijn voor ":lot" is verstreken zonder melding. Het bedrag wordt overgemaakt.',
+        'line' => 'De houdtermijn voor ":lot" is verstreken zonder melding. Het bedrag is vrijgegeven voor uitbetaling.',
         'action' => 'Bekijk je verkopen',
     ],
 
@@ -167,7 +167,7 @@ return [
         'subject' => 'Welkom bij Aucvy',
         'greeting' => 'Welkom, :name',
         'line' => 'Je account staat. Rondkijken, volgen en een kavel voorbereiden kan meteen.',
-        'next' => 'Vóór je eerste bod of je eerste gepubliceerde kavel vragen we je verificatie af te ronden. Dat duurt een paar minuten.',
+        'next' => 'Vóór je eerste bod of je eerste gepubliceerde kavel vragen we je verificatie af te ronden. Invullen duurt een paar minuten; een medewerker beoordeelt het daarna, meestal binnen een werkdag.',
         'action' => 'Verificatie afronden',
         'browse' => 'Liever eerst kijken? De veilingen staan open zonder account.',
     ],

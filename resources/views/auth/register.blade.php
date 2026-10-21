@@ -1,6 +1,6 @@
 <x-layouts.auth title="Registreren" heading="Account aanmaken"
     intro="Rondkijken, volgen en verkopen voorbereiden kan meteen. Vóór je eerste bod vragen we je verificatie af te ronden.">
-    <div x-data="{ type: '{{ old('type', 'private') }}' }">
+    <div x-data="{ type: {{ Js::from(old('type', 'private')) }} }">
 
         <form method="POST" action="{{ route('register.store') }}" class="space-y-4">
             @csrf

@@ -63,9 +63,13 @@
                     <div>
                         <span class="label">Prijs nu</span>
                         <span class="price v4-tnum"
-                              data-dutch="{{ intdiv($price, 100) }}"
-                              data-step="{{ intdiv($auction->dutch_step_cents, 100) }}"
-                              data-floor="{{ intdiv($auction->dutch_floor_cents, 100) }}">{{ $euro($price) }}</span>
+                              data-dutch="{{ $price }}"
+                              data-dutch-start="{{ $auction->dutch_start_cents }}"
+                              data-dutch-floor="{{ $auction->dutch_floor_cents }}"
+                              data-dutch-step="{{ $auction->dutch_step_cents }}"
+                              data-dutch-interval="{{ $auction->dutch_interval_s }}"
+                              data-dutch-starts-at="{{ $auction->starts_at->toIso8601String() }}"
+                              data-dutch-now="{{ now()->toIso8601String() }}">{{ $euro($price) }}</span>
                     </div>
                     <div class="stats">
                         <span class="v4-tnum" data-dutch-timer><x-v4.icon name="arrow-down" :size="13" stroke="2" /> daalt over {{ $auction->dutch_interval_s }}s</span>
@@ -103,10 +107,30 @@
             @endif
         </div>
     </a>
-    {{-- Volgen bestaat nog niet als functie; de knop onthoudt de keuze
-         alleen voor deze pagina, zoals het ontwerp hem laat zien. --}}
-    <button type="button" class="v4-follow" x-data="{ on: false }" :class="{ 'is-on': on }" @click="on = ! on"
-            :aria-pressed="on" aria-label="Volgen">
-        <x-v4.icon name="heart" :size="15" stroke="2.2" ::fill="on ? 'currentColor' : 'none'" />
-    </button>
+    {{-- Volgen is de volglijst (hfst. 13.6): één query per pagina voor
+         de beginstand, daarna de watch-API. Zonder account: eerst inloggen. --}}
+    @auth
+        @php $watched = in_array($lot->id, once(fn (): array => \App\Models\WatchlistItem::query()->where('user_id', auth()->id())->pluck('lot_id')->all()), true); @endphp
+        <button type="button" class="v4-follow"
+                x-data="{ on: {{ $watched ? 'true' : 'false' }}, busy: false,
+                          async toggle() {
+                              if (this.busy) return;
+                              this.busy = true;
+                              try {
+                                  const response = await fetch('/api/lots/{{ $lot->id }}/watch', {
+                                      method: this.on ? 'DELETE' : 'POST',
+                                      headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '', Accept: 'application/json' },
+                                  });
+                                  if (response.ok) this.on = ! this.on;
+                              } catch (error) {}
+                              this.busy = false;
+                          } }"
+                :class="{ 'is-on': on }" @click="toggle()" :aria-pressed="on" aria-label="Volgen">
+            <x-v4.icon name="heart" :size="15" stroke="2.2" ::fill="on ? 'currentColor' : 'none'" />
+        </button>
+    @else
+        <a href="{{ route('login') }}" class="v4-follow" aria-label="Inloggen om te volgen">
+            <x-v4.icon name="heart" :size="15" stroke="2.2" />
+        </a>
+    @endauth
 </article>

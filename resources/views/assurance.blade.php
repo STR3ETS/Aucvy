@@ -87,8 +87,8 @@
                     <summary class="cursor-pointer text-sm font-bold">Wat gebeurt er met een borg?</summary>
                     <p class="mt-2 text-sm text-aj-muted">
                         Boven {{ \App\Support\Money\Money::format((int) config('aucvy.deposit.threshold_cents')) }} vragen we
-                        een reservering vóór je eerste bod. Win je niet, dan komt hij direct vrij; win je wel, dan wordt hij
-                        verrekend met je betaling.
+                        een reservering vóór je eerste bod. Win je niet, dan komt hij direct vrij; win je wel, dan komt hij
+                        vrij zodra je betaling binnen is.
                     </p>
                 </details>
             </div>

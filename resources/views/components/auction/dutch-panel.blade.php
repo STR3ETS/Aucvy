@@ -39,7 +39,7 @@
         </div>
     </template>
 
-    <template x-if="state.dutch.floor_reached">
+    <template x-if="floorReached">
         {{-- Een teller die nergens heen loopt is erger dan geen teller. --}}
         <p class="mt-1 text-xs text-amber-200">
             De bodemprijs is bereikt. Lager wordt hij niet.
@@ -108,7 +108,7 @@
 
             <template x-if="! state.viewer?.can_bid && ! state.viewer?.is_seller && state.status !== 'closed'">
                 <p class="rounded-aj-sm bg-white/10 px-3 py-3 text-sm">
-                    Rond eerst je verificatie af - dat duurt twee minuten.
+                    Rond eerst je verificatie af; een medewerker beoordeelt die, meestal binnen een werkdag.
                 </p>
             </template>
 
@@ -123,10 +123,15 @@
                                 <span class="tabular" x-text="formatCents(state.viewer?.deposit?.threshold_cents)"></span> -
                                 die je terugkrijgt als je niet koopt.
                             </p>
-                            <button type="button" @click="arrangeDeposit()"
-                                    class="mt-2 rounded-aj-sm bg-white px-3 py-2 text-xs font-extrabold text-aj-navy">
-                                Borg regelen
-                            </button>
+                            <template x-if="state.viewer?.deposit?.available">
+                                <button type="button" @click="arrangeDeposit()"
+                                        class="mt-2 rounded-aj-sm bg-white px-3 py-2 text-xs font-extrabold text-aj-navy">
+                                    Borg regelen
+                                </button>
+                            </template>
+                            <template x-if="! state.viewer?.deposit?.available">
+                                <p class="mt-2 text-xs text-white/70">{{ __('auctions.deposit.provider_missing') }}</p>
+                            </template>
                             <p class="mt-2 text-xs text-white/60">
                                 Daarna kun je direct afmijnen - of wacht tot de prijs onder de drempel zakt.
                             </p>
@@ -143,7 +148,9 @@
                     </template>
 
                     <template x-if="! needsDeposit && confirming">
-                        <div class="rounded-aj-sm bg-white/10 p-3">
+                        {{-- De focus gaat mee naar de bevestiging: de knop die hem had is net verdwenen. --}}
+                        <div class="rounded-aj-sm bg-white/10 p-3" role="group" aria-label="Bevestig je koop"
+                             x-init="$nextTick(() => $el.querySelector('button')?.focus())">
                             <p class="text-sm">
                                 Je koopt deze kavel voor
                                 <span class="tabular font-semibold" x-text="formatCents(state.price_cents)"></span>.
@@ -153,11 +160,12 @@
                                 Zakt de prijs precies nu, dan reken je af tegen de nieuwe, lagere prijs.
                             </p>
                             <div class="mt-3 flex gap-2">
-                                <button type="button" @click="acceptDutch()"
+                                <button type="button" @click="acceptDutch()" :disabled="isBlocked || busy"
                                         class="flex flex-1 items-center justify-center rounded-aj-sm bg-white px-4
-                                               text-sm font-semibold text-aj-navy"
+                                               text-sm font-semibold text-aj-navy disabled:opacity-60"
                                         style="min-height: var(--spacing-cta)">
-                                    Ja, afmijnen
+                                    <span x-show="! busy">Ja, afmijnen</span>
+                                    <span x-show="busy" x-cloak>Even geduld…</span>
                                 </button>
                                 <button type="button" @click="confirming = false"
                                         class="flex items-center justify-center rounded-aj-sm bg-white/10 px-4 text-sm"

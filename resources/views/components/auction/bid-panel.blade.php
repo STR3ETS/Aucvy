@@ -134,9 +134,9 @@
             </template>
 
             {{-- Niet geverifieerd, met de route ernaartoe --}}
-            <template x-if="! state.viewer?.is_seller && ! state.viewer?.can_bid">
+            <template x-if="isOpen && ! state.viewer?.is_seller && ! state.viewer?.can_bid">
                 <div class="rounded-aj-sm bg-white/12 p-3 text-sm">
-                    <p>Rond eerst je verificatie af - dat duurt twee minuten.</p>
+                    <p>Rond eerst je verificatie af; een medewerker beoordeelt die, meestal binnen een werkdag.</p>
                     <p class="mt-1 text-xs text-white/70">
                         Nodig vóór je eerste bod, niet vóór het rondkijken.
                     </p>
@@ -291,8 +291,8 @@
                                        class="tabular w-full rounded-aj-sm border border-aj-border-strong bg-white pl-8 pr-3 text-aj-text"
                                        style="min-height: var(--spacing-cta)">
                             </div>
-                            <button type="button" @click="setMaxBid(maxCents)"
-                                    class="shrink-0 rounded-aj-sm bg-white px-4 text-sm font-semibold text-aj-navy"
+                            <button type="button" @click="setMaxBid(maxCents)" :disabled="! (maxCents > 0)"
+                                    class="shrink-0 rounded-aj-sm bg-white px-4 text-sm font-semibold text-aj-navy disabled:opacity-60"
                                     style="min-height: var(--spacing-cta)">
                                 Instellen
                             </button>
@@ -361,10 +361,16 @@
                             <span class="tabular" x-text="formatCents(state.viewer?.deposit?.threshold_cents)"></span> -
                             die je terugkrijgt als je niet wint.
                         </p>
-                        <button type="button" @click="arrangeDeposit()"
-                                class="mt-2 rounded-aj-sm bg-white px-3 py-2 text-xs font-extrabold text-aj-navy">
-                            Borg regelen
-                        </button>
+                        <template x-if="state.viewer?.deposit?.available">
+                            <button type="button" @click="arrangeDeposit()"
+                                    class="mt-2 rounded-aj-sm bg-white px-3 py-2 text-xs font-extrabold text-aj-navy">
+                                Borg regelen
+                            </button>
+                        </template>
+                        <template x-if="! state.viewer?.deposit?.available">
+                            {{-- Eerlijk: zonder betaalprovider is er geen reservering, dus ook geen knop die altijd faalt. --}}
+                            <p class="mt-2 text-xs text-white/70">{{ __('auctions.deposit.provider_missing') }}</p>
+                        </template>
                     </div>
 
 

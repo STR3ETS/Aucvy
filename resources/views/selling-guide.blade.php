@@ -22,7 +22,7 @@
                         ['ivy', 'Ivy herkent je object'],
                         ['nova', 'Nova schrijft de advertentie'],
                         ['atlas', 'Atlas geeft de waarde-indicatie'],
-                        ['finn', 'Live verkopen - Finn adviseert de vorm'],
+                        ['finn', 'Live verkopen - jij kiest de vorm'],
                         ['flow', 'Flow handelt betaling en uitbetaling af'],
                     ] as $index => [$agent, $title])
                         <li>
@@ -199,7 +199,7 @@
                         <p class="demo-in demo-d3 mt-3 text-xs text-aj-muted">
                             Zekerheid: midden · bron: 14 vergelijkbare verkopen in de laatste 12 maanden.
                         </p>
-                        <p class="demo-in demo-d4 mt-1 text-xs font-semibold">Een range, geen belofte - en Finn adviseert: veiling.</p>
+                        <p class="demo-in demo-d4 mt-1 text-xs font-semibold">Een range, geen belofte - jij kiest de vorm.</p>
                     </div>
                 </template>
 
@@ -247,7 +247,7 @@
                                 <span class="block text-xs font-normal text-aj-muted">AI-specialist</span></p>
                         </div>
                         <ul class="mt-4 space-y-2 text-sm">
-                            @foreach (['Verkocht voor € 16.750', 'Koper heeft betaald', 'Transport ingepland en geleverd', 'Houdtermijn voorbij - geen geschil'] as $index => $stap)
+                            @foreach (['Verkocht voor € 16.750', 'Koper heeft betaald', 'Geleverd of opgehaald', 'Houdtermijn voorbij - geen geschil'] as $index => $stap)
                                 <li class="demo-in demo-d{{ $index + 1 }} flex items-center gap-2.5">
                                     <svg class="size-4 shrink-0 text-aj-success" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/></svg>
                                     {{ $stap }}

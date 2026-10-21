@@ -13,7 +13,7 @@
             </p>
             <p class="mt-1 text-sm text-aj-muted">
                 Dit bedrag wordt gereserveerd, niet afgeschreven. Win je niet, dan komt het
-                direct vrij; win je wel, dan wordt het verrekend met je betaling.
+                direct vrij; win je wel, dan komt het vrij zodra je betaling binnen is.
             </p>
 
             <form method="POST" action="{{ route('dev.deposit.store', $deposit) }}" class="mt-6">

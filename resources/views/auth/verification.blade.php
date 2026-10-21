@@ -41,13 +41,13 @@
             {{-- 2 · Telefoon --}}
             <li class="rounded-aj-sm border border-aj-border bg-aj-surface p-4">
                 <p class="text-sm font-bold">
-                    <x-ui.step-icon :done="$user->phone_verified_at !== null" />
+                    <x-ui.step-icon :done="$user->phone !== null" />
                     Telefoonnummer
-                    @if ($user->phone_verified_at !== null)
-                        <span class="font-normal text-aj-muted">- {{ $user->phone }}</span>
+                    @if ($user->phone !== null)
+                        <span class="font-normal text-aj-muted">- {{ $user->phone }} (opgegeven)</span>
                     @endif
                 </p>
-                @if ($user->phone_verified_at === null)
+                @if ($user->phone === null)
                     <form method="POST" action="{{ route('verification.phone') }}" class="mt-2 flex gap-2">
                         @csrf
                         <input type="tel" name="phone" required placeholder="+31 6 12345678"
@@ -67,7 +67,7 @@
                 <div class="flex items-center justify-between gap-3">
                     <p class="text-sm font-bold">
                         <x-ui.step-icon :done="$user->kyc_status->allowsBidding()" :open="$identityPending" />
-                        Identiteit{{ $identityPending ? ' - in behandeling' : ' - duurt twee minuten' }}
+                        Identiteit{{ $identityPending ? ' - in behandeling' : ' - invullen duurt een paar minuten' }}
                     </p>
                     @unless ($user->kyc_status->allowsBidding() || $identityPending)
                         <form method="POST" action="{{ route('verification.identity') }}">

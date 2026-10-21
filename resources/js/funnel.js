@@ -34,6 +34,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         recognition: null,
         scan: { busy: false, result: null, error: null },
         saving: false,
+        publishing: false,
         saved: false,
         error: null,
         uploading: false,
@@ -85,7 +86,9 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         },
 
         setEuro(field, value) {
-            const euros = parseFloat(String(value).replace(',', '.'));
+            // Nederlands: "1.500,50" is vijftienhonderd vijftig, dus eerst de
+            // duizendtalpunten weg en dan de komma als decimaalteken.
+            const euros = parseFloat(String(value).replace(/\./g, '').replace(',', '.'));
 
             this.set(field, Number.isFinite(euros) ? Math.round(euros * 100) : null);
         },
@@ -99,6 +102,10 @@ export default function funnel(initial, feePercentage, schemas = {}) {
 
             await this.ensureDraft();
 
+            // Geen concept (throttle, budget, storing): de invoer blijft in
+            // de wachtrij staan voor de volgende poging.
+            if (! this.draft) return;
+
             const payload = this._pending;
             this._pending = {};
             this.saving = true;
@@ -106,6 +113,12 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             const response = await this.request(`/api/drafts/${this.draft.id}`, 'PATCH', payload);
 
             this.saving = false;
+
+            if (! response) {
+                // Mislukt: wat nog niet opnieuw getypt is gaat terug in de
+                // wachtrij, zodat "je wijzigingen staan nog klaar" ook waar is.
+                this._pending = { ...payload, ...this._pending };
+            }
 
             if (response) {
                 /*
@@ -131,7 +144,13 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             if (this.draft) return;
 
             this._creating ??= this.request('/api/drafts', 'POST', {}).then((response) => {
-                if (response) this.apply(response);
+                if (response) {
+                    this.apply(response);
+                } else {
+                    // Mislukt: de volgende aanroep probeert het opnieuw in
+                    // plaats van eeuwig op deze mislukte belofte te wachten.
+                    this._creating = null;
+                }
             });
 
             await this._creating;
@@ -192,9 +211,10 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                 .map(([field]) => field);
         },
 
-        /** Publiceren mag als alles behalve de accountvraag in orde is. */
+        /** Publiceren mag als er een concept is en alles behalve de accountvraag in orde is. */
         get canPublish() {
-            return this.preflight.blocking.filter((key) => key !== 'account').length === 0;
+            return this.draft !== null && ! this.publishing
+                && this.preflight.blocking.filter((key) => key !== 'account').length === 0;
         },
 
         // Uploads ------------------------------------------------------------
@@ -558,7 +578,9 @@ export default function funnel(initial, feePercentage, schemas = {}) {
 
         /** Pollen tot de run klaar is; de taken zelf draaien op de queue. */
         async awaitRun(run) {
-            for (let attempt = 0; attempt < 60; attempt++) {
+            // Even lang wachten als de server de taak gunt (180 s), anders
+            // meldt de wizard "te lang" terwijl de run nog slaagt.
+            for (let attempt = 0; attempt < 120; attempt++) {
                 if (['completed', 'failed', 'skipped'].includes(run.status)) return run;
 
                 await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -606,10 +628,28 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         // Publiceren ---------------------------------------------------------
 
         async publish() {
+            if (this.publishing) return;
+
+            this.publishing = true;
+
+            try {
+                await this.publishNow();
+            } finally {
+                this.publishing = false;
+            }
+        },
+
+        async publishNow() {
             // Eerst alles wegschrijven wat nog in de wachtrij staat.
             clearTimeout(this._timer);
             await this.flush();
             await this.ensureDraft();
+
+            if (! this.draft) {
+                this.error = 'Het concept kon niet worden aangemaakt. Probeer het zo opnieuw.';
+
+                return;
+            }
 
             // De preflight is de waarheid: staat er iets open, dan spring je
             // naar de stap waar het op te lossen is in plaats van een 422.

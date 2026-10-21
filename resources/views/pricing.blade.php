@@ -61,7 +61,7 @@
         </div>
         <div class="biz-grid">
             <div><h3>Ivy inbegrepen</h3><p>Herkennen uit foto's, de advertentietekst en de waarde-indicatie zitten in elk plan. Geen extra kosten per kavel.</p></div>
-            <div><h3>Betaling via het platform</h3><p>De koper betaalt aan het platform. Na levering en een houdtermijn van {{ $houdtermijn }} uur zonder melding gaat het bedrag minus de fee naar je rekening.</p></div>
+            <div><h3>Betaling via het platform</h3><p>De koper betaalt aan het platform. Na levering en een houdtermijn van {{ $houdtermijn }} uur zonder melding wordt het bedrag minus de fee vrijgegeven voor uitbetaling.</p></div>
             <div><h3>Niet verkocht, geen kosten</h3><p>Haalt een kavel de reserveprijs niet of blijft hij zonder bod, dan betaal je niets en plaats je hem opnieuw.</p></div>
         </div>
         <div class="sec-cta">

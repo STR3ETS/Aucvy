@@ -69,7 +69,7 @@
 
             <template x-if="! state.viewer?.is_seller && ! state.viewer?.can_bid && isOpen">
                 <div class="rounded-aj-sm bg-white/12 p-3 text-sm">
-                    <p>Rond eerst je verificatie af - dat duurt twee minuten.</p>
+                    <p>Rond eerst je verificatie af; een medewerker beoordeelt die, meestal binnen een werkdag.</p>
                     <a href="{{ route('verification.overview') }}"
                        class="mt-2 inline-block rounded-aj-sm bg-white px-3 py-2 text-xs font-extrabold text-aj-navy">
                         Verificatie starten
@@ -124,7 +124,8 @@
                     </template>
 
                     <template x-if="costs">
-                        <div class="rounded-aj-sm bg-white/12 p-3">
+                        <div class="rounded-aj-sm bg-white/12 p-3" role="group" aria-label="Bevestig je koop"
+                             x-init="$nextTick(() => $el.querySelector('button')?.focus())">
                             <dl class="space-y-1 text-sm">
                                 <template x-for="line in costs.lines" :key="line.key">
                                     <div class="flex justify-between gap-3">
@@ -143,10 +144,11 @@
                                 </div>
                             </dl>
 
-                            <button type="button" @click="buyNow(true)"
-                                    class="mt-3 flex w-full items-center justify-center rounded-aj-sm bg-white px-4 text-sm font-extrabold text-aj-navy"
+                            <button type="button" @click="buyNow(true)" :disabled="isBlocked || busy"
+                                    class="mt-3 flex w-full items-center justify-center rounded-aj-sm bg-white px-4 text-sm font-extrabold text-aj-navy disabled:opacity-60"
                                     style="min-height: var(--spacing-cta)">
-                                Bevestigen en kopen
+                                <span x-show="! busy">Bevestigen en kopen</span>
+                                <span x-show="busy" x-cloak>Even geduld…</span>
                             </button>
                             <button type="button" @click="costs = null"
                                     class="mt-1 w-full text-xs text-white/70 underline">

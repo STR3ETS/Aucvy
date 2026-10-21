@@ -31,7 +31,7 @@
                 ['Hoe werkt bieden?', 'Je bevestigt een bod door de knop naar rechts te slepen - zo plaats je nooit per ongeluk een bod. Het minimum is telkens de huidige stand plus een vaste biedstap, en die staat altijd bij het invoerveld.'],
                 ['Wat is automatisch meestappen?', 'Je stelt een maximum in en wij bieden voor je terug zodra iemand over je heen gaat, met de kleinste geldige stap en nooit boven jouw limiet. Niemand ziet jouw maximum, ook de verkoper niet.'],
                 ['Waarom werd de veiling verlengd?', 'Een bod in de laatste '.$slotVenster.' seconden verlengt de veiling met '.$verlenging.' seconden, zodat anderen kunnen reageren. Zo wint niemand door op de valreep te snipen.'],
-                ['Wat is de borg?', 'Wil je meer dan '.$borg.' bieden, dan vragen we eerst een borgreservering. Win je niet, dan komt die automatisch vrij; win je wel, dan wordt hij verrekend met je betaling.'],
+                ['Wat is de borg?', 'Wil je meer dan '.$borg.' bieden, dan vragen we eerst een borgreservering. Win je niet, dan komt die automatisch vrij; win je wel, dan komt hij vrij zodra je betaling binnen is.'],
                 ['Kan ik een bod intrekken?', 'Nee, een bod is bindend - daarom bevestig je het bewust met de sleepbeweging. Een ingesteld maximum kun je wel intrekken; je al geplaatste bod blijft dan staan.'],
             ],
             'Kopen en betalen' => [
@@ -43,7 +43,7 @@
             'Verkopen' => [
                 ['Wat kost verkopen?', 'Plaatsen is gratis. Alleen bij een geslaagde verkoop wordt een succesfee ingehouden, vanaf '.$startFee.'% afhankelijk van je plan. Het exacte bedrag zie je vóór publicatie in de kostenopbouw.'],
                 ['Moet ik alles zelf invullen?', 'Nee. Ivy herkent je object uit de foto\'s, Nova schrijft de advertentie en Atlas geeft een waarde-indicatie. Jij controleert, past aan en keurt goed - zonder jouw akkoord gaat er niets live.'],
-                ['Welke verkoopvorm kies ik?', 'Veiling als de markt de prijs mag bepalen, afslag (dalende prijs) als het snel moet, koop direct bij een vaste prijs. Finn adviseert op basis van je kavel en je doel; jij beslist.'],
+                ['Welke verkoopvorm kies ik?', 'Veiling als de markt de prijs mag bepalen, afslag (dalende prijs) als het snel moet, koop direct bij een vaste prijs. Jij kiest; Atlas geeft de waarde-indicatie mee.'],
                 ['Wanneer krijg ik mijn geld?', 'Na levering geldt een korte houdtermijn waarin de koper kan controleren of alles klopt. Daarna wordt de uitbetaling vrijgegeven, minus de succesfee.'],
             ],
             'Zekerheid en geschillen' => [

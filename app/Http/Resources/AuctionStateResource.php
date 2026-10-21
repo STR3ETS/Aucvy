@@ -232,6 +232,8 @@ final class AuctionStateResource
             ->first();
 
         return [
+            // Het eigen id, voor het eigen "overboden"-kanaal; nooit van een ander.
+            'id' => $this->viewer->id,
             'state' => match (true) {
                 $this->auction->isClosed() && $isLeading => 'won',
                 $this->auction->isClosed() && $hasBid => 'lost',
@@ -258,6 +260,9 @@ final class AuctionStateResource
              */
             'deposit' => [
                 'threshold_cents' => (int) config('aucvy.deposit.threshold_cents'),
+                // Zolang de reservering alleen bij de nepprovider bestaat,
+                // toont het paneel geen knop die altijd op een 501 uitkomt.
+                'available' => config('aucvy.payments.provider') === 'fake',
                 'covered' => Deposit::query()
                     ->where('auction_id', $this->auction->id)
                     ->where('user_id', $this->viewer->id)

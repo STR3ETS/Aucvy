@@ -119,7 +119,7 @@
     </div>
     <div class="forms">
       <article class="form rv">
-        <span class="fee"><b>7,5%</b>bij verkoop</span>
+        <span class="fee"><b>{{ number_format(\App\Enums\CompanyPlan::Start->defaultFeePercentage(), 1, ',', '.') }}%</b>succesfee</span>
         <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18h16M6 18V9l6-4 6 4v9"/><path d="M12 5v13"/></svg></div>
         <h3>Veiling</h3>
         <p>Oplopend bieden met proxy-bieden en een verlengregel in de slotfase. De markt bepaalt de prijs.</p>
@@ -130,14 +130,14 @@
         <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6l7 7 4-4 5 5"/><path d="M20 10v4h-4"/></svg></div>
         <h3>Afslag</h3>
         <p>De prijs start hoog en daalt in vaste stappen. Wie als eerste afmijnt, koopt. Snel en transparant.</p>
-        <ul><li>Daalt elke 20 seconden</li><li>Bodemprijs stel jij in</li><li>Ideaal bij een deadline</li></ul>
+        <ul><li>Daalt in vaste stappen, op jouw tempo</li><li>Bodemprijs stel jij in</li><li>Ideaal bij een deadline</li></ul>
       </article>
       <article class="form rv">
         <span class="fee"><b>2,5%</b>bij verkoop</span>
         <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14l-1.5 9h-11z"/><path d="M9 7V5a3 3 0 016 0v2"/></svg></div>
         <h3>Koop direct</h3>
         <p>Een vaste prijs, meteen te kopen. Voor kavels waar geen veiling nodig is.</p>
-        <ul><li>Vaste prijs, geen wachttijd</li><li>Reserveren mogelijk met betaling</li><li>Transport direct te boeken</li></ul>
+        <ul><li>Vaste prijs, geen wachttijd</li><li>Betalen via het platform</li><li>Transportindicatie vooraf</li></ul>
       </article>
     </div>
     <p class="fee-note rv">Plaatsen is gratis. Het tarief wordt alleen ingehouden op een geslaagde verkoop en staat vooraf per kavel in de kostenopbouw.</p>

@@ -38,8 +38,17 @@ export default function auction(initialState) {
         dutchDropIn: null,
         priceDropped: false,
 
+        busy: false,
+
         init() {
             this.clockOffset = new Date(this.state.server_time).getTime() - Date.now();
+
+            // Een vooraf opgehaalde buurkavel (lot-nav) draagt een stand van
+            // even geleden; eerst de verse stand, dan pas vertrouwen.
+            if (window.__aucvyStaleState) {
+                window.__aucvyStaleState = false;
+                this.refreshState();
+            }
 
             this.tick();
             this._tickTimer = setInterval(() => this.tick(), 1000);
@@ -61,6 +70,9 @@ export default function auction(initialState) {
 
             if (typeof window.Echo !== 'undefined') {
                 window.Echo.leave(`auction.${this.state.auction_id}`);
+
+                if (this.state.viewer?.id) window.Echo.leave(`user.${this.state.viewer.id}`);
+                if (this._connectionHandler) window.Echo.connector?.pusher?.connection?.unbind('state_change', this._connectionHandler);
             }
         },
 
@@ -133,6 +145,12 @@ export default function auction(initialState) {
             return this.state.status !== 'closed' && this.state.status !== 'paused';
         },
 
+        /** De bodem is bereikt zodra de prijs er is: ook zonder herlaad. */
+        get floorReached() {
+            return this.state.dutch !== null && this.state.dutch !== undefined
+                && this.state.price_cents <= this.state.dutch.floor_cents;
+        },
+
         tick() {
             this.countdownLabel = this.formatCountdown(this.secondsLeft());
 
@@ -154,8 +172,9 @@ export default function auction(initialState) {
 
             // Op nul overgekomen: de sluiting komt via de websocket, maar als
             // die weg is willen we niet eeuwig "nog 0 seconden" tonen.
+            // Niet elke tik een verzoek: pollen tot de server "gesloten" zegt.
             if (this.secondsLeft() === 0 && this.isOpen) {
-                this.refreshState();
+                this.startPolling();
             }
         },
 
@@ -221,6 +240,42 @@ export default function auction(initialState) {
                 return;
             }
 
+            /*
+             | Een websocket die wegvalt (Reverb down, proxy, slaapstand) mag
+             | geen "LIVE" laten staan op een oude prijs. Zolang de verbinding
+             | er niet is, pollen we; zodra hij terug is, halen we het gat
+             | dicht en stoppen we met pollen.
+             */
+            const connection = window.Echo.connector?.pusher?.connection;
+
+            if (connection) {
+                this._connectionHandler = ({ current }) => {
+                    if (current === 'connected') {
+                        this.stopPolling();
+                        this.resync();
+                    } else if (['connecting', 'unavailable', 'failed', 'disconnected'].includes(current)) {
+                        if (this.isOpen) this.connection = 'reconnecting';
+                        this.startPolling();
+                    }
+                };
+
+                connection.bind('state_change', this._connectionHandler);
+
+                if (connection.state !== 'connected') this.startPolling();
+            }
+
+            // Overboden op je eigen kanaal: direct de nieuwe stand, ook als
+            // je de kavel zelf niet open hebt staan in het publieke kanaal.
+            if (this.state.viewer?.id) {
+                window.Echo.private(`user.${this.state.viewer.id}`)
+                    .listen('.outbid', (event) => {
+                        if (event.auction_id !== this.state.auction_id) return;
+
+                        this.announce('Je bent overboden.');
+                        this.refreshState();
+                    });
+            }
+
             window.Echo.channel(`auction.${this.state.auction_id}`)
                 .listen('.bid.placed', (event) => this.applyEvent(event, () => {
                     this.state.price_cents = event.amount_cents;
@@ -241,6 +296,7 @@ export default function auction(initialState) {
                 .listen('.auction.closed', (event) => this.applyEvent(event, () => {
                     this.state.status = 'closed';
                     this.announce('De veiling is gesloten.');
+                    this.stopPolling();
                     this.refreshState();
                 }));
         },
@@ -306,8 +362,15 @@ export default function auction(initialState) {
 
                 this.state = await response.json();
                 this.history = this.state.history ?? [];
+                // De serverklok opnieuw ijken: deze stand is vers.
+                this.clockOffset = new Date(this.state.server_time).getTime() - Date.now();
                 this.connection = 'live';
                 this._failedReconnects = 0;
+
+                // Dicht of weer live via de websocket: dan hoeft het pollen niet meer.
+                const socketUp = window.Echo?.connector?.pusher?.connection?.state === 'connected';
+
+                if (this.state.status === 'closed' || socketUp) this.stopPolling();
             } catch {
                 this._failedReconnects++;
 
@@ -322,6 +385,11 @@ export default function auction(initialState) {
             if (this._pollTimer) return;
 
             this._pollTimer = setInterval(() => this.refreshState(), 3000);
+        },
+
+        stopPolling() {
+            clearInterval(this._pollTimer);
+            this._pollTimer = null;
         },
 
         get isBlocked() {
@@ -405,24 +473,42 @@ export default function auction(initialState) {
         },
 
         async acceptDutch() {
+            if (this.busy) return;
+
             this.error = null;
+            this.busy = true;
 
             const result = await this.post(`/api/auctions/${this.state.auction_id}/dutch-accept`, {
                 // De prijs die op dít scherm stond. De server rekent opnieuw.
                 seen_price_cents: this.state.price_cents,
             });
 
-            if (result) window.location.reload();
+            if (result) {
+                window.location.reload();
+
+                return;
+            }
+
+            this.busy = false;
         },
 
         async buyNow(confirmed) {
+            if (this.busy) return null;
+
             this.error = null;
+            this.busy = true;
 
             const result = await this.post(`/api/auctions/${this.state.auction_id}/buy-now`, {
                 confirm: confirmed,
             });
 
-            if (result?.confirmed) window.location.reload();
+            if (result?.confirmed) {
+                window.location.reload();
+
+                return result;
+            }
+
+            this.busy = false;
 
             return result;
         },
@@ -476,14 +562,22 @@ export default function auction(initialState) {
                     body: JSON.stringify(body),
                 });
 
-                const data = await response.json();
+                const data = await response.json().catch(() => ({}));
 
                 // Antwoord binnen: de volgende klik is een nieuwe bedoeling.
                 // Bij een netwerkfout (catch) blijft de sleutel staan.
                 this._intentKeys.delete(intent);
 
                 if (! response.ok) {
-                    this.error = data;
+                    // Laravel praat Engels bij een verlopen sessie of een
+                    // serverfout; de bieder niet.
+                    this.error = response.status === 401 || response.status === 419
+                        ? { message: 'Je sessie is verlopen. Laad de pagina opnieuw en log in.' }
+                        : response.status === 429
+                            ? { message: 'Even rustig aan: te veel verzoeken achter elkaar.' }
+                            : response.status >= 500
+                                ? { message: 'Er ging iets mis aan onze kant. Probeer het zo opnieuw.' }
+                                : data;
 
                     // De prijs is verschoven: meteen de nieuwe stand tonen in
                     // plaats van alleen melden dat het misging.

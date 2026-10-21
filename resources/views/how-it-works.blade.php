@@ -76,7 +76,7 @@
             <div>
                 <span class="eyebrow">Verkoopvormen</span>
                 <h2 id="how-forms">Drie manieren om te verkopen</h2>
-                <p>Elke kavel krijgt de vorm die bij het doel past. Finn adviseert, jij beslist.</p>
+                <p>Elke kavel krijgt de vorm die bij het doel past. Jij kiest de vorm; Atlas geeft de waarde-indicatie mee.</p>
             </div>
         </div>
         <div class="forms">
@@ -96,11 +96,11 @@
                 <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14l-1.5 9h-11z"/><path d="M9 7V5a3 3 0 016 0v2"/></svg></div>
                 <h3>Koop direct</h3>
                 <p>Een vaste prijs, meteen te kopen. Voor kavels waar geen veiling nodig is.</p>
-                <ul><li>Vaste prijs, geen wachttijd</li><li>Reserveren mogelijk met betaling</li><li>Transport direct te boeken</li></ul>
+                <ul><li>Vaste prijs, geen wachttijd</li><li>Betalen via het platform</li><li>Transportindicatie vooraf</li></ul>
             </article>
         </div>
         <div class="sec-cta">
-            <p>Twijfel je welke vorm past? Finn adviseert bij het plaatsen, jij beslist.</p>
+            <p>Twijfel je welke vorm past? Bij het plaatsen zie je de waarde-indicatie van Atlas; jij kiest de vorm.</p>
             <a class="btn btn-primary" href="{{ route('sell') }}">Kavel plaatsen</a>
             <a class="btn btn-ghost" href="{{ route('faq') }}">Veelgestelde vragen</a>
         </div>

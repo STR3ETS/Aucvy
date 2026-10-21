@@ -21,7 +21,7 @@
         <div class="v4-head">
             <span class="v4-kicker">Ivy</span>
             <h2 class="v4-h2" id="ivy-engine-title">Jouw persoonlijke commerce-assistent</h2>
-            <p class="v4-sub" style="margin-top:10px;font-size:15.5px;max-width:none">Geen chatbot die vragen beantwoordt, maar een assistent die het werk uitvoert. Kies een taak en je ziet meteen wat ze ermee doet.</p>
+            <p class="v4-sub" style="margin-top:10px;font-size:15.5px;max-width:none">Geen chatbot die vragen beantwoordt, maar een assistent die het werk uitvoert. Vandaag: herkennen, schrijven, waarderen, documenten controleren, biedadvies en vertalen. Promotie, planning en matchen zijn in ontwikkeling.</p>
         </div>
         <button type="button" class="v4-play" :aria-label="playing ? 'Pauzeer de doorloop' : 'Speel de doorloop af'" @click="toggle()" x-show="! reduce">
             <x-v4.icon name="pause" :size="13" stroke="2.6" x-show="playing" />

@@ -380,16 +380,20 @@
                             async toggle() {
                                 if (this.busy) return;
                                 this.busy = true;
-                                const response = await fetch('/api/lots/{{ $lot->id }}/watch', {
-                                    method: this.watching ? 'DELETE' : 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                                        'Accept': 'application/json',
-                                    },
-                                });
-                                if (response.ok) {
-                                    this.watching = ! this.watching;
-                                    this.count += this.watching ? 1 : -1;
+                                try {
+                                    const response = await fetch('/api/lots/{{ $lot->id }}/watch', {
+                                        method: this.watching ? 'DELETE' : 'POST',
+                                        headers: {
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                                            'Accept': 'application/json',
+                                        },
+                                    });
+                                    if (response.ok) {
+                                        this.watching = ! this.watching;
+                                        this.count += this.watching ? 1 : -1;
+                                    }
+                                } catch (error) {
+                                    // Geen verbinding: de knop blijft bruikbaar.
                                 }
                                 this.busy = false;
                             },
@@ -399,9 +403,13 @@
                                     try { await navigator.share({ title: {{ Js::from($lot->title) }}, url }); } catch (error) {}
                                     return;
                                 }
-                                await navigator.clipboard.writeText(url);
-                                this.copied = true;
-                                setTimeout(() => this.copied = false, 2000);
+                                try {
+                                    await navigator.clipboard.writeText(url);
+                                    this.copied = true;
+                                    setTimeout(() => this.copied = false, 2000);
+                                } catch (error) {
+                                    window.prompt('Kopieer de link:', url);
+                                }
                             },
                          }">
                         @auth
@@ -511,21 +519,26 @@
                                                 this.error = null;
                                                 if (! this.slot) { this.error = 'Kies eerst een moment.'; return; }
                                                 this.busy = true;
-                                                const response = await fetch('/api/lots/{{ $lot->id }}/viewings', {
-                                                    method: 'POST',
-                                                    headers: {
-                                                        'Content-Type': 'application/json',
-                                                        'Accept': 'application/json',
-                                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                                                    },
-                                                    body: JSON.stringify({ slot_at: this.slot, note: this.note || null }),
-                                                });
-                                                this.busy = false;
-                                                if (response.ok) {
-                                                    this.done = (await response.json()).viewing;
-                                                } else {
-                                                    this.error = (await response.json())?.message ?? 'Dat lukte niet - probeer het opnieuw.';
+                                                try {
+                                                    const response = await fetch('/api/lots/{{ $lot->id }}/viewings', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/json',
+                                                            'Accept': 'application/json',
+                                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                                                        },
+                                                        body: JSON.stringify({ slot_at: this.slot, note: this.note || null }),
+                                                    });
+                                                    const data = await response.json().catch(() => ({}));
+                                                    if (response.ok) {
+                                                        this.done = data.viewing;
+                                                    } else {
+                                                        this.error = data?.message ?? 'Dat lukte niet - probeer het opnieuw.';
+                                                    }
+                                                } catch (error) {
+                                                    this.error = 'Geen verbinding - probeer het zo opnieuw.';
                                                 }
+                                                this.busy = false;
                                             },
                                          }">
                                         <template x-if="! done">
@@ -581,26 +594,31 @@
                                 async calc() {
                                     this.error = null;
                                     this.busy = true;
-                                    const response = await fetch('/api/shipping/quote', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
-                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                                        },
-                                        body: JSON.stringify({ lot_id: {{ $lot->id }}, postcode: this.postcode }),
-                                    });
-                                    this.busy = false;
-                                    if (response.ok) {
-                                        const data = await response.json();
-                                        this.quote = data.quote;
-                                        // De kostenopbouw hieronder springt mee
-                                        // met jouw transportbedrag.
-                                        if (data.costs) this.$dispatch('shipping-quoted', data.costs);
-                                    } else {
+                                    try {
+                                        const response = await fetch('/api/shipping/quote', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                                            },
+                                            body: JSON.stringify({ lot_id: {{ $lot->id }}, postcode: this.postcode }),
+                                        });
+                                        const data = await response.json().catch(() => ({}));
+                                        if (response.ok) {
+                                            this.quote = data.quote;
+                                            // De kostenopbouw hieronder springt mee
+                                            // met jouw transportbedrag.
+                                            if (data.costs) this.$dispatch('shipping-quoted', data.costs);
+                                        } else {
+                                            this.quote = null;
+                                            this.error = data?.message ?? 'Dat lukte niet - probeer het opnieuw.';
+                                        }
+                                    } catch (error) {
                                         this.quote = null;
-                                        this.error = (await response.json())?.message ?? 'Dat lukte niet - probeer het opnieuw.';
+                                        this.error = 'Geen verbinding - probeer het zo opnieuw.';
                                     }
+                                    this.busy = false;
                                 },
                              }">
                             <p class="text-sm font-extrabold">Transportindicatie</p>

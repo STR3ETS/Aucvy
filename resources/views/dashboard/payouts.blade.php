@@ -2,15 +2,17 @@
 @use('App\Support\Money\Money')
 
 @php
-    $paid = (int) $payouts->where('status', PayoutStatus::Paid)->sum('amount_cents');
-    $pending = $payouts->whereIn('status', [PayoutStatus::Scheduled, PayoutStatus::Held, PayoutStatus::Released]);
+    // Vrijgegeven of uitbetaald: het platform geeft vrij, de overboeking zelf
+    // loopt via de betaalprovider en wordt hier (nog) niet teruggemeld.
+    $paid = (int) $payouts->whereIn('status', [PayoutStatus::Released, PayoutStatus::Paid])->sum('amount_cents');
+    $pending = $payouts->whereIn('status', [PayoutStatus::Scheduled, PayoutStatus::Held]);
     $held = $payouts->where('status', PayoutStatus::Held)->count();
     $fees = (int) $payouts->sum('fee_cents');
 @endphp
 
 <x-layouts.dashboard title="Uitbetalingen" eyebrow="Dashboard" intro="Wat er na een verkoop wanneer wordt uitbetaald, met de houdtermijn erbij.">
     <x-slot:tiles>
-        <x-dashboard.tile tone="green" icon="banknote" label="Uitbetaald" :value="Money::format($paid)" sub="op je rekening ontvangen" />
+        <x-dashboard.tile tone="green" icon="banknote" label="Vrijgegeven" :value="Money::format($paid)" sub="vrijgegeven voor uitbetaling" />
         <x-dashboard.tile tone="orange" icon="clock" label="Onderweg" :value="Money::format((int) $pending->sum('amount_cents'))" :sub="$held.' '.($held === 1 ? 'uitbetaling' : 'uitbetalingen').' in de houdtermijn'" />
         <x-dashboard.tile tone="blue" icon="gavel" label="Uitbetalingen" :value="$payouts->count()" sub="in totaal" />
         <x-dashboard.tile tone="purple" icon="badge-check" label="Succesfee" :value="Money::format($fees)" sub="ingehouden over alle verkopen" />

@@ -13,8 +13,8 @@
       <li><span class="n">2</span><h3><img src="{{ asset('images/agents/ivy.jpg') }}" alt="">Ivy herkent</h3><p>Merk, model, bouwjaar en conditie - met een zekerheidsscore, zodat je weet wat je moet nakijken.</p><span class="bar"></span></li>
       <li><span class="n">3</span><h3><img src="{{ asset('images/agents/nova.jpg') }}" alt="">Advertentie</h3><p>Titel, omschrijving en specificaties staan klaar - geschreven door Nova. Jij past aan of keurt goed.</p><span class="bar"></span></li>
       <li><span class="n">4</span><h3><img src="{{ asset('images/agents/atlas.jpg') }}" alt="">Waarde-indicatie</h3><p>Een range van Atlas op basis van vergelijkbare verkopen, met de bron erbij.</p><span class="bar"></span></li>
-      <li><span class="n">5</span><h3><img src="{{ asset('images/agents/finn.jpg') }}" alt="">Kies de verkoopvorm</h3><p>Veiling, afslag of koop direct. Finn adviseert, jij beslist.</p><span class="bar"></span></li>
-      <li><span class="n">6</span><h3><img src="{{ asset('images/agents/flow.jpg') }}" alt="">Verkocht &amp; uitbetaald</h3><p>Betaling, transport en uitbetaling handelt Flow voor je af.</p><span class="bar"></span></li>
+      <li><span class="n">5</span><h3><img src="{{ asset('images/agents/finn.jpg') }}" alt="">Kies de verkoopvorm</h3><p>Veiling, afslag of koop direct. Jij kiest; Atlas geeft de waarde-indicatie mee.</p><span class="bar"></span></li>
+      <li><span class="n">6</span><h3><img src="{{ asset('images/agents/flow.jpg') }}" alt="">Verkocht &amp; uitbetaald</h3><p>Betaling en uitbetaling lopen via het platform; transport regel je met de koper na de hamerslag.</p><span class="bar"></span></li>
     </ol>
     <div class="reis-ctrl">
       <button class="btn btn-ghost" id="reisToggle" aria-pressed="false">
@@ -45,12 +45,12 @@
       <div class="cap"><small>Stap 4</small>Een range, geen belofte. Met de bron erbij.</div>
     </div>
     <div class="scene">
-      <div class="art"><div class="card" style="left:8%;top:14%;width:40%"><b>Veiling</b><span>7 dagen</span></div><div class="card" style="right:8%;top:14%;width:40%;border-color:var(--blue)"><b>Afslag</b><span>Daalt elke 20s</span></div><div class="card" style="left:8%;bottom:14%;width:40%"><b>Koop direct</b><span>Vaste prijs</span></div><span class="tag b" style="right:8%;bottom:16%">Ivy adviseert: afslag</span></div>
+      <div class="art"><div class="card" style="left:8%;top:14%;width:40%"><b>Veiling</b><span>7 dagen</span></div><div class="card" style="right:8%;top:14%;width:40%;border-color:var(--blue)"><b>Afslag</b><span>Daalt in stappen</span></div><div class="card" style="left:8%;bottom:14%;width:40%"><b>Koop direct</b><span>Vaste prijs</span></div><span class="tag b" style="right:8%;bottom:16%">Ivy adviseert: afslag</span></div>
       <div class="cap"><small>Stap 5</small>Snel geld nodig? Dan is afslag de verstandige keuze.</div>
     </div>
     <div class="scene">
       <div class="art"><div class="big" style="left:8%;top:22%">€ 13.750</div><span class="tag g" style="left:8%;top:52%">Verkocht</span><span class="tag" style="left:8%;top:66%;background:#1c2540">Uitbetaling na houdtermijn</span><span class="tag c" style="right:8%;top:52%">Transport ingepland</span></div>
-      <div class="cap"><small>Stap 6</small>Afgemijnd op € 13.750. Uitbetaald na de houdtermijn.</div>
+      <div class="cap"><small>Stap 6</small>Afgemijnd op € 13.750. Vrijgegeven na de houdtermijn.</div>
     </div>
   </div>
 </div>
