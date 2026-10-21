@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Compliance\Actions\DecideKyc;
 use App\Enums\KycStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\URL;
@@ -47,12 +48,27 @@ it('weigert de identiteitsstap vóór het e-mailadres bevestigd is', function ()
     expect($user->fresh()->kyc_status)->toBe(KycStatus::Unverified);
 });
 
-it('zet de biedvlag pas na e-mail én identiteit', function () {
+it('zet een aangevraagde identiteitscontrole in behandeling, nog zonder biedvlag', function () {
     $user = freshUser(['email_verified_at' => now()]);
 
     $this->actingAs($user)
         ->post('/verificatie/identiteit')
         ->assertRedirect(route('verification.overview'));
+
+    $user->refresh();
+
+    expect($user->kyc_status)->toBe(KycStatus::Pending)
+        ->and($user->kyc_requested_at)->not->toBeNull()
+        ->and($user->kyc_verified_at)->toBeNull()
+        ->and($user->can_bid)->toBeFalse();
+
+    $this->actingAs($user)->get('/verificatie')->assertOk()->assertSee('in behandeling');
+});
+
+it('zet de biedvlag pas na e-mail én een goedgekeurde identiteit', function () {
+    $user = freshUser(['email_verified_at' => now(), 'kyc_status' => KycStatus::Pending]);
+
+    app(DecideKyc::class)->handle($user, User::factory()->create(['is_staff' => true]), true);
 
     $user->refresh();
 
@@ -86,7 +102,8 @@ it('koppelt de kvk alleen voor zakelijke accounts', function () {
         ->post('/verificatie/kvk')
         ->assertRedirect(route('verification.overview'));
 
-    expect($business->company->fresh()->verified_at)->not->toBeNull();
+    expect($business->company->fresh()->verified_at)->toBeNull()
+        ->and($business->company->fresh()->awaitsVerification())->toBeTrue();
 });
 
 it('toont de checklist met de juiste stappen', function () {

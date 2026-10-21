@@ -92,6 +92,7 @@ it('bezorgt de geschiluitkomst mét motivering bij beide partijen', function () 
         upheld: true,
         resolution: 'prijscorrectie',
         notes: 'Beide partijen akkoord met een correctie.',
+        correctionCents: 5_000,
     );
 
     foreach ([$order->buyer, $order->seller] as $party) {

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Payout;
+use App\Notifications\Concerns\ShowsInApp;
+use App\Support\Markdown;
 use App\Support\Money\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,7 +19,7 @@ use Illuminate\Notifications\Notification;
  */
 final class PayoutReleased extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, ShowsInApp;
 
     public function __construct(public readonly Payout $payout) {}
 
@@ -26,7 +28,17 @@ final class PayoutReleased extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
+    }
+
+    protected function inApp(object $notifiable): array
+    {
+        return [
+            'kind' => 'payout',
+            'title' => __('notifications.payout_released.subject', ['amount' => Money::format($this->payout->amount_cents)]),
+            'body' => __('notifications.payout_released.line', ['lot' => $this->payout->order->lot->title]),
+            'url' => route('dashboard.payouts'),
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -36,7 +48,7 @@ final class PayoutReleased extends Notification implements ShouldQueue
                 'amount' => Money::format($this->payout->amount_cents),
             ]))
             ->line(__('notifications.payout_released.line', [
-                'lot' => $this->payout->order->lot->title,
+                'lot' => Markdown::escape($this->payout->order->lot->title),
             ]))
             ->action(__('notifications.payout_released.action'), route('orders.index'))
             ->salutation('Aucvy');

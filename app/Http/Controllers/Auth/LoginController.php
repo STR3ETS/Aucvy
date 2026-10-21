@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
@@ -87,6 +88,9 @@ final class LoginController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // De conceptcookie hoort bij de persoon, niet bij de browser.
+        Cookie::queue(Cookie::forget(DraftAccess::COOKIE));
 
         return redirect()->route('home');
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\CompanyRole;
 use App\Enums\KycStatus;
 use App\Enums\UserType;
 use Database\Factories\UserFactory;
@@ -20,7 +21,7 @@ use Illuminate\Notifications\Notifiable;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
 #[Fillable([
-    'company_id', 'name', 'display_name', 'email', 'password', 'type',
+    'company_id', 'company_role', 'name', 'display_name', 'email', 'password', 'type',
     'phone', 'kyc_status', 'notification_prefs',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -38,13 +39,25 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'kyc_verified_at' => 'datetime',
+            'kyc_requested_at' => 'datetime',
+            'blocked_at' => 'datetime',
             'password' => 'hashed',
             'type' => UserType::class,
+            'company_role' => CompanyRole::class,
             'kyc_status' => KycStatus::class,
             'can_bid' => 'boolean',
             'is_staff' => 'boolean',
             'notification_prefs' => 'array',
         ];
+    }
+
+    /**
+     * Geblokkeerd door beheer: niets wat geld of publicatie raakt mag nog.
+     * De Permission Engine leest dit als eerste.
+     */
+    public function isBlocked(): bool
+    {
+        return $this->blocked_at !== null;
     }
 
     /**
@@ -60,11 +73,83 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * 2FA is verplicht zodra er een uitbetaling aan het account hangt
-     * (hfst. 15): wie geld kan ontvangen, logt in twee stappen in.
+     * (hfst. 15): wie geld kan ontvangen, logt in twee stappen in. Beheer
+     * altijd (briefing sectie 2).
      */
     public function requiresSecondFactor(): bool
     {
-        return $this->company?->payout_iban_last4 !== null;
+        return $this->is_staff || $this->company?->payout_iban_last4 !== null;
+    }
+
+    /**
+     * Meldingsvoorkeur (briefing sectie 2). Alles staat aan tot de gebruiker
+     * het uitzet; transactionele berichten lopen hier niet langs.
+     */
+    public function prefers(string $preference): bool
+    {
+        return (bool) ($this->notification_prefs[$preference] ?? true);
+    }
+
+    // Organisatierollen (briefing sectie 2) ---------------------------------
+
+    /**
+     * De rol binnen het bedrijf. Wie bij een bedrijf hoort zonder rol (data
+     * van vóór de rollen) telt als eigenaar: zo was het ook.
+     */
+    public function companyRole(): ?CompanyRole
+    {
+        if ($this->company_id === null) {
+            return null;
+        }
+
+        return $this->company_role ?? CompanyRole::Owner;
+    }
+
+    public function canManageTeam(): bool
+    {
+        return $this->companyRole()?->canManageTeam() ?? false;
+    }
+
+    public function canEditCompanyLots(): bool
+    {
+        return $this->companyRole()?->canEditLots() ?? false;
+    }
+
+    /**
+     * Particulieren zien altijd hun eigen cijfers; in een bedrijf bepaalt
+     * de rol het.
+     */
+    public function canSeeCompanyFinance(): bool
+    {
+        return $this->company_id === null || ($this->companyRole()?->canSeeFinance() ?? false);
+    }
+
+    /**
+     * Wiens kavels deze gebruiker in "Mijn kavels" ziet en mag bewerken.
+     *
+     * @return list<int>
+     */
+    public function lotSellerIds(): array
+    {
+        return $this->canEditCompanyLots() ? $this->colleagueIds() : [$this->id];
+    }
+
+    /**
+     * Wiens verkopen in financiën en uitbetalingen meetellen.
+     *
+     * @return list<int>
+     */
+    public function financeSellerIds(): array
+    {
+        return $this->company_id !== null && $this->canSeeCompanyFinance() ? $this->colleagueIds() : [$this->id];
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function colleagueIds(): array
+    {
+        return User::query()->where('company_id', $this->company_id)->pluck('id')->map(fn (mixed $id): int => (int) $id)->all() ?: [$this->id];
     }
 
     // Relaties -------------------------------------------------------------
@@ -133,6 +218,16 @@ class User extends Authenticatable implements MustVerifyEmail
      * Valt terug op een afkorting van de echte naam zolang de gebruiker zelf
      * geen weergavenaam heeft gekozen.
      */
+    /**
+     * Heeft een publiek verkopersprofiel: ooit een kavel in de verkoop gehad
+     * of een review als verkoper. Kopers en medewerkers hebben geen profiel.
+     */
+    public function hasSellerProfile(): bool
+    {
+        return Lot::query()->where('seller_id', $this->id)->public()->exists()
+            || Review::query()->where('seller_id', $this->id)->exists();
+    }
+
     public function publicName(): string
     {
         if ($this->display_name !== null && $this->display_name !== '') {

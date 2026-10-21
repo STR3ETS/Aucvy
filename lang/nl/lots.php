@@ -60,4 +60,24 @@ return [
         'no_bids_yet' => 'nog geen biedingen',
     ],
 
+    /*
+     | Eigen kavels beheren (briefing sectie 4).
+     */
+    'manage' => [
+        'saved' => 'Je wijzigingen zijn opgeslagen.',
+        'translating' => 'Ivy vertaalt de advertentie; het Engels staat binnen een minuut op de kavelpagina.',
+        'translate_off' => 'Vertalen staat nu uit, of de kavel is niet publiek.',
+        'not_editable' => 'Deze kavel is niet meer te bewerken: hij is afgerond of nog een concept. Een concept bewerk je in de wizard.',
+        'title_locked' => 'De titel staat vast zodra er geboden is; bieders hebben daarop geboden.',
+        'cannot_pause' => 'Alleen een lopende of ingeplande veiling is te pauzeren.',
+        'cannot_pause_bids' => 'Pauzeren kan niet meer: er is al geboden.',
+        'not_paused' => 'Deze kavel is niet gepauzeerd.',
+        'paused' => 'De kavel is gepauzeerd. Hij is even niet te zien; de resterende tijd loopt bij hervatten verder.',
+        'resumed' => 'De kavel loopt weer. De eindtijd is opgeschoven met de tijd die hij stilstond.',
+        'duplicated' => 'Gedupliceerd als concept #:id. Loop de stappen na en publiceer wanneer je klaar bent.',
+        'relisted' => 'Opnieuw klaargezet als concept #:id. Controleer de prijs en publiceer wanneer je klaar bent.',
+        'bulk_delete_drafts' => '{0} Geen concepten verwijderd.|{1} Eén concept verwijderd.|[2,*] :count concepten verwijderd.',
+        'bulk_duplicate' => '{0} Niets gedupliceerd.|{1} Eén kavel gedupliceerd als concept.|[2,*] :count kavels gedupliceerd als concept.',
+    ],
+
 ];

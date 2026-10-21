@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Order;
+use App\Notifications\Concerns\ShowsInApp;
+use App\Support\Markdown;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,7 +19,7 @@ use Illuminate\Notifications\Notification;
  */
 final class OrderCreated extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, ShowsInApp;
 
     public function __construct(
         public readonly Order $order,
@@ -32,7 +34,19 @@ final class OrderCreated extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
+    }
+
+    protected function inApp(object $notifiable): array
+    {
+        $replace = ['lot' => $this->order->lot->title, 'deadline' => $this->order->payment_deadline_at?->timezone(config('aucvy.display_timezone'))->isoFormat('D MMMM, HH:mm') ?? '-'];
+
+        return [
+            'kind' => 'order',
+            'title' => __("notifications.created.{$this->role}.subject", $replace),
+            'body' => __("notifications.created.{$this->role}.line", $replace),
+            'url' => route('orders.show', $this->order),
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -46,7 +60,7 @@ final class OrderCreated extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject(__("notifications.created.{$this->role}.subject", $replace))
-            ->line(__("notifications.created.{$this->role}.line", $replace))
+            ->line(__("notifications.created.{$this->role}.line", Markdown::escapeValues($replace)))
             ->action(__("notifications.created.{$this->role}.action"), route('orders.show', $this->order))
             ->salutation('Aucvy');
     }

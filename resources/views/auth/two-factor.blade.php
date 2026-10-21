@@ -1,12 +1,8 @@
-<x-layouts.public title="Inlogcode">
-    <div class="mx-auto max-w-md">
-        <h1 class="text-2xl font-extrabold tracking-tight">Nog één stap</h1>
-        <p class="mt-2 text-sm text-aj-muted">
-            Aan dit account hangt een uitbetaling, dus vragen we een extra code.
-            Hij staat in je mail en is tien minuten geldig.
-        </p>
+<x-layouts.auth title="Inlogcode" heading="Nog één stap"
+    intro="Aan dit account hangt een uitbetaling, dus vragen we een extra code. Hij staat in je mail en is tien minuten geldig.">
+    <div>
 
-        <form method="POST" action="{{ route('two-factor.store') }}" class="mt-6 space-y-4">
+        <form method="POST" action="{{ route('two-factor.store') }}" class="space-y-4">
             @csrf
 
             @if ($errors->any())
@@ -32,4 +28,4 @@
             <a href="{{ route('login') }}" class="font-semibold underline">log opnieuw in</a> voor een nieuwe code.
         </p>
     </div>
-</x-layouts.public>
+</x-layouts.auth>

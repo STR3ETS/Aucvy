@@ -1,8 +1,7 @@
-<x-layouts.public title="Nieuw wachtwoord">
-    <div class="mx-auto max-w-md">
-        <h1 class="text-2xl font-extrabold tracking-tight">Nieuw wachtwoord instellen</h1>
+<x-layouts.auth title="Nieuw wachtwoord" heading="Nieuw wachtwoord instellen">
+    <div>
 
-        <form method="POST" action="{{ route('password.update') }}" class="mt-6 space-y-4">
+        <form method="POST" action="{{ route('password.update') }}" class="space-y-4">
             @csrf
             <input type="hidden" name="token" value="{{ $token }}">
 
@@ -38,4 +37,4 @@
             <x-ui.button type="submit" class="w-full justify-center">Wachtwoord opslaan</x-ui.button>
         </form>
     </div>
-</x-layouts.public>
+</x-layouts.auth>

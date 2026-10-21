@@ -28,7 +28,10 @@ class Company extends Model
     {
         return [
             'verified_at' => 'datetime',
+            'kyb_requested_at' => 'datetime',
             'ubo_verified_at' => 'datetime',
+            'ubo_declaration' => 'array',
+            'ubo_declared_at' => 'datetime',
             'plan' => CompanyPlan::class,
             'fee_percentage' => 'decimal:2',
         ];
@@ -37,6 +40,11 @@ class Company extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(CompanyInvitation::class);
     }
 
     public function lots(): HasMany
@@ -52,5 +60,13 @@ class Company extends Model
     public function isVerified(): bool
     {
         return $this->verified_at !== null;
+    }
+
+    /**
+     * Aangevraagd maar nog niet beoordeeld: wacht in de compliance-queue.
+     */
+    public function awaitsVerification(): bool
+    {
+        return $this->verified_at === null && $this->kyb_requested_at !== null;
     }
 }

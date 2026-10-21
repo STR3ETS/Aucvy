@@ -27,10 +27,38 @@ return [
         'rejected' => 'Afgewezen',
     ],
 
+    'company_role' => [
+        'owner' => 'Eigenaar',
+        'admin' => 'Beheerder',
+        'editor' => 'Redacteur',
+        'finance' => 'Financieel',
+    ],
+
+    'company_role_description' => [
+        'owner' => 'Alles: kavels, financiën, team en bedrijfsgegevens. Er is altijd minstens één eigenaar.',
+        'admin' => 'Kavels en financiën, en het team beheren. Kan geen eigenaar verwijderen.',
+        'editor' => 'Kavels plaatsen en bewerken, ook die van collega\'s. Ziet geen financiën.',
+        'finance' => 'Financiën en uitbetalingen van het hele bedrijf. Bewerkt geen kavels van collega\'s.',
+    ],
+
+    'sale_state' => [
+        'draft' => 'Concept',
+        'scheduled' => 'Gepland',
+        'live' => 'Loopt',
+        'closed' => 'Gesloten',
+        'cancelled' => 'Geannuleerd',
+    ],
+
     'company_plan' => [
         'start' => 'Start',
         'pro' => 'Pro',
         'enterprise' => 'Enterprise',
+    ],
+
+    'home_variant' => [
+        'a' => 'Ontwerp A (oud)',
+        'b' => 'Ontwerp B (v4)',
+        'c' => 'Ontwerp C (hybride)',
     ],
 
     'lot_status' => [
@@ -39,6 +67,7 @@ return [
         'scheduled' => 'Ingepland',
         'live' => 'Live',
         'closing' => 'Slotfase',
+        'paused' => 'Gepauzeerd',
         'sold' => 'Verkocht',
         'unsold' => 'Niet verkocht',
         'cancelled' => 'Ingetrokken',
@@ -108,6 +137,7 @@ return [
         'own_lot' => 'Je kunt niet bieden op je eigen kavel.',
         'same_company' => 'Bieden op een kavel van je eigen bedrijf kan niet.',
         'not_verified' => 'Rond eerst je verificatie af - dat duurt twee minuten.',
+        'blocked' => 'Dit account is geblokkeerd. Neem contact op met Aucvy als je denkt dat dit niet klopt.',
         'deposit_required' => 'Voor dit bedrag vragen we eerst een borg, die je terugkrijgt als je niet wint.',
         'too_low' => 'Dit bod is lager dan de volgende biedstap.',
         'already_highest' => 'Je bent al de hoogste bieder.',

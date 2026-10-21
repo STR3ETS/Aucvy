@@ -10,6 +10,7 @@ use App\Enums\LotStatus;
 use App\Enums\SaleType;
 use App\Enums\ValueConfidence;
 use App\Enums\VatRegime;
+use App\Lots\Translation;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\RouteKey;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,12 +22,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'public_id', 'seller_id', 'company_id', 'category_id', 'location_id',
+    'public_id', 'seller_id', 'company_id', 'category_id', 'sale_id', 'sale_position', 'location_id',
     'project_id', 'title', 'slug', 'description', 'brand', 'model', 'year',
     'quantity', 'condition', 'specifications', 'status', 'sale_type', 'vat_regime',
     'completeness_score', 'value_min_cents', 'value_max_cents',
     'value_confidence', 'pickup_only', 'viewing_available',
-    'transport_from_cents', 'draft_token', 'draft_meta', 'published_at',
+    'transport_from_cents', 'draft_token', 'draft_meta', 'field_sources', 'translations', 'published_at',
 ])]
 #[RouteKey('slug')]
 class Lot extends Model
@@ -54,20 +55,69 @@ class Lot extends Model
             'pickup_only' => 'boolean',
             'viewing_available' => 'boolean',
             'draft_meta' => 'array',
+            'field_sources' => 'array',
+            'translations' => 'array',
             'published_at' => 'datetime',
+            'reviewed_at' => 'datetime',
         ];
     }
 
     // Relaties -------------------------------------------------------------
 
+    /**
+     * De vertaling in een taal, alleen zolang hij bij de huidige Nederlandse
+     * tekst hoort (briefing stap 4: vertaling).
+     *
+     * @return array{title: string, description: string, hash: string, run_id: int|null, source: string, translated_at: string}|null
+     */
+    public function translation(string $locale): ?array
+    {
+        $entry = $this->translations[$locale] ?? null;
+
+        if (! is_array($entry) || ($entry['hash'] ?? null) !== Translation::hash($this)) {
+            return null;
+        }
+
+        return $entry;
+    }
+
+    /**
+     * Wie aan deze kavel mag zitten: de verkoper zelf, of een collega met
+     * een rol die kavels mag bewerken (briefing sectie 2).
+     */
+    public function isManagedBy(User $user): bool
+    {
+        if ($this->seller_id === $user->id) {
+            return true;
+        }
+
+        return $this->company_id !== null && $this->company_id === $user->company_id && $user->canEditCompanyLots();
+    }
+
+    /**
+     * De veiling (Auction Studio) waar deze kavel in zit, als hij er in zit.
+     */
+    public function sale(): BelongsTo
+    {
+        return $this->belongsTo(Sale::class);
+    }
+
     public function seller(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'seller_id');
+        return $this->belongsTo(User::class, 'seller_id')->withTrashed();
     }
 
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * De medewerker die de kavel na publicatie heeft beoordeeld.
+     */
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by')->withTrashed();
     }
 
     public function category(): BelongsTo

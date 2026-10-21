@@ -63,12 +63,12 @@ class Order extends Model
 
     public function buyer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'buyer_id');
+        return $this->belongsTo(User::class, 'buyer_id')->withTrashed();
     }
 
     public function seller(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'seller_id');
+        return $this->belongsTo(User::class, 'seller_id')->withTrashed();
     }
 
     public function payments(): HasMany
@@ -79,6 +79,11 @@ class Order extends Model
     public function payout(): HasOne
     {
         return $this->hasOne(Payout::class);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(OrderMessage::class)->orderBy('id');
     }
 
     public function disputes(): HasMany

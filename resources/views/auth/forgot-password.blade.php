@@ -1,9 +1,6 @@
-<x-layouts.public title="Wachtwoord vergeten">
-    <div class="mx-auto max-w-md">
-        <h1 class="text-2xl font-extrabold tracking-tight">Wachtwoord vergeten</h1>
-        <p class="mt-1 text-sm text-aj-muted">
-            Vul je e-mailadres in; je krijgt een link om een nieuw wachtwoord in te stellen.
-        </p>
+<x-layouts.auth title="Wachtwoord vergeten" heading="Wachtwoord vergeten"
+    intro="Vul je e-mailadres in; je krijgt een link om een nieuw wachtwoord in te stellen.">
+    <div>
 
         @if (session('status'))
             <p class="mt-4 rounded-aj-sm border border-aj-border bg-aj-surface p-3 text-sm">{{ session('status') }}</p>
@@ -29,4 +26,4 @@
             <x-ui.button type="submit" class="w-full justify-center">Stuur herstel-link</x-ui.button>
         </form>
     </div>
-</x-layouts.public>
+</x-layouts.auth>

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'order_id', 'reported_by', 'reason', 'description', 'evidence',
-    'status', 'sla_due_at',
+    'status', 'sla_due_at', 'correction_cents',
 ])]
 class Dispute extends Model
 {
@@ -39,7 +39,7 @@ class Dispute extends Model
 
     public function reporter(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reported_by');
+        return $this->belongsTo(User::class, 'reported_by')->withTrashed();
     }
 
     /**
@@ -48,6 +48,6 @@ class Dispute extends Model
      */
     public function handler(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'handled_by');
+        return $this->belongsTo(User::class, 'handled_by')->withTrashed();
     }
 }

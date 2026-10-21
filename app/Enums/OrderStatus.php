@@ -56,4 +56,12 @@ enum OrderStatus: string
     {
         return $this === self::Completed;
     }
+
+    /**
+     * Het geld is al verwerkt: betaald of elke stap daarna, inclusief een geschil.
+     */
+    public function isPaidOrLater(): bool
+    {
+        return ! in_array($this, [self::AwaitingPayment, self::Cancelled], true);
+    }
 }

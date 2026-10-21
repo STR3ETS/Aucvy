@@ -1,11 +1,8 @@
-<x-layouts.public title="Registreren">
-    <div class="mx-auto max-w-md" x-data="{ type: '{{ old('type', 'private') }}' }">
-        <h1 class="text-2xl font-extrabold tracking-tight">Account aanmaken</h1>
-        <p class="mt-1 text-sm text-aj-muted">
-            Rondkijken, volgen en verkopen voorbereiden kan meteen. Vóór je eerste bod vragen we je verificatie af te ronden.
-        </p>
+<x-layouts.auth title="Registreren" heading="Account aanmaken"
+    intro="Rondkijken, volgen en verkopen voorbereiden kan meteen. Vóór je eerste bod vragen we je verificatie af te ronden.">
+    <div x-data="{ type: '{{ old('type', 'private') }}' }">
 
-        <form method="POST" action="{{ route('register.store') }}" class="mt-6 space-y-4">
+        <form method="POST" action="{{ route('register.store') }}" class="space-y-4">
             @csrf
 
             @if ($errors->any())
@@ -82,4 +79,4 @@
             </p>
         </form>
     </div>
-</x-layouts.public>
+</x-layouts.auth>

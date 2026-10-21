@@ -41,12 +41,12 @@ class Review extends Model
 
     public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewer_id');
+        return $this->belongsTo(User::class, 'reviewer_id')->withTrashed();
     }
 
     public function seller(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'seller_id');
+        return $this->belongsTo(User::class, 'seller_id')->withTrashed();
     }
 
     public function company(): BelongsTo

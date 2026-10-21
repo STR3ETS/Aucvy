@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\CompanyRole;
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Lots\DraftAccess;
 use App\Models\Company;
 use App\Models\User;
+use App\Notifications\Welcome;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,11 +64,13 @@ final class RegisterController extends Controller
                 'password' => $validated['password'],
                 'type' => $validated['type'],
                 'company_id' => $company?->id,
+                'company_role' => $company !== null ? CompanyRole::Owner : null,
             ]);
         });
 
-        // Stuurt de bevestigingsmail (MustVerifyEmail).
+        // Stuurt de bevestigingsmail (MustVerifyEmail), en apart het welkom.
         event(new Registered($user));
+        $user->notify(new Welcome);
 
         Auth::login($user);
         $request->session()->regenerate();

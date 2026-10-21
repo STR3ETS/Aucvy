@@ -40,6 +40,7 @@ class Auction extends Model
             'ends_at' => 'datetime',
             'original_ends_at' => 'datetime',
             'closed_at' => 'datetime',
+            'paused_at' => 'datetime',
             'increment_table' => 'array',
             'start_price_cents' => 'integer',
             'reserve_price_cents' => 'integer',
@@ -89,7 +90,7 @@ class Auction extends Model
 
     public function winner(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'winner_id');
+        return $this->belongsTo(User::class, 'winner_id')->withTrashed();
     }
 
     public function winningBid(): BelongsTo
@@ -116,7 +117,7 @@ class Auction extends Model
      */
     public function scopeOverdue(Builder $query): void
     {
-        $query->whereNull('closed_at')->where('ends_at', '<=', now());
+        $query->whereNull('closed_at')->whereNull('paused_at')->where('ends_at', '<=', now());
     }
 
     // Afgeleide waarden ----------------------------------------------------
@@ -124,6 +125,16 @@ class Auction extends Model
     public function isClosed(): bool
     {
         return $this->closed_at !== null;
+    }
+
+    /**
+     * Stilgezet door de verkoper of beheer: de klok staat stil en er wordt
+     * niet geboden, maar de veiling is niet voorbij (ResumeLot schuift de
+     * sluittijd op).
+     */
+    public function isPaused(): bool
+    {
+        return $this->closed_at === null && $this->paused_at !== null;
     }
 
     /**

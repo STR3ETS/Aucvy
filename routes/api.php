@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuctionStateController;
 use App\Http\Controllers\Api\AutoBidController;
 use App\Http\Controllers\Api\BidController;
 use App\Http\Controllers\Api\BuyNowController;
+use App\Http\Controllers\Api\ChunkedUploadController;
 use App\Http\Controllers\Api\DepositController;
 use App\Http\Controllers\Api\DraftController;
 use App\Http\Controllers\Api\DraftUploadController;
@@ -117,12 +118,22 @@ Route::prefix('drafts')->name('drafts.')->group(function (): void {
     Route::post('/', [DraftController::class, 'store'])->middleware('throttle:10,10')->name('store');
     Route::get('{lot:id}', [DraftController::class, 'show'])->name('show');
     Route::patch('{lot:id}', [DraftController::class, 'update'])->middleware('throttle:120,1')->name('update');
+    Route::post('{lot:id}/confirm', [DraftController::class, 'confirm'])->middleware('throttle:60,1')->name('confirm');
     Route::post('{lot:id}/publish', [DraftController::class, 'publish'])->name('publish');
 
     Route::middleware('throttle:30,1')->group(function (): void {
         Route::post('{lot:id}/media', [DraftUploadController::class, 'storeMedia'])->name('media.store');
         Route::delete('{lot:id}/media/{media}', [DraftUploadController::class, 'destroyMedia'])->name('media.destroy');
+        Route::post('{lot:id}/media/{media}/cover', [DraftUploadController::class, 'cover'])->name('media.cover');
         Route::post('{lot:id}/documents', [DraftUploadController::class, 'storeDocument'])->name('documents.store');
+    });
+
+    // Hervatbare upload in delen (briefing stap 1): starten, delen sturen, stand opvragen, samenvoegen.
+    Route::middleware('throttle:240,1')->group(function (): void {
+        Route::post('{lot:id}/uploads', [ChunkedUploadController::class, 'start'])->name('uploads.start');
+        Route::get('{lot:id}/uploads/{upload}', [ChunkedUploadController::class, 'status'])->whereUuid('upload')->name('uploads.status');
+        Route::post('{lot:id}/uploads/{upload}/complete', [ChunkedUploadController::class, 'complete'])->whereUuid('upload')->name('uploads.complete');
+        Route::post('{lot:id}/uploads/{upload}/{index}', [ChunkedUploadController::class, 'chunk'])->whereUuid('upload')->whereNumber('index')->name('uploads.chunk');
     });
 });
 

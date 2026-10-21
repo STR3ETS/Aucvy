@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Dispute;
+use App\Notifications\Concerns\ShowsInApp;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,7 +17,7 @@ use Illuminate\Notifications\Notification;
  */
 final class DisputeResolved extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, ShowsInApp;
 
     public function __construct(public readonly Dispute $dispute)
     {
@@ -29,7 +30,19 @@ final class DisputeResolved extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
+    }
+
+    protected function inApp(object $notifiable): array
+    {
+        $order = $this->dispute->order;
+
+        return [
+            'kind' => 'dispute',
+            'title' => __('notifications.dispute_resolved.subject', ['lot' => $order->lot->title]),
+            'body' => __('notifications.dispute_resolved.intro', ['resolution' => str_replace('_', ' ', (string) $this->dispute->resolution)]),
+            'url' => route('orders.show', $order),
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage

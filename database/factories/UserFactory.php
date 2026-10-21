@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\CompanyRole;
 use App\Enums\KycStatus;
 use App\Enums\UserType;
 use App\Models\Company;
@@ -49,6 +50,8 @@ class UserFactory extends Factory
             'kyc_status' => KycStatus::Unverified,
             'kyc_verified_at' => null,
             'can_bid' => false,
+            'blocked_at' => null,
+            'blocked_reason' => null,
         ];
     }
 
@@ -81,6 +84,7 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => UserType::Business,
             'company_id' => Company::factory()->verified(),
+            'company_role' => CompanyRole::Owner,
         ]);
     }
 }

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'order_id', 'provider', 'provider_payment_id', 'status', 'method',
+    'order_id', 'provider', 'provider_payment_id', 'checkout_url', 'status', 'method',
     'amount_cents', 'webhook_payload',
 ])]
 class Payment extends Model

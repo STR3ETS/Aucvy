@@ -4,7 +4,42 @@
     // Op de home ligt de header transparant óver de blauwe hero (het ontwerp).
     // Op binnenpagina's krijgt hij de vaste witte variant.
     'overHero' => false,
+    // De stijlvariant op de body. 'c' is de hybride stijlgids (hybrid.css) en
+    // geldt voor elke pagina; alleen de home van ontwerp A in de A/B-test
+    // zet hem op null en krijgt het kale ontwerp van aucvy-home.html.
+    'theme' => 'c',
+    // De paginakop van thema C: een navy band met kicker, titel en intro onder
+    // de transparante header. Elke binnenpagina krijgt hem; een pagina met een
+    // eigen kop (de kavelpagina, de lokale nepcheckout) zet hero op false.
+    'hero' => true,
+    // De kop boven de band ("Dashboard", "Verkopen"); null is geen kicker.
+    'eyebrow' => null,
+    // De titel in de band; standaard de paginatitel uit <title>.
+    'heading' => null,
+    // Eén zin onder de titel. Met opmaak of links: de slot "lead".
+    'intro' => null,
+    // 'left' of 'center': pagina's met een smalle, gecentreerde kolom
+    // (inloggen, veelgestelde vragen) zetten de band ook in het midden.
+    'align' => 'left',
+    // Zoekmachines en deelknoppen: de canonieke URL (standaard de huidige
+    // zonder querystring), het deelbeeld en het Open Graph-type.
+    'canonical' => null,
+    'image' => null,
+    'ogType' => 'website',
 ])
+
+@php
+    $showHero = $theme === 'c' && $hero && ! $overHero;
+
+    // Het hoofdmenu, met de routes waarop elk item de actieve staat krijgt.
+    $navItems = [
+        [route('lots.index'), 'Veilingen', ['lots.*']],
+        [route('categories.index'), 'Categorieën', ['categories.*']],
+        [route('how-it-works'), 'Hoe het werkt', ['how-it-works', 'selling.guide', 'faq']],
+        [route('business'), 'Zakelijk', ['business']],
+        [route('pricing'), 'Prijzen', ['pricing']],
+    ];
+@endphp
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -22,6 +57,25 @@
         <meta name="description" content="{{ $description }}">
     @endif
 
+    @php
+        $canonicalUrl = $canonical ?? url()->current();
+        $shareImage = $image ?? asset('images/v4/footer-gavel.jpg');
+        $shareTitle = $title ? $title.' · '.config('app.name') : 'Aucvy - Upload. Ivy regelt de rest.';
+    @endphp
+    <link rel="canonical" href="{{ $canonicalUrl }}">
+    <meta property="og:site_name" content="{{ config('app.name') }}">
+    <meta property="og:locale" content="nl_NL">
+    <meta property="og:type" content="{{ $ogType }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    <meta property="og:title" content="{{ $shareTitle }}">
+    @if ($description)
+        <meta property="og:description" content="{{ $description }}">
+    @endif
+    <meta property="og:image" content="{{ $shareImage }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $shareTitle }}">
+    <meta name="twitter:image" content="{{ $shareImage }}">
+
     {{-- Exact de fontlaad-regels uit aucvy-home.html. Google serveert Manrope
          als variabel font en dat rendert zichtbaar lichter dan de statische
          instanties die een self-host-pakket levert - vandaar niet via bunny. --}}
@@ -34,31 +88,24 @@
 </head>
 {{-- `no-js` wordt door het script verwijderd; zonder JavaScript blijven de
      .rv-blokken daardoor gewoon zichtbaar (zoals in het ontwerp). --}}
-<body class="no-js">
+<body class="no-js{{ $theme ? ' '.$theme : '' }}">
 
     <a href="#hoofdinhoud" class="skip-link">Naar de hoofdinhoud</a>
 
     {{-- Header uit aucvy-home.html. --}}
-    <header class="header {{ $overHero ? '' : 'solid' }}" x-data="{ menu: false }">
+    <header class="header {{ ($overHero || $showHero) ? '' : 'solid' }}" x-data="{ menu: false }">
         <div class="wrap">
-            <a class="brand" href="{{ route('home') }}" aria-label="Aucvy - home"><i></i>Aucvy</a>
+            <a class="brand" href="{{ route('home') }}" aria-label="Aucvy - home">@if ($theme === 'c')<svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg>@else<i></i>@endif Aucvy</a>
             <nav class="nav" aria-label="Hoofdnavigatie">
-                <a href="{{ route('lots.index') }}">Veilingen</a>
-                <a href="{{ route('lots.index') }}">Categorieën</a>
-                <a href="{{ route('home') }}#reis">Hoe het werkt</a>
-                <a href="{{ route('home') }}#zakelijk">Zakelijk</a>
+                @foreach ($navItems as [$url, $label, $patterns])
+                    @php $isOn = request()->routeIs(...$patterns); @endphp
+                    <a href="{{ $url }}"{!! $isOn ? ' class="is-on" aria-current="page"' : '' !!}>{{ $label }}</a>
+                @endforeach
             </nav>
             <div class="header-actions">
-                <a class="link" href="{{ route('lots.index') }}">Zoeken</a>
                 @auth
-                    {{-- TOEVOEGING t.o.v. het ontwerp: ingelogd moet je bij je
-                         dashboard en bestellingen kunnen (stap 10/11). --}}
-                    <a class="link" href="{{ auth()->user()->is_staff ? url('/admin') : route('dashboard') }}">Dashboard</a>
-                    <a class="link" href="{{ route('orders.index') }}">Bestellingen</a>
-                    <form method="POST" action="{{ route('logout') }}" style="display:contents">
-                        @csrf
-                        <button type="submit" class="link">Uitloggen</button>
-                    </form>
+                    {{-- Ingelogd: de profielknop met de snelle acties. --}}
+                    <x-marketing.user-menu />
                 @endauth
                 @guest
                     <a class="link" href="{{ route('login') }}">Inloggen</a>
@@ -75,11 +122,15 @@
 
         {{-- TOEVOEGING: het mobiele menu achter de burger. --}}
         <nav class="mobile-menu" x-show="menu" x-cloak aria-label="Menu" @click.outside="menu = false">
-            <a href="{{ route('lots.index') }}">Veilingen</a>
-            <a href="{{ route('home') }}#reis">Hoe het werkt</a>
+            @foreach ($navItems as [$url, $label, $patterns])
+                @php $isOn = request()->routeIs(...$patterns); @endphp
+                <a href="{{ $url }}"{!! $isOn ? ' class="is-on" aria-current="page"' : '' !!}>{{ $label }}</a>
+            @endforeach
             <a href="{{ route('assurance') }}">Zekerheid</a>
             @auth
                 <a href="{{ auth()->user()->is_staff ? url('/admin') : route('dashboard') }}">Dashboard</a>
+                <a href="{{ route('dashboard.lots') }}">Mijn kavels</a>
+                <a href="{{ route('dashboard.bids') }}">Mijn biedingen</a>
                 <a href="{{ route('orders.index') }}">Bestellingen</a>
                 <form method="POST" action="{{ route('logout') }}" style="display:contents">
                     @csrf
@@ -96,6 +147,37 @@
     <main id="hoofdinhoud" tabindex="-1">
         @if ($overHero)
             {{ $slot }}
+        @elseif ($showHero)
+            {{-- De paginakop van thema C. De kruimels, de intro met opmaak en
+                 de knoppen rechts komen als slots uit de pagina. --}}
+            <section class="page-hero{{ $align === 'center' ? ' is-center' : '' }}" aria-labelledby="page-title">
+                {{-- Hetzelfde ademende stippenveld als in de hero en de zakelijk-sectie. --}}
+                <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
+                <div class="wrap">
+                    @isset($crumbs)
+                        <nav class="page-crumbs" aria-label="Kruimelpad">{{ $crumbs }}</nav>
+                    @endisset
+                    <div class="page-hero-row">
+                        <div class="page-hero-text">
+                            @if ($eyebrow)
+                                <span class="eyebrow">{{ $eyebrow }}</span>
+                            @endif
+                            <h1 id="page-title">{{ $heading ?? $title }}</h1>
+                            @isset($lead)
+                                <div class="lead">{{ $lead }}</div>
+                            @elseif ($intro)
+                                <p class="lead">{{ $intro }}</p>
+                            @endif
+                        </div>
+                        @isset($actions)
+                            <div class="page-actions">{{ $actions }}</div>
+                        @endisset
+                    </div>
+                </div>
+            </section>
+            <div class="wrap page-body">
+                {{ $slot }}
+            </div>
         @else
             {{-- Binnenpagina's krijgen de inhoudskolom van het ontwerp. --}}
             <div class="wrap" style="padding-top:40px;padding-bottom:96px">
@@ -106,16 +188,20 @@
 
     {{-- Footer uit aucvy-home.html. Links zonder bestaande pagina wijzen naar
          de dichtstbijzijnde bestaande route. --}}
+    @if ($theme === 'c')
+        {{-- Variant C heeft een uitgebreide footer in de hybride stijlgids. --}}
+        <x-marketing.footer-c />
+    @else
     <footer>
         <div class="wrap">
             <div class="foot">
                 <div>
-                    <div class="brand"><i></i>Aucvy</div>
+                    <div class="brand">@if ($theme === 'c')<svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg>@else<i></i>@endif Aucvy</div>
                     <p style="margin:0;max-width:34ch">Het AI-commerceplatform voor zakelijke goederen. Nederland.</p>
                 </div>
-                <div><h4>Kopen</h4><ul><li><a href="{{ route('lots.index') }}">Veilingen</a></li><li><a href="{{ route('lots.index') }}">Categorieën</a></li><li><a href="{{ route('home') }}#reis">Hoe bieden werkt</a></li><li><a href="{{ route('assurance') }}">Zekerheid</a></li></ul></div>
-                <div><h4>Verkopen</h4><ul><li><a href="{{ route('sell') }}">Kavel plaatsen</a></li><li><a href="{{ route('selling.guide') }}">Verkooproute</a></li><li><a href="{{ route('faq') }}">Tarieven</a></li><li><a href="{{ route('home') }}#zakelijk">Zakelijk</a></li></ul></div>
-                <div><h4>Aucvy</h4><ul><li><a href="{{ route('home') }}">Over ons</a></li><li><a href="{{ route('faq') }}">Veelgestelde vragen</a></li><li><a href="{{ route('home') }}">Contact</a></li><li><a href="{{ route('home') }}">Privacy</a></li></ul></div>
+                <div><h4>Kopen</h4><ul><li><a href="{{ route('lots.index') }}">Veilingen</a></li><li><a href="{{ route('categories.index') }}">Categorieën</a></li><li><a href="{{ route('lots.buy-now') }}">Direct kopen</a></li><li><a href="{{ route('home') }}#reis">Hoe bieden werkt</a></li><li><a href="{{ route('assurance') }}">Zekerheid</a></li></ul></div>
+                <div><h4>Verkopen</h4><ul><li><a href="{{ route('sell') }}">Kavel plaatsen</a></li><li><a href="{{ route('selling.guide') }}">Verkooproute</a></li><li><a href="{{ route('pricing') }}">Tarieven</a></li><li><a href="{{ route('home') }}#zakelijk">Zakelijk</a></li></ul></div>
+                <div><h4>Aucvy</h4><ul><li><a href="{{ route('home') }}">Over ons</a></li><li><a href="{{ route('faq') }}">Veelgestelde vragen</a></li><li><a href="{{ route('contact') }}">Contact</a></li><li><a href="{{ route('home') }}">Privacy</a></li></ul></div>
             </div>
             <div class="foot-bottom">
                 <span>© {{ now()->year }} Aucvy B.V.</span>
@@ -123,6 +209,7 @@
             </div>
         </div>
     </footer>
+    @endif
 
     {{-- Ivy-launcher uit het ontwerp. Het paneel erachter komt in stap 9;
          tot die tijd opent hij het zoekveld op de veilingenpagina. --}}

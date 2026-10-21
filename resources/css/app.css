@@ -12,6 +12,19 @@
  */
 @import './site.css' layer(components);
 
+/*
+ | Variant B van de A/B-test op de home (preview v4). Zelfde laag, zelfde
+ | reden; alles erin is gescopet op .v4 zodat het huidige ontwerp er niets
+ | van merkt. Zie v4.css.
+ */
+@import './v4.css' layer(components);
+
+/*
+ | Variant C van de home: A's opbouw in de hybride stijlgids. Gescopet op
+ | body.c; alleen overschrijvingen van site.css. Zie hybrid.css.
+ */
+@import './hybrid.css' layer(components);
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../views/**/*.blade.php';
@@ -100,6 +113,13 @@
   radial-gradient(120% 90% at 85% 10%, rgba(255,255,255,.14), transparent 55%),
   radial-gradient(90% 70% at 10% 100%, rgba(12,19,38,.45), transparent 60%),
   linear-gradient(180deg,#2E5CC6 0%,#284FB0 55%,#1F419B 100%)}
+/* In de hybride stijlgids (body.c) is het paneel de navy van de hero met
+   dezelfde twee gloeden. Hier en niet in hybrid.css: die zit in de
+   componentenlaag en zou het van deze ongelaagde regel verliezen. */
+.c .panel-hero{background:
+  radial-gradient(640px 360px at 85% 0%, rgba(47,107,255,.5), transparent 60%),
+  radial-gradient(520px 340px at 0% 100%, rgba(124,58,237,.38), transparent 60%),
+  linear-gradient(160deg,#131c39,#0b1327)}
 /* Zachter dan op de hero, en uitdovend naar het midden: de stipjes leven
    langs de randen, de tekst erbovenop blijft rustig leesbaar. */
 /* Kavelkaart: het ontwerp pint .meta onderaan met margin-top:auto, maar in
@@ -109,6 +129,18 @@
 
 /* Op de paarse Ivy-regel staat de foto van Ivy in plaats van het ruitje. */
 .lot .ivy::before{content:none}
+
+/* De waardebalk op de kavelkaart: de gekleurde as van de kavelpagina (groen
+   onder, rood boven de range), het segment als felle uitsnede van die as, de
+   stip in navy. De posities komen als --band-left en --band-width (getallen,
+   procenten van de as) uit de kaart. In de componentenlaag, zodat ontwerp C
+   hem in hybrid.css kan overschrijven met de balk van ontwerp B. */
+@layer components {
+  .value-range-axis,.value-range-band{background-image:linear-gradient(90deg,#1c8a5b 0%,#b4690e 55%,#c0392b 100%)}
+  .value-range-axis{opacity:.25}
+  .value-range-band{left:calc(var(--band-left) * 1%);width:calc(var(--band-width) * 1%);background-size:calc(10000% / var(--band-width)) 100%;background-position-x:calc(100% * var(--band-left) / (100 - var(--band-width)))}
+  .value-range-dot{width:10px;height:10px;background:var(--color-aj-navy);box-shadow:0 1px 2px rgba(14,21,38,.25)}
+}
 
 /* Home en launcher: echte gezichten in plaats van gekleurde ruitjes -
    in het team, de Vraag Ivy-knop, het herozoekveld en de zes stappen. */
@@ -179,10 +211,6 @@
 /* Zachte navigatie (veilingenpagina): tijdens het ophalen dimt de inhoud
    even in plaats van een witte flits van een harde reload. */
 #lots-content[aria-busy]{opacity:.55;pointer-events:none;transition:opacity .15s ease}
-
-/* Het stippenveld als paginalaag: vast achter alle inhoud, boven de
-   achtergrondkleur van de body (negatieve z-index). */
-canvas.page-dots{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1}
 
 .panel-hero>canvas.dots{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.45;
   -webkit-mask-image:radial-gradient(140% 120% at 50% 30%, transparent 40%, #000 80%);

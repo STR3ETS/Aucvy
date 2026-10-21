@@ -27,7 +27,64 @@ return [
         'viewing' => 'Een kijkmoment',
     ],
 
+    /*
+     | Herkomst per veld (briefing sectie 5): wie heeft dit ingevuld en hoe
+     | zeker is dat.
+     */
+    'provenance' => [
+        'seller' => 'Door jou ingevuld',
+        'photo' => 'Ivy, uit je foto\'s (:percent% zeker)',
+        'document' => 'Ivy, uit je documenten (:percent% zeker)',
+        'ivy' => 'Geschreven door Ivy (:percent% zeker)',
+        'benchmark' => 'Indicatie op basis van :count vergelijkbare aanbiedingen',
+    ],
+
+    'fields' => [
+        'title' => 'titel',
+        'description' => 'omschrijving',
+        'category_id' => 'categorie',
+        'condition' => 'conditie',
+        'brand' => 'merk',
+        'model' => 'model',
+        'year' => 'bouwjaar',
+        'value' => 'waarde-indicatie',
+    ],
+
+    /*
+     | De preflight van stap 8: label en, als het niet in orde is, wat te doen.
+     */
+    'preflight' => [
+        'title' => 'Titel',
+        'title_hint' => 'Geef de kavel een titel.',
+        'category' => 'Categorie',
+        'category_hint' => 'Kies een categorie, dan vinden kopers hem.',
+        'forbidden' => 'Toegestane categorie',
+        'forbidden_hint' => 'Deze categorie mag niet op Aucvy worden aangeboden.',
+        'photos' => 'Minstens één foto',
+        'photos_hint' => 'Zonder foto gaat een kavel niet live. Eén foto van je telefoon is genoeg.',
+        'condition' => 'Conditie',
+        'condition_hint' => 'Aanbevolen: kopers vragen er als eerste naar.',
+        'description' => 'Omschrijving van minstens veertig tekens',
+        'description_hint' => 'Aanbevolen: eerlijk over gebreken verkoopt aantoonbaar beter.',
+        'pricing' => 'Verkoopvorm en prijzen',
+        'pricing_hint' => 'Kies hoe je verkoopt en vul de bijbehorende bedragen in.',
+        'price_order' => 'Prijzen in de juiste volgorde',
+        'price_order_hint' => 'De reserveprijs niet onder de startprijs, koop-direct boven start en reserve, en de bodem van een afslag tussen reserve en startprijs.',
+        'ownership' => 'Eigendom',
+        'ownership_hint' => 'Verklaar dat je eigenaar of gemachtigd bent, of voeg een eigendomsbewijs of factuur toe.',
+        'confirmed' => 'Ivy-velden bevestigd',
+        'confirmed_hint' => 'Bevestig of corrigeer eerst: :fields.',
+        'account' => 'Ingelogd',
+        'account_hint' => 'Om te publiceren log je eerst in; je concept blijft bewaard.',
+        'permission' => 'Verificatie',
+        'permission_hint' => 'Rond je verificatie af voordat je kavel live kan.',
+    ],
+
     'errors' => [
+        'reserve_below_start' => 'De reserveprijs kan niet onder de startprijs liggen.',
+        'buy_now_below_prices' => 'De koop-directprijs moet boven de start- en reserveprijs liggen; anders koopt iemand voor minder dan je zelf wilt.',
+        'dutch_floor_below_reserve' => 'De bodemprijs van de afslag kan niet onder de reserveprijs liggen.',
+        'not_yours' => 'Dit concept is van iemand anders. Alleen de eigenaar of een collega met de juiste rol kan het publiceren.',
         'login_required' => 'Log in om je kavel te publiceren. Je concept blijft bewaard.',
         'verification_required' => 'Rond eerst je verificatie af voordat je kavel live kan.',
         'title_required' => 'Een kavel heeft een titel nodig.',

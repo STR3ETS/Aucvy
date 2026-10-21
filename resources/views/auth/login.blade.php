@@ -1,8 +1,8 @@
-<x-layouts.public title="Inloggen">
-    <div class="mx-auto max-w-md">
-        <h1 class="text-2xl font-extrabold tracking-tight">Inloggen</h1>
+<x-layouts.auth title="Inloggen" heading="Inloggen"
+    intro="Welkom terug. Log in om te bieden, te verkopen en je dashboard te zien.">
+    <div>
 
-        <form method="POST" action="{{ route('login.store') }}" class="mt-6 space-y-4">
+        <form method="POST" action="{{ route('login.store') }}" class="space-y-4">
             @csrf
 
             @if ($errors->any())
@@ -48,19 +48,20 @@
         @if (session('status'))
             <p class="mt-4 rounded-aj-sm border border-aj-border bg-aj-surface p-3 text-sm">{{ session('status') }}</p>
         @endif
-
-        @if (! app()->isProduction())
-            <div class="mt-8 rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4 text-sm">
-                <p class="font-semibold">Demo-accounts</p>
-                <ul class="mt-2 space-y-1 text-aj-muted">
-                    <li><code class="font-mono">anna@aucvy.test</code> - geverifieerde bieder</li>
-                    <li><code class="font-mono">bram@aucvy.test</code> - geverifieerde bieder</li>
-                    <li><code class="font-mono">nieuw@aucvy.test</code> - nog niet geverifieerd</li>
-                    <li><code class="font-mono">verkoper@aucvy.test</code> - verkoper</li>
-                    <li><code class="font-mono">beheer@aucvy.test</code> - medewerker (geschillen)</li>
-                </ul>
-                <p class="mt-2 text-aj-muted">Wachtwoord: <code class="font-mono">wachtwoord</code></p>
-            </div>
-        @endif
     </div>
-</x-layouts.public>
+
+    {{-- Lokaal en op demo: de accounts als zwevend paneel rechtsonder, buiten de kaart. --}}
+    @if (! app()->isProduction())
+        <x-slot:float>
+            <p class="auth-float-title">Demo-accounts</p>
+            <ul>
+                <li><code>anna@aucvy.test</code> geverifieerde bieder</li>
+                <li><code>bram@aucvy.test</code> geverifieerde bieder</li>
+                <li><code>nieuw@aucvy.test</code> nog niet geverifieerd</li>
+                <li><code>verkoper@aucvy.test</code> verkoper</li>
+                <li><code>beheer@aucvy.test</code> medewerker (geschillen)</li>
+            </ul>
+            <p class="auth-float-note">Wachtwoord: <code>wachtwoord</code></p>
+        </x-slot:float>
+    @endif
+</x-layouts.auth>

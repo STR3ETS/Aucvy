@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use LogicException;
 
 /**
  * Alles wat geld, status of eigendom raakt. Append-only en niet muteerbaar
@@ -25,6 +26,16 @@ class AuditLog extends Model
     public const UPDATED_AT = null;
 
     /**
+     * Bewijs wordt niet bijgewerkt of verwijderd. Een verwijderverzoek
+     * loopt via anonimisering van de actor, niet via deze rijen (hfst. 15).
+     */
+    protected static function booted(): void
+    {
+        static::updating(fn (): never => throw new LogicException('Auditregels zijn bewijs en worden niet bijgewerkt.'));
+        static::deleting(fn (): never => throw new LogicException('Auditregels zijn bewijs en worden niet verwijderd.'));
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -38,7 +49,7 @@ class AuditLog extends Model
 
     public function actor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'actor_id');
+        return $this->belongsTo(User::class, 'actor_id')->withTrashed();
     }
 
     public function subject(): MorphTo

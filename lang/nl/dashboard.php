@@ -56,7 +56,7 @@ return [
         'title' => 'Wat doet de vraag straks?',
         'measured' => 'gemeten',
         'predicted' => 'voorspeld',
-        'empty' => 'Nog te weinig verkoophistorie voor een verwachting - die groeit mee met je eerste verkopen.',
+        'empty' => 'Nog te weinig verkoophistorie voor een verwachting. Die groeit mee met je eerste verkopen.',
         'disclaimer' => 'De voorspelling is een bandbreedte op basis van je eigen weekcijfers, geen belofte.',
     ],
 

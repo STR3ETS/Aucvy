@@ -28,7 +28,7 @@ class OrderFactory extends Factory
             'order_number' => 'AUC-'.fake()->unique()->numerify('########'),
             'lot_id' => Lot::factory(),
             'buyer_id' => User::factory()->verified(),
-            'seller_id' => User::factory(),
+            'seller_id' => User::factory()->verified(),
 
             'hammer_cents' => $hammer,
             // Nul in de MVP. Het veld bestaat, de waarde is nul.

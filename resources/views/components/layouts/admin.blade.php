@@ -25,8 +25,12 @@
         $groups = [
             'Operatie' => [
                 ['admin.index', 'Overzicht'],
+                ['admin.live', 'Live'],
                 ['admin.lots', 'Kavels'],
+                ['admin.moderation', 'Moderatie'],
+                ['admin.risk', 'Risico'],
                 ['admin.auctions', 'Veilingen'],
+                ['admin.sales', 'Gebundeld'],
                 ['admin.bids', 'Biedingen'],
                 ['admin.orders', 'Orders'],
                 ['admin.payouts', 'Uitbetalingen'],
@@ -35,11 +39,16 @@
             'Mensen' => [
                 ['admin.users', 'Gebruikers'],
                 ['admin.companies', 'Bedrijven'],
+                ['admin.compliance', 'Compliance'],
+                ['admin.support', 'Support'],
                 ['admin.reviews', 'Reviews'],
             ],
             'Systeem' => [
                 ['admin.categories', 'Categorieën'],
                 ['admin.ai-runs', 'AI-runs'],
+                ['admin.auditlog', 'Auditlog'],
+                ['admin.queue', 'Wachtrij'],
+                ['admin.system', 'Systeem'],
             ],
         ];
     @endphp

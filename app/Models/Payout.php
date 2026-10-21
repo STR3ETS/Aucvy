@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'order_id', 'seller_id', 'amount_cents', 'fee_cents', 'status', 'hold_until',
-    'released_at', 'failure_reason',
+    'released_at', 'failure_reason', 'blocked_reason',
 ])]
 class Payout extends Model
 {
@@ -41,7 +41,7 @@ class Payout extends Model
 
     public function seller(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'seller_id');
+        return $this->belongsTo(User::class, 'seller_id')->withTrashed();
     }
 
     /**

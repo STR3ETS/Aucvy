@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Viewing;
+use App\Notifications\Concerns\ShowsInApp;
+use App\Support\Markdown;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,7 +18,7 @@ use Illuminate\Notifications\Notification;
  */
 final class ViewingConfirmed extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, ShowsInApp;
 
     public function __construct(public readonly Viewing $viewing)
     {
@@ -28,7 +30,17 @@ final class ViewingConfirmed extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
+    }
+
+    protected function inApp(object $notifiable): array
+    {
+        return [
+            'kind' => 'viewing',
+            'title' => __('notifications.viewing_confirmed.buyer.subject', ['lot' => $this->viewing->lot->title]),
+            'body' => __('notifications.viewing_confirmed.buyer.line', ['moment' => $this->viewing->slot_at->timezone(config('aucvy.display_timezone'))->isoFormat('dddd D MMMM, HH:mm')]),
+            'url' => route('lots.show', $this->viewing->lot),
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -47,8 +59,8 @@ final class ViewingConfirmed extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject(__('notifications.viewing_confirmed.buyer.subject', $replace))
-            ->line(__('notifications.viewing_confirmed.buyer.line', $replace))
-            ->line(__('notifications.viewing_confirmed.buyer.address', $replace))
+            ->line(__('notifications.viewing_confirmed.buyer.line', Markdown::escapeValues($replace)))
+            ->line(__('notifications.viewing_confirmed.buyer.address', Markdown::escapeValues($replace)))
             ->action(__('notifications.viewing_confirmed.buyer.action'), route('lots.show', $this->viewing->lot))
             ->salutation('Aucvy');
     }

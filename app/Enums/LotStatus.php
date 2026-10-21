@@ -15,6 +15,7 @@ enum LotStatus: string
     case Scheduled = 'scheduled';
     case Live = 'live';
     case Closing = 'closing';
+    case Paused = 'paused';
     case Sold = 'sold';
     case Unsold = 'unsold';
     case Cancelled = 'cancelled';

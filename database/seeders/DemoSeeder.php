@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Auctions\Actions\PlaceBid;
+use App\Enums\CompanyRole;
 use App\Enums\DepositStatus;
 use App\Enums\KycStatus;
 use App\Enums\LotCondition;
@@ -13,15 +14,18 @@ use App\Enums\SaleType;
 use App\Enums\UserType;
 use App\Enums\ValueConfidence;
 use App\Enums\VatRegime;
+use App\Lots\Translation;
 use App\Models\Auction;
 use App\Models\Category;
 use App\Models\Company;
+use App\Models\CompanyInvitation;
 use App\Models\Deposit;
 use App\Models\Location;
 use App\Models\Lot;
 use App\Models\LotDocument;
 use App\Models\Order;
 use App\Models\Review;
+use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -62,6 +66,12 @@ class DemoSeeder extends Seeder
         // Twaalf afgeronde verkopen over een jaar: genoeg om de Trust Index
         // eerlijk te kunnen tonen (drempel: tien transacties).
         $this->salesHistory($seller, $company, $bidders);
+        // Blok G tot K: team, UBO, gebundelde veiling, berichten en vertaling.
+        $this->studioExtras($seller, $company, $bidders);
+
+        // Foto's bij elke kavel zonder media: zonder beeld oogt geen enkele
+        // kaart als een echte kavel.
+        $this->call(DemoPhotoSeeder::class);
 
         $this->command?->newLine();
         $this->command?->info('Demodata klaar. Inloggen kan met:');
@@ -69,11 +79,15 @@ class DemoSeeder extends Seeder
             ['E-mail', 'Wachtwoord', 'Rol'],
             [
                 ['verkoper@aucvy.test', 'wachtwoord', 'verkoper (kan niet op eigen kavels bieden)'],
+                ['fleur@aucvy.test', 'wachtwoord', 'redacteur bij Keukenhuis (kavels, geen financiën)'],
+                ['boekhouding@aucvy.test', 'wachtwoord', 'financieel bij Keukenhuis (cijfers, geen kavels)'],
                 ['anna@aucvy.test', 'wachtwoord', 'geverifieerde bieder'],
                 ['bram@aucvy.test', 'wachtwoord', 'geverifieerde bieder'],
                 ['nieuw@aucvy.test', 'wachtwoord', 'niet geverifieerd - ziet de verificatiestaat'],
+                ['beheer@aucvy.test', 'wachtwoord', 'beheer (backoffice op /admin)'],
             ],
         );
+        $this->command?->info('Beheer en de Keukenhuis-accounts loggen in met een code per mail; lokaal staat die in storage/logs/laravel.log zodra de queue draait.');
     }
 
     /**
@@ -100,6 +114,7 @@ class DemoSeeder extends Seeder
                 'name' => 'Sander Vermeulen',
                 'display_name' => 'Keukenhuis Utrecht',
                 'company_id' => $company->id,
+                'company_role' => CompanyRole::Owner,
                 'type' => UserType::Business,
                 'password' => 'wachtwoord',
                 'email_verified_at' => now(),
@@ -400,6 +415,130 @@ class DemoSeeder extends Seeder
                 'published_at' => $moment->copy()->addDays(6),
             ]);
         }
+    }
+
+    /**
+     * Team met rollen, UBO-verklaring, een gebundelde veiling met drie
+     * kavels, een berichtendraad en een Engelse vertaling: alles wat na de
+     * briefing van oktober gebouwd is, zichtbaar in de demo.
+     *
+     * @param  array<string, User>  $bidders
+     */
+    private function studioExtras(User $seller, Company $company, array $bidders): void
+    {
+        foreach ([
+            ['fleur@aucvy.test', 'Fleur de Groot', CompanyRole::Editor],
+            ['boekhouding@aucvy.test', 'Pieter Boekhouder', CompanyRole::Finance],
+        ] as [$email, $name, $role]) {
+            User::firstOrCreate(['email' => $email], [
+                'name' => $name,
+                'company_id' => $company->id,
+                'company_role' => $role,
+                'type' => UserType::Business,
+                'password' => 'wachtwoord',
+                'email_verified_at' => now(),
+                'kyc_status' => KycStatus::Verified,
+                'kyc_verified_at' => now()->subMonths(3),
+                'can_bid' => true,
+            ]);
+        }
+
+        CompanyInvitation::firstOrCreate(
+            ['company_id' => $company->id, 'email' => 'stagiair@aucvy.test'],
+            ['invited_by' => $seller->id, 'role' => CompanyRole::Editor, 'token' => Str::random(48), 'expires_at' => now()->addDays(10)],
+        );
+
+        if ($company->ubo_declared_at === null) {
+            $company->forceFill([
+                'ubo_declaration' => [
+                    ['name' => 'Sander Vermeulen', 'birth_year' => 1979, 'role' => 'ubo', 'share' => 60],
+                    ['name' => 'Marieke Vermeulen', 'birth_year' => 1982, 'role' => 'ubo', 'share' => 40],
+                ],
+                'ubo_declared_at' => now()->subMonths(14),
+            ])->save();
+        }
+
+        // Gebundelde veiling: drie kavels van één restaurant, sluiten na elkaar.
+        $sale = Sale::updateOrCreate(['slug' => 'inventaris-restaurant-de-molen-9200'], [
+            'public_id' => '9200',
+            'seller_id' => $seller->id,
+            'company_id' => $company->id,
+            'title' => 'Inventaris Restaurant De Molen',
+            'description' => "Het restaurant sluit na dertig jaar. De complete keuken en het interieur gaan in één veiling, per kavel te koop.\nAlles is gebruikt maar goed onderhouden; zie de foto's en kom kijken op de bezichtigingsdag.",
+            'ends_at' => now()->addDays(4)->setTime(20, 0),
+            'closing_gap_seconds' => 120,
+            'viewing_at' => now()->addDays(2)->setTime(14, 0),
+            'viewing_note' => 'Op afspraak; het adres volgt per mail na bevestiging.',
+            'pickup_from' => now()->addDays(5)->toDateString(),
+            'pickup_until' => now()->addDays(9)->toDateString(),
+            'pickup_note' => 'Zelf demonteren en meenemen; een heftruck en een laadklep zijn aanwezig.',
+            'terms' => "Betaling binnen drie werkdagen na toewijzing.\nOphalen alleen in de ophaalperiode, op afspraak.\nGekocht is gekocht; bezichtigen kan vooraf.",
+            'published_at' => now()->subDay(),
+        ]);
+
+        $restaurantLots = [
+            ['9201', 'Professionele gasfornuis Rational, 6 pits', 'Zes grote branders en een oven eronder; dagelijks gebruikt, gereinigd en werkend.', 'Kookapparatuur', 180_000],
+            ['9202', 'Koelwerkbank RVS met drie deuren', 'Driedeurs koelwerkbank, 2 meter breed. Koelt tot 2 graden; compressor vorig jaar vervangen.', 'Koeling', 95_000],
+            ['9203', 'Partij restaurantstoelen, 40 stuks', 'Veertig houten stoelen met leren zitting, enkele met gebruikssporen. Alleen als partij.', 'Horecameubilair', 60_000],
+        ];
+
+        foreach ($restaurantLots as $position => [$publicId, $title, $description, $categoryNeedle, $startCents]) {
+            $lot = $this->lot($seller, $company, [
+                'public_id' => $publicId,
+                'title' => $title,
+                'description' => $description,
+                'category' => $this->categorySlug($categoryNeedle),
+                'condition' => LotCondition::Used,
+                'vat_regime' => VatRegime::Margin,
+                'completeness_score' => 88,
+                'published_at' => now()->subDay(),
+                'sale_id' => $sale->id,
+                'sale_position' => $position,
+            ]);
+
+            $this->auction($lot, [
+                'ends_at' => $sale->closingFor($position),
+                'start_price_cents' => $startCents,
+                'reserve_price_cents' => $startCents,
+            ]);
+        }
+
+        // Berichten bij de laatste afgeronde verkoop: koper, verkoper en support.
+        $order = Order::query()->where('order_number', 'DEMO-H12')->first();
+        $staff = User::query()->where('is_staff', true)->first();
+
+        if ($order !== null && $order->messages()->count() === 0) {
+            $order->messages()->createMany(array_filter([
+                ['user_id' => $order->buyer_id, 'from_staff' => false, 'body' => 'Kan ik donderdag rond 11 uur ophalen? Ik kom met een bus met laadklep.', 'created_at' => $order->paid_at?->copy()->addHours(2)],
+                ['user_id' => $seller->id, 'from_staff' => false, 'body' => 'Prima, donderdag 11 uur. Meld je bij de balie van het magazijn; we zetten alles klaar.', 'created_at' => $order->paid_at?->copy()->addHours(5)],
+                $staff !== null ? ['user_id' => $staff->id, 'from_staff' => true, 'body' => 'Even meegelezen: de borg wordt na bevestiging van ophalen automatisch vrijgegeven.', 'created_at' => $order->paid_at?->copy()->addHours(6)] : null,
+            ]));
+        }
+
+        // Engelse vertaling van de eerste restaurantkavel, zoals Ivy die maakt.
+        $translated = Lot::query()->where('public_id', '9201')->first();
+
+        if ($translated !== null && $translated->translation('en') === null) {
+            $translated->update(['translations' => ['en' => [
+                'title' => 'Professional Rational gas range, 6 burners',
+                'description' => 'Six large burners with an oven underneath; used daily, cleaned and in working order.',
+                'hash' => Translation::hash($translated),
+                'run_id' => null,
+                'source' => 'demo',
+                'translated_at' => now()->subDay()->toIso8601String(),
+            ]]]);
+        }
+    }
+
+    /**
+     * De slug van de eerste categorie waarvan de naam op de zoekterm lijkt;
+     * de demo mag niet omvallen op een hernoemde categorie.
+     */
+    private function categorySlug(string $needle): string
+    {
+        $match = Category::query()->where('name', 'like', '%'.$needle.'%')->orderByRaw('parent_id is null')->first();
+
+        return $match?->slug ?? 'elektronica-computers';
     }
 
     /**

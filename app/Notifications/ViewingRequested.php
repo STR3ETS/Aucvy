@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\Viewing;
+use App\Notifications\Concerns\ShowsInApp;
+use App\Support\Markdown;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,7 +19,13 @@ use Illuminate\Support\Facades\URL;
  */
 final class ViewingRequested extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, ShowsInApp;
+
+    /**
+     * Een doorgestuurde of gelekte mail mag maanden later geen bezichtiging
+     * meer bevestigen (en dus het adres niet meer versturen).
+     */
+    public const int LINK_VALID_DAYS = 14;
 
     public function __construct(public readonly Viewing $viewing)
     {
@@ -29,7 +37,19 @@ final class ViewingRequested extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
+    }
+
+    protected function inApp(object $notifiable): array
+    {
+        $replace = ['lot' => $this->viewing->lot->title, 'name' => $this->viewing->user->name, 'moment' => $this->moment()];
+
+        return [
+            'kind' => 'viewing',
+            'title' => __('notifications.viewing_requested.seller.subject', $replace),
+            'body' => __('notifications.viewing_requested.seller.line', $replace),
+            'url' => route('lots.show', $this->viewing->lot),
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -42,19 +62,19 @@ final class ViewingRequested extends Notification implements ShouldQueue
 
         $mail = (new MailMessage)
             ->subject(__('notifications.viewing_requested.seller.subject', $replace))
-            ->line(__('notifications.viewing_requested.seller.line', $replace));
+            ->line(__('notifications.viewing_requested.seller.line', Markdown::escapeValues($replace)));
 
         if ($this->viewing->note !== null) {
-            $mail->line(__('notifications.viewing_requested.seller.note', ['note' => $this->viewing->note]));
+            $mail->line(__('notifications.viewing_requested.seller.note', ['note' => Markdown::escape($this->viewing->note)]));
         }
 
         return $mail
             ->action(
                 __('notifications.viewing_requested.seller.action'),
-                URL::signedRoute('viewings.confirm', ['viewing' => $this->viewing]),
+                URL::temporarySignedRoute('viewings.confirm', now()->addDays(self::LINK_VALID_DAYS), ['viewing' => $this->viewing]),
             )
             ->line(__('notifications.viewing_requested.seller.decline', [
-                'url' => URL::signedRoute('viewings.decline', ['viewing' => $this->viewing]),
+                'url' => URL::temporarySignedRoute('viewings.decline', now()->addDays(self::LINK_VALID_DAYS), ['viewing' => $this->viewing]),
             ]))
             ->salutation('Aucvy');
     }

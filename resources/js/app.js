@@ -9,9 +9,11 @@ import sellingDemo from './selling-demo';
 import bidForm from './bid-form';
 import pushToggle from './push';
 import adminLive from './admin-live';
+import lotMedia from './lot-media';
 import initHome from './home';
 import initLotsIndex from './lots-index';
 import initLotNav from './lot-nav';
+import { v4Demo, v4Story, v4Engine, v4Dock, v4Nav, initV4Reveal } from './v4';
 
 /*
  | focus levert $focus, nodig om de focus vast te houden binnen een modal of
@@ -34,6 +36,17 @@ Alpine.data('sellingDemo', sellingDemo);
 Alpine.data('bidForm', bidForm);
 Alpine.data('pushToggle', pushToggle);
 Alpine.data('adminLive', adminLive);
+Alpine.data('lotMedia', lotMedia);
+
+/*
+ | Variant B van de A/B-test op de home (preview v4): de productdemo, de
+ | verhalen, de Ivy-tabs, de Ivy-dock en het menu. Zie v4.js.
+ */
+Alpine.data('v4Demo', v4Demo);
+Alpine.data('v4Story', v4Story);
+Alpine.data('v4Engine', v4Engine);
+Alpine.data('v4Dock', v4Dock);
+Alpine.data('v4Nav', v4Nav);
 
 window.Alpine = Alpine;
 
@@ -50,6 +63,9 @@ initLotsIndex();
 
 // Doomscrollen op de kavelpagina: pijltjestoetsen bladeren door de kavels.
 initLotNav();
+
+// Scroll-reveals van het v4-ontwerp (variant B van de home).
+initV4Reveal();
 
 /**
  * Echo verzorgt de websocketverbinding. Valt hij weg, dan schakelt de

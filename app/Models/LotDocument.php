@@ -40,8 +40,14 @@ class LotDocument extends Model
         return $this->belongsTo(Lot::class);
     }
 
+    /**
+     * Alleen een document dat leesbaar was zonder opmerkingen draagt de
+     * badge; een bevinding is geen keurmerk.
+     */
     public function wasCheckedByIvy(): bool
     {
-        return $this->ai_checked_at !== null;
+        return $this->ai_checked_at !== null
+            && ($this->ai_findings['readable'] ?? false) === true
+            && blank($this->ai_findings['issues'] ?? null);
     }
 }

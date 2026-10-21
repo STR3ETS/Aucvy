@@ -159,6 +159,99 @@ return [
         'expires' => 'De link werkt 24 uur en alleen als je ingelogd bent.',
     ],
 
+    /*
+     | De mails uit de briefing (sectie 8) die nog ontbraken: welkom,
+     | overboden zonder push, verloren en de uitkomst van de verificatie.
+     */
+    'welcome' => [
+        'subject' => 'Welkom bij Aucvy',
+        'greeting' => 'Welkom, :name',
+        'line' => 'Je account staat. Rondkijken, volgen en een kavel voorbereiden kan meteen.',
+        'next' => 'Vóór je eerste bod of je eerste gepubliceerde kavel vragen we je verificatie af te ronden. Dat duurt een paar minuten.',
+        'action' => 'Verificatie afronden',
+        'browse' => 'Liever eerst kijken? De veilingen staan open zonder account.',
+    ],
+
+    'outbid' => [
+        'subject' => 'Je bent overboden op ":lot"',
+        'line' => ':lot staat nu op :price.',
+        'manual' => 'De veiling loopt nog. Bied opnieuw of laat hem lopen: jij beslist.',
+        'automatic' => 'Een ander had een hoger maximum ingesteld, waardoor zijn bod automatisch meeging. De veiling loopt nog.',
+        'action' => 'Naar de kavel',
+    ],
+
+    'auction_lost' => [
+        'subject' => 'De veiling van ":lot" is gesloten',
+        'line' => ':lot is gegaan voor :price. Jouw bod was niet het hoogste.',
+        'next' => 'Vergelijkbare kavels komen regelmatig voorbij. Volg een categorie of kijk wat er nu live staat.',
+        'action' => 'Bekijk vergelijkbare kavels',
+    ],
+
+    'verification' => [
+        'kyc_approved_subject' => 'Je identiteit is bevestigd',
+        'kyc_approved_line' => 'Je identiteitscontrole is goedgekeurd. Bieden staat nu open; voor publiceren geldt bij een zakelijk account ook de bedrijfscontrole.',
+        'kyc_rejected_subject' => 'Je identiteitscontrole is niet goedgekeurd',
+        'kyc_rejected_line' => 'We konden je identiteit niet bevestigen. Bieden staat daardoor nog niet open. Je kunt het opnieuw proberen.',
+        'kyb_approved_subject' => 'Je bedrijf is gecontroleerd',
+        'kyb_approved_line' => 'De KvK-gegevens van je bedrijf zijn nagekeken en kloppen. Publiceren en uitbetalen staat nu open.',
+        'kyb_rejected_subject' => 'De bedrijfscontrole is niet goedgekeurd',
+        'kyb_rejected_line' => 'We konden de KvK-gegevens van je bedrijf niet bevestigen. Publiceren en uitbetalen staat daardoor nog niet open. Je kunt opnieuw aanvragen.',
+        'reason' => 'Reden: :reason',
+        'approved_action' => 'Naar de veilingen',
+        'rejected_action' => 'Bekijk je verificatie',
+    ],
+
+    /*
+     | Moderatie (sectie 8): elke gepubliceerde kavel wordt nagekeken.
+     */
+    'lot_moderated' => [
+        'approved_subject' => '":lot" is nagekeken en in orde',
+        'approved_line' => 'We hebben ":lot" bekeken. De kavel staat gewoon live; dit is alleen een bevestiging dat alles klopt.',
+        'approved_action' => 'Naar de kavel',
+        'rejected_subject' => '":lot" is offline gehaald',
+        'rejected_line' => 'We hebben ":lot" na controle offline gehaald. Een lopende veiling is gesloten zonder winnaar en eventuele borgen zijn vrijgegeven.',
+        'reason' => 'Reden: :reason',
+        'rejected_next' => 'Klopt er iets niet of is het op te lossen? Pas de kavel aan en plaats hem opnieuw, of neem contact op.',
+        'rejected_action' => 'Naar mijn kavels',
+    ],
+
+    /*
+     | Alerts en volglijst (briefing sectie 3 en 8).
+     */
+    'alert_matches' => [
+        'subject' => '{1} Nieuwe kavel voor je alert ":name"|[2,*] :count nieuwe kavels voor je alert ":name"',
+        'line' => '{1} Er is een nieuwe kavel geplaatst die past bij ":name":|[2,*] Er zijn :count nieuwe kavels geplaatst die passen bij ":name":',
+        'action' => 'Bekijk de kavels',
+        'manage' => 'Alert aanpassen of pauzeren: :url',
+    ],
+
+    'watchlist_ending' => [
+        'subject' => '":lot" sluit binnenkort',
+        'line' => 'De veiling van :lot sluit om :ends. De stand is nu :price.',
+        'action' => 'Naar de veiling',
+    ],
+
+    'order_message' => [
+        'subject' => 'Nieuw bericht van :from over ":lot"',
+        'line' => 'Bij bestelling :order schreef :from:',
+        'action' => 'Naar de bestelling',
+        'footer' => 'Antwoorden doe je op de bestelpagina, dan blijft alles bij elkaar.',
+        'from' => ['buyer' => 'de koper', 'seller' => 'de verkoper', 'support' => 'Aucvy support'],
+    ],
+
+    'auction_withdrawn' => [
+        'subject' => 'De veiling van ":lot" is beëindigd',
+        'line' => 'Aucvy heeft ":lot" na controle offline gehaald. De veiling is beëindigd zonder winnaar; je bod vervalt.',
+        'deposit' => 'Had je een borg vastgezet, dan is die vrijgegeven.',
+        'action' => 'Bekijk andere veilingen',
+    ],
+
+    'team_joined' => [
+        'subject' => ':name is bij je team gekomen',
+        'line' => ':name heeft de uitnodiging aangenomen en werkt nu mee als :role.',
+        'action' => 'Naar het team',
+    ],
+
     'two_factor' => [
         'subject' => 'Je inlogcode: :code',
         'line' => 'Je inlogcode is :code. Hij is tien minuten geldig.',

@@ -19,6 +19,7 @@ return [
     ],
 
     'errors' => [
+        'key_in_use' => 'Deze aanvraagsleutel is al gebruikt voor een ander bod. Probeer het opnieuw.',
         // Zichtbaar voor een ontwikkelaar, niet voor een koper: als deze tekst
         // op een scherm belandt is er een client die de header vergeet.
         'idempotency_key_required' => 'Deze aanvraag mist een Idempotency-Key-header.',

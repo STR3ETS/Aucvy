@@ -45,6 +45,8 @@
         <env name="AUCVY_PAYMENT_PROVIDER" value="fake"/>
         <env name="ANTHROPIC_API_KEY" value=""/>
         <env name="MOLLIE_API_KEY" value=""/>
+        <!-- De A/B-test op de home staat uit in tests: anders krijgt een test willekeurig ontwerp A of B. -->
+        <env name="AUCVY_HOME_EXPERIMENT_ENABLED" value="false"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

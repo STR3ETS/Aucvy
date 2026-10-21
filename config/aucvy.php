@@ -158,6 +158,9 @@ return [
         // Totaalbudget per omgeving per dag - de tweede rem uit hfst. 8, ook
         // voor bezoekers zonder account (de funnel werkt zonder login).
         'daily_budget_cents_total' => (int) env('AUCVY_AI_DAILY_BUDGET_TOTAL_CENTS', 10_000),
+        // Zonder account: zoveel taken per adres per dag (zoekvragen, de
+        // funnel zonder login). Het omgevingsbudget blijft de harde grens.
+        'daily_runs_per_guest_ip' => (int) env('AUCVY_AI_DAILY_RUNS_PER_GUEST_IP', 60),
         'task_timeout_seconds' => 180,
 
         /*
@@ -174,7 +177,17 @@ return [
          | een prompt, verhoog dit nummer - anders serveert de cache antwoorden
          | van de oude prompt (hfst. 8).
          */
-        'prompt_version' => 1,
+        'prompt_version' => 2,
+
+        /*
+         | Onder deze zekerheid moet de verkoper een door Ivy ingevuld veld
+         | bevestigen voordat de kavel gepubliceerd kan worden (briefing,
+         | regels voor de AI-uitvoer: voorstel 0,8).
+         */
+        'confirmation_threshold' => (float) env('AUCVY_AI_CONFIRMATION_THRESHOLD', 0.8),
+
+        // Engelse vertaling van elke gepubliceerde advertentie (briefing stap 4). Eén run per publicatie of tekstwijziging.
+        'translate' => (bool) env('AUCVY_AI_TRANSLATE', true),
 
         /*
          | Prijzen in centen per miljoen tokens, om cost_cents te vullen.
@@ -184,6 +197,37 @@ return [
             'claude-opus-5' => ['input_cents_per_mtok' => 500, 'output_cents_per_mtok' => 2_500],
             'claude-sonnet-5' => ['input_cents_per_mtok' => 300, 'output_cents_per_mtok' => 1_500],
         ],
+    ],
+
+    /*
+     | Support (briefing sectie 1): waar het contactformulier heen mailt.
+     | Zonder eigen adres valt hij terug op de afzender van de app.
+     */
+    'support' => [
+        'email' => env('AUCVY_SUPPORT_EMAIL', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+    ],
+
+    /*
+     | Kavels: de preflight van stap 8. De lijst verboden categorieën is een
+     | besluit van Raphael; tot die er is, is hij leeg. Slugs van categorieën,
+     | gescheiden door komma's; een ouder telt voor al haar kinderen.
+     */
+    'listings' => [
+        'forbidden_categories' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('AUCVY_FORBIDDEN_CATEGORIES', '')),
+        ))),
+    ],
+
+    /*
+     | Verificatie (briefing flow E en sectie 7). Zonder gekoppelde
+     | identiteitsdienst gaat een aangevraagde identiteits- of bedrijfscontrole
+     | naar de compliance-queue in de backoffice en beslist een mens. Met
+     | `auto_approve` aan keurt het systeem direct goed: alleen voor lokaal
+     | en demo, nooit in productie.
+     */
+    'verification' => [
+        'auto_approve' => (bool) env('AUCVY_VERIFICATION_AUTO_APPROVE', false),
     ],
 
     /*
@@ -217,6 +261,25 @@ return [
         'financial_years' => 7,
         'auction_events_months' => 13,
         'ai_runs_months' => 12,
+        // De inzage-export: de downloadlink is 24 uur geldig, het bestand
+        // zelf (naam, adres, biedingen) hoort daarna niet te blijven staan.
+        'exports_days' => 7,
+    ],
+
+    /*
+     | De A/B-test op de home: het oude ontwerp uit aucvy-home.html (a)
+     | tegenover het nieuwe ontwerp uit preview v4 (b). Variant b is gekozen:
+     | de test staat uit en iedereen krijgt `default`. Zet de test aan en de
+     | verdeling is het aandeel bezoekers dat b krijgt; de cookie houdt die
+     | toewijzing zoveel dagen vast. ?variant=a en ?variant=b werken altijd.
+     */
+    'experiments' => [
+        'home' => [
+            'enabled' => (bool) env('AUCVY_HOME_EXPERIMENT_ENABLED', false),
+            'default' => env('AUCVY_HOME_VARIANT', 'c'),
+            'redesign_share' => 0.5,
+            'cookie_days' => 30,
+        ],
     ],
 
 ];

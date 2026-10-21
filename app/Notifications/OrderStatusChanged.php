@@ -6,6 +6,8 @@ namespace App\Notifications;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Notifications\Concerns\ShowsInApp;
+use App\Support\Markdown;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -18,7 +20,7 @@ use Illuminate\Notifications\Notification;
  */
 final class OrderStatusChanged extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, ShowsInApp;
 
     public function __construct(
         public readonly Order $order,
@@ -34,7 +36,20 @@ final class OrderStatusChanged extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database', 'mail'];
+    }
+
+    protected function inApp(object $notifiable): array
+    {
+        $key = "notifications.{$this->status->value}.{$this->role}";
+        $replace = ['lot' => $this->order->lot->title, 'window' => (int) config('aucvy.orders.dispute_window_hours'), 'deadline' => $this->deadline()];
+
+        return [
+            'kind' => 'order',
+            'title' => __("{$key}.subject", $replace),
+            'body' => __("{$key}.line", $replace),
+            'url' => route('orders.show', $this->order),
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -49,7 +64,7 @@ final class OrderStatusChanged extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject(__("{$key}.subject", $replace))
-            ->line(__("{$key}.line", $replace))
+            ->line(__("{$key}.line", Markdown::escapeValues($replace)))
             ->action(__("{$key}.action"), route('orders.show', $this->order))
             ->salutation('Aucvy');
     }
