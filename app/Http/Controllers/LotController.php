@@ -163,6 +163,8 @@ final class LotController extends Controller
             return $auction->buy_now_price_cents;
         }
 
-        return $auction->current_price_cents;
+        // Dutch-bewust: bij een afslag loopt de opgeslagen kolom bewust
+        // achter op de klok, en de kostenopbouw hoort bij de prijs van nu.
+        return $lot->currentPriceCents();
     }
 }

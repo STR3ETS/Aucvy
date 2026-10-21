@@ -87,6 +87,19 @@ describe('het contract met de client', function () {
             ->assertSee('data-dutch-now="', false);
     });
 
+    it('rekent de kostenopbouw van een afslag met de prijs van nu', function () {
+        $auction = Auction::factory()->dutch(startCents: 200_000, floorCents: 50_000, stepCents: 10_000, intervalSeconds: 60)->create([
+            'starts_at' => now()->subMinutes(5),
+            'ends_at' => now()->addDay(),
+        ]);
+
+        // Vijf minuten na de start is de prijs vijf stappen gezakt; de
+        // opgeslagen kolom loopt bewust achter op de klok.
+        $costs = $this->get(route('lots.show', $auction->lot))->assertOk()->viewData('costs');
+
+        expect($costs->hammerCents)->toBe(150_000);
+    });
+
     it('vertelt de kijker zijn eigen id en of de borg te regelen is', function () {
         $user = User::factory()->verified()->create();
         $lot = Lot::factory()->live()->create();
