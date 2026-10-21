@@ -6,15 +6,14 @@ namespace App\Risk;
 
 use App\Enums\LotStatus;
 use App\Enums\OrderStatus;
-use App\Models\Auction;
 use App\Models\AuditLog;
 use App\Models\Bid;
 use App\Models\Lot;
 use App\Models\Order;
-use App\Models\User;
 use DateTimeInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Risicosignalen voor beheer (briefing sectie 7: biedmanipulatie, verdachte
@@ -63,7 +62,7 @@ final class RiskScan
             ->join('auctions', 'auctions.id', '=', 'bids.auction_id')
             ->join('lots', 'lots.id', '=', 'auctions.lot_id')
             ->join('users', 'users.id', '=', 'bids.user_id')
-            ->where('bids.created_at', '>=', $since)
+            ->where('bids.placed_at', '>=', $since)
             ->where(fn ($query) => $query
                 ->whereColumn('bids.user_id', 'lots.seller_id')
                 ->orWhere(fn ($own) => $own
@@ -90,56 +89,40 @@ final class RiskScan
      */
     private function sharedAddress(DateTimeInterface $since): array
     {
-        $bids = AuditLog::query()
-            ->where('action', 'bid.placed')
-            ->whereNotNull('ip')
-            ->where('created_at', '>=', $since)
-            ->get(['actor_id', 'ip', 'after']);
-
-        if ($bids->isEmpty()) {
-            return [];
-        }
-
-        $auctionIds = $bids->map(fn (AuditLog $entry): int => (int) ($entry->after['auction_id'] ?? 0))->filter()->unique();
-        $lotsByAuction = Auction::query()->whereIn('id', $auctionIds)->with('lot:id,title,seller_id')->get()->keyBy('id');
-        $sellerIds = $lotsByAuction->map(fn (Auction $auction): ?int => $auction->lot?->seller_id)->filter()->unique();
-
-        $sellerAddresses = AuditLog::query()
-            ->whereIn('actor_id', $sellerIds)
-            ->whereNotNull('ip')
-            ->where('created_at', '>=', now()->subDays(90))
-            ->distinct()
-            ->get(['actor_id', 'ip'])
-            ->groupBy('actor_id')
-            ->map(fn (Collection $rows): array => $rows->pluck('ip')->unique()->all());
-
-        $names = User::query()
-            ->withTrashed()
-            ->whereIn('id', $bids->pluck('actor_id')->filter()->unique())
-            ->pluck('name', 'id');
+        /*
+         | In SQL: de biedregel uit het auditlog (actie, periode en ip zijn
+         | geïndexeerd) via het veiling-id in de payload naar de kavel, en
+         | dan de auditregels van de verkoper op hetzelfde adres. Zo komt er
+         | geen maand aan biedregels naar PHP, hoe druk het ook wordt.
+         */
+        $rows = DB::table('audit_logs as bidlog')
+            ->join('auctions', fn ($join) => $join->on('auctions.id', '=', DB::raw("cast(json_unquote(json_extract(bidlog.after, '$.auction_id')) as unsigned)")))
+            ->join('lots', 'lots.id', '=', 'auctions.lot_id')
+            ->join('audit_logs as sellerlog', function ($join): void {
+                $join->on('sellerlog.actor_id', '=', 'lots.seller_id')
+                    ->on('sellerlog.ip', '=', 'bidlog.ip');
+            })
+            ->join('users as bidders', 'bidders.id', '=', 'bidlog.actor_id')
+            ->where('bidlog.action', 'bid.placed')
+            ->whereNotNull('bidlog.ip')
+            ->where('bidlog.created_at', '>=', $since)
+            ->where('sellerlog.created_at', '>=', now()->subDays(90))
+            ->whereColumn('bidlog.actor_id', '!=', 'lots.seller_id')
+            ->selectRaw('distinct lots.id as lot_id, lots.title, bidlog.actor_id as user_id, bidders.name, bidlog.ip')
+            ->limit(500)
+            ->get();
 
         $signals = [];
 
-        foreach ($bids as $entry) {
-            $auction = $lotsByAuction->get((int) ($entry->after['auction_id'] ?? 0));
-            $seller = $auction?->lot?->seller_id;
-
-            if ($seller === null || $seller === $entry->actor_id) {
-                continue;
-            }
-
-            if (! in_array($entry->ip, $sellerAddresses->get($seller, []), true)) {
-                continue;
-            }
-
-            $key = 'shared_ip:'.$auction->lot->id.':'.$entry->actor_id;
+        foreach ($rows as $row) {
+            $key = 'shared_ip:'.$row->lot_id.':'.$row->user_id;
 
             $signals[$key] ??= [
                 'key' => $key,
                 'severity' => 'midden',
-                'title' => __('risk.shared_ip', ['name' => $names->get($entry->actor_id) ?? '#'.$entry->actor_id, 'lot' => $auction->lot->title]),
-                'body' => __('risk.shared_ip_body', ['ip' => $entry->ip]),
-                'url' => route('admin.lots.show', $auction->lot->id),
+                'title' => __('risk.shared_ip', ['name' => $row->name ?? '#'.$row->user_id, 'lot' => $row->title]),
+                'body' => __('risk.shared_ip_body', ['ip' => $row->ip]),
+                'url' => route('admin.lots.show', $row->lot_id),
             ];
         }
 

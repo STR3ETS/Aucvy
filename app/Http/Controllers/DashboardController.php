@@ -19,6 +19,7 @@ use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -49,7 +50,13 @@ final class DashboardController extends Controller
             return redirect('/admin');
         }
 
-        $signals->sync($user);
+        // Negen query's plus schrijfwerk per bezoek; één keer per minuut is
+        // genoeg voor taken die op uren en dagen lopen. Nul zet de drempel uit.
+        $syncSeconds = (int) config('aucvy.dashboard.signal_sync_seconds');
+
+        if ($syncSeconds <= 0 || Cache::add("signals:synced:{$user->id}", 1, $syncSeconds)) {
+            $signals->sync($user);
+        }
 
         /*
          | Standaard verkopersmodus alleen bij échte kavels: wie enkel een

@@ -31,7 +31,7 @@ final class ModerationController extends Controller
                 ->with(['seller', 'company', 'category', 'media', 'auction', 'documents'])
                 ->oldest('published_at')
                 ->paginate(20),
-            'reviewedToday' => Lot::query()->whereDate('reviewed_at', today())->count(),
+            'reviewedToday' => Lot::query()->whereBetween('reviewed_at', [today(), today()->endOfDay()])->count(),
         ]);
     }
 

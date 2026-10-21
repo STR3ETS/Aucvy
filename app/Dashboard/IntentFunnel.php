@@ -27,17 +27,19 @@ final class IntentFunnel
      */
     public function forSeller(User $user): array
     {
-        $lotIds = $user->lots()->pluck('id');
+        // Als subquery, niet als lijst: een bedrijf met duizenden kavels
+        // stuurt anders duizenden id's heen en weer per telling.
+        $lotIds = $user->lots()->select('id');
 
         $bidderIds = Bid::query()
             ->whereHas('auction', fn ($query) => $query->whereIn('lot_id', $lotIds))
             ->distinct()
-            ->pluck('user_id');
+            ->select('user_id');
 
         return [
             'watchers' => WatchlistItem::query()->whereIn('lot_id', $lotIds)->distinct()->count('user_id'),
             'viewings' => Viewing::query()->whereIn('lot_id', $lotIds)->count(),
-            'bidders' => $bidderIds->count(),
+            'bidders' => (clone $bidderIds)->count('user_id'),
             'business' => User::query()
                 ->whereIn('id', $bidderIds)
                 ->where('type', UserType::Business)

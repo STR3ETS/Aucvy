@@ -104,9 +104,24 @@ class Sale extends Model
 
     public function lastClosingAt(): CarbonImmutable
     {
-        $count = $this->lots()->count();
+        // Uit withCount('lots') als de lijst die meenam; anders één telling.
+        $count = (int) ($this->getAttributes()['lots_count'] ?? $this->lots()->count());
 
         return $this->closingFor(max(0, $count - 1));
+    }
+
+    /**
+     * De tellingen waarmee een lijst state() zonder query's per rij kan
+     * bepalen: `->withCount(Sale::stateCounts())`.
+     *
+     * @return array<int|string, mixed>
+     */
+    public static function stateCounts(): array
+    {
+        return [
+            'lots',
+            'lots as open_lots_count' => fn ($query) => $query->whereHas('auction', fn ($auction) => $auction->whereNull('closed_at')),
+        ];
     }
 
     public function state(): SaleState
@@ -120,7 +135,13 @@ class Sale extends Model
         }
 
         // Een lopende biedronde telt, ook als antisnipe hem over het schema heen tilde.
-        if ($this->lots()->whereHas('auction', fn ($query) => $query->whereNull('closed_at'))->exists()) {
+        // Uit withCount('open_lots') als de lijst die meenam (zie openLotsCount()).
+        // Via de ruwe attributen: de strikte modus weigert een onbekend attribuut.
+        $openLots = $this->getAttributes()['open_lots_count'] ?? null;
+
+        if ($openLots === null
+            ? $this->lots()->whereHas('auction', fn ($query) => $query->whereNull('closed_at'))->exists()
+            : (int) $openLots > 0) {
             return SaleState::Live;
         }
 

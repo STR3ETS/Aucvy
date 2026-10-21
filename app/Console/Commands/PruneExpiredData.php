@@ -14,6 +14,7 @@ use App\Models\Payment;
 use App\Models\Payout;
 use App\Models\Review;
 use Illuminate\Console\Command;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -31,10 +32,18 @@ final class PruneExpiredData extends Command
     public function handle(): int
     {
         $aiCutoff = now()->subMonths((int) config('aucvy.retention.ai_runs_months'));
-        $aiRuns = AiRun::query()->where('created_at', '<', $aiCutoff)->delete();
+        $aiRuns = $this->deleteInChunks(AiRun::query()->where('created_at', '<', $aiCutoff)->toBase());
 
         $eventCutoff = now()->subMonths((int) config('aucvy.retention.auction_events_months'));
-        $events = AuctionEvent::query()->where('created_at', '<', $eventCutoff)->delete();
+        $events = $this->deleteInChunks(AuctionEvent::query()->where('created_at', '<', $eventCutoff)->toBase());
+
+        /*
+         | Auditregels zijn bewijs: het model weigert elke verwijdering, dus
+         | dit gaat bewust langs de querybuilder, alleen hier en alleen na de
+         | fiscale termijn.
+         */
+        $auditCutoff = now()->subYears((int) config('aucvy.retention.audit_log_years'));
+        $auditRows = $this->deleteInChunks(DB::table('audit_logs')->where('created_at', '<', $auditCutoff));
 
         $financialCutoff = now()->subYears((int) config('aucvy.retention.financial_years'));
 
@@ -74,9 +83,25 @@ final class PruneExpiredData extends Command
 
         $exports = $this->pruneExports();
 
-        $this->info("Opgeruimd: {$aiRuns} AI-runs, {$events} veilingevents, {$bids} biedingen, {$orders} orders, {$exports} exports.");
+        $this->info("Opgeruimd: {$aiRuns} AI-runs, {$events} veilingevents, {$auditRows} auditregels, {$bids} biedingen, {$orders} orders, {$exports} exports.");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Verwijderen in stukken van vijfduizend: één onbegrensde DELETE houdt
+     * bij miljoenen rijen de tabel minutenlang op slot.
+     */
+    private function deleteInChunks(Builder $query, int $chunk = 5000): int
+    {
+        $total = 0;
+
+        do {
+            $deleted = (clone $query)->limit($chunk)->delete();
+            $total += $deleted;
+        } while ($deleted === $chunk);
+
+        return $total;
     }
 
     /**

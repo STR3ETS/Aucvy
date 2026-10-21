@@ -149,9 +149,13 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * @return list<int>
      */
+    /** @var list<int>|null */
+    private ?array $colleagueIdsForRequest = null;
+
     private function colleagueIds(): array
     {
-        return User::query()->where('company_id', $this->company_id)->pluck('id')->map(fn (mixed $id): int => (int) $id)->all() ?: [$this->id];
+        // Eén keer per verzoek: het dashboard vraagt dit lijstje acht keer.
+        return $this->colleagueIdsForRequest ??= User::query()->where('company_id', $this->company_id)->pluck('id')->map(fn (mixed $id): int => (int) $id)->all() ?: [$this->id];
     }
 
     // Relaties -------------------------------------------------------------

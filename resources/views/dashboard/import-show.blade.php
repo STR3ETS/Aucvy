@@ -73,14 +73,15 @@
             <section class="overflow-x-auto rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="voorbeeld">
                 <h2 id="voorbeeld" class="text-sm font-extrabold">Voorbeeld van de eerste rijen</h2>
                 <p class="mt-1 text-xs text-aj-muted">Zo leest Aucvy je bestand met de voorzet hiernaast. Rijen met een fout worden overgeslagen en staan in het rapport.</p>
-                <table class="admin-table mt-3">
+                @php $categoryNames = \App\Models\Category::query()->pluck('name', 'id'); @endphp
+                    <table class="admin-table mt-3">
                     <thead><tr><th>Rij</th><th>Titel</th><th>Categorie</th><th>Conditie</th><th>Verkoopvorm</th><th>Startprijs</th><th>Fouten</th></tr></thead>
                     <tbody>
                         @foreach ($preview as $row)
                             <tr>
                                 <td class="tabular text-aj-muted">{{ $row['line'] }}</td>
                                 <td class="max-w-[24ch] truncate">{{ $row['values']['title'] ?? '-' }}</td>
-                                <td>{{ $row['values']['category_id'] ? \App\Models\Category::find($row['values']['category_id'])?->name : '-' }}</td>
+                                <td>{{ $row['values']['category_id'] ? ($categoryNames[$row['values']['category_id']] ?? '-') : '-' }}</td>
                                 <td>{{ $row['values']['condition'] ?? '-' }}</td>
                                 <td>{{ $row['values']['sale_type'] ?? '-' }}</td>
                                 <td class="tabular">{{ $row['values']['start_price_cents'] !== null ? \App\Support\Money\Money::format($row['values']['start_price_cents']) : '-' }}</td>

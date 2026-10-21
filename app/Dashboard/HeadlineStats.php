@@ -8,6 +8,7 @@ use App\Enums\BidStatus;
 use App\Enums\LotStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PayoutStatus;
+use App\Models\Auction;
 use App\Models\Bid;
 use App\Models\Lot;
 use App\Models\Order;
@@ -36,12 +37,15 @@ final class HeadlineStats
             ->where('completed_at', '>=', now()->subDays(30))
             ->sum('hammer_cents');
 
-        $live = Lot::query()
+        $liveLots = Lot::query()
             ->whereIn('seller_id', $user->lotSellerIds())
-            ->whereIn('status', [LotStatus::Live, LotStatus::Closing])
-            ->with('auction')
-            ->get();
-        $bidders = (int) $live->sum(fn (Lot $lot): int => (int) ($lot->auction?->bidder_count ?? 0));
+            ->whereIn('status', [LotStatus::Live, LotStatus::Closing]);
+        $liveCount = (clone $liveLots)->count();
+        // De tellers staan op de veiling; sommeren in de database in plaats
+        // van elke live kavel met zijn veiling te laden.
+        $bidders = (int) Auction::query()
+            ->whereIn('lot_id', (clone $liveLots)->select('id'))
+            ->sum('bidder_count');
 
         $drafts = Lot::query()
             ->whereIn('seller_id', $user->lotSellerIds())
@@ -70,13 +74,13 @@ final class HeadlineStats
         return [
             'tiles' => [
                 $this->tile('green', 'banknote', 'Opbrengst 30 dagen', Money::format($revenue), $trendText, $financeUrl),
-                $this->tile('blue', 'gavel', 'Live kavels', (string) $live->count(), $this->count($bidders, 'bieder', 'bieders').($drafts > 0 ? ' · '.$this->count($drafts, 'concept', 'concepten') : ''), route('dashboard.lots')),
+                $this->tile('blue', 'gavel', 'Live kavels', (string) $liveCount, $this->count($bidders, 'bieder', 'bieders').($drafts > 0 ? ' · '.$this->count($drafts, 'concept', 'concepten') : ''), route('dashboard.lots')),
                 $this->tile('orange', 'clock', 'Te ontvangen', Money::format($pendingSum), $this->count($pendingCount, 'uitbetaling onderweg', 'uitbetalingen onderweg'), $financeUrl),
                 $this->tile('purple', 'badge-check', 'Verkocht', (string) $sold, 'kavels met een koper', route('orders.index')),
             ],
             'summary' => sprintf(
                 '%s, %s en %s te ontvangen.',
-                $this->count($live->count(), 'live kavel', 'live kavels'),
+                $this->count($liveCount, 'live kavel', 'live kavels'),
                 $this->count($bidders, 'bieder', 'bieders'),
                 Money::format($pendingSum),
             ),

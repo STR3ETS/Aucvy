@@ -22,6 +22,7 @@ final class WatchlistPageController extends Controller
             ->where('user_id', $request->user()->id)
             ->with(['lot.auction', 'lot.category', 'lot.media'])
             ->latest('id')
+            ->limit(500)
             ->get()
             ->filter(fn (WatchlistItem $item): bool => $item->lot !== null);
 

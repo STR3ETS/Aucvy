@@ -67,7 +67,7 @@ class SavedSearch extends Model
         $filters = $this->filters();
         $parts = array_filter([
             $filters->query,
-            $filters->category !== null ? Category::query()->where('slug', $filters->category)->value('name') ?? $filters->category : null,
+            $filters->category !== null ? (once(fn () => Category::query()->pluck('name', 'slug'))->get($filters->category) ?? $filters->category) : null,
         ]);
 
         return $parts === [] ? 'Alle kavels' : implode(' in ', $parts);

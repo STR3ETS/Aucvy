@@ -28,7 +28,7 @@ final class TeamActivity
     public function forSeller(User $user): array
     {
         $since = now()->subDays(30);
-        $lotIds = $user->lots()->pluck('id');
+        $lotIds = $user->lots()->select('id');
 
         $runs = fn (string $task): int => AiRun::query()
             ->where('task', $task)

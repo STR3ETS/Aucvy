@@ -110,7 +110,7 @@
     {{-- Volgen is de volglijst (hfst. 13.6): één query per pagina voor
          de beginstand, daarna de watch-API. Zonder account: eerst inloggen. --}}
     @auth
-        @php $watched = in_array($lot->id, once(fn (): array => \App\Models\WatchlistItem::query()->where('user_id', auth()->id())->pluck('lot_id')->all()), true); @endphp
+        @php $watched = in_array($lot->id, once(fn (): array => \App\Models\WatchlistItem::query()->where('user_id', auth()->id())->latest('id')->limit(2000)->pluck('lot_id')->all()), true); @endphp
         <button type="button" class="v4-follow"
                 x-data="{ on: {{ $watched ? 'true' : 'false' }}, busy: false,
                           async toggle() {

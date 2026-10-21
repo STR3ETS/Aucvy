@@ -26,8 +26,9 @@ final class SaleStudioController extends Controller
         return view('dashboard.sales', [
             'sales' => Sale::query()
                 ->whereIn('seller_id', $request->user()->lotSellerIds())
-                ->withCount('lots')
+                ->withCount(Sale::stateCounts())
                 ->latest('id')
+                ->limit(200)
                 ->get(),
         ]);
     }

@@ -64,7 +64,7 @@ final class BackofficeController extends Controller
     {
         return [
             ['Live kavels', Lot::query()->whereIn('status', [LotStatus::Live, LotStatus::Closing])->count(), route('admin.lots')],
-            ['Biedingen (24 uur)', Bid::query()->where('created_at', '>=', now()->subDay())->count(), route('admin.bids')],
+            ['Biedingen (24 uur)', Bid::query()->where('placed_at', '>=', now()->subDay())->count(), route('admin.bids')],
             ['Open orders', Order::query()->whereNotIn('status', [OrderStatus::Completed, OrderStatus::Cancelled])->count(), route('admin.orders')],
             ['Omzet 30 dagen', Money::format((int) Order::query()->where('status', OrderStatus::Completed)->where('completed_at', '>=', now()->subDays(30))->sum('hammer_cents')), route('admin.orders')],
             ['Gebruikers', User::query()->count(), route('admin.users')],
@@ -235,7 +235,7 @@ final class BackofficeController extends Controller
         return view('admin.sales', [
             'sales' => Sale::query()
                 ->with(['seller', 'company'])
-                ->withCount('lots')
+                ->withCount(Sale::stateCounts())
                 ->when($request->query('q'), fn ($query, $term) => $query
                     ->where(fn ($inner) => $inner
                         ->where('title', 'like', "%{$term}%")

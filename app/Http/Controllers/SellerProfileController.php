@@ -31,12 +31,13 @@ final class SellerProfileController extends Controller
         // /verkoper/1..n een lijst van alle accounts met hun KYC-status.
         abort_unless($user->hasSellerProfile(), 404);
 
-        $reviews = Review::query()
-            ->where('seller_id', $user->id)
-            ->whereNotNull('published_at')
-            ->with('reviewer')
-            ->latest('published_at')
-            ->get();
+        $published = Review::query()->where('seller_id', $user->id)->whereNotNull('published_at');
+
+        // Verdeling en gemiddelde als aggregaat; de lijst zelf begrensd. Een
+        // publiek profiel op een opsombaar id mag geen duizend rijen laden.
+        $perRating = (clone $published)->selectRaw('rating, count(*) as aantal')->groupBy('rating')->pluck('aantal', 'rating');
+        $reviewCount = (int) $perRating->sum();
+        $reviews = (clone $published)->with('reviewer')->latest('published_at')->limit(50)->get();
 
         // Vijf aggregaties per bezoek is te duur voor een publieke pagina
         // op een opsombaar id; het cijfer beweegt toch traag.
@@ -45,16 +46,17 @@ final class SellerProfileController extends Controller
             now()->addMinutes(10),
             fn (): array => ['trust' => $trustIndex->forSeller($user)],
         )['trust'];
+        // De kavelpagina hergebruikt hetzelfde cijfer onder trust:{id}.
 
         return view('sellers.show', [
             'seller' => $user,
             'company' => $user->company,
             'trust' => $trust,
             'reviews' => $reviews,
-            'averageRating' => $reviews->isEmpty() ? null : round($reviews->avg('rating'), 1),
+            'averageRating' => $reviewCount === 0 ? null : round((float) (clone $published)->avg('rating'), 1),
             // Alle vijf de sterren, ook waar nul staat - dat is het punt.
             'distribution' => collect(range(5, 1))
-                ->mapWithKeys(fn (int $stars) => [$stars => $reviews->where('rating', $stars)->count()]),
+                ->mapWithKeys(fn (int $stars) => [$stars => (int) $perRating->get($stars, 0)]),
             'completedSales' => Order::query()
                 ->where('seller_id', $user->id)
                 ->where('status', OrderStatus::Completed)

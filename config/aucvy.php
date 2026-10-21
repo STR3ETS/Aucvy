@@ -259,10 +259,22 @@ return [
      |   veilingevents                   13 maanden
      |   AI-runs                         12 maanden
      */
+    /*
+     | Het werkplan: de signalen (taken) worden bij een bezoek bijgewerkt,
+     | maar hooguit één keer per zoveel seconden per gebruiker. Nul zet de
+     | drempel uit (tests).
+     */
+    'dashboard' => [
+        'signal_sync_seconds' => (int) env('AUCVY_SIGNAL_SYNC_SECONDS', 60),
+    ],
+
     'retention' => [
         'financial_years' => 7,
         'auction_events_months' => 13,
         'ai_runs_months' => 12,
+        // Het auditlog is bewijs bij geschillen en voor de fiscus; na deze
+        // termijn mag het weg, in stukken, buiten de drukte.
+        'audit_log_years' => 7,
         // De inzage-export: de downloadlink is 24 uur geldig, het bestand
         // zelf (naam, adres, biedingen) hoort daarna niet te blijven staan.
         'exports_days' => 7,

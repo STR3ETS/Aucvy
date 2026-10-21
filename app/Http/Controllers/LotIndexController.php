@@ -8,6 +8,7 @@ use App\Lots\LotFilters;
 use App\Lots\LotSearch;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 final class LotIndexController extends Controller
@@ -84,7 +85,13 @@ final class LotIndexController extends Controller
         return view('lots.index', $extra + [
             'filters' => $filters,
             'results' => $results,
-            'facets' => $this->search->facets($filters),
+            // Tien tellingen over de hele open set per bezoek; een minuut
+            // cache per filtercombinatie houdt dat van de kritieke route af.
+            'facets' => Cache::remember(
+                'lots:facets:'.md5(json_encode($filters->toQuery())),
+                now()->addMinute(),
+                fn (): array => $this->search->facets($filters),
+            ),
             'categories' => Category::roots()->get(),
             /*
              | Alleen uitrekenen als er niets gevonden is. De lege staat mag

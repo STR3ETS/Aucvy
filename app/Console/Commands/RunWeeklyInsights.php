@@ -27,26 +27,30 @@ final class RunWeeklyInsights extends Command
 
     public function handle(): int
     {
-        $sellers = User::query()->whereHas('lots')->get();
+        // In stukken: alle verkopers in één verzameling groeit mee met het platform.
+        $scheduled = 0;
 
-        foreach ($sellers as $seller) {
-            $task = TaskRegistry::weeklyInsightsFor($seller);
+        User::query()->whereHas('lots')->chunkById(200, function ($sellers) use (&$scheduled): void {
+            foreach ($sellers as $seller) {
+                $task = TaskRegistry::weeklyInsightsFor($seller);
 
-            $run = AiRun::create([
-                'subject_type' => $seller->getMorphClass(),
-                'subject_id' => $seller->id,
-                'user_id' => $seller->id,
-                'agent' => $task->agent(),
-                'task' => $task->name(),
-                'input' => $task->input(),
-                'cache_key' => $task->cacheKey(),
-                'status' => AiRunStatus::Queued,
-            ]);
+                $run = AiRun::create([
+                    'subject_type' => $seller->getMorphClass(),
+                    'subject_id' => $seller->id,
+                    'user_id' => $seller->id,
+                    'agent' => $task->agent(),
+                    'task' => $task->name(),
+                    'input' => $task->input(),
+                    'cache_key' => $task->cacheKey(),
+                    'status' => AiRunStatus::Queued,
+                ]);
 
-            RunAiTask::dispatch($run, $task);
-        }
+                RunAiTask::dispatch($run, $task);
+                $scheduled++;
+            }
+        });
 
-        $this->info("{$sellers->count()} verkopers ingepland.");
+        $this->info("{$scheduled} verkopers ingepland.");
 
         return self::SUCCESS;
     }

@@ -6,8 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Lot;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
@@ -41,22 +39,26 @@ final class CategoryIndexController extends Controller
         // Per hoofdcategorie de nieuwste foto uit het aanbod, als die er is.
         // Dit laadt alle publieke kavels met hun foto's; tien minuten cache
         // houdt dat van de kritieke route af.
-        $covers = Cache::remember('categories:covers', now()->addMinutes(10), function () use ($rootOf): array {
+        $covers = Cache::remember('categories:covers', now()->addMinutes(10), function () use ($roots): array {
             $covers = [];
 
-            Lot::query()
-                ->public()
-                ->whereHas('media')
-                ->with(['media' => fn (Builder|HasMany $query) => $query->orderBy('position')])
-                ->latest('id')
-                ->get(['id', 'category_id'])
-                ->each(function (Lot $lot) use (&$covers, $rootOf): void {
-                    $rootId = $rootOf[$lot->category_id] ?? null;
+            // Per hoofdcategorie de nieuwste publieke kavel met een foto en
+            // daarvan de omslag: twee kleine, geïndexeerde query's per
+            // hoofdcategorie in plaats van alle kavels met al hun foto's.
+            foreach ($roots as $root) {
+                $categoryIds = [$root->id, ...$root->children->pluck('id')->all()];
 
-                    if ($rootId !== null && ! isset($covers[$rootId])) {
-                        $covers[$rootId] = $lot->media->first()?->path;
-                    }
-                });
+                $cover = Lot::query()
+                    ->public()
+                    ->whereIn('category_id', $categoryIds)
+                    ->whereHas('media')
+                    ->latest('id')
+                    ->first(['id']);
+
+                if ($cover !== null) {
+                    $covers[$root->id] = $cover->media()->orderBy('position')->value('path');
+                }
+            }
 
             return $covers;
         });

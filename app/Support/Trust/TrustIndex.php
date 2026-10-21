@@ -169,25 +169,27 @@ final class TrustIndex
      */
     private function delivery(User $seller, CarbonImmutable $asOf): ?array
     {
-        $shipped = Order::query()
+        // Eén aggregaat in plaats van elke afgeronde order naar PHP halen.
+        $row = Order::query()
             ->where('seller_id', $seller->id)
             ->where('status', OrderStatus::Completed)
             ->where('created_at', '<=', $asOf)
             ->whereNotNull('paid_at')
             ->whereNotNull('shipped_at')
-            ->get(['paid_at', 'shipped_at']);
+            ->selectRaw('count(*) as total, coalesce(sum(shipped_at <= date_add(paid_at, interval 7 day)), 0) as on_time')
+            ->first();
 
-        if ($shipped->isEmpty()) {
+        $total = (int) ($row->total ?? 0);
+
+        if ($total === 0) {
             return null;
         }
 
-        $onTime = $shipped
-            ->filter(fn (Order $order) => $order->shipped_at->lessThanOrEqualTo($order->paid_at->addDays(7)))
-            ->count();
+        $onTime = (int) $row->on_time;
 
         return $this->factor(
             'delivery', 'Leverprestatie', 12,
-            (int) round($onTime / $shipped->count() * 100),
+            (int) round($onTime / $total * 100),
             'Of ophalen en levering gaan zoals afgesproken, binnen zeven dagen na betaling.',
         );
     }
