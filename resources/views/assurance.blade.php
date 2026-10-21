@@ -7,11 +7,10 @@
     $betalen = (int) config('aucvy.orders.payment_deadline_hours');
 @endphp
 
-<x-layouts.public title="Zekerheid">
+<x-layouts.public title="Zekerheid" heading="Bij elke kavel geregeld" eyebrow="Zekerheid" align="center"
+    intro="Wat er bij elke kavel vaststaat, met de termijnen erbij. En wat er nog niet is.">
     <div class="mx-auto max-w-3xl">
-        <h1 class="text-3xl font-extrabold tracking-[-0.03em]">Bij elke kavel geregeld</h1>
-
-        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+        <div class="grid gap-3 sm:grid-cols-2">
             <div class="rounded-aj-sm border border-aj-border bg-aj-surface p-4">
                 <p class="text-sm font-extrabold">Verkoper gecontroleerd</p>
                 <p class="mt-1 text-sm text-aj-muted">Identiteit en - zakelijk - de KVK-inschrijving, vóór een kavel live kan.</p>

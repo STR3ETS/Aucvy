@@ -6,21 +6,17 @@
     funnel, Ivy-analyse, advertentie, waardebalk, live bieden en uitbetaling.
     De regie zit in selling-demo.js, de micro-animaties in app.css (.demo-*).
 --}}
-<x-layouts.public over-hero title="Verkooproute">
-    <div class="wrap" style="padding-top:32px;padding-bottom:32px">
+{{-- Geen over-hero: de pagina heeft geen donkere hero, dus de header hoort
+     hier de vaste witte variant te zijn. De layout levert de inhoudskolom. --}}
+<x-layouts.public title="Verkooproute" heading="Van foto tot uitbetaling" eyebrow="Verkopen op Aucvy"
+    intro="Dit is het echte systeem in het klein. Jij levert de foto's en het akkoord; Ivy en haar team doen het werk ertussen.">
+    <div>
         <div x-data="sellingDemo"
-             class="grid gap-8 lg:h-[calc(100svh-190px)] lg:min-h-[560px] lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-stretch">
+             class="grid gap-8 lg:min-h-[600px] lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-stretch">
 
             {{-- Links: uitleg, stappen en de actie. ----------------------- --}}
             <div class="flex flex-col">
-                <p class="text-sm font-bold text-aj-blue-text">Verkopen op Aucvy</p>
-                <h1 class="mt-1 text-3xl font-extrabold tracking-[-0.03em]">Van foto tot uitbetaling</h1>
-                <p class="mt-2 text-sm text-aj-soft">
-                    Dit is het echte systeem in het klein. Jij levert de foto's en het akkoord;
-                    Ivy en haar team doen het werk ertussen.
-                </p>
-
-                <ol class="mt-5 space-y-1" aria-label="De zes stappen">
+                <ol class="space-y-1" aria-label="De zes stappen">
                     @foreach ([
                         [null, 'Upload je foto\'s'],
                         ['ivy', 'Ivy herkent je object'],

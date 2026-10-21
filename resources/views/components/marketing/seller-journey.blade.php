@@ -45,7 +45,7 @@
       <div class="cap"><small>Stap 4</small>Een range, geen belofte. Met de bron erbij.</div>
     </div>
     <div class="scene">
-      <div class="art"><div class="card" style="left:8%;top:14%;width:40%"><b>Veiling</b><span>7 dagen</span></div><div class="card" style="right:8%;top:14%;width:40%;border-color:#2E5CC6"><b>Afslag</b><span>Daalt elke 20s</span></div><div class="card" style="left:8%;bottom:14%;width:40%"><b>Koop direct</b><span>Vaste prijs</span></div><span class="tag b" style="right:8%;bottom:16%">Ivy adviseert: afslag</span></div>
+      <div class="art"><div class="card" style="left:8%;top:14%;width:40%"><b>Veiling</b><span>7 dagen</span></div><div class="card" style="right:8%;top:14%;width:40%;border-color:var(--blue)"><b>Afslag</b><span>Daalt elke 20s</span></div><div class="card" style="left:8%;bottom:14%;width:40%"><b>Koop direct</b><span>Vaste prijs</span></div><span class="tag b" style="right:8%;bottom:16%">Ivy adviseert: afslag</span></div>
       <div class="cap"><small>Stap 5</small>Snel geld nodig? Dan is afslag de verstandige keuze.</div>
     </div>
     <div class="scene">

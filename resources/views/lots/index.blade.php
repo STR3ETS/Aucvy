@@ -1,24 +1,7 @@
 @use('App\Lots\LotFilters')
 
-<x-layouts.public title="Veilingen">
-    <x-slot:actions>
-        @auth
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <x-ui.button type="submit" variant="text">Uitloggen</x-ui.button>
-            </form>
-        @endauth
-        @guest
-            <x-ui.button variant="text" :href="route('login')">Inloggen</x-ui.button>
-        @endguest
-    </x-slot:actions>
-
-    {{-- Het stippenveld van de hero als paginalaag: donkergrijs en zwak
-         op de lichte achtergrond, achter alle kaarten. --}}
-    <canvas class="page-dots" x-data="dotField({ color: '#0e1526', strength: 0.25 })"
-            aria-hidden="true"></canvas>
-
-    <h1 class="text-2xl font-extrabold tracking-tight">Veilingen</h1>
+<x-layouts.public :title="$pageTitle ?? 'Veilingen'" eyebrow="Ontdek"
+    :intro="$pageIntro ?? 'Kavels van geverifieerde verkopers, met de waarde-indicatie van Ivy erbij. Zoek, filter of vraag het gewoon in je eigen woorden.'">
 
     {{--
         Alles hierbinnen wisselt zonder harde reload (lots-index.js): links en
@@ -28,7 +11,7 @@
     <div id="lots-content">
 
     {{-- Zoeken ---------------------------------------------------------- --}}
-    <form method="GET" action="{{ route('lots.index') }}" class="mt-4 flex gap-2">
+    <form method="GET" action="{{ route('lots.index') }}" class="flex gap-2">
         @foreach ($filters->toQuery(['q' => null]) as $key => $value)
             @foreach ((array) $value as $item)
                 <input type="hidden" name="{{ $key }}{{ is_array($value) ? '[]' : '' }}" value="{{ $item }}">
@@ -154,6 +137,8 @@
                     @endif
                 </p>
 
+                <x-lots.alert-cta :filters="$filters" />
+
                 <form method="GET" action="{{ route('lots.index') }}" class="ml-auto"
                       x-data @change="$el.requestSubmit()">
                     @foreach ($filters->toQuery(['sorteer' => null]) as $key => $value)
@@ -207,6 +192,11 @@
                     @else
                         <p class="mt-2 text-sm text-aj-muted">{{ __('lots.empty.nothing') }}</p>
                     @endif
+
+                    <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-aj-border pt-4">
+                        <p class="text-sm text-aj-muted">Komt er iets nieuws dat hieraan voldoet? Dan hoor je het.</p>
+                        <x-lots.alert-cta :filters="$filters" />
+                    </div>
                 </div>
             @else
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

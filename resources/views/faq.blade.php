@@ -16,16 +16,15 @@
     De FAQ (briefing hfst. 2b: "statisch, met een accordeon"). Native
     details/summary: toegankelijk zonder JavaScript.
 --}}
-<x-layouts.public title="Veelgestelde vragen">
+<x-layouts.public title="Veelgestelde vragen" eyebrow="Hulp" align="center">
+    <x-slot:lead>
+        Staat je vraag er niet bij? De
+        <a href="{{ route('assurance') }}">zekerheidspagina</a>
+        legt de geschilroute met termijnen uit, en de
+        <a href="{{ route('selling.guide') }}">verkooproute</a>
+        het hele verkoopproces.
+    </x-slot:lead>
     <div class="mx-auto max-w-3xl">
-        <h1 class="text-3xl font-extrabold tracking-[-0.03em]">Veelgestelde vragen</h1>
-        <p class="mt-3 text-aj-soft">
-            Staat je vraag er niet bij? De
-            <a href="{{ route('assurance') }}" class="font-bold text-aj-blue-text underline">zekerheidspagina</a>
-            legt de geschilroute met termijnen uit, en de
-            <a href="{{ route('selling.guide') }}" class="font-bold text-aj-blue-text underline">verkooproute</a>
-            het hele verkoopproces.
-        </p>
 
         @foreach ([
             'Bieden' => [

@@ -2,66 +2,70 @@
 @use('App\Enums\SaleType')
 @use('App\Support\Money\Money')
 
-<x-layouts.public :title="$lot->title" :description="Str::limit($lot->description, 155)">
-    <x-slot:actions>
-        @auth
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <x-ui.button type="submit" variant="text">Uitloggen</x-ui.button>
-            </form>
-        @endauth
-        @guest
-            <x-ui.button variant="text" :href="route('login')">Inloggen</x-ui.button>
-        @endguest
-    </x-slot:actions>
+@php
+    $firstMedia = $lot->media->first()?->path;
+    $shareImage = $firstMedia === null
+        ? null
+        : (Str::startsWith($firstMedia, ['http://', 'https://']) ? $firstMedia : asset($firstMedia));
+    $isLive = $lot->status->isPublic() && $auction !== null && ! $auction->isClosed();
+    $structured = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Product',
+        'name' => $lot->title,
+        'description' => Str::limit($lot->description, 300),
+        'sku' => $lot->public_id,
+        'url' => route('lots.show', $lot),
+        'image' => array_values(array_filter($lot->media->map(fn ($media) => Str::startsWith($media->path, ['http://', 'https://']) ? $media->path : asset($media->path))->all())),
+        'brand' => $lot->brand ? ['@type' => 'Brand', 'name' => $lot->brand] : null,
+        'category' => $lot->category?->name,
+        'offers' => [
+            '@type' => 'Offer',
+            'url' => route('lots.show', $lot),
+            'priceCurrency' => 'EUR',
+            'price' => number_format($lot->currentPriceCents() / 100, 2, '.', ''),
+            'availability' => $isLive ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
+            'itemCondition' => 'https://schema.org/UsedCondition',
+            'seller' => ['@type' => 'Organization', 'name' => $lot->seller?->publicName() ?? config('app.name')],
+        ],
+    ];
+@endphp
+
+@push('head')
+    <script type="application/ld+json">{!! json_encode(array_filter($structured, fn ($value) => $value !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+@endpush
+
+<x-layouts.public :title="$lot->title" :heading="$translation['title'] ?? $lot->title" :description="Str::limit($lot->description, 155)"
+    :eyebrow="$lot->category?->name ?? 'Kavel'" :image="$shareImage" og-type="product" :canonical="route('lots.show', $lot)">
+    {{-- Het kruimelpad staat in de paginakop; de titel is de kop zelf. --}}
+    <x-slot:crumbs>
+        <a href="{{ route('lots.index') }}">Veilingen</a>
+        @if ($lot->category)
+            @if ($lot->category->parent)
+                <span aria-hidden="true">/</span>
+                <a href="{{ route('lots.category', $lot->category->parent) }}">{{ $lot->category->parent->name }}</a>
+            @endif
+            <span aria-hidden="true">/</span>
+            <a href="{{ route('lots.category', $lot->category) }}">{{ $lot->category->name }}</a>
+        @endif
+    </x-slot:crumbs>
 
     {{--
         Eén Alpine-component bezit de stand; alles eronder leest eruit.
         Dat voorkomt de klassieke fout waarbij het biedpaneel iets anders toont
         dan de teller ernaast (hfst. 11).
     --}}
-    {{--
-        Het stippenveld als paginalaag: bewust BUITEN het wisselblok van het
-        doomscrollen. Binnen dat blok zou de schuif-transform het
-        referentiekader van position:fixed worden en meet de canvas zich
-        tegen het blok in plaats van het scherm - uitgerekte stipjes. Zo
-        blijft hij bovendien gewoon doorademen tijdens het bladeren.
-    --}}
-    <canvas class="page-dots" x-data="dotField({ color: '#0e1526', strength: 0.25 })"
-            aria-hidden="true"></canvas>
-
     <div @if ($state) x-data="auction({{ Js::from($state) }})" @endif
          data-lot-nav
          @if ($nextLot) data-next="{{ route('lots.show', $nextLot) }}" @endif
          @if ($previousLot) data-prev="{{ route('lots.show', $previousLot) }}" @endif>
 
-        <div class="flex items-center justify-between gap-4">
-        <nav aria-label="Kruimelpad" class="flex flex-wrap items-center gap-1.5 text-sm text-aj-muted">
-            <a href="{{ route('lots.index') }}" class="hover:text-aj-text">Veilingen</a>
-            @if ($lot->category)
-                <span aria-hidden="true">/</span>
-                @if ($lot->category->parent)
-                    <a href="{{ route('lots.category', $lot->category->parent) }}" class="hover:text-aj-text">
-                        {{ $lot->category->parent->name }}
-                    </a>
-                    <span aria-hidden="true">/</span>
-                @endif
-                <a href="{{ route('lots.category', $lot->category) }}" class="hover:text-aj-text">
-                    {{ $lot->category->name }}
-                </a>
-            @endif
-            <span aria-hidden="true">/</span>
-            <span class="text-aj-text">{{ Str::limit($lot->title, 45) }}</span>
-        </nav>
-
         @if ($nextLot || $previousLot)
-            <p class="hidden shrink-0 items-center gap-1 text-xs text-aj-muted lg:flex" aria-hidden="true">
+            <p class="-mt-2 hidden items-center justify-end gap-1 text-xs text-aj-muted lg:flex" aria-hidden="true">
                 Blader
                 <kbd class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-1.5 py-0.5 font-sans font-bold">&larr;</kbd>
                 <kbd class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-1.5 py-0.5 font-sans font-bold">&rarr;</kbd>
             </p>
         @endif
-        </div>
 
         {{--
             Prijswijzigingen worden voorgelezen, maar afgeknepen tot één melding
@@ -80,9 +84,7 @@
                 <x-lot.media-gallery :lot="$lot" />
 
                 <div>
-                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">{{ $lot->title }}</h1>
-
-                    <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+                    <ul class="flex flex-wrap gap-2 text-sm">
                         @if ($lot->location)
                             <li class="rounded-full bg-aj-bg px-3 py-1">{{ $lot->location->publicLabel() }}</li>
                         @endif
@@ -195,11 +197,28 @@
                     </div>
                 @endif
 
+                @if ($lot->sale && $lot->sale->isPublished())
+                    {{-- Onderdeel van een veiling met meerdere kavels (Auction Studio). --}}
+                    <p class="rounded-aj-sm border border-aj-blue/30 bg-aj-blue/5 px-4 py-3 text-sm">
+                        Onderdeel van de veiling <a class="font-bold underline" href="{{ route('sales.show', $lot->sale) }}">{{ $lot->sale->title }}</a>
+                        <span class="text-aj-muted">· {{ $lot->sale->lots()->count() }} kavels, sluiten vanaf {{ $lot->sale->ends_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') }}</span>
+                    </p>
+                @endif
+
                 {{-- Beschrijving naast het vertrouwensblok, zoals in het ontwerp. --}}
                 <div class="grid gap-5 sm:grid-cols-[1.4fr_1fr] sm:items-start">
                     <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5">
-                        <h2 class="text-lg font-extrabold">Omschrijving</h2>
-                        <p class="mt-2 whitespace-pre-line text-sm text-aj-soft">{{ $lot->description }}</p>
+                        <h2 class="text-lg font-extrabold">{{ $translation ? 'Description' : 'Omschrijving' }}</h2>
+                        {{-- Vertaling door Ivy (briefing stap 4): op verzoek, met de Nederlandse tekst als bindende versie. --}}
+                        @if ($translation)
+                            <p class="mt-2 rounded-aj-sm border border-aj-border bg-aj-bg px-3 py-2 text-xs text-aj-muted" lang="en">Automatically translated by Ivy. The Dutch text is the binding version. <a class="font-bold underline" href="{{ route('lots.show', $lot) }}" hreflang="nl">Toon Nederlands</a></p>
+                            <p class="mt-2 whitespace-pre-line text-sm text-aj-soft" lang="en">{{ $translation['description'] }}</p>
+                        @else
+                            @if ($hasTranslation)
+                                <p class="mt-1 text-xs text-aj-muted"><a class="font-bold underline" href="{{ route('lots.show', ['lot' => $lot, 'lang' => 'en']) }}" hreflang="en" lang="en">Read in English</a></p>
+                            @endif
+                            <p class="mt-2 whitespace-pre-line text-sm text-aj-soft">{{ $lot->description }}</p>
+                        @endif
                     </section>
 
                     <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Vertrouwen">
@@ -234,9 +253,14 @@
                     <section>
                         <h2 class="text-lg font-extrabold">Specificaties</h2>
                         <dl class="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                            @php $schemaKeys = []; @endphp
                             @foreach ($lot->category?->effectiveSpecificationsSchema() ?? [] as $field)
-                                @php $value = $lot->specifications[$field['key']] ?? null; @endphp
-                                @if ($value !== null)
+                                @php
+                                    $schemaKeys[] = $field['key'];
+                                    $value = $lot->specifications[$field['key']] ?? null;
+                                    $value = is_array($value) || $value === null ? $value : ['value' => $value];
+                                @endphp
+                                @if ($value !== null && ($value['value'] ?? null) !== null)
                                     <div class="flex justify-between gap-3 border-b border-aj-border py-1">
                                         <dt class="text-aj-muted">{{ $field['label'] }}</dt>
                                         <dd class="font-semibold">
@@ -248,6 +272,21 @@
                                             {{-- De herkomst blijft navolgbaar: door Ivy ingevuld
                                                  of door de verkoper (hfst. 5). --}}
                                             @if (($value['source'] ?? null) === 'ai')
+                                                <span class="text-xs font-normal text-aj-violet">· door Ivy</span>
+                                            @endif
+                                        </dd>
+                                    </div>
+                                @endif
+                            @endforeach
+                            {{-- Kenmerken buiten het schema: wat Ivy of de verkoper er los bij zette. --}}
+                            @foreach (collect($lot->specifications)->except($schemaKeys) as $key => $value)
+                                @php $entry = is_array($value) ? $value : ['value' => $value]; @endphp
+                                @if (($entry['value'] ?? null) !== null && ! is_array($entry['value']))
+                                    <div class="flex justify-between gap-3 border-b border-aj-border py-1">
+                                        <dt class="text-aj-muted">{{ ucfirst(str_replace('_', ' ', (string) $key)) }}</dt>
+                                        <dd class="font-semibold">
+                                            @if (is_bool($entry['value'])) {{ $entry['value'] ? 'Ja' : 'Nee' }} @else {{ $entry['value'] }} @endif
+                                            @if (($entry['source'] ?? null) === 'ai')
                                                 <span class="text-xs font-normal text-aj-violet">· door Ivy</span>
                                             @endif
                                         </dd>
@@ -414,6 +453,20 @@
                         @endauth
                     </div>
 
+                    @auth
+                        @if ($lot->seller_id === auth()->id())
+                            {{-- Eigenaar: delen met herkomst per kanaal (briefing stap 10) en snel naar bewerken. --}}
+                            <div class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4">
+                                <p class="text-sm font-extrabold">Jouw kavel delen</p>
+                                <p class="mt-1 text-xs text-aj-muted">Elke link heeft een eigen herkomst, zodat je ziet wat werkt.</p>
+                                <x-lots.share :lot="$lot" compact class="mt-3" />
+                                @unless ($lot->viewing_available)
+                                    <a href="{{ route('dashboard.lots.edit', $lot) }}" class="btn btn-ghost mt-3 w-full justify-center" style="height:40px;font-size:13px">Kavel bewerken</a>
+                                @endunless
+                            </div>
+                        @endif
+                    @endauth
+
                     {{-- Bezichtiging: moment voorstellen; het adres volgt per
                          mail, pas na bevestiging van de verkoper (hfst. 7). --}}
                     @if ($lot->viewing_available)
@@ -433,6 +486,7 @@
                                     <p class="mt-1 text-sm text-aj-muted">
                                         Kopers stellen hier een kijkmoment voor; jij bevestigt per mail.
                                     </p>
+                                    <a href="{{ route('dashboard.lots.edit', $lot) }}" class="btn btn-ghost mt-3 w-full justify-center" style="height:40px;font-size:13px">Kavel bewerken</a>
                                 @elseif ($viewerViewing !== null)
                                     <p class="mt-1 flex items-start gap-2 text-sm {{ $viewerViewing->mayReceiveAddress() ? 'text-aj-success-text' : 'text-aj-muted' }}">
                                         <svg class="mt-0.5 size-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

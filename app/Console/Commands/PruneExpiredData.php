@@ -15,6 +15,7 @@ use App\Models\Payout;
 use App\Models\Review;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * De bewaartermijnen uit hfst. 15, afgedwongen in code in plaats van
@@ -71,8 +72,30 @@ final class PruneExpiredData extends Command
                 }
             });
 
-        $this->info("Opgeruimd: {$aiRuns} AI-runs, {$events} veilingevents, {$bids} biedingen, {$orders} orders.");
+        $exports = $this->pruneExports();
+
+        $this->info("Opgeruimd: {$aiRuns} AI-runs, {$events} veilingevents, {$bids} biedingen, {$orders} orders, {$exports} exports.");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * De inzage-exports: één JSON per gebruiker met alles wat we over hem
+     * hebben. De link verloopt na een dag; het bestand na de termijn.
+     */
+    private function pruneExports(): int
+    {
+        $disk = Storage::disk('local');
+        $cutoff = now()->subDays((int) config('aucvy.retention.exports_days'))->getTimestamp();
+        $pruned = 0;
+
+        foreach ($disk->files('exports') as $file) {
+            if ($disk->lastModified($file) < $cutoff) {
+                $disk->delete($file);
+                $pruned++;
+            }
+        }
+
+        return $pruned;
     }
 }

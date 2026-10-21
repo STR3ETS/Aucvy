@@ -116,15 +116,16 @@ export default function initHome() {
 
   /* ============ 5. COUNTDOWNS (local, sync via /api/auctions/state) ============ */
   const pad = n => String(n).padStart(2, '0');
-  const cds = [...document.querySelectorAll('[data-countdown]')].map(el => ({ el, end: Date.now() + parseInt(el.dataset.countdown, 10) * 1000 }));
+  // data-short: de compacte notatie van de v4-kaarten ("2d 04u", "01:42").
+  const cds = [...document.querySelectorAll('[data-countdown]')].map(el => ({ el, end: Date.now() + parseInt(el.dataset.countdown, 10) * 1000, short: 'short' in el.dataset }));
   if (cds.length) {
     function tick() {
       const now = Date.now();
-      cds.forEach(({ el, end }) => {
+      cds.forEach(({ el, end, short }) => {
         let s = Math.max(0, Math.round((end - now) / 1000));
-        if (s >= 86400) { el.textContent = 'nog ' + Math.round(s / 86400) + ' dagen'; return; }
-        if (s >= 3600) { el.textContent = 'nog ' + Math.floor(s / 3600) + ' u ' + pad(Math.floor(s % 3600 / 60)) + ' min'; return; }
-        el.textContent = 'nog ' + pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+        if (s >= 86400) { el.textContent = short ? Math.floor(s / 86400) + 'd ' + pad(Math.floor(s % 86400 / 3600)) + 'u' : 'nog ' + Math.round(s / 86400) + ' dagen'; return; }
+        if (s >= 3600) { el.textContent = short ? Math.floor(s / 3600) + 'u ' + pad(Math.floor(s % 3600 / 60)) + 'm' : 'nog ' + Math.floor(s / 3600) + ' u ' + pad(Math.floor(s % 3600 / 60)) + ' min'; return; }
+        el.textContent = (short ? '' : 'nog ') + pad(Math.floor(s / 60)) + ':' + pad(s % 60);
         if (s < 300) el.classList.add('hot');
       });
     }

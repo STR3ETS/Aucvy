@@ -8,7 +8,9 @@ use App\Enums\LotStatus;
 use App\Enums\SaleType;
 use App\Models\Category;
 use App\Models\Lot;
+use App\Support\Experiments\HomeExperiment;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
@@ -23,10 +25,19 @@ final class HomeController extends Controller
      *
      * Bewust géén websocket op de home: dat zijn honderd verbindingen voor
      * niets. De kaarten kloppen weer bij de volgende paginaweergave.
+     *
+     * De A/B-test bepaalt welk ontwerp rendert: 'home' (het huidige) of
+     * 'home-v4' (preview v4). Beide krijgen dezelfde data; alleen de
+     * presentatie verschilt, want dat is wat de test vergelijkt.
      */
-    public function __invoke(): View
+    public function __invoke(Request $request, HomeExperiment $experiment): View
     {
-        return view('home', [
+        $variant = $experiment->resolve($request);
+
+        return view($variant->view(), [
+            'variant' => $variant,
+            // In de vergelijkingspagina (iframe) blijft de wisselknop weg.
+            'demo' => $request->boolean(HomeExperiment::DEMO),
             'featured' => $this->featured(),
             // Acht rijen uit één query. Cachen levert hier niets op en zou een
             // nieuwe categorie tien minuten onzichtbaar maken.

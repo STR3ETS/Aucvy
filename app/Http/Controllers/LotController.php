@@ -52,8 +52,13 @@ final class LotController extends Controller
 
         $reviewCount = (clone $sellerReviews)->count();
 
+        $lang = $request->query('lang') === 'en' ? 'en' : 'nl';
+
         return view('lots.show', [
             'lot' => $lot,
+            'lang' => $lang,
+            'translation' => $lang === 'en' ? $lot->translation('en') : null,
+            'hasTranslation' => $lot->translation('en') !== null,
             'auction' => $auction,
             'sellerStats' => [
                 'average_rating' => $reviewCount > 0

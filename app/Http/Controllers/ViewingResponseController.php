@@ -12,14 +12,15 @@ use Illuminate\View\View;
 
 /**
  * De verkoper reageert via de getekende links uit zijn mail - zonder in te
- * hoeven loggen, net als bij e-mailverificatie. Alleen een lopende aanvraag
- * verandert; nogmaals klikken doet niets (en stuurt geen tweede mail).
+ * hoeven loggen, net als bij e-mailverificatie. De link is tijdelijk, en
+ * alleen een lopende aanvraag op een kavel die nog loopt verandert; nogmaals
+ * klikken doet niets (en stuurt geen tweede mail).
  */
 final class ViewingResponseController extends Controller
 {
     public function confirm(Viewing $viewing): View
     {
-        if ($viewing->status === ViewingStatus::Requested) {
+        if ($this->isOpen($viewing)) {
             $viewing->status = ViewingStatus::Confirmed;
             $viewing->address_sent_at = now();
             $viewing->save();
@@ -32,7 +33,7 @@ final class ViewingResponseController extends Controller
 
     public function decline(Viewing $viewing): View
     {
-        if ($viewing->status === ViewingStatus::Requested) {
+        if ($this->isOpen($viewing)) {
             $viewing->status = ViewingStatus::Cancelled;
             $viewing->save();
 
@@ -40,5 +41,20 @@ final class ViewingResponseController extends Controller
         }
 
         return view('viewings.responded', ['viewing' => $viewing]);
+    }
+
+    /**
+     * Een aanvraag die nog loopt, op een kavel die nog te zien is, voor een
+     * moment dat nog moet komen. Is de kavel inmiddels gesloten of het moment
+     * voorbij, dan gaat er geen adres meer de deur uit.
+     */
+    private function isOpen(Viewing $viewing): bool
+    {
+        $viewing->loadMissing('lot');
+
+        return $viewing->status === ViewingStatus::Requested
+            && $viewing->lot->status->isPublic()
+            && ! $viewing->lot->status->isFinished()
+            && $viewing->slot_at->isFuture();
     }
 }

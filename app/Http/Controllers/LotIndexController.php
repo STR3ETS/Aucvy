@@ -43,9 +43,45 @@ final class LotIndexController extends Controller
             );
         }
 
+        return $this->render($filters);
+    }
+
+    /**
+     * Direct kopen als eigen overzicht (briefing sectie 1): dezelfde pagina,
+     * de verkoopvorm staat vast.
+     */
+    public function buyNow(Request $request): View
+    {
+        $filters = LotFilters::fromRequest($request);
+
+        $filters = new LotFilters(
+            query: $filters->query,
+            category: $filters->category,
+            quick: $filters->quick,
+            saleTypes: ['buy_now'],
+            conditions: $filters->conditions,
+            provinces: $filters->provinces,
+            priceMinCents: $filters->priceMinCents,
+            priceMaxCents: $filters->priceMaxCents,
+            viewingOnly: $filters->viewingOnly,
+            transportOnly: $filters->transportOnly,
+            sort: $filters->sort,
+        );
+
+        return $this->render($filters, [
+            'pageTitle' => 'Direct kopen',
+            'pageIntro' => 'Kavels met een vaste prijs: geen biedstrijd, meteen van jou. Ook deze lopen via de betaling en zekerheid van het platform.',
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $extra
+     */
+    private function render(LotFilters $filters, array $extra = []): View
+    {
         $results = $this->search->results($filters);
 
-        return view('lots.index', [
+        return view('lots.index', $extra + [
             'filters' => $filters,
             'results' => $results,
             'facets' => $this->search->facets($filters),

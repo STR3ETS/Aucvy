@@ -1,20 +1,19 @@
-<x-layouts.public :title="$seller->publicName()">
+<x-layouts.public :title="$seller->publicName()" eyebrow="Verkoper">
+    {{-- De feiten onder de naam staan in de paginakop, als lichte regel. --}}
+    <x-slot:lead>
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+            @if ($company?->verified_at !== null || $seller->kyc_status->allowsBidding())
+                <span class="rounded-full bg-white/15 px-2.5 py-0.5 font-bold text-white">Geverifieerd</span>
+            @endif
+            @if ($averageRating !== null)
+                <span class="tabular font-bold text-white">{{ number_format($averageRating, 1, ',', '') }}★</span>
+                <span>· {{ $completedSales }} {{ $completedSales === 1 ? 'verkoop' : 'verkopen' }}</span>
+            @endif
+            <span>· lid sinds {{ $seller->created_at->timezone(config('aucvy.display_timezone'))->isoFormat('MMMM YYYY') }}</span>
+            <span>· {{ $disputeCount }} {{ $disputeCount === 1 ? 'geschil' : 'geschillen' }}</span>
+        </div>
+    </x-slot:lead>
     <div class="mx-auto max-w-4xl">
-
-        <header>
-            <h1 class="text-3xl font-extrabold tracking-[-0.03em]">{{ $seller->publicName() }}</h1>
-            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                @if ($company?->verified_at !== null || $seller->kyc_status->allowsBidding())
-                    <span class="rounded-aj-sm bg-aj-success/10 px-2 py-0.5 font-bold text-aj-success-text">Geverifieerd</span>
-                @endif
-                @if ($averageRating !== null)
-                    <span class="tabular font-bold">{{ number_format($averageRating, 1, ',', '') }}★</span>
-                    <span class="text-aj-muted">· {{ $completedSales }} {{ $completedSales === 1 ? 'verkoop' : 'verkopen' }}</span>
-                @endif
-                <span class="text-aj-muted">· lid sinds {{ $seller->created_at->timezone(config('aucvy.display_timezone'))->isoFormat('MMMM YYYY') }}</span>
-                <span class="text-aj-muted">· {{ $disputeCount }} {{ $disputeCount === 1 ? 'geschil' : 'geschillen' }}</span>
-            </div>
-        </header>
 
         {{--
             De Trust Index (preview v4): één cijfer, met de opbouw er
@@ -22,7 +21,7 @@
             weinig data is geen onbetrouwbaarheid.
         --}}
         @if ($trust !== null)
-            <section class="mt-8 rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Trust Index">
+            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Trust Index">
                 <div class="flex flex-wrap items-center gap-6">
                     @php
                         $size = 132;

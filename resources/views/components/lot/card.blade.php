@@ -95,9 +95,11 @@
       </div>
 
       {{--
-          De waardebalk, in dezelfde taal als de kavelpagina: vage prijsas,
-          fel afgerond segment als marktwaarde, bolletje voor de huidige
-          prijs. Het bolletje alleen bij voldoende zekerheid (hfst. 8).
+          De waardebalk: vage prijsas, afgerond segment als marktwaarde,
+          bolletje voor de huidige prijs. Het bolletje alleen bij voldoende
+          zekerheid (hfst. 8). De posities staan hier als CSS-variabelen; de
+          kleuren staan in app.css (de gekleurde as van de kavelpagina) en in
+          hybrid.css (ontwerp C: de Ivy-gradient van ontwerp B).
       --}}
       @if ($lot->hasValueEstimate())
         @php
@@ -106,7 +108,6 @@
             $axisPosition = fn (int $cents): float => round(max(2, min(98, ($cents - $axisMin) / ($axisMax - $axisMin) * 100)), 1);
             $bandLeft = $axisPosition($lot->value_min_cents);
             $bandWidth = max(2, $axisPosition($lot->value_max_cents) - $bandLeft);
-            $axisGradient = 'linear-gradient(90deg,#1c8a5b 0%,#b4690e 55%,#c0392b 100%)';
         @endphp
         <div class="mt-2">
           {{-- Altijd één regel: het bedrag blijft heel, het label kapt af. --}}
@@ -114,16 +115,13 @@
             <span class="min-w-0 truncate font-semibold text-aj-muted">Ivy-waarderange (indicatie)</span>
             <span class="tnum shrink-0 whitespace-nowrap font-bold">{{ $euro($lot->value_min_cents) }} – {{ $euro($lot->value_max_cents) }}</span>
           </div>
-          <div class="relative mt-1.5 h-1.5"
+          <div class="value-range relative mt-1.5 h-1.5"
+               style="--band-left:{{ $bandLeft }};--band-width:{{ $bandWidth }}"
                title="Marktwaarde {{ $euro($lot->value_min_cents) }} – {{ $euro($lot->value_max_cents) }}">
-            <div class="absolute inset-0 rounded-full opacity-25" style="background:{{ $axisGradient }}"></div>
-            <div class="absolute inset-y-0 rounded-full"
-                 style="left:{{ $bandLeft }}%;width:{{ $bandWidth }}%;
-                        background-image:{{ $axisGradient }};
-                        background-size:{{ round(10000 / $bandWidth, 2) }}% 100%;
-                        background-position-x:{{ round(100 * $bandLeft / (100 - $bandWidth), 2) }}%"></div>
+            <div class="value-range-axis absolute inset-0 rounded-full"></div>
+            <div class="value-range-band absolute inset-y-0 rounded-full"></div>
             @if ($lot->mayShowValueComparison() && $price > 0)
-              <div class="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-aj-navy shadow-sm"
+              <div class="value-range-dot absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white"
                    style="left:{{ $axisPosition($price) }}%" title="Huidige prijs"></div>
             @endif
           </div>

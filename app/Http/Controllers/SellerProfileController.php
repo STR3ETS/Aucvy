@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\Review;
 use App\Models\User;
 use App\Support\Trust\TrustIndex;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 /**
@@ -26,6 +27,10 @@ final class SellerProfileController extends Controller
 {
     public function __invoke(User $user, TrustIndex $trustIndex): View
     {
+        // Geen profiel voor wie nooit iets aangeboden heeft: anders is
+        // /verkoper/1..n een lijst van alle accounts met hun KYC-status.
+        abort_unless($user->hasSellerProfile(), 404);
+
         $reviews = Review::query()
             ->where('seller_id', $user->id)
             ->whereNotNull('published_at')
@@ -33,7 +38,13 @@ final class SellerProfileController extends Controller
             ->latest('published_at')
             ->get();
 
-        $trust = $trustIndex->forSeller($user);
+        // Vijf aggregaties per bezoek is te duur voor een publieke pagina
+        // op een opsombaar id; het cijfer beweegt toch traag.
+        $trust = Cache::remember(
+            "trust:profile:{$user->id}",
+            now()->addMinutes(10),
+            fn (): array => ['trust' => $trustIndex->forSeller($user)],
+        )['trust'];
 
         return view('sellers.show', [
             'seller' => $user,

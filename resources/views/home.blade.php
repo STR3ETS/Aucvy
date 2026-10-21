@@ -6,7 +6,7 @@
     komt letterlijk uit het ontwerp - wijzigingen dáár horen eerst in het
     ontwerpbestand, dan hier.
 --}}
-<x-layouts.public over-hero
+<x-layouts.public over-hero theme=""
     description="Aucvy is het AI-commerceplatform voor zakelijke goederen. Upload een foto en het AI-team van Ivy herkent, schrijft en waardeert. Verkopen via veiling, afslag of koop direct, met geverifieerde verkopers en kosten vooraf - je betaalt alleen bij resultaat.">
 
 <div class="home">
@@ -179,5 +179,8 @@
   <a class="btn btn-ghost" href="#live">Kopen</a>
   <a class="btn btn-primary" href="{{ route('sell') }}">Kavel plaatsen</a>
 </div>
+
+{{-- De A/B-test: wisselen naar het nieuwe ontwerp (variant B). --}}
+<x-marketing.ab-switch :variant="$variant" :demo="$demo" />
 
 </x-layouts.public>

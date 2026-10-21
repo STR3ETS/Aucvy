@@ -5,27 +5,47 @@ declare(strict_types=1);
 namespace App\Support\Privacy;
 
 use App\Enums\KycStatus;
+use App\Enums\LotStatus;
 use App\Enums\OrderStatus;
+use App\Lots\DeleteDraft;
 use App\Models\AuditLog;
+use App\Models\Bid;
 use App\Models\Location;
 use App\Models\Lot;
 use App\Models\Order;
 use App\Models\SavedSearch;
+use App\Models\SupportTicket;
 use App\Models\User;
 use App\Models\Viewing;
 use App\Models\WatchlistItem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
  * Verwijdering als anonimisering (hfst. 15): een order met een geschil mag
  * niet verdwijnen, de persoon erachter wel losgekoppeld worden. De
- * transactierijen (biedingen, orders) blijven staan tot hun fiscale
- * bewaartermijn; alles wat een persoon identificeert wordt overschreven.
+ * transactierijen (biedingen, orders, berichten bij een order) blijven staan
+ * tot hun fiscale bewaartermijn; alles wat een persoon identificeert wordt
+ * overschreven of weggegooid: adressen, apparaten, meldingen, concepten,
+ * IP-adressen, en de inzage-export op schijf.
  */
 final class AnonymiseUser
 {
+    /**
+     * Een kavel die nog in de verkoop zit of erin kan komen. Verkocht of
+     * onverkocht is afgerond en blokkeert niet - anders kan niemand die ooit
+     * iets verkocht heeft nog vertrekken.
+     */
+    private const RUNNING_LOT_STATUSES = [
+        LotStatus::PendingReview,
+        LotStatus::Scheduled,
+        LotStatus::Live,
+        LotStatus::Closing,
+        LotStatus::Paused,
+    ];
+
     public function handle(User $user): void
     {
         $this->guardAgainstRunningObligations($user);
@@ -36,6 +56,21 @@ final class AnonymiseUser
             SavedSearch::query()->where('user_id', $user->id)->delete();
             Viewing::query()->where('user_id', $user->id)->delete();
 
+            // Apparaten en de meldingenbak: namen en kaveltitels van anderen
+            // staan erin, en er hoeft niets meer aan te komen.
+            $user->pushSubscriptions()->delete();
+            $user->notifications()->delete();
+
+            // Concepten zijn nooit publiek geweest en van niemand anders.
+            Lot::query()
+                ->where('seller_id', $user->id)
+                ->where('status', LotStatus::Draft)
+                ->get()
+                ->each(fn (Lot $draft) => app(DeleteDraft::class)->handle($draft));
+
+            // Biedingen blijven (fiscaal), maar herkomst en apparaat niet.
+            Bid::query()->where('user_id', $user->id)->update(['ip' => null, 'user_agent' => null]);
+
             // Adressen: de plaats blijft (context van oude orders), de rest niet.
             Location::query()->where('user_id', $user->id)->update([
                 'label' => 'Verwijderd',
@@ -45,6 +80,19 @@ final class AnonymiseUser
                 'latitude' => null,
                 'longitude' => null,
             ]);
+
+            // Supportverzoeken: de vraag mag blijven voor de afhandeling, de
+            // afzender niet. Ook tickets zonder account maar met dit adres.
+            SupportTicket::query()
+                ->where(fn ($query) => $query->where('user_id', $user->id)->orWhere('email', $user->email))
+                ->update([
+                    'name' => 'Verwijderde gebruiker',
+                    'email' => "verwijderd-{$user->id}@anoniem.aucvy.test",
+                    'ip' => null,
+                ]);
+
+            // De inzage-export bevat alles hierboven in leesbare vorm.
+            Storage::disk('local')->delete(ExportUserData::path($user));
 
             $user->forceFill([
                 'name' => 'Verwijderde gebruiker',
@@ -92,9 +140,12 @@ final class AnonymiseUser
             throw new RuntimeException('Deze gebruiker heeft nog een lopende bestelling. Rond die eerst af.');
         }
 
-        $liveLot = Lot::query()->public()->where('seller_id', $user->id)->exists();
+        $runningLot = Lot::query()
+            ->where('seller_id', $user->id)
+            ->whereIn('status', self::RUNNING_LOT_STATUSES)
+            ->exists();
 
-        if ($liveLot) {
+        if ($runningLot) {
             throw new RuntimeException('Deze gebruiker heeft nog een lopende kavel. Sluit die eerst.');
         }
     }
