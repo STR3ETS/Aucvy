@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Dashboard\ActivityFeed;
 use App\Dashboard\DemandForecast;
+use App\Dashboard\HeadlineStats;
 use App\Dashboard\IntentFunnel;
 use App\Dashboard\SignalSync;
 use App\Dashboard\TeamActivity;
@@ -12,6 +14,7 @@ use App\Enums\AiAgent;
 use App\Enums\LotStatus;
 use App\Enums\OrderStatus;
 use App\Models\AiInsight;
+use App\Models\Lot;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -22,10 +25,11 @@ use Illuminate\View\View;
 /**
  * Het dashboard: geen cijferoverzicht maar een werkplan (hfst. 13.5).
  *
- * De volgorde van de blokken ís het ontwerp: eerst wat het team al deed, dan
- * wat jouw akkoord nodig heeft, dan pas de cijfers. De pagina doet geen
- * AI-calls - de deterministische signalen worden bij het laden ververst
- * (goedkope queries), de wekelijkse bevindingen komen uit de tabel.
+ * Eerst wat je snel kunt doen (bieden, verkopen, de cijfers), dan één lijst
+ * met taken, meldingen en tickets, dan het team en pas daarna de analyse.
+ * De pagina doet geen AI-calls - de deterministische signalen worden bij het
+ * laden ververst (goedkope queries), de wekelijkse bevindingen komen uit de
+ * tabel.
  */
 final class DashboardController extends Controller
 {
@@ -35,6 +39,8 @@ final class DashboardController extends Controller
         TeamActivity $activity,
         IntentFunnel $funnel,
         DemandForecast $forecast,
+        HeadlineStats $stats,
+        ActivityFeed $feed,
     ): View|RedirectResponse {
         $user = $request->user();
 
@@ -51,7 +57,7 @@ final class DashboardController extends Controller
          | verkoopblokken. De toggle blijft voor iedereen werken.
          */
         $isSeller = $request->query('rol') !== 'koper'
-            && ($user->lots()->whereNot('status', LotStatus::Draft)->exists()
+            && (Lot::query()->whereIn('seller_id', $user->lotSellerIds())->whereNot('status', LotStatus::Draft)->exists()
                 || $request->query('rol') === 'verkoper');
 
         $insights = AiInsight::query()
@@ -60,14 +66,18 @@ final class DashboardController extends Controller
             ->orderByRaw("field(severity, 'urgent', 'attention', 'info')")
             ->get();
 
+        $trend = $isSeller ? $this->revenueTrend($user) : null;
+
         return view('dashboard.index', [
             'isSeller' => $isSeller,
             'greeting' => $this->greeting(),
             'firstName' => Str::before(trim($user->name), ' '),
-            'revenueTrend' => $isSeller ? $this->revenueTrend($user) : null,
+            'revenueTrend' => $trend,
+            // De tegels in de band: de samenvatting per rol.
+            'stats' => $isSeller ? $stats->forSeller($user, $trend) : $stats->forBuyer($user),
             'agents' => AiAgent::cases(),
-            // Vraagt aandacht: kaarten mét actie. Geen kaart zonder knop.
-            'attention' => $insights->filter(fn (AiInsight $insight): bool => $insight->hasAction()),
+            // Taken (signalen mét knop), meldingen en tickets in één lijst.
+            'feed' => $feed->for($user, $insights->filter(fn (AiInsight $insight): bool => $insight->hasAction())),
             // Wat Ivy deze week zag: observaties, bewust zonder knoppen.
             'weekly' => $insights->where('type', 'weekly'),
             'done' => $isSeller ? $activity->forSeller($user) : [],
@@ -99,13 +109,13 @@ final class DashboardController extends Controller
     private function revenueTrend(User $user): ?int
     {
         $current = (int) Order::query()
-            ->where('seller_id', $user->id)
+            ->whereIn('seller_id', $user->financeSellerIds())
             ->where('status', OrderStatus::Completed)
             ->where('completed_at', '>=', now()->subDays(30))
             ->sum('hammer_cents');
 
         $previous = (int) Order::query()
-            ->where('seller_id', $user->id)
+            ->whereIn('seller_id', $user->financeSellerIds())
             ->where('status', OrderStatus::Completed)
             ->whereBetween('completed_at', [now()->subDays(60), now()->subDays(30)])
             ->sum('hammer_cents');

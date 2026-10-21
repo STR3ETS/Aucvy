@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Auctions\Actions\PlaceBid;
+use App\Dashboard\ActivityFeed;
 use App\Enums\LotStatus;
+use App\Models\AiInsight;
 use App\Models\Auction;
 use App\Models\Lot;
 use App\Models\User;
@@ -51,7 +53,13 @@ it('laat het signaal verdwijnen zodra je weer bovenaan staat', function () {
 
     app(PlaceBid::class)->handle($auction->fresh(), $anna, 110_000, 'test:3');
 
-    $this->actingAs($anna)->get('/dashboard')->assertDontSee('Je bent overboden op');
+    // De taak is weg; de melding van toen blijft als historie in de lijst staan.
+    $this->actingAs($anna)->get('/dashboard')->assertOk();
+
+    $tasks = app(ActivityFeed::class)
+        ->for($anna->fresh(), AiInsight::query()->where('user_id', $anna->id)->current()->get())['items'];
+
+    expect(collect($tasks)->where('kind', 'task')->filter(fn (array $item): bool => str_contains($item['title'], 'overboden')))->toBeEmpty();
 });
 
 it('opent voor iemand met alleen een concept in kopersmodus', function () {

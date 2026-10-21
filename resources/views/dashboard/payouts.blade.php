@@ -1,12 +1,23 @@
 @use('App\Enums\PayoutStatus')
 @use('App\Support\Money\Money')
 
-<x-layouts.public title="Uitbetalingen">
-    <h1 class="text-3xl font-extrabold tracking-[-0.03em]">Uitbetalingen</h1>
-    <x-dashboard.nav />
+@php
+    $paid = (int) $payouts->where('status', PayoutStatus::Paid)->sum('amount_cents');
+    $pending = $payouts->whereIn('status', [PayoutStatus::Scheduled, PayoutStatus::Held, PayoutStatus::Released]);
+    $held = $payouts->where('status', PayoutStatus::Held)->count();
+    $fees = (int) $payouts->sum('fee_cents');
+@endphp
+
+<x-layouts.dashboard title="Uitbetalingen" eyebrow="Dashboard" intro="Wat er na een verkoop wanneer wordt uitbetaald, met de houdtermijn erbij.">
+    <x-slot:tiles>
+        <x-dashboard.tile tone="green" icon="banknote" label="Uitbetaald" :value="Money::format($paid)" sub="op je rekening ontvangen" />
+        <x-dashboard.tile tone="orange" icon="clock" label="Onderweg" :value="Money::format((int) $pending->sum('amount_cents'))" :sub="$held.' '.($held === 1 ? 'uitbetaling' : 'uitbetalingen').' in de houdtermijn'" />
+        <x-dashboard.tile tone="blue" icon="gavel" label="Uitbetalingen" :value="$payouts->count()" sub="in totaal" />
+        <x-dashboard.tile tone="purple" icon="badge-check" label="Succesfee" :value="Money::format($fees)" sub="ingehouden over alle verkopen" />
+    </x-slot:tiles>
 
     @if ($payouts->isEmpty())
-        <div class="mt-6">
+        <div>
             <x-ui.empty-state
                 title="Nog geen uitbetalingen"
                 body="Na een verkoop en de houdtermijn verschijnt hier wat er wanneer wordt uitbetaald.">
@@ -16,9 +27,9 @@
             </x-ui.empty-state>
         </div>
     @else
-        <ul class="mt-6 space-y-2">
+        <ul class="space-y-2">
             @foreach ($payouts as $payout)
-                <li class="flex flex-wrap items-center gap-3 rounded-aj-sm border border-aj-border bg-aj-surface p-4">
+                <li class="flex flex-wrap items-center gap-3 rounded-aj-s border border-aj-border bg-aj-surface p-4">
                     <span class="min-w-0 flex-1">
                         <span class="block truncate text-sm font-bold">{{ $payout->order->lot->title }}</span>
                         <span class="block text-xs text-aj-muted">
@@ -47,4 +58,4 @@
             @endforeach
         </ul>
     @endif
-</x-layouts.public>
+</x-layouts.dashboard>

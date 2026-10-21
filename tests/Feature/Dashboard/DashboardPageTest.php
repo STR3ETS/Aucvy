@@ -30,10 +30,9 @@ it('toont een verkoper zijn werkplan met signalen en teamchips', function () {
     $this->actingAs($seller)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Jouw AI-team')
-        ->assertSee('Vraagt vandaag je aandacht')
-        ->assertSee('Transportinformatie ontbreekt')
-        ->assertSeeInOrder(['Flow', 'Bekijken']);
+        ->assertSee('Bieden')
+        ->assertSee('Kavel plaatsen')
+        ->assertSeeInOrder(['Taken, meldingen en tickets', 'Jouw AI-team', 'Flow', 'Transportinformatie ontbreekt']);
 });
 
 it('toont een koper zijn eigen signalen via de toggle', function () {

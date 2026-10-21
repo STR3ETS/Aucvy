@@ -18,6 +18,10 @@ final class WatchlistController extends Controller
      */
     public function store(Request $request, Lot $lot): JsonResponse
     {
+        // Een concept of een afgekeurde kavel bestaat voor het publiek niet,
+        // dus ook niet als rij op de volglijst (titel, foto, categorie).
+        abort_unless($lot->status->isPublic(), 404);
+
         WatchlistItem::firstOrCreate([
             'user_id' => $request->user()->id,
             'lot_id' => $lot->id,

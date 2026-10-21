@@ -1,19 +1,28 @@
 @use('App\Enums\DisputeStatus')
 
-<x-layouts.public title="Geschillen">
-    <h1 class="text-3xl font-extrabold tracking-[-0.03em]">Geschillen</h1>
-    <x-dashboard.nav />
+@php
+    $openDisputes = $disputes->filter(fn ($dispute): bool => $dispute->status !== DisputeStatus::Resolved);
+    $resolved = $disputes->count() - $openDisputes->count();
+@endphp
+
+<x-layouts.dashboard title="Geschillen" eyebrow="Dashboard" intro="Meldingen, reacties en uitkomsten, met de termijnen die erbij horen.">
+    <x-slot:tiles>
+        <x-dashboard.tile tone="orange" icon="clock" label="Open" :value="$openDisputes->count()" sub="wacht op een reactie of beoordeling" />
+        <x-dashboard.tile tone="green" icon="badge-check" label="Afgehandeld" :value="$resolved" sub="met een uitkomst" />
+        <x-dashboard.tile tone="blue" icon="shield-check" label="Totaal" :value="$disputes->count()" sub="geschillen bij je bestellingen" />
+        <x-dashboard.tile tone="purple" icon="message-circle" label="Hulp" value="FAQ" sub="hoe de geschilroute werkt" :href="route('assurance')" />
+    </x-slot:tiles>
 
     @if ($disputes->isEmpty())
-        <div class="mt-6">
+        <div>
             <x-ui.empty-state
                 title="Geen geschillen"
                 body="Zo hoort het. Gaat er ooit iets mis, dan volg je hier de melding, de reactie en de uitkomst." />
         </div>
     @else
-        <ul class="mt-6 space-y-2">
+        <ul class="space-y-2">
             @foreach ($disputes as $dispute)
-                <li class="flex flex-wrap items-center gap-3 rounded-aj-sm border border-aj-border bg-aj-surface p-4">
+                <li class="flex flex-wrap items-center gap-3 rounded-aj-s border border-aj-border bg-aj-surface p-4">
                     <span class="min-w-0 flex-1">
                         <span class="block truncate text-sm font-bold">{{ $dispute->order->lot->title }}</span>
                         <span class="block text-xs text-aj-muted">
@@ -36,4 +45,4 @@
             @endforeach
         </ul>
     @endif
-</x-layouts.public>
+</x-layouts.dashboard>
