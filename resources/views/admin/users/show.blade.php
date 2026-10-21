@@ -5,6 +5,62 @@
         <a href="{{ route('admin.users') }}" class="underline">Gebruikers</a> · #{{ $user->id }}
     </p>
 
+    {{-- Compliance: identiteitsbesluit en blokkade, met reden en spoor. --}}
+    @unless ($user->trashed())
+        <section class="mt-4 rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Compliance" x-data="{ reject: false, block: false }">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="min-w-0 flex-1">
+                    <h2 class="text-sm font-extrabold">Compliance</h2>
+                    @if ($user->isBlocked())
+                        <p class="mt-1 text-sm text-aj-error">Geblokkeerd sinds {{ $user->blocked_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM YYYY') }}: {{ $user->blocked_reason }}</p>
+                    @elseif ($user->kyc_status === \App\Enums\KycStatus::Pending)
+                        <p class="mt-1 text-sm text-aj-warn-text">Identiteitscontrole aangevraagd {{ $user->kyc_requested_at?->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') ?? '' }}; wacht op een besluit.</p>
+                    @elseif ($user->kyc_status === \App\Enums\KycStatus::Rejected)
+                        <p class="mt-1 text-sm text-aj-muted">Identiteit afgewezen{{ $user->kyc_note ? ': '.$user->kyc_note : '' }}.</p>
+                    @else
+                        <p class="mt-1 text-sm text-aj-muted">Identiteit: {{ $user->kyc_status->label() }}{{ $user->kyc_verified_at ? ' sinds '.$user->kyc_verified_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM YYYY') : '' }}.</p>
+                    @endif
+                </div>
+                @if ($user->kyc_status === \App\Enums\KycStatus::Pending)
+                    <form method="POST" action="{{ route('admin.compliance.kyc', $user) }}">
+                        @csrf
+                        <input type="hidden" name="decision" value="approve">
+                        <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px">Identiteit goedkeuren</button>
+                    </form>
+                    <button type="button" class="btn btn-ghost" style="height:40px;font-size:13px;color:var(--color-aj-error)" @click="reject = ! reject; block = false">Afwijzen</button>
+                @endif
+                @if ($user->isBlocked())
+                    <form method="POST" action="{{ route('admin.compliance.unblock', $user) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-ghost" style="height:40px;font-size:13px">Vrijgeven</button>
+                    </form>
+                @elseif (! $user->is_staff)
+                    <button type="button" class="btn btn-ghost" style="height:40px;font-size:13px;color:var(--color-aj-error)" @click="block = ! block; reject = false">Blokkeren</button>
+                @endif
+            </div>
+            <form method="POST" action="{{ route('admin.compliance.kyc', $user) }}" x-show="reject" x-cloak class="mt-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-4">
+                @csrf
+                <input type="hidden" name="decision" value="reject">
+                <label for="kyc-note" class="block text-sm font-bold">Reden voor de aanvrager</label>
+                <textarea id="kyc-note" name="note" rows="2" required maxlength="500" class="mt-2 w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface p-3 text-sm"></textarea>
+                <div class="mt-3 flex gap-2">
+                    <button type="submit" class="btn btn-dark" style="height:40px;font-size:13px">Identiteit afwijzen</button>
+                    <button type="button" class="btn btn-ghost" style="height:40px;font-size:13px" @click="reject = false">Annuleren</button>
+                </div>
+            </form>
+            <form method="POST" action="{{ route('admin.compliance.block', $user) }}" x-show="block" x-cloak class="mt-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-4">
+                @csrf
+                <label for="block-reason" class="block text-sm font-bold">Reden voor de blokkade</label>
+                <p class="text-xs text-aj-muted">Bieden, publiceren en uitbetalen gaat dicht. Inloggen en inzien blijft mogelijk. De reden staat in het auditlog.</p>
+                <textarea id="block-reason" name="reason" rows="2" required minlength="5" maxlength="500" class="mt-2 w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface p-3 text-sm"></textarea>
+                <div class="mt-3 flex gap-2">
+                    <button type="submit" class="btn btn-dark" style="height:40px;font-size:13px">Account blokkeren</button>
+                    <button type="button" class="btn btn-ghost" style="height:40px;font-size:13px" @click="block = false">Annuleren</button>
+                </div>
+            </form>
+        </section>
+    @endunless
+
     <div class="mt-4 grid gap-4 lg:grid-cols-2">
         <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Account">
             <h2 class="text-sm font-extrabold">Account</h2>

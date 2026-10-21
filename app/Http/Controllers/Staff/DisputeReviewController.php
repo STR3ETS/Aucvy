@@ -44,6 +44,8 @@ final class DisputeReviewController extends Controller
         $validated = $request->validate([
             'resolution' => ['required', Rule::in(['afgewezen', 'alsnog_leveren', 'prijscorrectie', 'terugdraaien'])],
             'notes' => ['required', 'string', 'max:4000'],
+            // Een prijscorrectie zonder bedrag is een motivering, geen correctie.
+            'correction' => ['required_if:resolution,prijscorrectie', 'nullable', 'numeric', 'min:0.01', 'max:1000000'],
         ]);
 
         $action->handle(
@@ -52,6 +54,9 @@ final class DisputeReviewController extends Controller
             upheld: $validated['resolution'] !== 'afgewezen',
             resolution: $validated['resolution'],
             notes: $validated['notes'],
+            correctionCents: $validated['resolution'] === 'prijscorrectie'
+                ? (int) round((float) $validated['correction'] * 100)
+                : null,
         );
 
         return redirect()->route('staff.disputes.index');

@@ -40,7 +40,8 @@
 
         {{-- De uitkomst, altijd met motivering - die gaat het auditlog in. --}}
         <form method="POST" action="{{ route('staff.disputes.resolve', $dispute) }}"
-              class="mt-6 space-y-4 rounded-aj-s border border-aj-border bg-aj-surface p-6">
+              class="mt-6 space-y-4 rounded-aj-s border border-aj-border bg-aj-surface p-6"
+              x-data="{ resolution: '{{ old('resolution', 'alsnog_leveren') }}' }">
             @csrf
             <h2 class="text-lg font-extrabold">Uitkomst</h2>
 
@@ -52,7 +53,7 @@
 
             <label class="block sm:max-w-xs">
                 <span class="text-sm font-bold">Beslissing</span>
-                <select name="resolution" required
+                <select name="resolution" required x-model="resolution"
                         class="mt-1 w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm"
                         style="min-height:var(--cta-h)">
                     <option value="alsnog_leveren">Alsnog leveren - order afronden</option>
@@ -60,6 +61,14 @@
                     <option value="terugdraaien">Terugdraaien - koop ontbinden</option>
                     <option value="afgewezen">Melding afwijzen - order afronden</option>
                 </select>
+            </label>
+
+            <label class="block sm:max-w-xs" x-show="resolution === 'prijscorrectie'" x-cloak>
+                <span class="text-sm font-bold">Bedrag terug naar de koper (euro)</span>
+                <span class="block text-xs text-aj-muted">Gaat van de uitbetaling aan de verkoper af; support regelt de terugbetaling bij de betaalprovider.</span>
+                <input type="number" name="correction" step="0.01" min="0.01" value="{{ old('correction') }}"
+                       class="mt-1 w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm"
+                       style="min-height:var(--cta-h)">
             </label>
 
             <label class="block">

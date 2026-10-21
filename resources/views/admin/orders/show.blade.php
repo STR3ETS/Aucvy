@@ -54,6 +54,10 @@
         </section>
     </div>
 
+    <div class="mt-8">
+        <x-orders.messages :order="$order" :messages="$order->messages" :action="route('admin.orders.messages.store', $order)" :viewer="auth()->user()" :staff="true" />
+    </div>
+
     @if ($order->payments->isNotEmpty())
         <section class="mt-8" aria-label="Betalingen">
             <h2 class="text-lg font-extrabold">Betalingen</h2>

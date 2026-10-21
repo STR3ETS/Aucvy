@@ -6,6 +6,45 @@
         <a href="{{ route('admin.lots') }}" class="underline">Kavels</a> · {{ $lot->public_id }}
     </p>
 
+    {{-- Moderatie: beoordeeld of niet, en de knoppen om dat nu te doen. --}}
+    @if ($lot->published_at !== null && ! $lot->trashed())
+        <section class="mt-4 rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Moderatie" x-data="{ reject: false }">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="min-w-0 flex-1">
+                    <h2 class="text-sm font-extrabold">Moderatie</h2>
+                    @if ($lot->reviewed_at)
+                        <p class="mt-1 text-sm text-aj-muted">
+                            {{ $lot->status === \App\Enums\LotStatus::Cancelled ? 'Afgewezen' : 'Goedgekeurd' }}
+                            op {{ $lot->reviewed_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM YYYY, HH:mm') }}
+                            door {{ $lot->reviewer?->name ?? 'onbekend' }}{{ $lot->moderation_note ? ' · '.$lot->moderation_note : '' }}
+                        </p>
+                    @else
+                        <p class="mt-1 text-sm text-aj-warn-text">Nog niet beoordeeld sinds publicatie.</p>
+                    @endif
+                </div>
+                @if ($lot->reviewed_at === null && $lot->status->isPublic())
+                    <form method="POST" action="{{ route('admin.moderation.approve', $lot) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px">Goedkeuren</button>
+                    </form>
+                @endif
+                @if ($lot->status->acceptsBids() || $lot->status === \App\Enums\LotStatus::Scheduled)
+                    <button type="button" class="btn btn-ghost" style="height:40px;font-size:13px;color:var(--color-aj-error)" @click="reject = ! reject">Offline halen</button>
+                @endif
+            </div>
+            <form method="POST" action="{{ route('admin.moderation.reject', $lot) }}" x-show="reject" x-cloak class="mt-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-4">
+                @csrf
+                <label for="reject-reason" class="block text-sm font-bold">Reden voor de verkoper</label>
+                <p class="text-xs text-aj-muted">Gaat per mail naar de verkoper. Een lopende veiling sluit zonder winnaar; borgen gaan terug.</p>
+                <textarea id="reject-reason" name="reason" rows="3" required minlength="10" maxlength="500" class="mt-2 w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface p-3 text-sm"></textarea>
+                <div class="mt-3 flex gap-2">
+                    <button type="submit" class="btn btn-dark" style="height:40px;font-size:13px">Kavel afwijzen</button>
+                    <button type="button" class="btn btn-ghost" style="height:40px;font-size:13px" @click="reject = false">Annuleren</button>
+                </div>
+            </form>
+        </section>
+    @endif
+
     @if ($lot->media->isNotEmpty())
         <div class="mt-4 flex gap-2 overflow-x-auto">
             @foreach ($lot->media as $item)

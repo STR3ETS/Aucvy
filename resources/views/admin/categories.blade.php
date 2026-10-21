@@ -30,6 +30,7 @@
                     <p class="flex-1 font-extrabold">{{ $root->name }}
                         <span class="text-xs font-normal text-aj-muted">/{{ $root->slug }} · {{ $root->lots_count }} {{ $root->lots_count === 1 ? 'kavel' : 'kavels' }}</span>
                     </p>
+                    <a href="{{ route('admin.categories.schema', $root) }}" class="text-sm font-bold underline">Kenmerken{{ $root->specifications_schema ? ' ('.count($root->specifications_schema).')' : '' }}</a>
                     @if ($root->lots_count === 0 && $root->children->isEmpty())
                         <form method="POST" action="{{ route('admin.categories.destroy', $root) }}"
                               onsubmit="return confirm('{{ $root->name }} verwijderen?')">
@@ -44,6 +45,7 @@
                             <p class="flex-1 text-sm font-semibold">{{ $child->name }}
                                 <span class="text-xs font-normal text-aj-muted">/{{ $child->slug }} · {{ $child->lots_count }} {{ $child->lots_count === 1 ? 'kavel' : 'kavels' }}</span>
                             </p>
+                            <a href="{{ route('admin.categories.schema', $child) }}" class="text-xs font-bold underline">Kenmerken{{ $child->specifications_schema ? ' ('.count($child->specifications_schema).')' : ' (van hoofd)' }}</a>
                             @if ($child->lots_count === 0)
                                 <form method="POST" action="{{ route('admin.categories.destroy', $child) }}"
                                       onsubmit="return confirm('{{ $child->name }} verwijderen?')">

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Staff;
 use App\Enums\LotStatus;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Lots\DeleteDraft;
 use App\Models\AiRun;
 use App\Models\Auction;
 use App\Models\Bid;
@@ -16,13 +17,16 @@ use App\Models\Lot;
 use App\Models\Order;
 use App\Models\Payout;
 use App\Models\Review;
+use App\Models\Sale;
 use App\Models\User;
 use App\Models\Viewing;
+use App\Risk\RiskScan;
 use App\Support\Money\Money;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -65,6 +69,8 @@ final class BackofficeController extends Controller
             ['Omzet 30 dagen', Money::format((int) Order::query()->where('status', OrderStatus::Completed)->where('completed_at', '>=', now()->subDays(30))->sum('hammer_cents')), route('admin.orders')],
             ['Gebruikers', User::query()->count(), route('admin.users')],
             ['Open geschillen', Dispute::query()->whereNull('resolved_at')->count(), route('staff.disputes.index')],
+            ['Risicosignalen', app(RiskScan::class)->count(), route('admin.risk')],
+            ['Mislukte jobs', DB::table('failed_jobs')->count(), route('admin.queue')],
         ];
     }
 
@@ -149,13 +155,16 @@ final class BackofficeController extends Controller
      */
     public function destroyDraftLots(Request $request): RedirectResponse
     {
-        $validated = $request->validate(['ids' => ['required', 'array'], 'ids.*' => ['integer']]);
+        $validated = $request->validate(['ids' => ['required', 'array', 'max:100'], 'ids.*' => ['integer']]);
 
-        $deleted = Lot::query()
+        $drafts = Lot::query()
             ->whereIn('id', $validated['ids'])
             ->where('status', LotStatus::Draft)
-            ->delete();
+            ->get();
 
+        $drafts->each(fn (Lot $lot) => app(DeleteDraft::class)->handle($lot, $request->user()));
+
+        $deleted = $drafts->count();
         $skipped = count($validated['ids']) - $deleted;
 
         return back()->with('status', trim(
@@ -186,9 +195,9 @@ final class BackofficeController extends Controller
         return view('admin.bids', [
             'bids' => Bid::query()
                 ->with(['user', 'auction.lot'])
-                ->when($request->query('q'), fn ($query, $term) => $query
+                ->when($request->query('q'), fn ($query, $term) => $query->where(fn ($search) => $search
                     ->whereHas('user', fn ($inner) => $inner->where('name', 'like', "%{$term}%")->orWhere('email', 'like', "%{$term}%"))
-                    ->orWhereHas('auction.lot', fn ($inner) => $inner->where('title', 'like', "%{$term}%")))
+                    ->orWhereHas('auction.lot', fn ($inner) => $inner->where('title', 'like', "%{$term}%"))))
                 ->when($request->query('status'), fn ($query, $status) => $query->where('status', $status))
                 ->latest('id')
                 ->paginate(25)
@@ -201,9 +210,9 @@ final class BackofficeController extends Controller
         return view('admin.orders', [
             'orders' => Order::query()
                 ->with(['lot', 'buyer', 'seller'])
-                ->when($request->query('q'), fn ($query, $term) => $query
+                ->when($request->query('q'), fn ($query, $term) => $query->where(fn ($search) => $search
                     ->where('order_number', 'like', "%{$term}%")
-                    ->orWhereHas('lot', fn ($inner) => $inner->where('title', 'like', "%{$term}%")))
+                    ->orWhereHas('lot', fn ($inner) => $inner->where('title', 'like', "%{$term}%"))))
                 ->when($request->query('status'), fn ($query, $status) => $query->where('status', $status))
                 ->latest('id')
                 ->paginate(25)
@@ -213,9 +222,28 @@ final class BackofficeController extends Controller
 
     public function showOrder(Order $order): View
     {
-        $order->load(['lot', 'buyer', 'seller', 'payments', 'payout', 'disputes.reporter', 'review.reviewer']);
+        $order->load(['lot', 'buyer', 'seller', 'payments', 'payout', 'disputes.reporter', 'review.reviewer', 'messages.author']);
 
         return view('admin.orders.show', ['order' => $order]);
+    }
+
+    /**
+     * Gebundelde veilingen uit Auction Studio (meerdere kavels per veiling).
+     */
+    public function sales(Request $request): View
+    {
+        return view('admin.sales', [
+            'sales' => Sale::query()
+                ->with(['seller', 'company'])
+                ->withCount('lots')
+                ->when($request->query('q'), fn ($query, $term) => $query
+                    ->where(fn ($inner) => $inner
+                        ->where('title', 'like', "%{$term}%")
+                        ->orWhereHas('seller', fn ($seller) => $seller->where('name', 'like', "%{$term}%"))))
+                ->latest('id')
+                ->paginate(25)
+                ->withQueryString(),
+        ]);
     }
 
     public function payouts(Request $request): View
@@ -265,8 +293,8 @@ final class BackofficeController extends Controller
     {
         return view('admin.companies', [
             'companies' => Company::query()
-                ->when($request->query('q'), fn ($query, $term) => $query
-                    ->where('name', 'like', "%{$term}%")->orWhere('kvk_number', 'like', "%{$term}%"))
+                ->when($request->query('q'), fn ($query, $term) => $query->where(fn ($search) => $search
+                    ->where('name', 'like', "%{$term}%")->orWhere('kvk_number', 'like', "%{$term}%")))
                 ->when($request->query('status') === 'geverifieerd', fn ($query) => $query->whereNotNull('verified_at'))
                 ->when($request->query('status') === 'ongeverifieerd', fn ($query) => $query->whereNull('verified_at'))
                 ->latest('id')
