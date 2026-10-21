@@ -27,9 +27,10 @@ use Illuminate\View\View;
  */
 final class DevCheckoutController extends Controller
 {
-    public function show(Payment $payment): View
+    public function show(Request $request, Payment $payment): View
     {
         $this->guardFakeProvider();
+        $this->guardOwner($request, $payment->order->buyer_id);
 
         return view('dev.checkout', ['payment' => $payment->load('order')]);
     }
@@ -41,6 +42,7 @@ final class DevCheckoutController extends Controller
         ProcessPaymentWebhook $webhook,
     ): RedirectResponse {
         $this->guardFakeProvider();
+        $this->guardOwner($request, $payment->order->buyer_id);
 
         $validated = $request->validate([
             'outcome' => ['required', Rule::in(['paid', 'failed', 'expired'])],
@@ -60,16 +62,18 @@ final class DevCheckoutController extends Controller
     }
 
     /** De nepreservering voor de borg - zelfde patroon als de betaling. */
-    public function showDeposit(Deposit $deposit): View
+    public function showDeposit(Request $request, Deposit $deposit): View
     {
         $this->guardFakeProvider();
+        $this->guardOwner($request, $deposit->user_id);
 
         return view('dev.deposit', ['deposit' => $deposit->load('auction.lot')]);
     }
 
-    public function storeDeposit(Deposit $deposit): RedirectResponse
+    public function storeDeposit(Request $request, Deposit $deposit): RedirectResponse
     {
         $this->guardFakeProvider();
+        $this->guardOwner($request, $deposit->user_id);
 
         $deposit->status = DepositStatus::Authorised;
         $deposit->provider_id = 'fake_'.Str::random(16);
@@ -81,5 +85,16 @@ final class DevCheckoutController extends Controller
     private function guardFakeProvider(): void
     {
         abort_unless(config('aucvy.payments.provider') === 'fake', 404);
+    }
+
+    /**
+     * Ook een nepcheckout is van één persoon: andermans betaling afronden of
+     * andermans borg autoriseren hoort op geen enkele omgeving te kunnen.
+     */
+    private function guardOwner(Request $request, int $ownerId): void
+    {
+        $user = $request->user();
+
+        abort_unless($user !== null && ($user->id === $ownerId || $user->is_staff), 403);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Orders\OrderTimeline;
 use App\Support\Money\OrderCosts;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -42,13 +43,14 @@ final class OrderController extends Controller
         // bestaat gaat een derde niets aan (zelfde regel als bij concepten).
         abort_unless(in_array($user->id, [$order->buyer_id, $order->seller_id], true), 404);
 
-        $order->loadMissing(['lot.media', 'payout', 'disputes', 'payments']);
+        $order->loadMissing(['lot.media', 'payout', 'disputes', 'payments', 'messages.author']);
 
         return view('orders.show', [
             'order' => $order,
             'costs' => OrderCosts::fromOrder($order),
             'isBuyer' => $user->id === $order->buyer_id,
             'openDispute' => $order->disputes->first(fn ($dispute) => $dispute->status->isOpen()),
+            'timeline' => app(OrderTimeline::class)->for($order),
         ]);
     }
 }

@@ -1,4 +1,4 @@
-<x-layouts.public title="Borg reserveren">
+<x-layouts.public title="Borg reserveren" :hero="false">
     {{--
         De nepreservering van de FakePaymentProvider - bestaat alleen lokaal.
         Bij de echte provider wordt dit de pre-autorisatie van Mollie

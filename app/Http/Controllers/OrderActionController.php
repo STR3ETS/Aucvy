@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\DisputeStatus;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Orders\Actions\ReportProblem;
+use App\Orders\Actions\RespondToDispute;
 use App\Orders\Actions\StartPayment;
 use App\Orders\Actions\TransitionOrder;
 use Illuminate\Http\RedirectResponse;
@@ -79,6 +81,33 @@ final class OrderActionController extends Controller
         $reportProblem->handle($order, $request->user(), $validated['reason'], $validated['description']);
 
         return redirect()->route('orders.show', $order);
+    }
+
+    /**
+     * De verkoper reageert binnen de termijn op de melding van de koper.
+     * Alleen op een melding waar nog geen reactie op is; de actie zelf
+     * controleert dat het de verkoper is.
+     */
+    public function respondToDispute(Request $request, Order $order, RespondToDispute $respond): RedirectResponse
+    {
+        $this->authorizeParticipant($request, $order);
+
+        $validated = $request->validate([
+            'response' => ['required', 'string', 'max:4000'],
+        ]);
+
+        $dispute = $order->disputes()
+            ->where('status', DisputeStatus::Reported)
+            ->latest('id')
+            ->first();
+
+        if ($dispute === null) {
+            throw ValidationException::withMessages(['dispute' => __('orders.errors.dispute_not_open')]);
+        }
+
+        $respond->handle($dispute, $request->user(), $validated['response']);
+
+        return redirect()->route('orders.show', $order)->with('status', __('orders.dispute_responded'));
     }
 
     private function authorizeParticipant(Request $request, Order $order): void

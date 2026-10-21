@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Compliance\Permission;
+use App\Compliance\PermissionEngine;
 use App\Enums\DisputeStatus;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\PayoutStatus;
 use App\Models\Order;
 use App\Models\Payout;
 use App\Notifications\PayoutReleased;
 use App\Orders\Actions\TransitionOrder;
+use App\Support\Audit\Audit;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\ValidationException;
@@ -34,12 +38,16 @@ final class AdvanceOrders extends Command
 
     protected $description = 'Verloopt, levert, rondt af en geeft payouts vrij volgens de termijnen';
 
-    public function handle(TransitionOrder $transition): int
+    public function handle(TransitionOrder $transition, PermissionEngine $permissions): int
     {
         $expired = $this->sweep(
             Order::query()
                 ->where('status', OrderStatus::AwaitingPayment)
-                ->where('payment_deadline_at', '<', now()),
+                ->where('payment_deadline_at', '<', now())
+                // Wie nog in de betaalpagina zit, krijgt de tijd om af te rekenen.
+                ->whereDoesntHave('payments', fn ($query) => $query
+                    ->where('status', PaymentStatus::Pending)
+                    ->where('created_at', '>', now()->subMinutes(30))),
             fn (Order $order) => $transition->handle($order, OrderStatus::Cancelled, context: [
                 'reason' => 'payment_deadline_expired',
             ]),
@@ -78,14 +86,36 @@ final class AdvanceOrders extends Command
                 DisputeStatus::Rejected->value,
             ]))
             ->get()
-            ->each(function (Payout $payout): void {
+            ->filter(function (Payout $payout) use ($permissions): bool {
+                /*
+                 | De Permission Engine beslist: geblokkeerd account, afgewezen
+                 | bedrijfscontrole of geen rekeningnummer houdt het geld vast.
+                 | De reden staat op de uitbetaling, zodat verkoper en beheer
+                 | zien wat er nodig is (sectie 7, flow D).
+                 */
+                $decision = $permissions->decide($payout->seller, Permission::Payout);
+
+                if ($decision->denied()) {
+                    $payout->update(['blocked_reason' => $decision->reason->value]);
+
+                    return false;
+                }
+
                 $payout->update([
                     'status' => PayoutStatus::Released,
                     'released_at' => now(),
+                    'blocked_reason' => null,
+                ]);
+
+                Audit::record('payout.released', $payout, null, after: [
+                    'order_id' => $payout->order_id,
+                    'amount_cents' => $payout->amount_cents,
                 ]);
 
                 // Het bericht waar de verkoper op wacht (hfst. 9).
                 $payout->seller->notify(new PayoutReleased($payout));
+
+                return true;
             })
             ->count();
 

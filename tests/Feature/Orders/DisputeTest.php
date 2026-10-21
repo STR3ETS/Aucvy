@@ -82,18 +82,24 @@ describe('de beoordeling', function () {
         $order = deliveredOrder();
         $dispute = app(ReportProblem::class)->handle($order, $order->buyer, 'damaged', 'Kras op de zijkant.');
 
+        $payoutBefore = (int) $order->fresh()->payout->amount_cents;
+
         app(ResolveDispute::class)->handle(
             $dispute,
             User::factory()->create(),
             upheld: true,
             resolution: 'prijscorrectie',
-            notes: 'Verkoper en koper akkoord met € 150 correctie buiten het platform om.',
+            notes: 'Verkoper en koper akkoord met € 150 correctie.',
+            correctionCents: 15_000,
         );
 
         // Afgerond: de vrijgave-job mag hem nu meenemen zodra de
-        // houdtermijn om is.
+        // houdtermijn om is. De correctie gaat van de uitbetaling af en
+        // staat als bedrag op het geschil, niet alleen in de motivering.
         expect($dispute->fresh()->status)->toBe(DisputeStatus::Resolved)
-            ->and($order->fresh()->status)->toBe(OrderStatus::Completed);
+            ->and($dispute->fresh()->correction_cents)->toBe(15_000)
+            ->and($order->fresh()->status)->toBe(OrderStatus::Completed)
+            ->and((int) $order->fresh()->payout->amount_cents)->toBe($payoutBefore - 15_000);
 
         $this->travel(3)->days();
         $this->artisan('orders:advance');

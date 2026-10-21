@@ -1,4 +1,4 @@
-<x-layouts.public title="Nepcheckout">
+<x-layouts.public title="Nepcheckout" :hero="false">
     {{--
         De checkout van de FakePaymentProvider - bestaat alleen met de
         nepprovider actief. De knoppen doen wat Mollie zou doen: uitkomst

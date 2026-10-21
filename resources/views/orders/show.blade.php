@@ -1,15 +1,16 @@
+@use('App\Enums\DisputeStatus')
 @use('App\Enums\OrderStatus')
 @use('App\Support\Money\Money')
 
-<x-layouts.public :title="'Bestelling '.$order->order_number">
+<x-layouts.dashboard :title="'Bestelling '.$order->order_number" :heading="$order->lot->title" eyebrow="Bestelling">
+    <x-slot:crumbs>
+        <a href="{{ route('orders.index') }}">Bestellingen</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ $order->order_number }}</span>
+    </x-slot:crumbs>
     <div class="mx-auto max-w-4xl">
 
-        <p class="text-sm text-aj-muted">
-            <a href="{{ route('orders.index') }}" class="underline">Bestellingen</a> · {{ $order->order_number }}
-        </p>
-        <h1 class="mt-1 text-3xl font-extrabold tracking-[-0.03em]">{{ $order->lot->title }}</h1>
-
-        <div class="mt-6 grid gap-8 lg:grid-cols-[1fr_300px] lg:items-start">
+        <div class="grid gap-8 lg:grid-cols-[1fr_300px] lg:items-start">
             <div class="space-y-5">
 
                 {{-- Status en de eerstvolgende stap ------------------------- --}}
@@ -66,6 +67,12 @@
                     </div>
                 </section>
 
+                {{-- Tijdlijn: wat er gebeurd is, op volgorde. --------------- --}}
+                <x-orders.timeline :entries="$timeline" />
+
+                {{-- Berichten tussen koper, verkoper en support (briefing sectie 7). --}}
+                <x-orders.messages :order="$order" :messages="$order->messages" :action="route('orders.messages.store', $order)" :viewer="auth()->user()" />
+
                 {{-- Probleem melden ------------------------------------------ --}}
                 @php
                     $canReport = $isBuyer && $openDispute === null && (
@@ -116,6 +123,37 @@
                         @if ($openDispute->description)
                             <p class="mt-2 text-sm text-aj-muted">{{ $openDispute->description }}</p>
                         @endif
+
+                        @if ($openDispute->seller_response !== null)
+                            <p class="mt-3 text-xs font-extrabold text-aj-soft">Reactie van de verkoper</p>
+                            <p class="mt-1 text-sm">{{ $openDispute->seller_response }}</p>
+                        @endif
+
+                        @if (! $isBuyer && $openDispute->status === DisputeStatus::Reported)
+                            {{-- De 72 uur uit de zekerheidsbelofte: hier reageert de verkoper. --}}
+                            @if (session('status'))
+                                <p class="mt-3 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">{{ session('status') }}</p>
+                            @endif
+                            <form method="POST" action="{{ route('orders.dispute.respond', $order) }}" class="mt-4 space-y-3">
+                                @csrf
+                                <label class="block">
+                                    <span class="text-sm font-bold">Jouw reactie</span>
+                                    <span class="block text-xs text-aj-muted">
+                                        Reageer vóór {{ $openDispute->sla_due_at?->timezone(config('aucvy.display_timezone'))->isoFormat('D MMMM, HH:mm') ?? '-' }}; daarna beoordeelt een medewerker met wat er ligt.
+                                    </span>
+                                    <textarea name="response" rows="4" required maxlength="4000"
+                                              class="mt-1 w-full rounded-aj-sm border border-aj-border-strong p-3 text-sm">{{ old('response') }}</textarea>
+                                </label>
+                                @error('response')
+                                    <p role="alert" class="text-sm text-aj-error">{{ $message }}</p>
+                                @enderror
+                                @error('dispute')
+                                    <p role="alert" class="text-sm text-aj-error">{{ $message }}</p>
+                                @enderror
+                                <button type="submit" class="btn btn-primary">Reactie versturen</button>
+                            </form>
+                        @endif
+
                         <p class="mt-2 text-xs text-aj-muted">
                             De uitbetaling staat stil zolang dit loopt. Een medewerker beoordeelt de melding.
                         </p>
@@ -200,4 +238,4 @@
             </aside>
         </div>
     </div>
-</x-layouts.public>
+</x-layouts.dashboard>
