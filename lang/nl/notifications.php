@@ -225,6 +225,13 @@ return [
         'manage' => 'Alert aanpassen of pauzeren: :url',
     ],
 
+    'review_requested' => [
+        'subject' => 'Hoe beviel ":lot"?',
+        'line' => 'Je bestelling van ":lot" is afgerond.',
+        'body' => 'Laat andere kopers weten hoe de verkoper het deed. Een beoordeling kan alleen van wie de kavel afnam, en blijft staan.',
+        'action' => 'Beoordeling schrijven',
+    ],
+
     'watchlist_ending' => [
         'subject' => '":lot" sluit binnenkort',
         'line' => 'De veiling van :lot sluit om :ends. De stand is nu :price.',

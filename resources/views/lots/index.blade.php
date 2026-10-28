@@ -1,6 +1,6 @@
 @use('App\Lots\LotFilters')
 
-<x-layouts.public :title="$pageTitle ?? 'Veilingen'" eyebrow="Ontdek"
+<x-layouts.public :title="$pageTitle ?? 'Veilingen'" eyebrow="Ontdek" :noindex="$noindex ?? false"
     :intro="$pageIntro ?? 'Kavels van geverifieerde verkopers, met de waarde-indicatie van Ivy erbij. Zoek, filter of vraag het gewoon in je eigen woorden.'">
 
     {{--

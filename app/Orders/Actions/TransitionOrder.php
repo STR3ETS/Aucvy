@@ -15,6 +15,7 @@ use App\Models\Payout;
 use App\Models\User;
 use App\Notifications\MoneyNeedsAttention;
 use App\Notifications\OrderStatusChanged;
+use App\Notifications\ReviewRequested;
 use App\Support\Audit\Audit;
 use App\Support\Money\Money;
 use Illuminate\Support\Facades\DB;
@@ -101,6 +102,12 @@ final class TransitionOrder
 
         foreach ($roles as $role) {
             $order->{$role}->notify(new OrderStatusChanged($order, $to, $role));
+        }
+
+        // Het reviewverzoek (masterbriefing 4.3): één keer, alleen de koper,
+        // alleen na afronding en nooit als er al een beoordeling staat.
+        if ($to === OrderStatus::Completed && $order->review()->doesntExist()) {
+            $order->buyer->notify(new ReviewRequested($order));
         }
     }
 

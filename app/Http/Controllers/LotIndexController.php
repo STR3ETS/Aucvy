@@ -84,6 +84,9 @@ final class LotIndexController extends Controller
 
         return view('lots.index', $extra + [
             'filters' => $filters,
+            // Elke querystring (filter, zoekterm, pagina) is een variant van
+            // dezelfde pagina: wel volgen, niet indexeren.
+            'noindex' => request()->query() !== [],
             'results' => $results,
             // Tien tellingen over de hele open set per bezoek; een minuut
             // cache per filtercombinatie houdt dat van de kritieke route af.

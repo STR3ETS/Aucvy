@@ -21,7 +21,7 @@
                         De naam wordt bij de KvK-controle vergeleken met het handelsregister.
                     @endif
                 </p>
-                <form method="POST" action="{{ route('organisation.update') }}" class="mt-5 grid gap-4 sm:grid-cols-2">
+                <form method="POST" action="{{ route('organisation.update') }}" enctype="multipart/form-data" class="mt-5 grid gap-4 sm:grid-cols-2">
                     @csrf @method('PATCH')
                     <label class="grid gap-1 text-sm sm:col-span-2">
                         <span class="font-bold">Bedrijfsnaam</span>
@@ -34,6 +34,27 @@
                     <label class="grid gap-1 text-sm">
                         <span class="font-bold">Btw-nummer</span>
                         <input type="text" name="vat_number" value="{{ old('vat_number', $company->vat_number) }}" maxlength="20" placeholder="NL123456789B01" @disabled(! $mayEdit) class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm disabled:bg-aj-bg disabled:text-aj-muted" style="min-height:42px">
+                    </label>
+                    <label class="grid gap-1 text-sm sm:col-span-2">
+                        <span class="font-bold">Over het bedrijf</span>
+                        <span class="text-xs text-aj-muted">Staat op je publieke verkopersprofiel. Geen contactgegevens: kopers bereiken je via het platform.</span>
+                        <textarea name="description" rows="4" maxlength="800" @disabled(! $mayEdit) class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-3 text-sm">{{ old('description', $company->description) }}</textarea>
+                    </label>
+                    <label class="grid gap-1 text-sm">
+                        <span class="font-bold">Beeldmerk</span>
+                        @if ($company->logo_path)
+                            <img src="{{ $company->logo_path }}" alt="" class="size-16 rounded-aj-sm object-cover">
+                        @endif
+                        <input type="file" name="logo" accept="image/jpeg,image/png,image/webp" @disabled(! $mayEdit) class="text-sm">
+                        <span class="text-xs text-aj-muted">Vierkant, jpg, png of webp, tot 2 MB.</span>
+                    </label>
+                    <label class="grid gap-1 text-sm">
+                        <span class="font-bold">Cover</span>
+                        @if ($company->cover_path)
+                            <img src="{{ $company->cover_path }}" alt="" class="h-16 w-full rounded-aj-sm object-cover">
+                        @endif
+                        <input type="file" name="cover" accept="image/jpeg,image/png,image/webp" @disabled(! $mayEdit) class="text-sm">
+                        <span class="text-xs text-aj-muted">Breed, jpg, png of webp, tot 4 MB.</span>
                     </label>
                     @if ($mayEdit)
                         <div class="sm:col-span-2"><button type="submit" class="btn btn-primary">Opslaan</button></div>

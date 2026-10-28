@@ -26,6 +26,9 @@
     'canonical' => null,
     'image' => null,
     'ogType' => 'website',
+    // Gefilterde en gepagineerde zoekpagina's: wel volgen, niet indexeren
+    // (masterbriefing 7.3), de canonical wijst al naar de schone URL.
+    'noindex' => false,
 ])
 
 @php
@@ -63,6 +66,9 @@
         $shareTitle = $title ? $title.' · '.config('app.name') : 'Aucvy - Upload. Ivy regelt de rest.';
     @endphp
     <link rel="canonical" href="{{ $canonicalUrl }}">
+    @if ($noindex)
+        <meta name="robots" content="noindex,follow">
+    @endif
     <meta property="og:site_name" content="{{ config('app.name') }}">
     <meta property="og:locale" content="nl_NL">
     <meta property="og:type" content="{{ $ogType }}">

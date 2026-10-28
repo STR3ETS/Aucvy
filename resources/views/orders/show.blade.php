@@ -164,7 +164,7 @@
                 @if ($order->status === OrderStatus::Completed)
                     @php $review = $order->review; @endphp
 
-                    <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Beoordeling">
+                    <section id="beoordeling" class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Beoordeling">
                         @if ($review !== null)
                             <h2 class="text-sm font-extrabold">Beoordeling</h2>
                             <p class="mt-2 text-sm">

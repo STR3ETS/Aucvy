@@ -45,6 +45,7 @@
             ],
             'Systeem' => [
                 ['admin.categories', 'Categorieën'],
+                ['admin.redirects', 'Doorverwijzingen'],
                 ['admin.ai-runs', 'AI-runs'],
                 ['admin.auditlog', 'Auditlog'],
                 ['admin.queue', 'Wachtrij'],

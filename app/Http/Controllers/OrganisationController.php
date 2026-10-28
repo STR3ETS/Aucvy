@@ -12,6 +12,7 @@ use App\Support\Iban;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 /**
@@ -44,11 +45,25 @@ final class OrganisationController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'vat_number' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z]{2}[A-Za-z0-9 .]{2,17}$/'],
+            // Het publieke profiel: omschrijving, beeldmerk en cover. Geen
+            // persoonsgegevens, dus publiek te tonen.
+            'description' => ['nullable', 'string', 'max:800'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ], [
             'vat_number.regex' => 'Een btw-nummer begint met de landcode, bijvoorbeeld NL123456789B01.',
         ]);
 
-        $before = ['name' => $company->name, 'vat_number' => $company->vat_number];
+        $before = ['name' => $company->name, 'vat_number' => $company->vat_number, 'description' => $company->description];
+
+        $company->description = isset($validated['description']) ? trim($validated['description']) : null;
+
+        foreach (['logo', 'cover'] as $image) {
+            if ($request->hasFile($image)) {
+                $stored = $request->file($image)->store("companies/{$company->id}", 'public');
+                $company->{$image.'_path'} = Storage::disk('public')->url($stored);
+            }
+        }
 
         // De naam is gekoppeld aan de KvK-controle: na de aanvraag staat hij vast.
         if (! $company->isVerified() && ! $company->awaitsVerification()) {
@@ -58,7 +73,7 @@ final class OrganisationController extends Controller
         $company->vat_number = isset($validated['vat_number']) ? strtoupper(str_replace([' ', '.'], '', $validated['vat_number'])) : null;
         $company->save();
 
-        Audit::record('company.updated', $company, $user, $before, ['name' => $company->name, 'vat_number' => $company->vat_number], $request->ip());
+        Audit::record('company.updated', $company, $user, $before, ['name' => $company->name, 'vat_number' => $company->vat_number, 'description' => $company->description], $request->ip());
 
         return redirect()->route('organisation.show')->with('status', 'De bedrijfsgegevens zijn opgeslagen.');
     }

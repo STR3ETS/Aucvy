@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'name', 'slug', 'kvk_number', 'vat_number', 'plan', 'fee_percentage',
-    'payout_iban_last4', 'payout_iban_name',
+    'payout_iban_last4', 'payout_iban_name', 'description', 'logo_path', 'cover_path',
 ])]
 #[RouteKey('slug')]
 class Company extends Model

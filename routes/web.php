@@ -24,6 +24,7 @@ use App\Http\Controllers\OrderActionController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderMessageController;
 use App\Http\Controllers\OrganisationController;
+use App\Http\Controllers\RedirectFallbackController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SaleStudioController;
@@ -38,6 +39,7 @@ use App\Http\Controllers\Staff\DisputeReviewController;
 use App\Http\Controllers\Staff\LiveRoomController;
 use App\Http\Controllers\Staff\ModerationController;
 use App\Http\Controllers\Staff\QueueController;
+use App\Http\Controllers\Staff\RedirectController;
 use App\Http\Controllers\Staff\RiskController;
 use App\Http\Controllers\Staff\SupportTicketController;
 use App\Http\Controllers\Staff\SystemController;
@@ -392,6 +394,11 @@ Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group
     Route::post('/support/{ticket}/sluiten', [SupportTicketController::class, 'close'])->name('support.close');
     Route::post('/support/{ticket}/heropenen', [SupportTicketController::class, 'reopen'])->name('support.reopen');
 
+    // Doorverwijzingen van oude paden (masterbriefing 7.2).
+    Route::get('/doorverwijzingen', [RedirectController::class, 'index'])->name('redirects');
+    Route::post('/doorverwijzingen', [RedirectController::class, 'store'])->name('redirects.store');
+    Route::delete('/doorverwijzingen/{redirect}', [RedirectController::class, 'destroy'])->name('redirects.destroy');
+
     Route::get('/categorieen', [CategoryAdminController::class, 'index'])->name('categories');
     Route::post('/categorieen', [CategoryAdminController::class, 'store'])->name('categories.store');
     Route::put('/categorieen/{category:id}', [CategoryAdminController::class, 'update'])->name('categories.update');
@@ -417,3 +424,9 @@ Route::middleware('signed')->group(function (): void {
 Route::post('/webhooks/mollie', MollieWebhookController::class)
     ->middleware('throttle:120,1')
     ->name('webhooks.mollie');
+
+/*
+ | Geen route? Dan eerst de doorverwijzingen (masterbriefing 7.2), anders de
+ | gewone 404. Dit draait alleen als niets anders paste.
+ */
+Route::fallback(RedirectFallbackController::class)->name('fallback');

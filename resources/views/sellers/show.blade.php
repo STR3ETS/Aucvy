@@ -9,11 +9,47 @@
                 <span class="tabular font-bold text-white">{{ number_format($averageRating, 1, ',', '') }}★</span>
                 <span>· {{ $completedSales }} {{ $completedSales === 1 ? 'verkoop' : 'verkopen' }}</span>
             @endif
-            <span>· lid sinds {{ $seller->created_at->timezone(config('aucvy.display_timezone'))->isoFormat('MMMM YYYY') }}</span>
+            <span>· actief sinds {{ $seller->created_at->timezone(config('aucvy.display_timezone'))->isoFormat('MMMM YYYY') }}</span>
+            @if ($region)
+                <span>· {{ $region }}</span>
+            @endif
             <span>· {{ $disputeCount }} {{ $disputeCount === 1 ? 'geschil' : 'geschillen' }}</span>
         </div>
     </x-slot:lead>
     <div class="mx-auto max-w-4xl">
+
+        @if ($company?->cover_path)
+            <img src="{{ $company->cover_path }}" alt="" class="mb-6 h-44 w-full rounded-aj-s object-cover">
+        @endif
+
+        {{-- Over de verkoper (masterbriefing 4.1): wie, waar, sinds wanneer, en
+             de cijfers met hun definitie erbij. Geen contactgegevens. --}}
+        <section id="over" class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Over de verkoper">
+            <div class="flex flex-wrap items-start gap-5">
+                @if ($company?->logo_path)
+                    <img src="{{ $company->logo_path }}" alt="" class="size-16 shrink-0 rounded-aj-sm object-cover">
+                @endif
+                <div class="min-w-0 flex-1">
+                    <h2 class="text-lg font-extrabold">{{ $company?->name ?? $seller->publicName() }}</h2>
+                    @if ($company?->description)
+                        <p class="mt-1 text-sm">{{ $company->description }}</p>
+                    @else
+                        <p class="mt-1 text-sm text-aj-muted">Deze verkoper heeft nog geen omschrijving toegevoegd.</p>
+                    @endif
+                </div>
+            </div>
+            <dl class="mt-5 grid gap-4 border-t border-aj-border pt-4 sm:grid-cols-4">
+                <div><dt class="text-xs font-bold uppercase tracking-wide text-aj-muted">Afgeronde verkopen</dt><dd class="tabular text-2xl font-extrabold">{{ $completedSales }}</dd><dd class="text-xs text-aj-muted">betaald, geleverd en zonder open geschil afgesloten</dd></div>
+                <div><dt class="text-xs font-bold uppercase tracking-wide text-aj-muted">Actieve kavels</dt><dd class="tabular text-2xl font-extrabold">{{ $activeCount }}</dd><dd class="text-xs text-aj-muted">nu te zien en te bieden</dd></div>
+                <div><dt class="text-xs font-bold uppercase tracking-wide text-aj-muted">Verkochte kavels</dt><dd class="tabular text-2xl font-extrabold">{{ $soldCount }}</dd><dd class="text-xs text-aj-muted">kavels met een koper, ook als de levering nog loopt</dd></div>
+                <div><dt class="text-xs font-bold uppercase tracking-wide text-aj-muted">Geschillen</dt><dd class="tabular text-2xl font-extrabold">{{ $disputeCount }}</dd><dd class="text-xs text-aj-muted">meldingen door kopers, gegrond of niet</dd></div>
+            </dl>
+            <nav class="mt-4 flex flex-wrap gap-2 text-xs font-bold" aria-label="Op deze pagina">
+                <a href="#aanbod" class="rounded-full border border-aj-border px-3 py-1 hover:bg-aj-bg">Actief aanbod</a>
+                <a href="#verkocht" class="rounded-full border border-aj-border px-3 py-1 hover:bg-aj-bg">Verkochte kavels</a>
+                <a href="#reviews" class="rounded-full border border-aj-border px-3 py-1 hover:bg-aj-bg">Beoordelingen</a>
+            </nav>
+        </section>
 
         {{--
             De Trust Index (preview v4): één cijfer, met de opbouw er
@@ -21,7 +57,7 @@
             weinig data is geen onbetrouwbaarheid.
         --}}
         @if ($trust !== null)
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Trust Index">
+            <section class="mt-8 rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Trust Index">
                 <div class="flex flex-wrap items-center gap-6">
                     @php
                         $size = 132;
@@ -78,7 +114,7 @@
         @endif
 
         {{-- De verdeling over álle sterren - ook waar nul staat (13.6). --}}
-        <section class="mt-8" aria-label="Beoordelingen">
+        <section id="reviews" class="mt-8" aria-label="Beoordelingen">
             <h2 class="text-lg font-extrabold">Beoordelingen - alle sterren</h2>
 
             @if ($reviews->isEmpty())
@@ -137,13 +173,51 @@
         </section>
 
         @if ($liveLots->isNotEmpty())
-            <section class="mt-8" aria-label="Lopende kavels">
+            <section id="aanbod" class="mt-8" aria-label="Lopende kavels">
                 <h2 class="text-lg font-extrabold">Nu bij deze verkoper</h2>
                 <div class="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($liveLots as $lot)
                         <x-lot.card :lot="$lot" />
                     @endforeach
                 </div>
+            </section>
+        @endif
+
+        {{-- Verkochte kavels (masterbriefing 4.1): filterbaar op categorie,
+             nieuwste eerst. Gerealiseerde prijzen zijn niet openbaar
+             zolang dat beleid (prijsprivacy) niet is vastgesteld. --}}
+        @if ($soldCount > 0)
+            <section id="verkocht" class="mt-8" aria-label="Verkochte kavels">
+                <h2 class="text-lg font-extrabold">Verkochte kavels</h2>
+                <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="Filter op categorie">
+                    <a href="{{ route('sellers.show', $seller) }}#verkocht" class="rounded-full border px-3 py-1 text-xs font-bold {{ $soldCategory === null ? 'border-aj-navy bg-aj-navy text-white' : 'border-aj-border hover:bg-aj-bg' }}">Alle</a>
+                    @foreach ($soldCategories as $category)
+                        <a href="{{ route('sellers.show', [$seller, 'categorie' => $category->slug]) }}#verkocht" class="rounded-full border px-3 py-1 text-xs font-bold {{ $soldCategory === $category->slug ? 'border-aj-navy bg-aj-navy text-white' : 'border-aj-border hover:bg-aj-bg' }}">{{ $category->name }}</a>
+                    @endforeach
+                </div>
+                <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($soldLots as $lot)
+                        <li class="overflow-hidden rounded-aj-s border border-aj-border bg-aj-surface">
+                            <a href="{{ route('lots.show', $lot) }}" class="block">
+                                <span class="block aspect-[4/3] bg-aj-navy">
+                                    @if ($lot->media->isNotEmpty())
+                                        <img src="{{ $lot->media->first()->path }}" alt="" loading="lazy" class="h-full w-full object-cover">
+                                    @endif
+                                </span>
+                                <span class="block p-4">
+                                    <span class="block text-xs font-bold uppercase tracking-wide text-aj-muted">{{ $lot->category?->name ?? 'Kavel' }}</span>
+                                    <span class="block truncate text-sm font-bold">{{ $lot->title }}</span>
+                                    <span class="block text-xs text-aj-muted">Verkocht{{ $lot->auction?->closed_at ? ' · '.$lot->auction->closed_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMMM YYYY') : '' }}</span>
+                                </span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+                @if ($soldLots->isEmpty())
+                    <p class="mt-3 text-sm text-aj-muted">Geen verkochte kavels in deze categorie.</p>
+                @endif
+                <div class="mt-4">{{ $soldLots->links() }}</div>
+                <p class="mt-3 text-xs text-aj-muted">Gerealiseerde prijzen zijn niet openbaar.</p>
             </section>
         @endif
     </div>
