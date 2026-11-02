@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Auctions\Jobs\CloseAuctionJob;
 use App\Enums\LotStatus;
 use App\Enums\SaleType;
+use App\Ivy\Jobs\RunAiTask;
 use App\Lots\DraftAccess;
 use App\Lots\PublishLot;
 use App\Models\Category;
@@ -24,7 +25,7 @@ function draftFor(?User $seller = null, array $meta = []): Lot
         'title' => 'Complete horecakeuken',
         'slug' => null,
         'category_id' => Category::factory()->create()->id,
-        'draft_meta' => ['ownership_declared' => true] + ($meta ?: [
+        'draft_meta' => ['ownership_declared' => true, 'warranty' => 'none'] + ($meta ?: [
             'sale_type' => 'auction',
             'start_price_cents' => 80_000,
             'duration_days' => 7,
@@ -38,7 +39,7 @@ function draftFor(?User $seller = null, array $meta = []): Lot
 
 describe('publiceren', function () {
     beforeEach(function () {
-        Queue::fake();
+        Queue::fakeExcept([RunAiTask::class]);
         $this->seller = User::factory()->verified()->business()->create();
     });
 
@@ -163,7 +164,7 @@ describe('via het endpoint', function () {
     });
 
     it('publiceert voor een ingelogde geverifieerde verkoper', function () {
-        Queue::fake();
+        Queue::fakeExcept([RunAiTask::class]);
 
         $seller = User::factory()->verified()->business()->create();
         $lot = draftFor($seller);

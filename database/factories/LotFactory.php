@@ -45,6 +45,7 @@ class LotFactory extends Factory
             'model' => Str::upper(fake()->bothify('??-###')),
             'year' => fake()->numberBetween(2005, 2024),
             'quantity' => 1,
+            'unit' => 'stuk',
 
             'condition' => LotCondition::Good,
             'specifications' => [],

@@ -30,7 +30,7 @@ function readyDraft(User $seller, array $overrides = []): Lot
         'seller_id' => $seller->id,
         'title' => 'Heftruck Linde H25',
         'category_id' => Category::factory()->create()->id,
-        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 250_000, 'ownership_declared' => true],
+        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 250_000, 'ownership_declared' => true, 'warranty' => 'none'],
         ...$overrides,
     ]);
 
@@ -53,12 +53,12 @@ it('keurt een compleet concept goed en noemt elk punt', function () {
     expect($preflight['ok'])->toBeTrue()
         ->and($preflight['blocking'])->toBe([])
         ->and(collect($preflight['checks'])->pluck('key')->all())
-        ->toBe(['title', 'category', 'forbidden', 'photos', 'condition', 'description', 'pricing', 'price_order', 'ownership', 'confirmed', 'permission']);
+        ->toBe(['title', 'category', 'forbidden', 'photos', 'condition', 'description', 'pricing', 'price_order', 'ownership', 'unit', 'warranty', 'documents_authentic', 'confirmed', 'permission']);
 });
 
 it('eist een eigendomsverklaring of een eigendomsbewijs', function () {
     $seller = User::factory()->verified()->business()->create();
-    $lot = readyDraft($seller, ['draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 250_000]]);
+    $lot = readyDraft($seller, ['draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 250_000, 'warranty' => 'none', 'documents_authentic' => true]]);
 
     $preflight = app(Preflight::class)->for($lot, $seller);
 

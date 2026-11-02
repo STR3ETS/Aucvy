@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\LotStatus;
+use App\Ivy\Jobs\RunAiTask;
 use App\Models\Auction;
 use App\Models\Category;
 use App\Models\Lot;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Queue;
 | veiling.
 */
 
-beforeEach(fn () => Queue::fake());
+beforeEach(fn () => Queue::fakeExcept([RunAiTask::class]));
 
 function saleDraft(User $seller, string $title): Lot
 {
@@ -28,7 +29,7 @@ function saleDraft(User $seller, string $title): Lot
         'title' => $title,
         'slug' => null,
         'category_id' => Category::factory()->create()->id,
-        'draft_meta' => ['ownership_declared' => true, 'sale_type' => 'auction', 'start_price_cents' => 50_000, 'duration_days' => 7],
+        'draft_meta' => ['ownership_declared' => true, 'warranty' => 'none', 'sale_type' => 'auction', 'start_price_cents' => 50_000, 'duration_days' => 7],
     ]);
 
     LotMedia::factory()->create(['lot_id' => $lot->id]);

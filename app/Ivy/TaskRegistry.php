@@ -11,6 +11,7 @@ use App\Ivy\Tasks\DraftListing;
 use App\Ivy\Tasks\EstimateValue;
 use App\Ivy\Tasks\InterpretSearch;
 use App\Ivy\Tasks\RecogniseLot;
+use App\Ivy\Tasks\ScreenListing;
 use App\Ivy\Tasks\TranslateListing;
 use App\Ivy\Tasks\WeeklyInsights;
 use App\Models\Lot;
@@ -43,6 +44,7 @@ final class TaskRegistry
     /** Taken die de applicatie zelf start (publicatie, bewerking); niet via de API. */
     private const SYSTEM_TASKS = [
         'translate_listing' => TranslateListing::class,
+        'screen_listing' => ScreenListing::class,
     ];
 
     public static function knows(string $name): bool

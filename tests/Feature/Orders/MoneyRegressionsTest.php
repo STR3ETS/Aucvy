@@ -133,7 +133,7 @@ it('weigert prijzen die elkaar tegenspreken bij het publiceren', function () {
     $category = Category::factory()->create();
 
     $draft = function (array $meta) use ($seller, $category): Lot {
-        $lot = Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id, 'status' => LotStatus::Draft, 'title' => 'Prijzen', 'slug' => null, 'category_id' => $category->id, 'draft_meta' => ['ownership_declared' => true, ...$meta]]);
+        $lot = Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id, 'status' => LotStatus::Draft, 'title' => 'Prijzen', 'slug' => null, 'category_id' => $category->id, 'draft_meta' => ['ownership_declared' => true, 'warranty' => 'none', ...$meta]]);
         LotMedia::factory()->create(['lot_id' => $lot->id]);
 
         return $lot;

@@ -6,6 +6,7 @@ namespace App\Ivy;
 
 use App\Enums\AiRunStatus;
 use App\Ivy\Contracts\AiTask;
+use App\Ivy\Contracts\HandlesFailedRun;
 use App\Ivy\Jobs\RunAiTask;
 use App\Models\AiRun;
 use App\Models\User;
@@ -37,6 +38,11 @@ final class StartTask
                 'error' => 'Noodrem: Ivy staat uit (aucvy.ai.enabled).',
                 'latency_ms' => 0,
             ]);
+
+            // Een taak die niet mag blijven hangen hoort het meteen.
+            if ($task instanceof HandlesFailedRun) {
+                $task->failed($run);
+            }
 
             return $run;
         }

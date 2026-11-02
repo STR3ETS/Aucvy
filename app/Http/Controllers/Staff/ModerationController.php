@@ -24,6 +24,13 @@ final class ModerationController extends Controller
     public function index(): View
     {
         return view('admin.moderation', [
+            // Vooraf modereren: wat Ivy bij een medewerker legde, eerst.
+            'pending' => Lot::query()
+                ->where('status', LotStatus::PendingReview)
+                ->whereNotNull('screening')
+                ->with(['seller', 'company', 'category', 'media', 'documents'])
+                ->oldest('submitted_at')
+                ->get(),
             'lots' => Lot::query()
                 ->whereIn('status', [LotStatus::Scheduled, LotStatus::Live, LotStatus::Closing])
                 ->whereNotNull('published_at')

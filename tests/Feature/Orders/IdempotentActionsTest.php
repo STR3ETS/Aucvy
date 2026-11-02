@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\LotStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Ivy\Jobs\RunAiTask;
 use App\Models\Auction;
 use App\Models\Category;
 use App\Models\Lot;
@@ -25,8 +26,9 @@ use Illuminate\Support\Facades\Queue;
 | binnenkomt.
 */
 
-// De sluitjob hoort in de agenda, niet direct op de synchrone testqueue.
-beforeEach(fn () => Queue::fake());
+// De sluitjob hoort in de agenda, niet direct op de synchrone testqueue;
+// de controle vóór publicatie draait wel echt.
+beforeEach(fn () => Queue::fakeExcept([RunAiTask::class]));
 
 function publishableDraft(User $seller): Lot
 {
@@ -34,7 +36,7 @@ function publishableDraft(User $seller): Lot
         'seller_id' => $seller->id,
         'title' => 'Compressor Atlas Copco GA11',
         'category_id' => Category::factory()->create()->id,
-        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 150_000, 'ownership_declared' => true],
+        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 150_000, 'ownership_declared' => true, 'warranty' => 'none'],
     ]);
 
     LotMedia::factory()->create(['lot_id' => $lot->id]);

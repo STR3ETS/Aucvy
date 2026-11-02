@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'completeness_score', 'value_min_cents', 'value_max_cents',
     'value_confidence', 'pickup_only', 'viewing_available',
     'transport_from_cents', 'draft_token', 'draft_meta', 'field_sources', 'translations', 'published_at',
+    'unit', 'warranty', 'warranty_until',
 ])]
 #[RouteKey('slug')]
 class Lot extends Model
@@ -41,6 +42,10 @@ class Lot extends Model
     {
         return [
             'specifications' => 'array',
+            'screening' => 'array',
+            'warranty_until' => 'date',
+            'documents_declared_at' => 'datetime',
+            'submitted_at' => 'datetime',
             'status' => LotStatus::class,
             'condition' => LotCondition::class,
             'sale_type' => SaleType::class,

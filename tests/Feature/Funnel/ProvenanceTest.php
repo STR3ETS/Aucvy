@@ -99,7 +99,7 @@ it('weigert publiceren zolang een Ivy-veld onbevestigd is, en niet meer na beves
         'category_id' => Category::factory()->create()->id,
         'description' => 'Keuken uit een showroom, drie jaar oud, met complete apparatuur erbij.',
         'condition' => null,
-        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 50_000, 'ownership_declared' => true],
+        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 50_000, 'ownership_declared' => true, 'warranty' => 'none'],
     ]);
     LotMedia::factory()->create(['lot_id' => $lot->id]);
 
@@ -108,7 +108,7 @@ it('weigert publiceren zolang een Ivy-veld onbevestigd is, en niet meer na beves
     expect(Provenance::unconfirmed($lot->fresh()))->toBe(['condition']);
 
     // Vanaf hier alleen nog de sluitingsjob van het publiceren faken.
-    Queue::fake();
+    Queue::fakeExcept([RunAiTask::class]);
 
     $this->actingAs($seller)
         ->postJson("/api/drafts/{$lot->id}/publish")
@@ -164,7 +164,7 @@ it('laat PublishLot zelf ook weigeren bij een onbevestigd veld', function () {
     $lot = Lot::factory()->anonymousDraft()->create([
         'seller_id' => $seller->id,
         'category_id' => Category::factory()->create()->id,
-        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 50_000, 'ownership_declared' => true],
+        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 50_000, 'ownership_declared' => true, 'warranty' => 'none'],
     ]);
     LotMedia::factory()->create(['lot_id' => $lot->id]);
     Provenance::markAi($lot, ['year' => 0.4], Provenance::PHOTO);

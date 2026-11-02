@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace App\Lots;
 
-use App\Auctions\Jobs\CloseAuctionJob;
 use App\Compliance\Permission;
 use App\Compliance\PermissionEngine;
 use App\Enums\LotStatus;
 use App\Enums\SaleType;
+use App\Ivy\StartTask;
+use App\Ivy\Tasks\ScreenListing;
 use App\Lots\Sales\SaleStudio;
-use App\Models\Auction;
 use App\Models\Lot;
 use App\Models\User;
 use App\Support\Audit\Audit;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Zet een concept live: kavel → status live, veiling aangemaakt, sluiting
- * ingepland.
+ * Dient een concept in voor publicatie: alle poortwachters, dan de status
+ * "in beoordeling" en de controle van Ivy (ScreenListing). Live zetten doet
+ * GoLive, na akkoord van Ivy of een medewerker (besluit Raph, 2 november
+ * 2026: vooraf modereren).
  *
- * De prijzen en de looptijd komen uit `draft_meta` - de wachtkamer die de
- * funnel vult. Hier worden ze definitief: de staffel en de anti-snipe-waarden
- * worden uit config gekopieerd en daarna nooit meer gelezen, zodat een
- * configwijziging een lopende veiling niet raakt (briefing hfst. 5).
+ * De prijzen en de looptijd blijven tot het live gaan in `draft_meta`; de
+ * verkoper kan in die tijd niets wijzigen, want alleen een concept is te
+ * bewerken.
  */
 final class PublishLot
 {
@@ -48,12 +48,14 @@ final class PublishLot
         $this->guardOwnership($lot, $seller);
         $this->guardSaleSlot($lot);
 
-        $published = DB::transaction(function () use ($lot, $seller, $meta, $saleType, $ip): Lot {
+        $didSubmit = false;
+
+        $submitted = DB::transaction(function () use ($lot, $seller, $ip, &$didSubmit): Lot {
             /*
              | Twee keer op publiceren klikken: de tweede aanvraag wacht op de
-             | lock van de eerste en ziet daarna een kavel die al live is. Die
-             | geeft dezelfde uitkomst terug in plaats van een tweede veiling
-             | (briefing, wizard-scenario 12).
+             | lock van de eerste en ziet daarna een kavel die al ingediend of
+             | live is. Die geeft dezelfde uitkomst terug in plaats van een
+             | tweede indiening (briefing, wizard-scenario 12).
              */
             $locked = Lot::query()->whereKey($lot->id)->lockForUpdate()->firstOrFail();
 
@@ -61,66 +63,44 @@ final class PublishLot
                 return $locked->fresh(['auction']);
             }
 
-            // Zit de kavel in een gepubliceerde veiling, dan geeft die de sluittijd
-            // (Auction Studio); anders geldt de gekozen looptijd.
-            $durationDays = (int) ($meta['duration_days'] ?? 7);
-            $endsAt = SaleStudio::closingFor($lot) ?? now()->addDays(max(1, min(30, $durationDays)));
-
-            $auction = Auction::create([
-                'lot_id' => $lot->id,
-                'starts_at' => now(),
-                'ends_at' => $endsAt,
-                'original_ends_at' => $endsAt,
-                'start_price_cents' => (int) ($meta['start_price_cents'] ?? 0),
-                'reserve_price_cents' => $meta['reserve_price_cents'] ?? null,
-                'current_price_cents' => $saleType === SaleType::Dutch
-                    ? (int) $meta['dutch_start_cents']
-                    : (int) ($meta['start_price_cents'] ?? 0),
-                'increment_table' => config('aucvy.auction.increment_table'),
-                'anti_snipe_window_s' => (int) config('aucvy.auction.anti_snipe_window_seconds'),
-                'anti_snipe_extend_s' => (int) config('aucvy.auction.anti_snipe_extend_seconds'),
-                'buy_now_price_cents' => $meta['buy_now_price_cents'] ?? null,
-                'buy_now_active' => isset($meta['buy_now_price_cents']),
-                'dutch_start_cents' => $meta['dutch_start_cents'] ?? null,
-                'dutch_floor_cents' => $meta['dutch_floor_cents'] ?? null,
-                'dutch_step_cents' => $meta['dutch_step_cents'] ?? null,
-                'dutch_interval_s' => $meta['dutch_interval_s'] ?? null,
-            ]);
-
             // Een concept zonder eigenaar (cookie) komt op naam van wie publiceert;
             // een kavel van een collega blijft van die collega (organisatierollen).
-            if ($lot->seller_id === null) {
-                $lot->seller_id = $seller->id;
-                $lot->company_id = $seller->company_id;
+            if ($locked->seller_id === null) {
+                $locked->seller_id = $seller->id;
+                $locked->company_id = $seller->company_id;
             }
-            $lot->sale_type = $saleType;
-            $lot->status = LotStatus::Live;
-            $lot->published_at = now();
-            // De slug bevat het kavelnummer, zodat een latere titelwijziging
-            // de URL niet breekt (hfst. 5).
-            $lot->slug = Str::slug((string) $lot->title).'-'.$lot->public_id;
-            // De wachtkamer is leeg; vanaf nu is de veiling de waarheid.
-            $lot->draft_meta = null;
-            $lot->draft_token = null;
-            $lot->save();
 
-            // Sluiting inplannen; het vangnet auctions:close-overdue vangt een
-            // verloren job op (hfst. 6).
-            CloseAuctionJob::dispatch($auction->id)->delay($endsAt);
+            $locked->status = LotStatus::PendingReview;
+            $locked->submitted_at = now();
+            $locked->screening = null;
+            $locked->save();
 
-            Audit::record('lot.published', $lot, $seller, after: [
-                'sale_type' => $saleType->value,
-                'auction_id' => $auction->id,
-                'ends_at' => $endsAt->toIso8601String(),
-            ], ip: $ip);
+            Audit::record('lot.submitted', $locked, $seller, after: ['sale_type' => ($locked->draft_meta['sale_type'] ?? null)], ip: $ip);
 
-            return $lot->fresh(['auction']);
+            $didSubmit = true;
+
+            return $locked;
         });
 
-        // Engelse vertaling door Ivy (briefing stap 4), buiten de transactie.
-        Translation::start($published);
+        // Alleen de aanvraag die de status echt wijzigde start de controle;
+        // een gelijktijdige tweede klik krijgt dezelfde uitkomst terug.
+        if (! $didSubmit) {
+            return $submitted;
+        }
 
-        return $published;
+        /*
+         | Vooraf modereren (besluit Raph, 2 november 2026): Ivy controleert
+         | de kavel en zet hem live, stuurt hem terug of legt hem bij een
+         | medewerker. Uitgezet (alleen lokaal of in een noodgeval) gaat de
+         | kavel direct live zoals voorheen.
+         */
+        if (! config('aucvy.listings.pre_moderation')) {
+            return app(GoLive::class)->handle($submitted, $seller, $ip, 'direct');
+        }
+
+        StartTask::run(new ScreenListing($submitted->fresh(['documents', 'media', 'category'])), $seller);
+
+        return $submitted->fresh(['auction']);
     }
 
     // Poortwachters ---------------------------------------------------------

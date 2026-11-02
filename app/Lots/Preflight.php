@@ -22,8 +22,8 @@ final class Preflight
 {
     /** @var array<string, int> De funnelstap waar elk punt op te lossen is. */
     private const STEPS = [
-        'title' => 3, 'category' => 3, 'forbidden' => 3, 'condition' => 3, 'description' => 3, 'confirmed' => 3,
-        'photos' => 1, 'ownership' => 1,
+        'title' => 3, 'category' => 3, 'forbidden' => 3, 'condition' => 3, 'description' => 3, 'confirmed' => 3, 'unit' => 3,
+        'photos' => 1, 'ownership' => 1, 'warranty' => 1, 'documents_authentic' => 1,
         'pricing' => 4, 'price_order' => 4,
         'account' => 7, 'permission' => 7,
     ];
@@ -49,6 +49,12 @@ final class Preflight
             $this->check('pricing', $this->pricingComplete($meta)),
             $this->check('price_order', $this->priceOrderValid($meta)),
             $this->check('ownership', $this->ownershipShown($lot, $meta)),
+            // De publicatiecriteria van Raph (2 november 2026): hoeveelheid
+            // met eenheid, een garantieverklaring, en de echtheid van
+            // aangeleverde documenten aangevinkt.
+            $this->check('unit', (int) $lot->quantity >= 1 && $lot->unit !== null),
+            $this->check('warranty', isset($meta['warranty']) && array_key_exists((string) $meta['warranty'], (array) config('listings.warranty_options'))),
+            $this->check('documents_authentic', $lot->documents->isEmpty() || ($meta['documents_authentic'] ?? false) === true),
             $this->check('confirmed', $unconfirmed === [], hint: $unconfirmed === [] ? null : __('funnel.preflight.confirmed_hint', [
                 'fields' => implode(', ', array_map(fn (string $field): string => __('funnel.fields.'.$field), $unconfirmed)),
             ])),

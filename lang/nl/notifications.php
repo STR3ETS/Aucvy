@@ -216,6 +216,28 @@ return [
     ],
 
     /*
+     | Vooraf modereren (besluit Raph, 2 november 2026): de uitkomst van de
+     | controle vóór publicatie.
+     */
+    'listing_screened' => [
+        'live' => [
+            'subject' => '":lot" staat live',
+            'line' => 'Ivy heeft ":lot" gecontroleerd op prijs, hoeveelheid, garantie en documenten. Alles klopt: de kavel staat nu live.',
+            'action' => 'Naar de kavel',
+        ],
+        'returned' => [
+            'subject' => '":lot" heeft nog een aanvulling nodig',
+            'line' => 'Voordat ":lot" live kan, vragen we je dit aan te passen:',
+            'action' => 'Kavel aanpassen',
+        ],
+        'escalated' => [
+            'subject' => '":lot" wordt nagekeken',
+            'line' => 'Een medewerker kijkt nog even naar ":lot" voordat hij live gaat. Meestal hoor je binnen één werkdag van ons.',
+            'action' => 'Naar mijn kavels',
+        ],
+    ],
+
+    /*
      | Alerts en volglijst (briefing sectie 3 en 8).
      */
     'alert_matches' => [

@@ -75,6 +75,9 @@ final class DraftController extends Controller
             'model' => ['sometimes', 'nullable', 'string', 'max:80'],
             'year' => ['sometimes', 'nullable', 'integer', 'between:1900,'.now()->year],
             'quantity' => ['sometimes', 'integer', 'between:1,100000'],
+            // Waar de hoeveelheid in geteld wordt (besluit Raph: "hoeveelheid
+            // van een eenheid" is een publicatiecriterium).
+            'unit' => ['sometimes', 'nullable', Rule::in(array_keys((array) config('listings.unit_options')))],
             'pickup_only' => ['sometimes', 'boolean'],
             'viewing_available' => ['sometimes', 'boolean'],
             'transport_from_cents' => ['sometimes', 'nullable', 'integer', 'min:0'],
@@ -107,12 +110,17 @@ final class DraftController extends Controller
             'dutch_interval_s' => ['sometimes', 'nullable', 'integer', 'between:5,600'],
             'duration_days' => ['sometimes', 'integer', 'between:1,30'],
             'ownership_declared' => ['sometimes', 'boolean'],
+            // Garantie en de verklaring over de documenten (vooraf modereren).
+            'warranty' => ['sometimes', 'nullable', Rule::in(array_keys((array) config('listings.warranty_options')))],
+            'warranty_until' => ['sometimes', 'nullable', 'date', 'after:today'],
+            'documents_authentic' => ['sometimes', 'boolean'],
         ]);
 
         $metaKeys = [
             'sale_type', 'start_price_cents', 'reserve_price_cents',
             'buy_now_price_cents', 'dutch_start_cents', 'dutch_floor_cents',
             'dutch_step_cents', 'dutch_interval_s', 'duration_days', 'ownership_declared',
+            'warranty', 'warranty_until', 'documents_authentic',
         ];
 
         $meta = $lot->draft_meta ?? [];
@@ -201,6 +209,11 @@ final class DraftController extends Controller
             return response()->json(['published' => true, 'url' => route('lots.show', $lot)]);
         }
 
+        // Al ingediend en nog in beoordeling: ook dan dezelfde uitkomst.
+        if ($user !== null && $lot->status === LotStatus::PendingReview && $lot->isManagedBy($user)) {
+            return response()->json(['published' => false, 'submitted' => true, 'status' => $lot->status->value, 'url' => route('dashboard.lots')]);
+        }
+
         $lot = $this->access->resolve($request, $lot);
 
         if ($user === null) {
@@ -210,10 +223,19 @@ final class DraftController extends Controller
             ], 401);
         }
 
-        $publish = fn (): array => [
-            'published' => true,
-            'url' => route('lots.show', $publishLot->handle($lot, $user, $request->ip())),
-        ];
+        /*
+         | Indienen: Ivy controleert vóór het live gaat. Is hij meteen live
+         | (snelle controle, of vooraf modereren staat uit), dan de
+         | kavelpagina; anders het overzicht met de status "in beoordeling".
+         */
+        $publish = function () use ($publishLot, $lot, $user, $request): array {
+            // Vers ophalen: een snelle controle kan hem al live gezet hebben.
+            $result = $publishLot->handle($lot, $user, $request->ip())->fresh() ?? $lot;
+
+            return $result->status === LotStatus::PendingReview || $result->status === LotStatus::Draft
+                ? ['published' => false, 'submitted' => true, 'status' => $result->status->value, 'url' => route('dashboard.lots')]
+                : ['published' => true, 'url' => route('lots.show', $result)];
+        };
 
         $key = $request->header(Idempotency::HEADER) ?: $request->input('idempotency_key');
 

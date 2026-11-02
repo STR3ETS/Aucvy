@@ -77,7 +77,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                 'sale_type', 'start_price_cents', 'reserve_price_cents',
                 'buy_now_price_cents', 'dutch_start_cents', 'dutch_floor_cents',
                 'dutch_step_cents', 'dutch_interval_s', 'duration_days',
-                'ownership_declared',
+                'ownership_declared', 'warranty', 'warranty_until', 'documents_authentic',
             ];
 
             metaFields.includes(field)
@@ -670,6 +670,9 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             });
 
             if (response?.published) {
+                window.location.href = response.url;
+            } else if (response?.submitted) {
+                // Ingediend: Ivy controleert de kavel vóór hij live gaat.
                 window.location.href = response.url;
             } else if (response?.login_url) {
                 // De accountvraag komt hier, niet eerder. Het concept blijft

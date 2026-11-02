@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\CompanyRole;
 use App\Enums\LotStatus;
 use App\Enums\SaleState;
+use App\Ivy\Jobs\RunAiTask;
 use App\Models\Auction;
 use App\Models\Category;
 use App\Models\Company;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Queue;
 | sluiten, en de status volgt de echte biedrondes.
 */
 
-beforeEach(fn () => Queue::fake());
+beforeEach(fn () => Queue::fakeExcept([RunAiTask::class]));
 
 function reviewDraft(User $seller, string $title): Lot
 {
@@ -31,7 +32,7 @@ function reviewDraft(User $seller, string $title): Lot
         'title' => $title,
         'slug' => null,
         'category_id' => Category::factory()->create()->id,
-        'draft_meta' => ['ownership_declared' => true, 'sale_type' => 'auction', 'start_price_cents' => 50_000, 'duration_days' => 7],
+        'draft_meta' => ['ownership_declared' => true, 'warranty' => 'none', 'sale_type' => 'auction', 'start_price_cents' => 50_000, 'duration_days' => 7],
     ]);
 
     LotMedia::factory()->create(['lot_id' => $lot->id]);

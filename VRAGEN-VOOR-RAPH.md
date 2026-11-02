@@ -27,8 +27,8 @@ Statuswoorden: **Besloten** = we bouwen ernaar. **Bij Don** = Raph vraagt het na
 | 13 | Prijzen openbaar | Navragen bij Don | Verkochte kavels blijven zonder prijs. | Bij Don |
 | 14 | Reviewbeleid | Het Google-principe: de verkoper kan reageren; automatische moderatie op scheldwoorden, politieke kleuring, discriminatie | Reviews gaan door een automatische controle vóór publicatie; wat erdoor valt, wordt niet gepubliceerd en gaat naar beheer. Iedereen kan een review melden. De verkoper reageert, maar verwijdert niets. | Besloten |
 | 15 | Reputatiescore | Standaard, vanaf 10 | Score vanaf 10 afgeronde transacties, over de laatste 12 maanden. | Besloten |
-| 16 | Publicatie | De bot kijkt of de kavel aan alle criteria voldoet (prijs, hoeveelheid per eenheid, garanties); de echtheid van documentatie moet worden aangevinkt; dan pas publiceren | Vooraf modereren door Ivy: de verkoper vinkt garantie en echtheid van documenten aan, Ivy toetst de kavel, en alleen een goedgekeurde kavel gaat live. Zie vervolgvraag V4 voor wat er bij twijfel gebeurt. | Besloten |
-| 17 | Verboden categorieën | Levert Raph aan; kijk ook wat andere platformen verbieden en houd dat gelijk | Een conceptlijst op basis van wat gangbare veilingplatformen verbieden, die Raph kan aanvullen. | Besloten, concept |
+| 16 | Publicatie | De bot kijkt of de kavel aan alle criteria voldoet (prijs, hoeveelheid per eenheid, garanties); de echtheid van documentatie moet worden aangevinkt; dan pas publiceren | Vooraf modereren door Ivy: de verkoper vinkt garantie en echtheid van documenten aan, Ivy toetst de kavel, en alleen een goedgekeurde kavel gaat live. Gebouwd: verkoper geeft hoeveelheid met eenheid en garantie op en vinkt de echtheid van documenten aan; Ivy toetst en zet live, stuurt terug of legt bij een medewerker. Zie V4. | Gebouwd |
+| 17 | Verboden categorieën | Levert Raph aan; kijk ook wat andere platformen verbieden en houd dat gelijk | Gebouwd: een conceptlijst (wapens, explosieven, drugs, receptmedicijnen, levende en beschermde dieren, namaak, goederen zonder herkomst, gevaarlijke stoffen en meer) op basis van wat gangbare veilingplatformen verbieden. Een treffer gaat altijd naar een medewerker. Raph kan de lijst aanvullen. | Gebouwd, concept |
 | 18 | Biedregel reserve | Navragen bij Don | Standaard: tillen tot de reserve. | Bij Don |
 | 19 | Mail Builder | Mag gebruiken, met eigen templates | De Mail Builder van Eazy overnemen met eigen Aucvy-templates. | Besloten |
 | 20 | Mailprovider | Mailgun, zet Raph maandag op | Mailgun als mailer, met webhook voor afleveren en bounces. Zie vervolgvraag V5. | Besloten, wacht op sleutels |
@@ -73,7 +73,7 @@ Antwoord:
 
 **V4. Wat doet de bot bij twijfel over een kavel?**
 Opties: (a) terug naar de verkoper met de reden, (b) naar een medewerker, (c) terug naar de verkoper bij een ontbrekend gegeven en naar een medewerker bij twijfel over echtheid of verboden waar.
-Standaard: (c).
+Standaard: (c). Zo gebouwd; een ander antwoord is een kleine aanpassing.
 Antwoord:
 
 **V5. Mailgun: domein en regio**

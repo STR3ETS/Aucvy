@@ -173,6 +173,36 @@
                             </ul>
                         </div>
 
+                        {{-- Garantie (publicatiecriterium, besluit Raph 2 november 2026). --}}
+                        <div class="mt-5 grid gap-3 rounded-aj-sm border border-aj-border bg-aj-bg p-3 text-sm sm:grid-cols-2">
+                            <label class="grid gap-1">
+                                <span class="font-bold">Garantie</span>
+                                <select class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3" style="min-height:40px"
+                                        :value="meta.warranty ?? ''" @change="set('warranty', $event.target.value || null)">
+                                    <option value="">Kies...</option>
+                                    @foreach (config('listings.warranty_options') as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                            <label class="grid gap-1" x-show="meta.warranty && meta.warranty !== 'none'" x-cloak>
+                                <span class="font-bold">Geldig tot</span>
+                                <input type="date" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3" style="min-height:40px"
+                                       :value="meta.warranty_until ?? ''" @change="set('warranty_until', $event.target.value || null)">
+                            </label>
+                        </div>
+
+                        {{-- De echtheid van documenten aanvinken (besluit Raph): alleen als er documenten zijn. --}}
+                        <label class="mt-3 flex items-start gap-3 rounded-aj-sm border border-aj-border bg-aj-bg p-3 text-sm" x-show="(draft?.documents?.length ?? 0) > 0" x-cloak>
+                            <input type="checkbox" class="mt-0.5 size-4"
+                                   :checked="meta.documents_authentic === true"
+                                   @change="set('documents_authentic', $event.target.checked)">
+                            <span>
+                                <span class="font-bold">De documenten die ik toevoeg zijn echt en volledig.</span>
+                                <span class="block text-xs text-aj-muted">Nodig om te publiceren als je documenten toevoegt. Een vals document leidt tot verwijdering van de kavel en blokkade van het account.</span>
+                            </span>
+                        </label>
+
                         {{-- Eigendom (preflight, briefing sectie 5): verklaring of bewijs. --}}
                         <label class="mt-5 flex items-start gap-3 rounded-aj-sm border border-aj-border bg-aj-bg p-3 text-sm">
                             <input type="checkbox" class="mt-0.5 size-4"
@@ -571,6 +601,7 @@
                 <section x-show="step === 7" x-cloak aria-label="Controleren en publiceren">
                     <div class="rounded-aj-s border border-aj-border bg-aj-surface p-6">
                         <h2 class="text-lg font-extrabold">Klaar om live te gaan?</h2>
+                        <p class="mt-1 text-sm text-aj-muted">Na het indienen controleert Ivy je kavel op prijs, hoeveelheid, garantie en documenten. Klopt alles, dan staat hij meteen live; anders hoor je wat er nog nodig is.</p>
 
                         <dl class="mt-4 space-y-1.5 text-sm">
                             <div class="flex justify-between gap-4"><dt class="text-aj-muted">Titel</dt><dd class="font-bold" x-text="draft?.title ?? '-'"></dd></div>

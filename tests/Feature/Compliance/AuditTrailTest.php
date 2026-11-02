@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Auctions\Actions\PlaceBid;
 use App\Enums\KycStatus;
+use App\Ivy\Jobs\RunAiTask;
 use App\Lots\PublishLot;
 use App\Models\Auction;
 use App\Models\AuditLog;
@@ -22,7 +23,7 @@ use Illuminate\Support\Str;
 */
 
 // De sluitjob hoort in de agenda, niet direct op de synchrone testqueue.
-beforeEach(fn () => Queue::fake());
+beforeEach(fn () => Queue::fakeExcept([RunAiTask::class]));
 
 it('legt een bod vast met bieder, veiling en bedrag', function () {
     $lot = Lot::factory()->live()->create();
@@ -50,17 +51,22 @@ it('legt een publicatie vast met verkoopvorm en veiling', function () {
         'seller_id' => $seller->id,
         'title' => 'Heftruck Linde H25',
         'category_id' => Category::factory()->create()->id,
-        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 250_000, 'ownership_declared' => true],
+        'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 250_000, 'ownership_declared' => true, 'warranty' => 'none'],
     ]);
     LotMedia::factory()->create(['lot_id' => $lot->id]);
 
     app(PublishLot::class)->handle($lot, $seller);
 
+    // De verkoper dient in; Ivy keurt goed en zet live (vooraf modereren).
+    $submitted = AuditLog::query()->where('action', 'lot.submitted')->sole();
     $entry = AuditLog::query()->where('action', 'lot.published')->sole();
 
-    expect($entry->actor_id)->toBe($seller->id)
+    expect($submitted->actor_id)->toBe($seller->id)
+        ->and($submitted->subject_id)->toBe($lot->id)
+        ->and($entry->actor_id)->toBeNull()
         ->and($entry->subject_id)->toBe($lot->id)
-        ->and($entry->after['sale_type'])->toBe('auction');
+        ->and($entry->after['sale_type'])->toBe('auction')
+        ->and($entry->after['approved_by'])->toBe('ivy');
 });
 
 it('legt een aangevraagde identiteitscontrole vast met de oude en nieuwe status', function () {

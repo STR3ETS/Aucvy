@@ -94,6 +94,14 @@
                             </li>
                         @endif
                         <li class="rounded-full bg-aj-bg px-3 py-1">{{ $lot->condition?->label() }}</li>
+                        @if ($lot->quantity > 1)
+                            <li class="rounded-full bg-aj-bg px-3 py-1">{{ $lot->quantity }} × {{ config('listings.unit_options.'.$lot->unit, $lot->unit) }}</li>
+                        @endif
+                        @if ($lot->warranty !== null && $lot->warranty !== 'none')
+                            <li class="rounded-full bg-aj-bg px-3 py-1">
+                                {{ config('listings.warranty_options.'.$lot->warranty) }}@if ($lot->warranty_until) tot {{ $lot->warranty_until->isoFormat('D MMM YYYY') }}@endif
+                            </li>
+                        @endif
                         @if ($lot->documents->contains(fn ($document) => $document->kind === DocumentKind::Invoice))
                             <li class="rounded-full bg-aj-bg px-3 py-1">Aankoopfactuur aanwezig</li>
                         @endif

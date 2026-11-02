@@ -7,6 +7,7 @@ namespace App\Ivy\Jobs;
 use App\Enums\AiRunStatus;
 use App\Ivy\AiResult;
 use App\Ivy\Contracts\AiTask;
+use App\Ivy\Contracts\HandlesFailedRun;
 use App\Ivy\Contracts\LlmProvider;
 use App\Ivy\Guards\BudgetGuard;
 use App\Ivy\Guards\OutputValidator;
@@ -136,6 +137,8 @@ final class RunAiTask implements ShouldQueue
                 'status' => AiRunStatus::Failed,
                 'error' => 'Toepassen mislukt: het resultaat kon niet op het concept gezet worden.',
             ]);
+
+            $this->notifyFailure();
         }
     }
 
@@ -152,6 +155,8 @@ final class RunAiTask implements ShouldQueue
                 'status' => AiRunStatus::Failed,
                 'error' => 'Afgebroken: '.($exception?->getMessage() ?? 'onbekende fout'),
             ]);
+
+            $this->notifyFailure();
         }
     }
 
@@ -194,6 +199,26 @@ final class RunAiTask implements ShouldQueue
             'error' => $reason,
             'latency_ms' => 0,
         ]);
+
+        $this->notifyFailure();
+    }
+
+    /**
+     * Een taak die niet mag blijven hangen (de controle vóór publicatie)
+     * hoort het als Ivy niet kon antwoorden. Een fout daarin mag de job
+     * zelf niet laten vallen.
+     */
+    private function notifyFailure(): void
+    {
+        if (! $this->task instanceof HandlesFailedRun) {
+            return;
+        }
+
+        try {
+            $this->task->failed($this->run->fresh() ?? $this->run);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     /** Met underscore: Queueable levert al een fail() met andere semantiek. */
@@ -208,6 +233,8 @@ final class RunAiTask implements ShouldQueue
             'cost_cents' => $result?->costCents() ?? 0,
             'latency_ms' => $this->elapsedMs($startedAt),
         ]);
+
+        $this->notifyFailure();
     }
 
     /**

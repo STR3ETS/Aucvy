@@ -215,6 +215,10 @@ return [
      | gescheiden door komma's; een ouder telt voor al haar kinderen.
      */
     'listings' => [
+        // Vooraf modereren (besluit Raph, 2 november 2026): Ivy controleert
+        // elke kavel vóór hij live gaat. Alleen uitzetten in een noodgeval.
+        'pre_moderation' => (bool) env('AUCVY_PRE_MODERATION', true),
+
         'forbidden_categories' => array_values(array_filter(array_map(
             'trim',
             explode(',', (string) env('AUCVY_FORBIDDEN_CATEGORIES', '')),
