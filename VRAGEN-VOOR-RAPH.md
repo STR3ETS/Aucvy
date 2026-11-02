@@ -32,7 +32,7 @@ Statuswoorden: **Besloten** = we bouwen ernaar. **Bij Don** = Raph vraagt het na
 | 18 | Biedregel reserve | Navragen bij Don | Standaard: tillen tot de reserve. | Bij Don |
 | 19 | Mail Builder | Mag gebruiken, met eigen templates | De Mail Builder van Eazy overnemen met eigen Aucvy-templates. | Besloten |
 | 20 | Mailprovider | Mailgun, zet Raph maandag op | Gebouwd: Mailgun als mailer (EU-endpoint), afleverlog per mail, webhook met handtekeningcontrole voor afleveren, bounces en spammeldingen, en een Ivy-signaal als mail niet aankomt. Alleen de sleutels nog; zie V5. | Gebouwd, wacht op sleutels |
-| 21 | CMS | Mail Builder mag; de blogmodule koppelen aan Eazyonline met een API, zoals FitnessAannemer en Eazyonline nu doen met NOVA van Inspace | Geen eigen CMS. De blog komt via de Eazyonline-API, op dezelfde manier als bij FitnessAannemer. Zie vervolgvraag V6. | Besloten |
+| 21 | CMS | Mail Builder mag; de blogmodule koppelen aan Eazyonline met een API, zoals FitnessAannemer en Eazyonline nu doen met NOVA van Inspace | Gebouwd: /blog en /blog/{slug} halen berichten op bij de Eazyonline-API met een leestoken, met cache en een reserveversie als de API even weg is, veilige HTML, SEO-gegevens en de sitemap. Alleen het token nog; zie V6. | Gebouwd, wacht op token |
 | 22 | Tenants | Niet multi-tenant, blijft in eigen bezit | Eén omgeving. Branding en rechten per organisatie. | Besloten |
 | 23 | AI-regio | Standaard | EU-endpoint zodra beschikbaar. | Besloten |
 | 24 | Juridisch | Cookiebanner komt; aan de algemene voorwaarden werkt Raph; Don voor de rest | Cookiebanner bouwen. Voorwaarden, privacy en cookieverklaring als pagina's klaarzetten die de tekst tonen zodra die er is. | Besloten, tekst volgt |
@@ -81,7 +81,7 @@ Nodig zodra je het opzet: het afzenderdomein (bijvoorbeeld mail.aucvy.nl), het a
 Antwoord:
 
 **V6. Blog via de Eazyonline-API**
-Nodig: de URL van de API en een sleutel voor Aucvy, net als bij FitnessAannemer.
+Nodig: een leestoken voor Aucvy (Bearer) en, als die afwijkt van https://eazyonline.nl/api/v1, de URL. De blog leest berichten met type "blog".
 Antwoord:
 
 **V7. Remco en iDIN**

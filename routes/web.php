@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CategoryIndexController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardListController;
@@ -94,6 +95,10 @@ Route::view('/zekerheid', 'assurance')->name('assurance');
 // tarieven en termijnen komen uit dezelfde bron als de code.
 Route::view('/verkooproute', 'selling-guide')->name('selling.guide');
 Route::view('/faq', 'faq')->name('faq');
+
+// Blog uit het CMS van Eazyonline (besluit Raph, 2 november 2026).
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('blog.show');
 
 // De pagina's achter de hoofdnavigatie: het categorie-overzicht, de uitleg
 // voor kopers en verkopers, en de zakelijke pagina.

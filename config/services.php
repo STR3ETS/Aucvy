@@ -37,6 +37,17 @@ return [
         'webhook_signing_key' => env('MAILGUN_WEBHOOK_SIGNING_KEY'),
     ],
 
+    /*
+     | De blog komt uit het CMS van Eazyonline (besluit Raph, 2 november
+     | 2026), net als bij FitnessAannemer. Een leestoken volstaat; zonder
+     | token toont /blog een nette lege staat.
+     */
+    'eazyonline' => [
+        'base_url' => env('EAZYONLINE_API_URL', 'https://eazyonline.nl/api/v1'),
+        'token' => env('EAZYONLINE_API_TOKEN'),
+        'cache_minutes' => (int) env('EAZYONLINE_CACHE_MINUTES', 15),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

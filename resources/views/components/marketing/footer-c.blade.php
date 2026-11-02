@@ -32,6 +32,7 @@
         'Aucvy' => [
             ['Zekerheid', route('assurance')],
             ['Veelgestelde vragen', route('faq')],
+            ['Blog', route('blog.index')],
             ['Over ons', route('home')],
             ['Contact', route('contact')],
             ['Inloggen', route('login')],

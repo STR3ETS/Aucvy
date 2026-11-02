@@ -41,7 +41,10 @@ class LotFactory extends Factory
             'slug' => Str::slug($title).'-'.$publicId,
             'description' => fake()->paragraph(),
 
-            'brand' => fake()->company(),
+            // Een vaste lijst merken, geen fake()->company(): een Nederlandse
+            // bedrijfsnaam als "Tabakzaak Vink" valt terecht onder de
+            // verboden-warenlijst en maakt de controle vóór publicatie grillig.
+            'brand' => fake()->randomElement(['Atlas Copco', 'Linde', 'Makita', 'Bosch', 'Rational', 'Hilti', 'Kärcher', 'Festool']),
             'model' => Str::upper(fake()->bothify('??-###')),
             'year' => fake()->numberBetween(2005, 2024),
             'quantity' => 1,

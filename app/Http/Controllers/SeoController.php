@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Lot;
 use App\Models\Sale;
+use App\Support\Blog\BlogClient;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 
@@ -84,6 +85,17 @@ final class SeoController extends Controller
             ->each(function (Sale $sale) use (&$entries): void {
                 $entries[] = $this->entry(route('sales.show', $sale), $sale->updated_at?->toAtomString(), 'hourly', '0.7');
             });
+
+        // De blog uit het CMS van Eazyonline: de index en de nieuwste berichten.
+        $blog = app(BlogClient::class);
+
+        if ($blog->configured()) {
+            $entries[] = $this->entry(route('blog.index'), null, 'weekly', '0.5');
+
+            foreach ($blog->posts(1, 100)['posts'] as $post) {
+                $entries[] = $this->entry(route('blog.show', $post['slug']), ($post['updated_at'] ?? $post['published_at'])?->toAtomString(), 'monthly', '0.5');
+            }
+        }
 
         return '<?xml version="1.0" encoding="UTF-8"?>'."\n"
             .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n"
