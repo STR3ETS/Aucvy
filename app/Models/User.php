@@ -26,7 +26,7 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
     'company_id', 'company_role', 'name', 'display_name', 'email', 'password', 'type',
     'phone', 'kyc_status', 'notification_prefs',
 ])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -50,6 +50,10 @@ class User extends Authenticatable implements MustVerifyEmail
             'can_bid' => 'boolean',
             'is_staff' => 'boolean',
             'notification_prefs' => 'array',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_last_step' => 'integer',
         ];
     }
 
@@ -80,7 +84,19 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function requiresSecondFactor(): bool
     {
-        return $this->is_staff || $this->company?->payout_iban_last4 !== null;
+        return $this->hasAuthenticatorApp() || $this->is_staff || $this->company?->payout_iban_last4 !== null;
+    }
+
+    /**
+     * Een gekoppelde authenticator-app (besluit Raph, 2 november 2026). Wie
+     * die heeft, logt er altijd mee in; de mailcode is dan de terugval.
+     */
+    public function hasAuthenticatorApp(): bool
+    {
+        // Ruwe attributen: een net aangemaakte gebruiker heeft deze kolommen nog niet geladen.
+        $attributes = $this->getAttributes();
+
+        return ($attributes['two_factor_confirmed_at'] ?? null) !== null && ($attributes['two_factor_secret'] ?? null) !== null;
     }
 
     /**

@@ -47,6 +47,7 @@ use App\Http\Controllers\Staff\SupportTicketController;
 use App\Http\Controllers\Staff\SystemController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TwoFactorSettingsController;
 use App\Http\Controllers\ViewingResponseController;
 use App\Http\Controllers\WatchlistPageController;
 use App\Models\User;
@@ -143,9 +144,10 @@ Route::middleware('guest')->group(function (): void {
     // het proberen van gelekte wachtwoorden over veel accounts tegelijk.
     Route::post('/inloggen', [LoginController::class, 'store'])->middleware('throttle:20,1')->name('login.store');
 
-    // De tweede inlogstap bij een gekoppelde uitbetaling (hfst. 15).
+    // De tweede inlogstap (hfst. 15): app, mail of herstelcode.
     Route::get('/inloggen/code', [TwoFactorController::class, 'create'])->name('two-factor.challenge');
     Route::post('/inloggen/code', [TwoFactorController::class, 'store'])->middleware('throttle:10,1')->name('two-factor.store');
+    Route::post('/inloggen/code/mail', [TwoFactorController::class, 'sendMail'])->middleware('throttle:3,10')->name('two-factor.mail');
 
     Route::get('/registreren', [RegisterController::class, 'create'])->name('register');
     Route::post('/registreren', [RegisterController::class, 'store'])->middleware('throttle:10,10')->name('register.store');
@@ -280,6 +282,15 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/account/wachtwoord', [AccountSettingsController::class, 'updatePassword'])->middleware('throttle:5,10')->name('account.password');
     Route::patch('/account/meldingen', [AccountSettingsController::class, 'updateNotifications'])->name('account.notifications');
     Route::post('/account/sessies/uitloggen', [AccountSettingsController::class, 'logoutOtherSessions'])->middleware('throttle:5,10')->name('account.sessions.logout');
+
+    // Authenticator-app (besluit Raph, 2 november 2026); elk beheer vraagt het wachtwoord.
+    Route::middleware('throttle:10,10')->group(function (): void {
+        Route::post('/account/tweestaps', [TwoFactorSettingsController::class, 'start'])->name('account.two-factor.start');
+        Route::post('/account/tweestaps/bevestigen', [TwoFactorSettingsController::class, 'confirm'])->name('account.two-factor.confirm');
+        Route::post('/account/tweestaps/annuleren', [TwoFactorSettingsController::class, 'cancel'])->name('account.two-factor.cancel');
+        Route::post('/account/tweestaps/herstelcodes', [TwoFactorSettingsController::class, 'regenerateRecoveryCodes'])->name('account.two-factor.recovery');
+        Route::delete('/account/tweestaps', [TwoFactorSettingsController::class, 'disable'])->name('account.two-factor.disable');
+    });
 
     Route::get('/bestellingen', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/bestellingen/{order}', [OrderController::class, 'show'])->name('orders.show');

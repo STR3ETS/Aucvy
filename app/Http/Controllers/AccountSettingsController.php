@@ -6,10 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Support\Audit\Audit;
+use App\Support\TwoFactor\Authenticator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -26,9 +28,21 @@ final class AccountSettingsController extends Controller
     public function show(Request $request): View
     {
         $user = $request->user();
+        $authenticator = app(Authenticator::class);
+
+        // Bezig met koppelen: de QR en het geheim uit de sessie, nog niet op de gebruiker.
+        $setupSecret = $request->session()->has('two_factor_setup')
+            ? Crypt::decryptString($request->session()->get('two_factor_setup'))
+            : null;
 
         return view('account.settings', [
             'user' => $user,
+            'twoFactor' => [
+                'active' => $user->hasAuthenticatorApp(),
+                'setup_secret' => $setupSecret,
+                'setup_qr' => $setupSecret === null ? null : $authenticator->qrSvg($user, $setupSecret),
+                'recovery_left' => $authenticator->remainingRecoveryCodes($user),
+            ],
             'preferences' => collect(self::PREFERENCES)->mapWithKeys(fn (string $key): array => [$key => $user->prefers($key)])->all(),
             'sessions' => $this->sessionsFor($user, $request->session()->getId()),
             'hasPush' => $user->pushSubscriptions()->exists(),

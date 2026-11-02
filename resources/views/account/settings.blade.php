@@ -57,9 +57,97 @@
                 </label>
                 <button type="submit" class="btn btn-primary">Wachtwoord wijzigen</button>
             </form>
-            <p class="mt-4 text-xs text-aj-muted">
-                Tweede inlogstap: {{ $user->requiresSecondFactor() ? 'actief, omdat er een uitbetaalrekening aan je account hangt. Bij elke login krijg je een code per mail.' : 'nog niet actief. Hij gaat automatisch aan zodra er een uitbetaalrekening aan je account hangt.' }}
-            </p>
+        </section>
+
+        {{-- Tweede inlogstap: authenticator-app (besluit Raph, 2 november 2026), mail als terugval. --}}
+        <section id="tweestaps" class="rounded-aj-s border border-aj-border bg-aj-surface p-6 lg:col-span-2" aria-labelledby="tweestaps-kop">
+            <h2 id="tweestaps-kop" class="text-lg font-extrabold">Tweede inlogstap</h2>
+
+            @if ($twoFactor['active'])
+                <p class="mt-1 text-sm">
+                    <span class="rounded-full bg-aj-success/10 px-2 py-0.5 text-xs font-bold text-aj-success-text">actief</span>
+                    Bij elke login vragen we de code uit je authenticator-app. Telefoon niet bij de hand? Dan kun je een code per mail laten sturen of een herstelcode gebruiken.
+                </p>
+                <p class="mt-2 text-xs text-aj-muted">Nog {{ $twoFactor['recovery_left'] }} van de {{ \App\Support\TwoFactor\Authenticator::RECOVERY_CODE_COUNT }} herstelcodes over.</p>
+            @elseif ($twoFactor['setup_secret'])
+                <div class="mt-3 flex flex-wrap items-start gap-6">
+                    <div class="rounded-aj-sm border border-aj-border bg-white p-3" aria-hidden="true">{!! $twoFactor['setup_qr'] !!}</div>
+                    <div class="min-w-0 flex-1 text-sm">
+                        <ol class="list-decimal space-y-1 pl-5">
+                            <li>Open je authenticator-app (bijvoorbeeld Google Authenticator, Microsoft Authenticator of 1Password).</li>
+                            <li>Scan de QR-code, of voer deze sleutel in: <code class="break-all rounded bg-aj-bg px-1.5 py-0.5 font-mono text-xs">{{ chunk_split($twoFactor['setup_secret'], 4, ' ') }}</code></li>
+                            <li>Vul de code van zes cijfers in die de app toont.</li>
+                        </ol>
+                        <form method="POST" action="{{ route('account.two-factor.confirm') }}" class="mt-4 flex flex-wrap items-end gap-2">
+                            @csrf
+                            <label class="min-w-0">
+                                <span class="text-sm font-bold">Code uit de app</span>
+                                <input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123456"
+                                       class="tabular mt-1 w-40 rounded-aj-sm border border-aj-border-strong px-3 text-sm tracking-[0.2em]" style="min-height:var(--cta-h)">
+                            </label>
+                            <button type="submit" class="btn btn-primary">Koppelen</button>
+                        </form>
+                        <form method="POST" action="{{ route('account.two-factor.cancel') }}" class="mt-2">
+                            @csrf
+                            <button type="submit" class="text-xs font-semibold text-aj-muted underline">Annuleren</button>
+                        </form>
+                    </div>
+                </div>
+            @else
+                <p class="mt-1 text-sm text-aj-muted">
+                    {{ $user->requiresSecondFactor()
+                        ? 'Nu krijg je bij elke login een code per mail, omdat er een uitbetaalrekening aan je account hangt. Met een authenticator-app gaat dat sneller en veiliger.'
+                        : 'Koppel een authenticator-app, dan vragen we bij elke login ook een code uit die app. Met een uitbetaalrekening is een tweede stap altijd aan.' }}
+                </p>
+            @endif
+
+            @if (session('recovery_codes'))
+                <div class="mt-4 rounded-aj-sm border border-aj-warn/40 bg-aj-warn/5 p-4">
+                    <p class="text-sm font-bold">Je herstelcodes</p>
+                    <p class="mt-1 text-xs text-aj-muted">Elke code werkt één keer, als je je telefoon kwijt bent. Je ziet ze alleen nu; bewaar ze in een wachtwoordmanager of op papier.</p>
+                    <ul class="tabular mt-3 grid grid-cols-2 gap-2 font-mono text-sm sm:grid-cols-4">
+                        @foreach (session('recovery_codes') as $code)
+                            <li class="rounded bg-aj-surface px-2 py-1">{{ $code }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @unless ($twoFactor['setup_secret'])
+                <div class="mt-4 flex flex-wrap gap-4">
+                    @if ($twoFactor['active'])
+                        <form method="POST" action="{{ route('account.two-factor.recovery') }}" class="flex flex-wrap items-end gap-2">
+                            @csrf
+                            <label>
+                                <span class="sr-only">Je wachtwoord</span>
+                                <input type="password" name="password" required autocomplete="current-password" placeholder="Je wachtwoord"
+                                       class="rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                            </label>
+                            <button type="submit" class="btn btn-ghost">Nieuwe herstelcodes</button>
+                        </form>
+                        <form method="POST" action="{{ route('account.two-factor.disable') }}" class="flex flex-wrap items-end gap-2">
+                            @csrf
+                            @method('DELETE')
+                            <label>
+                                <span class="sr-only">Je wachtwoord</span>
+                                <input type="password" name="password" required autocomplete="current-password" placeholder="Je wachtwoord"
+                                       class="rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                            </label>
+                            <button type="submit" class="btn btn-ghost" style="color:var(--color-aj-error)">App ontkoppelen</button>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('account.two-factor.start') }}" class="flex flex-wrap items-end gap-2">
+                            @csrf
+                            <label>
+                                <span class="sr-only">Je wachtwoord</span>
+                                <input type="password" name="password" required autocomplete="current-password" placeholder="Je wachtwoord"
+                                       class="rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                            </label>
+                            <button type="submit" class="btn btn-primary">Authenticator-app koppelen</button>
+                        </form>
+                    @endif
+                </div>
+            @endunless
         </section>
 
         {{-- Meldingen --}}

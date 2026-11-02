@@ -22,7 +22,7 @@ Statuswoorden: **Besloten** = we bouwen ernaar. **Bij Don** = Raph vraagt het na
 | 8 | Verificatieprovider | iDIN lijkt het beste, bespreken met Remco | Een koppeling voor iDIN klaarzetten achter een eigen contract, zodat de partij straks één adapter is. Handmatige beoordeling blijft tot iDIN live is. | Besloten, wacht op Remco |
 | 9 | Landen en drempels | Verificatie (KYC) is noodzakelijk, land is niet bepalend | Verificatie vóór het eerste bod blijft, voor iedereen, ongeacht land of bedrag. | Besloten |
 | 10 | Doelgroep | Zakelijke verkopers, particuliere kopers | Alleen zakelijke accounts met goedgekeurde bedrijfscontrole mogen publiceren. Kopers mogen particulier zijn. Zie vervolgvraag D1 over herroepingsrecht. | Besloten |
-| 11 | Tweede factor | Akkoord voor het pakket (a) | TOTP via een authenticator-app met recoverycodes; de mailcode blijft als terugval. | Besloten |
+| 11 | Tweede factor | Akkoord voor het pakket (a) | Gebouwd: TOTP via een authenticator-app (QR of sleutel), acht herstelcodes die elk één keer werken, de mailcode als terugval; koppelen en ontkoppelen vraagt het wachtwoord. | Gebouwd |
 | 12 | Telefoonnummer | Sms-dienst koppelen kan | Telefoonverificatie per sms, achter een eigen contract. Zie vervolgvraag V3 over de partij. | Besloten, wacht op partij |
 | 13 | Prijzen openbaar | Navragen bij Don | Verkochte kavels blijven zonder prijs. | Bij Don |
 | 14 | Reviewbeleid | Het Google-principe: de verkoper kan reageren; automatische moderatie op scheldwoorden, politieke kleuring, discriminatie | Reviews gaan door een automatische controle vóór publicatie; wat erdoor valt, wordt niet gepubliceerd en gaat naar beheer. Iedereen kan een review melden. De verkoper reageert, maar verwijdert niets. | Besloten |
