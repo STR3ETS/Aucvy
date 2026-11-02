@@ -10,6 +10,7 @@ use App\Models\AiRun;
 use App\Models\Dispute;
 use App\Models\ErrorEvent;
 use App\Models\Lot;
+use App\Models\MailDelivery;
 use App\Models\Review;
 use App\Risk\RiskScan;
 
@@ -76,6 +77,17 @@ final class IvySignals
                 'title' => "{$failedRuns} mislukte Ivy-taken in 24 uur",
                 'text' => 'Meer dan gewoonlijk. Kijk bij de AI-runs naar de foutmeldingen.',
                 'url' => route('admin.ai-runs'),
+            ];
+        }
+
+        $bounced = MailDelivery::query()->whereIn('status', MailDelivery::PROBLEMS)->where('last_event_at', '>=', now()->subDay())->count();
+
+        if ($bounced > 0) {
+            $signals[] = [
+                'level' => $bounced >= 10 ? 'fail' : 'warn',
+                'title' => trans_choice('{1} 1 mail kwam niet aan|[2,*] :count mails kwamen niet aan', $bounced, ['count' => $bounced]),
+                'text' => 'Gebounced of als spam gemeld in de laatste 24 uur. Bij veel tegelijk: controleer het domein bij Mailgun.',
+                'url' => route('admin.system').'#mail',
             ];
         }
 

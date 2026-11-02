@@ -282,6 +282,9 @@ return [
         // De inzage-export: de downloadlink is 24 uur geldig, het bestand
         // zelf (naam, adres, biedingen) hoort daarna niet te blijven staan.
         'exports_days' => 7,
+        // Het afleverlog van mail: lang genoeg om een klacht over een
+        // gemiste mail na te kunnen gaan, niet langer.
+        'mail_deliveries_days' => 90,
     ],
 
     /*

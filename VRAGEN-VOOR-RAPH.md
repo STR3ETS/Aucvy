@@ -31,7 +31,7 @@ Statuswoorden: **Besloten** = we bouwen ernaar. **Bij Don** = Raph vraagt het na
 | 17 | Verboden categorieën | Levert Raph aan; kijk ook wat andere platformen verbieden en houd dat gelijk | Gebouwd: een conceptlijst (wapens, explosieven, drugs, receptmedicijnen, levende en beschermde dieren, namaak, goederen zonder herkomst, gevaarlijke stoffen en meer) op basis van wat gangbare veilingplatformen verbieden. Een treffer gaat altijd naar een medewerker. Raph kan de lijst aanvullen. | Gebouwd, concept |
 | 18 | Biedregel reserve | Navragen bij Don | Standaard: tillen tot de reserve. | Bij Don |
 | 19 | Mail Builder | Mag gebruiken, met eigen templates | De Mail Builder van Eazy overnemen met eigen Aucvy-templates. | Besloten |
-| 20 | Mailprovider | Mailgun, zet Raph maandag op | Mailgun als mailer, met webhook voor afleveren en bounces. Zie vervolgvraag V5. | Besloten, wacht op sleutels |
+| 20 | Mailprovider | Mailgun, zet Raph maandag op | Gebouwd: Mailgun als mailer (EU-endpoint), afleverlog per mail, webhook met handtekeningcontrole voor afleveren, bounces en spammeldingen, en een Ivy-signaal als mail niet aankomt. Alleen de sleutels nog; zie V5. | Gebouwd, wacht op sleutels |
 | 21 | CMS | Mail Builder mag; de blogmodule koppelen aan Eazyonline met een API, zoals FitnessAannemer en Eazyonline nu doen met NOVA van Inspace | Geen eigen CMS. De blog komt via de Eazyonline-API, op dezelfde manier als bij FitnessAannemer. Zie vervolgvraag V6. | Besloten |
 | 22 | Tenants | Niet multi-tenant, blijft in eigen bezit | Eén omgeving. Branding en rechten per organisatie. | Besloten |
 | 23 | AI-regio | Standaard | EU-endpoint zodra beschikbaar. | Besloten |
@@ -77,7 +77,7 @@ Standaard: (c). Zo gebouwd; een ander antwoord is een kleine aanpassing.
 Antwoord:
 
 **V5. Mailgun: domein en regio**
-Nodig zodra je het opzet: het afzenderdomein (bijvoorbeeld mail.aucvy.nl), het afzenderadres, de API-sleutel en of het account in de EU-regio staat.
+Nodig zodra je het opzet: het afzenderdomein (bijvoorbeeld mail.aucvy.nl), het afzenderadres, de API-sleutel, de webhooksleutel (Mailgun, onder Webhooks) en of het account in de EU-regio staat. Zet in Mailgun een webhook op https://aucvy.nl/webhooks/mailgun voor delivered, failed en complained.
 Antwoord:
 
 **V6. Blog via de Eazyonline-API**

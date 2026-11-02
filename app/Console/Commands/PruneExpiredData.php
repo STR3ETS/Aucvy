@@ -9,6 +9,7 @@ use App\Models\AiRun;
 use App\Models\AuctionEvent;
 use App\Models\Bid;
 use App\Models\Dispute;
+use App\Models\MailDelivery;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Payout;
@@ -83,7 +84,10 @@ final class PruneExpiredData extends Command
 
         $exports = $this->pruneExports();
 
-        $this->info("Opgeruimd: {$aiRuns} AI-runs, {$events} veilingevents, {$auditRows} auditregels, {$bids} biedingen, {$orders} orders, {$exports} exports.");
+        $mailCutoff = now()->subDays((int) config('aucvy.retention.mail_deliveries_days'));
+        $mails = $this->deleteInChunks(MailDelivery::query()->where('created_at', '<', $mailCutoff)->toBase());
+
+        $this->info("Opgeruimd: {$aiRuns} AI-runs, {$events} veilingevents, {$auditRows} auditregels, {$bids} biedingen, {$orders} orders, {$exports} exports, {$mails} mailregels.");
 
         return self::SUCCESS;
     }

@@ -39,9 +39,50 @@
                     @endforeach
                 </ol>
             @endif
+            <p class="mt-3 text-xs"><a href="{{ route('admin.errors') }}" class="font-semibold underline">Naar het foutlog</a>, waar je fouten afhandelt.</p>
         </section>
 
-        <aside class="space-y-5">
+        {{-- Afleverlog van mail (Mailgun, besluit Raph 2 november 2026). --}}
+        <section id="mail" class="rounded-aj-s border border-aj-border bg-aj-surface p-5 lg:col-start-1" aria-labelledby="mail-kop">
+            <h2 id="mail-kop" class="text-sm font-extrabold">Mail</h2>
+            <p class="mt-1 text-xs text-aj-muted">
+                Laatste 7 dagen: {{ $mail['sent'] }} verstuurd, {{ $mail['delivered'] }} afgeleverd, {{ $mail['problems'] }} niet aangekomen.
+                @if (config('mail.default') !== 'mailgun')
+                    Afleverstatus komt pas binnen met Mailgun (MAIL_MAILER=mailgun en de webhook {{ route('webhooks.mailgun') }}).
+                @endif
+            </p>
+            @if ($mail['recent']->isEmpty())
+                <p class="mt-4 rounded-aj-s border border-dashed border-aj-border-strong p-6 text-center text-sm text-aj-muted">Nog geen mail verstuurd.</p>
+            @else
+                <div class="mt-3 overflow-x-auto">
+                    <table class="admin-table">
+                        <thead><tr><th>Aan</th><th>Onderwerp</th><th>Status</th><th>Wanneer</th></tr></thead>
+                        <tbody>
+                            @foreach ($mail['recent'] as $delivery)
+                                <tr>
+                                    <td class="break-all">{{ $delivery->to_email }}</td>
+                                    <td>{{ \Illuminate\Support\Str::limit((string) $delivery->subject, 60) }}</td>
+                                    <td>
+                                        <span @class([
+                                            'rounded-full px-2 py-0.5 text-xs font-bold',
+                                            'bg-aj-success/10 text-aj-success-text' => $delivery->status === 'delivered',
+                                            'bg-aj-error/10 text-aj-error' => in_array($delivery->status, \App\Models\MailDelivery::PROBLEMS, true),
+                                            'bg-aj-bg text-aj-muted' => in_array($delivery->status, ['sent', 'deferred'], true),
+                                        ])>{{ ['sent' => 'verstuurd', 'delivered' => 'afgeleverd', 'deferred' => 'vertraagd', 'failed' => 'gebounced', 'complained' => 'spammelding'][$delivery->status] ?? $delivery->status }}</span>
+                                        @if ($delivery->failure_reason)
+                                            <span class="block text-xs text-aj-muted">{{ \Illuminate\Support\Str::limit($delivery->failure_reason, 80) }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="whitespace-nowrap text-xs text-aj-muted">{{ $delivery->created_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM HH:mm') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </section>
+
+        <aside class="space-y-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
             <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="feiten">
                 <h2 id="feiten" class="text-sm font-extrabold">Instellingen</h2>
                 <dl class="mt-2 space-y-1 text-sm">

@@ -24,6 +24,19 @@ return [
         'key' => env('MOLLIE_API_KEY'),
     ],
 
+    /*
+     | Mailgun (besluit Raph, 2 november 2026). Zet MAIL_MAILER=mailgun als
+     | het account klaar is. Het EU-endpoint is de standaard, zodat mail
+     | binnen de EU verwerkt wordt.
+     */
+    'mailgun' => [
+        'domain' => env('MAILGUN_DOMAIN'),
+        'secret' => env('MAILGUN_SECRET'),
+        'endpoint' => env('MAILGUN_ENDPOINT', 'api.eu.mailgun.net'),
+        'scheme' => 'https',
+        'webhook_signing_key' => env('MAILGUN_WEBHOOK_SIGNING_KEY'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

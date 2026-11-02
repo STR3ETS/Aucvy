@@ -18,6 +18,7 @@ use App\Http\Controllers\LotController;
 use App\Http\Controllers\LotImportController;
 use App\Http\Controllers\LotIndexController;
 use App\Http\Controllers\LotManagementController;
+use App\Http\Controllers\MailgunWebhookController;
 use App\Http\Controllers\MollieWebhookController;
 use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\OrderActionController;
@@ -447,6 +448,11 @@ Route::middleware('signed')->group(function (): void {
 Route::post('/webhooks/mollie', MollieWebhookController::class)
     ->middleware('throttle:120,1')
     ->name('webhooks.mollie');
+
+// Afleverstatus van Mailgun; alleen met een geldige handtekening.
+Route::post('/webhooks/mailgun', MailgunWebhookController::class)
+    ->middleware('throttle:300,1')
+    ->name('webhooks.mailgun');
 
 /*
  | Geen route? Dan eerst de doorverwijzingen (masterbriefing 7.2), anders de
