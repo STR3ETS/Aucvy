@@ -43,7 +43,7 @@ Statuswoorden: **Besloten** = we bouwen ernaar. **Bij Don** = Raph vraagt het na
 | 29 | Larastan | Laat Raph aan ons over | Technische keuze van Boyd. | Besloten |
 | 30 | Redis en Horizon | Laat Raph aan ons over | Technische keuze van Boyd; bij livegang als de hosting het biedt. | Besloten |
 | 31 | Meilisearch | Prima | Zoeken via Scout met Meilisearch zodra de hosting het draait; tot dan blijft MySQL. | Besloten |
-| 32 | Sentry | Fouten loggen met audit trail in het beheerpaneel; updates van Ivy over de status op het dashboard, zoals Izzy bij Eazy | Geen Sentry. Een foutenoverzicht in de backoffice met spoor, en een statusfeed van Ivy op het beheerdashboard naar het voorbeeld van Izzy. | Besloten |
+| 32 | Sentry | Fouten loggen met audit trail in het beheerpaneel; updates van Ivy over de status op het dashboard, zoals Izzy bij Eazy | Gebouwd: foutlog in beheer (zelfde soort fout telt op, geheimen gemaskeerd, afhandelen met notitie in het auditlog, heropent vanzelf als hij terugkomt) en een Ivy-kaart op het beheeroverzicht met de belangrijkste signalen, naar het voorbeeld van Izzy. | Gebouwd |
 | 33 | Staging | Wij hosten; Don heeft toegang en Raph vraagt het uit | Staging zodra de toegang er is. | Bij Don |
 | 34 | Marktdata | Geen antwoord | Standaard: geen bron; de waarde-indicatie blijft een indicatie. | Standaard |
 | 35 | Vervoerder | Klaarzetten, komt op termijn | Het contract staat; een echte vervoerder volgt later. | Later |

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Auctions\Exceptions\BidRejected;
 use App\Http\Middleware\EnsureSecondFactorOnRecall;
+use App\Support\Health\ErrorLog;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -48,6 +49,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Naast het gewone log ook in het foutlog van beheer (besluit Raph, 2 november 2026).
+        $exceptions->report(function (Throwable $exception): void {
+            app(ErrorLog::class)->record($exception);
+        });
 
         /*
          | Een geweigerd bod is geen serverfout maar een antwoord. Elke reden

@@ -48,6 +48,7 @@
                 ['admin.redirects', 'Doorverwijzingen'],
                 ['admin.ai-runs', 'AI-runs'],
                 ['admin.auditlog', 'Auditlog'],
+                ['admin.errors', 'Foutlog'],
                 ['admin.queue', 'Wachtrij'],
                 ['admin.system', 'Systeem'],
             ],

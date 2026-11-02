@@ -21,6 +21,7 @@ use App\Models\Sale;
 use App\Models\User;
 use App\Models\Viewing;
 use App\Risk\RiskScan;
+use App\Support\Health\IvySignals;
 use App\Support\Money\Money;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
@@ -41,6 +42,7 @@ final class BackofficeController extends Controller
         return view('admin.index', [
             'stats' => $this->overviewStats(),
             'feed' => $this->activityFeed(),
+            'signals' => app(IvySignals::class)->all(),
         ]);
     }
 

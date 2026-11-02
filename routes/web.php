@@ -37,6 +37,7 @@ use App\Http\Controllers\Staff\BackofficeController;
 use App\Http\Controllers\Staff\CategoryAdminController;
 use App\Http\Controllers\Staff\ComplianceController;
 use App\Http\Controllers\Staff\DisputeReviewController;
+use App\Http\Controllers\Staff\ErrorLogController;
 use App\Http\Controllers\Staff\LiveRoomController;
 use App\Http\Controllers\Staff\ModerationController;
 use App\Http\Controllers\Staff\QueueController;
@@ -408,6 +409,9 @@ Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group
     Route::post('/wachtrij/vergeten', [QueueController::class, 'forget'])->name('queue.forget');
     Route::post('/wachtrij/opruimen', [QueueController::class, 'flush'])->name('queue.flush');
     Route::get('/systeem', [SystemController::class, 'index'])->name('system');
+    Route::get('/fouten', [ErrorLogController::class, 'index'])->name('errors');
+    Route::post('/fouten/{event}/afhandelen', [ErrorLogController::class, 'resolve'])->name('errors.resolve');
+    Route::post('/fouten/{event}/heropenen', [ErrorLogController::class, 'reopen'])->name('errors.reopen');
 
     Route::get('/support', [SupportTicketController::class, 'index'])->name('support');
     Route::post('/support/{ticket}/sluiten', [SupportTicketController::class, 'close'])->name('support.close');
