@@ -7,6 +7,7 @@ use App\Models\Auction;
 use App\Models\Category;
 use App\Models\Lot;
 use App\Support\Experiments\HomeExperiment;
+use App\Support\Privacy\CookieConsent;
 use Illuminate\Support\Lottery;
 
 /*
@@ -72,7 +73,22 @@ describe('zonder lopende test', function () {
 });
 
 describe('de toewijzing', function () {
-    beforeEach(fn () => config()->set('aucvy.experiments.home.enabled', true));
+    beforeEach(function () {
+        config()->set('aucvy.experiments.home.enabled', true);
+
+        // Meedoen aan de test vraagt toestemming voor statistiek.
+        $this->withCookie(CookieConsent::COOKIE, json_encode(['v' => CookieConsent::VERSION, 'statistics' => true, 'marketing' => false]));
+    });
+
+    it('laat zonder toestemming voor statistiek niemand meedoen', function () {
+        Lottery::alwaysWin();
+
+        $this->withCookie(CookieConsent::COOKIE, json_encode(['v' => CookieConsent::VERSION, 'statistics' => false, 'marketing' => false]))
+            ->get('/')
+            ->assertOk()
+            ->assertViewIs('home-c')
+            ->assertCookieMissing(HomeExperiment::COOKIE);
+    });
 
     it('wijst het nieuwe ontwerp toe en zet de cookie', function () {
         Lottery::alwaysWin();

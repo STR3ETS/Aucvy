@@ -10,11 +10,13 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CategoryIndexController;
+use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardListController;
 use App\Http\Controllers\DevCheckoutController;
 use App\Http\Controllers\FunnelController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LotController;
 use App\Http\Controllers\LotImportController;
 use App\Http\Controllers\LotIndexController;
@@ -95,6 +97,12 @@ Route::view('/zekerheid', 'assurance')->name('assurance');
 // tarieven en termijnen komen uit dezelfde bron als de code.
 Route::view('/verkooproute', 'selling-guide')->name('selling.guide');
 Route::view('/faq', 'faq')->name('faq');
+
+// Juridisch en de cookiekeuze (besluit Raph, 2 november 2026).
+Route::get('/voorwaarden', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/privacy', [LegalController::class, 'privacy'])->name('legal.privacy');
+Route::get('/cookies', [LegalController::class, 'cookies'])->name('legal.cookies');
+Route::post('/cookies/voorkeur', [CookieConsentController::class, 'store'])->middleware('throttle:30,1')->name('cookies.consent');
 
 // Blog uit het CMS van Eazyonline (besluit Raph, 2 november 2026).
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');

@@ -56,6 +56,8 @@
         <x-marketing.ab-switch :variant="$variant" :demo="$demo" />
     @endif
 
+    <x-privacy.cookie-banner />
+
     @stack('scripts')
 </body>
 </html>

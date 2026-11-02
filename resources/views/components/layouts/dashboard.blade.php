@@ -213,6 +213,8 @@
     <a class="ivy-launch" href="{{ route('lots.index') }}" aria-label="Open Ivy"><img
         src="{{ asset('images/agents/ivy.jpg') }}" alt="">Vraag Ivy</a>
 
+    <x-privacy.cookie-banner />
+
     @stack('scripts')
 </body>
 </html>

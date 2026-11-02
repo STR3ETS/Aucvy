@@ -207,11 +207,11 @@
                 </div>
                 <div><h4>Kopen</h4><ul><li><a href="{{ route('lots.index') }}">Veilingen</a></li><li><a href="{{ route('categories.index') }}">Categorieën</a></li><li><a href="{{ route('lots.buy-now') }}">Direct kopen</a></li><li><a href="{{ route('home') }}#reis">Hoe bieden werkt</a></li><li><a href="{{ route('assurance') }}">Zekerheid</a></li></ul></div>
                 <div><h4>Verkopen</h4><ul><li><a href="{{ route('sell') }}">Kavel plaatsen</a></li><li><a href="{{ route('selling.guide') }}">Verkooproute</a></li><li><a href="{{ route('pricing') }}">Tarieven</a></li><li><a href="{{ route('home') }}#zakelijk">Zakelijk</a></li></ul></div>
-                <div><h4>Aucvy</h4><ul><li><a href="{{ route('home') }}">Over ons</a></li><li><a href="{{ route('faq') }}">Veelgestelde vragen</a></li><li><a href="{{ route('contact') }}">Contact</a></li><li><a href="{{ route('home') }}">Privacy</a></li></ul></div>
+                <div><h4>Aucvy</h4><ul><li><a href="{{ route('home') }}">Over ons</a></li><li><a href="{{ route('faq') }}">Veelgestelde vragen</a></li><li><a href="{{ route('contact') }}">Contact</a></li><li><a href="{{ route('legal.privacy') }}">Privacy</a></li></ul></div>
             </div>
             <div class="foot-bottom">
                 <span>© {{ now()->year }} Aucvy B.V.</span>
-                <span>Voorwaarden · Privacy · Cookies</span>
+                <span><a href="{{ route('legal.terms') }}">Voorwaarden</a> · <a href="{{ route('legal.privacy') }}">Privacy</a> · <a href="{{ route('legal.cookies') }}">Cookies</a></span>
             </div>
         </div>
     </footer>
@@ -221,6 +221,8 @@
          tot die tijd opent hij het zoekveld op de veilingenpagina. --}}
     <a class="ivy-launch" href="{{ route('lots.index') }}" aria-label="Open Ivy"><img
         src="{{ asset('images/agents/ivy.jpg') }}" alt="">Vraag Ivy</a>
+
+    <x-privacy.cookie-banner />
 
     @stack('scripts')
 </body>

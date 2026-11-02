@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support\Experiments;
 
 use App\Enums\HomeVariant;
+use App\Support\Privacy\CookieConsent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Lottery;
@@ -43,12 +44,24 @@ final class HomeExperiment
             return $forced ?? $this->defaultVariant();
         }
 
+        /*
+         | Meedoen aan de test is statistiek: alleen met toestemming uit de
+         | cookiebanner (besluit Raph, 2 november 2026). Zonder keuze krijgt
+         | de bezoeker het standaardontwerp, of de variant uit de url, en
+         | geen cookie.
+         */
+        $consented = app(CookieConsent::class)->allows($request, 'statistics');
+
         if ($forced !== null) {
-            if (! $request->boolean(self::DEMO)) {
+            if ($consented && ! $request->boolean(self::DEMO)) {
                 $this->remember($forced);
             }
 
             return $forced;
+        }
+
+        if (! $consented) {
+            return $this->defaultVariant();
         }
 
         $remembered = HomeVariant::tryFrom((string) $request->cookie(self::COOKIE));

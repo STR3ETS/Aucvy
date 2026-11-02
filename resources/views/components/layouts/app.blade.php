@@ -47,6 +47,8 @@
 
     {{ $ivy ?? '' }}
 
+    <x-privacy.cookie-banner />
+
     @stack('scripts')
 </body>
 </html>

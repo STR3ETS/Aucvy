@@ -80,9 +80,9 @@
         <div class="footer-c-bottom">
             <span>© {{ now()->year }} Aucvy B.V.</span>
             <nav aria-label="Juridisch">
-                <a href="{{ route('assurance') }}">Voorwaarden</a>
-                <a href="{{ route('assurance') }}">Privacy</a>
-                <a href="{{ route('assurance') }}">Cookies</a>
+                <a href="{{ route('legal.terms') }}">Voorwaarden</a>
+                <a href="{{ route('legal.privacy') }}">Privacy</a>
+                <a href="{{ route('legal.cookies') }}">Cookies</a>
             </nav>
             <span class="by">Gebouwd door <a href="https://eazyonline.nl" target="_blank" rel="noopener noreferrer">Eazyonline</a></span>
         </div>

@@ -35,7 +35,7 @@ Statuswoorden: **Besloten** = we bouwen ernaar. **Bij Don** = Raph vraagt het na
 | 21 | CMS | Mail Builder mag; de blogmodule koppelen aan Eazyonline met een API, zoals FitnessAannemer en Eazyonline nu doen met NOVA van Inspace | Gebouwd: /blog en /blog/{slug} halen berichten op bij de Eazyonline-API met een leestoken, met cache en een reserveversie als de API even weg is, veilige HTML, SEO-gegevens en de sitemap. Alleen het token nog; zie V6. | Gebouwd, wacht op token |
 | 22 | Tenants | Niet multi-tenant, blijft in eigen bezit | Eén omgeving. Branding en rechten per organisatie. | Besloten |
 | 23 | AI-regio | Standaard | EU-endpoint zodra beschikbaar. | Besloten |
-| 24 | Juridisch | Cookiebanner komt; aan de algemene voorwaarden werkt Raph; Don voor de rest | Cookiebanner bouwen. Voorwaarden, privacy en cookieverklaring als pagina's klaarzetten die de tekst tonen zodra die er is. | Besloten, tekst volgt |
+| 24 | Juridisch | Cookiebanner komt; aan de algemene voorwaarden werkt Raph; Don voor de rest | Gebouwd: cookiebanner (alles accepteren, alleen noodzakelijk, instellen), een echte cookieverklaring op /cookies die de cookies uit de code noemt, en /voorwaarden en /privacy als tijdelijke pagina (noindex) tot de teksten er zijn. Het A/B-experiment op de home draait alleen nog met toestemming voor statistiek. | Gebouwd, tekst volgt |
 | 25 | De home | Geen antwoord | Standaard: zo laten met disclaimer. | Standaard |
 | 26 | Huisstijl deel-visual | "Heb je toch al?" | Klopt: logo en kleuren staan in Aucvy. We gebruiken die. Formaten: vierkant, staand (story) en liggend (link-preview). | Besloten |
 | 27 | Beveiligingsupdates | Geen idee, laat Raph aan ons | Technische keuze van Boyd: bijwerken. | Besloten |
