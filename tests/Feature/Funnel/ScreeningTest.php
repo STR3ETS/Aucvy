@@ -41,6 +41,13 @@ function screenableDraft(User $seller, array $overrides = []): Lot
         'seller_id' => $seller->id,
         'title' => 'Compressor Atlas Copco GA11',
         'description' => 'Schroefcompressor uit een werkplaats, 11 kW, draait goed.',
+        // Vast, niet uit de factory: een willekeurige merknaam kan op de
+        // lijst met verboden waar aanslaan.
+        'brand' => 'Atlas Copco',
+        'model' => 'GA11',
+        'value_min_cents' => null,
+        'value_max_cents' => null,
+        'value_confidence' => null,
         'category_id' => Category::factory()->create()->id,
         'draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 150_000, 'ownership_declared' => true, 'warranty' => 'none'],
         ...$overrides,
