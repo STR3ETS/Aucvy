@@ -106,3 +106,24 @@ Tot Don antwoordt, geldt de standaardkeuze en loopt de bouw door.
 | 33 | Toegang tot de hosting voor staging | Geen staging |
 | D1 | **Herroepingsrecht (nieuw).** Zakelijke verkopers verkopen online aan particulieren. Bij online verkoop van een bedrijf aan een consument geldt normaal 14 dagen bedenktijd; de uitzondering voor veilingen geldt alleen als de koper er persoonlijk bij kan zijn. Geldt de bedenktijd hier, en zo ja: wie betaalt het terugsturen, en hoe verhoudt het zich tot de afslag en koop direct? | We tonen de wettelijke informatie bij elke koop en bouwen een herroepingsmelding naast de geschilroute, zodra Don dit bevestigt |
 | D2 | **Escrow op de site (nieuw).** Mag de site zeggen dat het geld bij Stripe blijft tot de koper ontvangen heeft? Het woord "escrow" of "derdengeldenrekening" gebruiken we niet zonder zijn akkoord. | Wel de feitelijke zin, niet het woord escrow |
+
+---
+
+## Antwoorden van Don (2 november)
+
+De blauwe kleur van Don ging verloren bij het doorsturen; per regel is niet te zien wat van Don en wat van Raph komt. Het geldt als besloten tenzij Raph het tegenspreekt. De volledige uitwerking en de vervolgvragen N1 tot N13 staan in de doc "Aucvy: stand van zaken en aan te leveren".
+
+| Onderwerp | Besluit | Gevolg |
+| --- | --- | --- |
+| Succesfee (6) | Staffel op jaaromzet verkoper: tot 25K 15%, 25-50K 12,5%, 50-250K 10%, 250-500K 9%, 500K-1M 8%, 1-2,5M 7%, vanaf 2,5M 6%. Geen terugclaimen achteraf. | Vervangt de fee per pakket (N1-N3) |
+| Administratiekosten koper (6) | € 15 per factuur | Regel op elke order (N4) |
+| Bieden en identificatie (6, 9) | Tot € 250 vrij bieden, daarboven volledig geïdentificeerd | Wijkt af van vraag 9; nieuw antwoord gaat voor (N5) |
+| Borg (6) | Algemene borg € 200 ex btw boven € 2.500, € 500 boven € 10.000, verder bespreken | Eén borg per account, via Stripe (N6) |
+| Btw (3) | Verkoper kiest per kavel marge of btw; regels overnemen van Troostwijk, Auctivo, OLVM | Keuze in de wizard; buitenland open (N13) |
+| Boekhouding (5) | Exact Online via de API | Koppeling na toegang (N10) |
+| Prijzen openbaar (13) | Ja, met wie er bood (biednaam, zoals OLVM), ook op het verkopersprofiel | Wijkt af van de standaard (N7) |
+| Reserve (18) | Autobod tilt niet naar de reserve | Zo werkt het al (N9) |
+| Uitbetaling (7) | Na ontvangst en wederzijdse waardering, Marktplaats-principe | Onderdeel van Stripe Connect (N8) |
+| Voorwaarden (24) | Er al, van Yourauc (Remco) | Documenten opvragen (N11) |
+| Hosting (33) | Geen antwoord; de software blijft van Yourauc en wordt aan Aucvy verhuurd | Eigendom en hosting bespreken (N12) |
+| Wie factureert (2) | Niet beantwoord | Standaard blijft |
