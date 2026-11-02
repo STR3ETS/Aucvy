@@ -45,7 +45,7 @@ it('legt een bod vast met bieder, veiling en bedrag', function () {
 });
 
 it('legt een publicatie vast met verkoopvorm en veiling', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $lot = Lot::factory()->anonymousDraft()->create([
         'seller_id' => $seller->id,
         'title' => 'Heftruck Linde H25',

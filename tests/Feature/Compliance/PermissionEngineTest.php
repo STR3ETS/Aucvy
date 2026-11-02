@@ -20,8 +20,17 @@ function engine(): PermissionEngine
     return app(PermissionEngine::class);
 }
 
-it('laat een geverifieerd particulier account bieden, publiceren en uitbetaald worden', function () {
+it('laat een geverifieerd particulier account bieden maar niet verkopen', function () {
+    // Zakelijke verkopers, particuliere kopers (besluit Raph, 2 november 2026).
     $user = User::factory()->verified()->create();
+
+    expect(engine()->decide($user, Permission::Bid)->allowed)->toBeTrue()
+        ->and(engine()->decide($user, Permission::Publish)->reason)->toBe(DenialReason::BusinessAccountRequired)
+        ->and(engine()->decide($user, Permission::Payout)->reason)->toBe(DenialReason::BusinessAccountRequired);
+});
+
+it('laat een geverifieerd zakelijk account met gecontroleerd bedrijf bieden, publiceren en uitbetaald worden', function () {
+    $user = User::factory()->verified()->business()->create();
 
     foreach (Permission::cases() as $permission) {
         expect(engine()->decide($user, $permission)->allowed)->toBeTrue($permission->value);

@@ -80,7 +80,7 @@ it('toont ook een kritische review op het profiel, met de verkopersreactie', fun
         ->assertSee('Terecht punt')
         ->assertSee('1★')
         ->assertSee('5★')
-        ->assertSee('Reviews worden niet verwijderd op verzoek');
+        ->assertSee('De verkoper kan reageren, maar niets verwijderen.');
 });
 
 it('laat de verkoper maar één keer reageren', function () {

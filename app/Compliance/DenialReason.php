@@ -25,6 +25,9 @@ enum DenialReason: string
     /** De identiteitscontrole is afgewezen; opnieuw aanvragen kan. */
     case KycRejected = 'kyc_rejected';
 
+    /** Verkopen kan alleen met een zakelijk account (besluit Raph, 2 november 2026). */
+    case BusinessAccountRequired = 'business_account_required';
+
     /** Zakelijk account zonder goedgekeurde bedrijfscontrole (KvK). */
     case KybRequired = 'kyb_required';
 
@@ -42,7 +45,7 @@ enum DenialReason: string
     public function resolutionRoute(): ?string
     {
         return match ($this) {
-            self::EmailUnverified, self::KycRequired, self::KycPending, self::KycRejected, self::KybRequired, self::IbanRequired => 'verification.overview',
+            self::EmailUnverified, self::KycRequired, self::KycPending, self::KycRejected, self::BusinessAccountRequired, self::KybRequired, self::IbanRequired => 'verification.overview',
             self::Blocked => null,
         };
     }

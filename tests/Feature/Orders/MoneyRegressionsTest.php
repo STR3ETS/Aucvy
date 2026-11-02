@@ -47,7 +47,7 @@ beforeEach(function () {
 
 function moneyOrder(array $attributes = []): Order
 {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
 
     return Order::factory()->create(['seller_id' => $seller->id, 'status' => OrderStatus::AwaitingPayment, ...$attributes]);
 }
@@ -129,7 +129,7 @@ it('houdt de borg vast en waarschuwt support als de winnaar niet betaalt', funct
 });
 
 it('weigert prijzen die elkaar tegenspreken bij het publiceren', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $category = Category::factory()->create();
 
     $draft = function (array $meta) use ($seller, $category): Lot {

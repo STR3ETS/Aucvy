@@ -165,8 +165,16 @@
                     @php $review = $order->review; @endphp
 
                     <section id="beoordeling" class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Beoordeling">
+                        @if (session('status'))
+                            <p class="mb-3 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">{{ session('status') }}</p>
+                        @endif
                         @if ($review !== null)
                             <h2 class="text-sm font-extrabold">Beoordeling</h2>
+                            @if ($review->moderation_status === \App\Models\Review::STATUS_HELD)
+                                <p class="mt-1 text-xs font-bold text-aj-warn-text">Wordt bekeken door een medewerker voordat hij online komt.</p>
+                            @elseif ($review->moderation_status === \App\Models\Review::STATUS_REMOVED)
+                                <p class="mt-1 text-xs font-bold text-aj-muted">Niet gepubliceerd: {{ $review->moderation_reason?->label() }}.</p>
+                            @endif
                             <p class="mt-2 text-sm">
                                 <span class="tabular font-extrabold">{{ $review->rating }}★</span>
                                 @if ($review->body) - "{{ $review->body }}" @endif
@@ -193,7 +201,7 @@
                                           class="w-full rounded-aj-sm border border-aj-border-strong p-3 text-sm"></textarea>
                                 <button type="submit" class="btn btn-primary">Beoordeling plaatsen</button>
                             </form>
-                            <p class="mt-2 text-xs text-aj-muted">Reviews blijven staan - ook kritische.</p>
+                            <p class="mt-2 text-xs text-aj-muted">Reviews blijven staan, ook kritische. Scheldwoorden, discriminatie, politiek en persoonsgegevens worden eerst door een medewerker bekeken.</p>
                         @else
                             <p class="text-sm text-aj-muted">De koper kan deze bestelling nu beoordelen.</p>
                         @endif

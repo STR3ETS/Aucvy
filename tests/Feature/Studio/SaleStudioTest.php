@@ -37,7 +37,7 @@ function saleDraft(User $seller, string $title): Lot
 }
 
 it('plant een veiling, zet kavels erin, publiceert en laat de kavels na elkaar sluiten', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $endsAt = now()->addDays(3)->setTime(20, 0);
 
     $this->actingAs($seller)
@@ -84,7 +84,7 @@ it('plant een veiling, zet kavels erin, publiceert en laat de kavels na elkaar s
 });
 
 it('weigert publiceren zonder kavels of met een te vroege sluiting en houdt vreemden buiten', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $sale = Sale::factory()->create(['seller_id' => $seller->id]);
 
     $this->actingAs($seller)->from(route('dashboard.sales.edit', $sale))->post(route('dashboard.sales.publish', $sale))->assertSessionHasErrors('sale');
@@ -106,7 +106,7 @@ it('weigert publiceren zonder kavels of met een te vroege sluiting en houdt vree
 });
 
 it('schuift kavels zonder bod mee met een nieuwe sluiting en annuleert alleen zonder biedingen', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $sale = Sale::factory()->published()->create(['seller_id' => $seller->id, 'ends_at' => now()->addDays(2)->setTime(19, 0), 'closing_gap_seconds' => 300]);
 
     $quiet = Lot::factory()->create(['seller_id' => $seller->id, 'status' => LotStatus::Live, 'sale_id' => $sale->id, 'sale_position' => 0]);

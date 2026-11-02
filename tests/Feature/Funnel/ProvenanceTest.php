@@ -92,7 +92,7 @@ it('markeert eigen invoer als bron verkoper, en Ivy overschrijft die niet', func
 });
 
 it('weigert publiceren zolang een Ivy-veld onbevestigd is, en niet meer na bevestiging', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $lot = Lot::factory()->anonymousDraft()->create([
         'seller_id' => $seller->id,
         'title' => 'Showroomkeuken',
@@ -160,7 +160,7 @@ it('geeft de waarde-indicatie een bron met het aantal vergelijkingen, zonder bev
 });
 
 it('laat PublishLot zelf ook weigeren bij een onbevestigd veld', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $lot = Lot::factory()->anonymousDraft()->create([
         'seller_id' => $seller->id,
         'category_id' => Category::factory()->create()->id,

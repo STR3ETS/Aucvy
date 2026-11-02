@@ -6,14 +6,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Review;
+use App\Reviews\ReviewModerator;
+use App\Support\Audit\Audit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Reviews zijn niet cosmetisch (hfst. 13.6): alleen een afgeronde order
- * geeft er recht op, kritische reviews blijven staan - er bestaat hier
- * bewust geen delete-route - en de verkoper krijgt een reactieveld.
+ * geeft er recht op, kritische reviews blijven staan - de verkoper heeft
+ * bewust geen delete-route - en de verkoper krijgt een reactieveld. Wat
+ * offline gaat, gaat dat via beheer (ReviewModerationController).
  */
 final class ReviewController extends Controller
 {
@@ -44,11 +47,32 @@ final class ReviewController extends Controller
             'body' => $validated['body'] ?? null,
         ]);
 
-        // Direct publiek - er is geen redactieslag en die komt er ook niet.
-        $review->published_at = now();
+        /*
+         | Google-principe (besluit Raph, 2 november 2026): eerst de
+         | automatische controle. Geen treffer, dan direct publiek. Een
+         | treffer (scheldwoord, discriminatie, politiek, persoonsgegevens)
+         | wordt niet gepubliceerd maar door een medewerker beoordeeld; de
+         | koper hoort dat eerlijk, met de reden.
+         */
+        $held = app(ReviewModerator::class)->reasonToHold($review->body);
+
+        if ($held === null) {
+            $review->published_at = now();
+            $review->moderation_status = Review::STATUS_PUBLISHED;
+        } else {
+            $review->moderation_status = Review::STATUS_HELD;
+            $review->moderation_reason = $held;
+        }
+
         $review->save();
 
-        return redirect()->route('orders.show', $order);
+        if ($held !== null) {
+            Audit::record('review.held', $review, null, after: ['reason' => $held->value]);
+
+            return redirect()->route('orders.show', $order)->with('status', __('reviews.held', ['reason' => $held->label()]));
+        }
+
+        return redirect()->route('orders.show', $order)->with('status', __('reviews.published'));
     }
 
     public function reply(Request $request, Review $review): RedirectResponse

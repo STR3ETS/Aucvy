@@ -39,7 +39,7 @@ function draftFor(?User $seller = null, array $meta = []): Lot
 describe('publiceren', function () {
     beforeEach(function () {
         Queue::fake();
-        $this->seller = User::factory()->verified()->create();
+        $this->seller = User::factory()->verified()->business()->create();
     });
 
     it('maakt van het concept een lopende veiling', function () {
@@ -165,7 +165,7 @@ describe('via het endpoint', function () {
     it('publiceert voor een ingelogde geverifieerde verkoper', function () {
         Queue::fake();
 
-        $seller = User::factory()->verified()->create();
+        $seller = User::factory()->verified()->business()->create();
         $lot = draftFor($seller);
 
         $this->actingAs($seller)

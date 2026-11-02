@@ -45,7 +45,7 @@ function checkOf(array $preflight, string $key): array
 }
 
 it('keurt een compleet concept goed en noemt elk punt', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $lot = readyDraft($seller);
 
     $preflight = app(Preflight::class)->for($lot, $seller);
@@ -57,7 +57,7 @@ it('keurt een compleet concept goed en noemt elk punt', function () {
 });
 
 it('eist een eigendomsverklaring of een eigendomsbewijs', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $lot = readyDraft($seller, ['draft_meta' => ['sale_type' => 'auction', 'start_price_cents' => 250_000]]);
 
     $preflight = app(Preflight::class)->for($lot, $seller);
@@ -75,7 +75,7 @@ it('eist een eigendomsverklaring of een eigendomsbewijs', function () {
 });
 
 it('eist minstens één foto', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $lot = readyDraft($seller);
     $lot->media()->delete();
 
@@ -88,7 +88,7 @@ it('eist minstens één foto', function () {
 it('blokkeert een verboden categorie, ook via de ouder', function () {
     config()->set('aucvy.listings.forbidden_categories', ['wapens']);
 
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $parent = Category::factory()->create(['slug' => 'wapens', 'name' => 'Wapens']);
     $child = Category::factory()->create(['parent_id' => $parent->id, 'slug' => 'jachtgeweren', 'name' => 'Jachtgeweren']);
     $lot = readyDraft($seller, ['category_id' => $child->id]);
@@ -138,7 +138,7 @@ it('zet de accountvraag als punt voor wie niet is ingelogd, en de rest blijft gr
 });
 
 it('markeert conditie en omschrijving als aanbeveling, niet als blokkade', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $lot = readyDraft($seller, ['condition' => null, 'description' => 'kort']);
 
     $preflight = app(Preflight::class)->for($lot, $seller);

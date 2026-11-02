@@ -1,220 +1,108 @@
-# Vragen voor Raph: wat we nodig hebben om Aucvy af te bouwen
+# Vragen voor Raph: antwoorden en vervolg
 
-Datum: 28 oktober 2026. Van: Boyd. Antwoorden kun je achter elke vraag invullen, of het nummer plus je keuze terugmailen.
+Laatst bijgewerkt: 2 november 2026. Van: Boyd.
 
-Alles uit beide briefings (16 oktober en de masterbriefing van 28 oktober) dat zonder jouw antwoord kon, is gebouwd en getest. Wat hieronder staat kan niet zonder jouw keuze, je akkoord of door jou aangeleverd materiaal. Bij elke vraag staat wat we doen als je niets kiest, zodat de bouw nooit stilstaat.
+Raph beantwoordde op 2 november 34 van de 36 vragen (vragen 25 en 34 bleven leeg; daar geldt de standaardkeuze). Hieronder per vraag het antwoord en wat we ermee doen. Onderaan staan de vervolgvragen: een paar voor Raph, de rest voor Don.
 
-De drie belangrijkste: vraag 1 (betaalprovider), vraag 2 (factuurmodel) en vraag 24 (juridische teksten). Zonder die drie kan het platform niet live.
-
----
-
-## A. Geld
-
-**1. Welke betaalprovider, en met of zonder derdengeldenrekening (escrow)?**
-De adapter en de webhook zijn gebouwd en draaien nu op een nepprovider. Mollie is voorbereid.
-Opties: (a) Mollie met marketplace-uitbetaling, (b) andere PSP, (c) Mollie plus een aparte derdengeldenconstructie.
-Standaard als je niets kiest: (a), en we beloven nergens escrow tot het er is.
-Nodig van jou: account met sandbox- en livesleutels.
-Antwoord:
-
-**2. Wie verkoopt en wie factureert, juridisch?**
-Dit bepaalt elk factuurdocument, de btw en de margeregeling.
-Opties: (a) koper betaalt aan het platform, platform factureert de succesfee aan de verkoper, verkoper factureert de kavel aan de koper (platform maakt dat document namens de verkoper), (b) koper betaalt rechtstreeks aan de verkoper, (c) platform verkoopt in eigen naam.
-Standaard: (a).
-Antwoord:
-
-**3. Btw en bijzondere regelingen**
-Welke btw-behandeling per situatie: margegoederen (nu standaard), btw-verlegging bij zakelijke kopers, leveringen buiten Nederland. Graag een regel per geval of een verwijzing naar je accountant.
-Standaard: alleen Nederland, margeregeling waar de verkoper dat aangeeft, anders 21%.
-Antwoord:
-
-**4. Refunds en chargebacks**
-Nu meldt het systeem elke terugbetaling (prijscorrectie, terugdraaien na geschil) per mail aan support; de terugbetaling zelf loopt handmatig via de provider.
-Opties: (a) handmatig via support blijft, (b) automatisch via de PSP zodra die gekoppeld is.
-Standaard: (a) tot de PSP er is, daarna (b).
-Antwoord:
-
-**5. Boekhoudkoppeling**
-Opties: (a) csv-export (bestaat), (b) Moneybird, (c) Jortt, (d) anders.
-Standaard: (a).
-Antwoord:
-
-**6. Prijzen**
-Nodig: succesfee per pakket (nu Start 7,5%; Pro en Enterprise hebben geen tarief), maandprijs van Pro en Enterprise, prijs van Ivy Boost, opgeld voor de koper (nu 0%), borgdrempel (nu € 2.500).
-Standaard: alles blijft zoals het nu staat; Pro en Enterprise worden niet aangeboden tot er een prijs is.
-Antwoord:
-
-**7. Termijnen**
-Meldtermijn na levering: 48 uur (zoals gebouwd) of 3 werkdagen (zoals in de preview). Betaaltermijn 48 uur, reactietermijn verkoper 72 uur, houdtermijn voor uitbetaling 7 dagen.
-Standaard: zoals gebouwd.
-Antwoord:
+Statuswoorden: **Besloten** = we bouwen ernaar. **Bij Don** = Raph vraagt het na; tot dan geldt de standaardkeuze. **Standaard** = geen antwoord, standaardkeuze geldt.
 
 ---
 
-## B. Identiteit en toegang
+## Antwoorden per vraag
 
-**8. Welke verificatieprovider voor KYC (identiteit) en KYB (bedrijf)?**
-De statusmachine, de compliance-queue en de permission engine staan; nu beoordeelt een medewerker handmatig, meestal binnen een werkdag.
-Opties: bijvoorbeeld Veriff, Onfido, iDIN; plus een sleutel voor de KvK-API.
-Standaard: handmatige beoordeling blijft.
-Nodig van jou: account bij de provider en de KvK-API-sleutel.
-Antwoord:
-
-**9. Landen en drempels**
-Welke landen mogen kopen en verkopen, en vanaf welk bedrag is verificatie verplicht vóór een bod?
-Standaard: alleen Nederland; verificatie vóór het eerste bod, ongeacht bedrag.
-Antwoord:
-
-**10. Doelgroep**
-Alleen zakelijk, of ook particulier? Dit raakt de registratie, de btw en welke verificatie wie doorloopt.
-Standaard: zakelijk.
-Antwoord:
-
-**11. Tweede factor**
-De masterbriefing vraagt TOTP via een authenticator-app met recoverycodes, en geen sms. Dat vraagt een extra pakket.
-Opties: (a) akkoord voor het pakket, mailcode blijft als terugval, (b) alleen de mailcode.
-Standaard: (a).
-Antwoord:
-
-**12. Telefoonnummer**
-Nu wordt een nummer alleen opgeslagen, niet gecontroleerd.
-Opties: (a) sms-dienst koppelen, (b) de stap schrappen.
-Standaard: (b).
-Antwoord:
+| # | Onderwerp | Antwoord van Raph | Wat we doen | Status |
+| --- | --- | --- | --- | --- |
+| 1 | Betaalprovider | Stripe Connect | Stripe Connect in plaats van Mollie. Koper betaalt aan het platform, het geld blijft bij Stripe tot de koper heeft ontvangen, daarna gaat het naar de verkoper. Verkopers doorlopen de onboarding van Stripe (Express), dat dekt ook hun bedrijfscontrole en rekeningnummer. | Besloten |
+| 2 | Wie factureert | Vraagt Raph aan Don | Standaard (a) tot Don antwoordt. Geen factuurdocumenten bouwen voor het antwoord er is. | Bij Don |
+| 3 | Btw | Vraagt Raph aan Don | Standaard: alleen Nederland, margeregeling waar de verkoper dat aangeeft, anders 21%. | Bij Don |
+| 4 | Refunds | Automatisch via de PSP | Refunds en chargebacks via Stripe, vanuit de geschilroute en de backoffice. | Besloten |
+| 5 | Boekhouding | Overleggen met Don | Csv-export blijft. | Bij Don |
+| 6 | Prijzen | Navragen bij Don | Alles blijft zoals het staat. | Bij Don |
+| 7 | Termijnen | Betalen direct; het geld wordt vrijgegeven als de klant heeft ontvangen | Betalen direct na winnen of kopen. Uitbetaling na bevestigde ontvangst. Zie vervolgvragen V1 en V2 voor de precieze termijnen. | Besloten, met vervolgvraag |
+| 8 | Verificatieprovider | iDIN lijkt het beste, bespreken met Remco | Een koppeling voor iDIN klaarzetten achter een eigen contract, zodat de partij straks één adapter is. Handmatige beoordeling blijft tot iDIN live is. | Besloten, wacht op Remco |
+| 9 | Landen en drempels | Verificatie (KYC) is noodzakelijk, land is niet bepalend | Verificatie vóór het eerste bod blijft, voor iedereen, ongeacht land of bedrag. | Besloten |
+| 10 | Doelgroep | Zakelijke verkopers, particuliere kopers | Alleen zakelijke accounts met goedgekeurde bedrijfscontrole mogen publiceren. Kopers mogen particulier zijn. Zie vervolgvraag D1 over herroepingsrecht. | Besloten |
+| 11 | Tweede factor | Akkoord voor het pakket (a) | TOTP via een authenticator-app met recoverycodes; de mailcode blijft als terugval. | Besloten |
+| 12 | Telefoonnummer | Sms-dienst koppelen kan | Telefoonverificatie per sms, achter een eigen contract. Zie vervolgvraag V3 over de partij. | Besloten, wacht op partij |
+| 13 | Prijzen openbaar | Navragen bij Don | Verkochte kavels blijven zonder prijs. | Bij Don |
+| 14 | Reviewbeleid | Het Google-principe: de verkoper kan reageren; automatische moderatie op scheldwoorden, politieke kleuring, discriminatie | Reviews gaan door een automatische controle vóór publicatie; wat erdoor valt, wordt niet gepubliceerd en gaat naar beheer. Iedereen kan een review melden. De verkoper reageert, maar verwijdert niets. | Besloten |
+| 15 | Reputatiescore | Standaard, vanaf 10 | Score vanaf 10 afgeronde transacties, over de laatste 12 maanden. | Besloten |
+| 16 | Publicatie | De bot kijkt of de kavel aan alle criteria voldoet (prijs, hoeveelheid per eenheid, garanties); de echtheid van documentatie moet worden aangevinkt; dan pas publiceren | Vooraf modereren door Ivy: de verkoper vinkt garantie en echtheid van documenten aan, Ivy toetst de kavel, en alleen een goedgekeurde kavel gaat live. Zie vervolgvraag V4 voor wat er bij twijfel gebeurt. | Besloten |
+| 17 | Verboden categorieën | Levert Raph aan; kijk ook wat andere platformen verbieden en houd dat gelijk | Een conceptlijst op basis van wat gangbare veilingplatformen verbieden, die Raph kan aanvullen. | Besloten, concept |
+| 18 | Biedregel reserve | Navragen bij Don | Standaard: tillen tot de reserve. | Bij Don |
+| 19 | Mail Builder | Mag gebruiken, met eigen templates | De Mail Builder van Eazy overnemen met eigen Aucvy-templates. | Besloten |
+| 20 | Mailprovider | Mailgun, zet Raph maandag op | Mailgun als mailer, met webhook voor afleveren en bounces. Zie vervolgvraag V5. | Besloten, wacht op sleutels |
+| 21 | CMS | Mail Builder mag; de blogmodule koppelen aan Eazyonline met een API, zoals FitnessAannemer en Eazyonline nu doen met NOVA van Inspace | Geen eigen CMS. De blog komt via de Eazyonline-API, op dezelfde manier als bij FitnessAannemer. Zie vervolgvraag V6. | Besloten |
+| 22 | Tenants | Niet multi-tenant, blijft in eigen bezit | Eén omgeving. Branding en rechten per organisatie. | Besloten |
+| 23 | AI-regio | Standaard | EU-endpoint zodra beschikbaar. | Besloten |
+| 24 | Juridisch | Cookiebanner komt; aan de algemene voorwaarden werkt Raph; Don voor de rest | Cookiebanner bouwen. Voorwaarden, privacy en cookieverklaring als pagina's klaarzetten die de tekst tonen zodra die er is. | Besloten, tekst volgt |
+| 25 | De home | Geen antwoord | Standaard: zo laten met disclaimer. | Standaard |
+| 26 | Huisstijl deel-visual | "Heb je toch al?" | Klopt: logo en kleuren staan in Aucvy. We gebruiken die. Formaten: vierkant, staand (story) en liggend (link-preview). | Besloten |
+| 27 | Beveiligingsupdates | Geen idee, laat Raph aan ons | Technische keuze van Boyd: bijwerken. | Besloten |
+| 28 | Sanctum | Mogelijk maken, nu niet van belang | Later. | Later |
+| 29 | Larastan | Laat Raph aan ons over | Technische keuze van Boyd. | Besloten |
+| 30 | Redis en Horizon | Laat Raph aan ons over | Technische keuze van Boyd; bij livegang als de hosting het biedt. | Besloten |
+| 31 | Meilisearch | Prima | Zoeken via Scout met Meilisearch zodra de hosting het draait; tot dan blijft MySQL. | Besloten |
+| 32 | Sentry | Fouten loggen met audit trail in het beheerpaneel; updates van Ivy over de status op het dashboard, zoals Izzy bij Eazy | Geen Sentry. Een foutenoverzicht in de backoffice met spoor, en een statusfeed van Ivy op het beheerdashboard naar het voorbeeld van Izzy. | Besloten |
+| 33 | Staging | Wij hosten; Don heeft toegang en Raph vraagt het uit | Staging zodra de toegang er is. | Bij Don |
+| 34 | Marktdata | Geen antwoord | Standaard: geen bron; de waarde-indicatie blijft een indicatie. | Standaard |
+| 35 | Vervoerder | Klaarzetten, komt op termijn | Het contract staat; een echte vervoerder volgt later. | Later |
+| 36 | Werkverdeling | Boyd | Boyd doet alle modules. | Besloten |
 
 ---
 
-## C. Verkopers, reviews en reputatie
+## Vervolgvragen voor Raph
 
-**13. Zijn gerealiseerde verkoopprijzen openbaar?**
-Het verkopersprofiel toont verkochte kavels zonder prijs.
-Opties: (a) nooit, (b) altijd, (c) alleen bij veilingen, niet bij koop direct.
-Standaard: (a).
+**V1. Hoe snel moet de koper betalen?**
+Je schreef "betalen direct". Na winnen gaat de koper meteen naar de betaling. Maar een veiling kan om 22:00 sluiten terwijl de winnaar niet achter zijn scherm zit.
+Opties: (a) 1 uur, (b) 24 uur, (c) 48 uur (zoals nu).
+Standaard: (b) 24 uur, met een herinnering na 12 uur.
 Antwoord:
 
-**14. Reviewbeleid**
-Nu: alleen de koper van een afgeronde order, direct publiek, reactie van de verkoper, nooit verwijderd op verzoek. Te bouwen zonder besluit: melden, moderatie, bezwaar.
-Vragen: wat is een geldige reden om een review te verwijderen, en wie beslist (beheer, of een tweede persoon)?
-Standaard: beheer verwijdert alleen bij beledigingen, persoonsgegevens of een aantoonbaar niet-plaatsgevonden transactie, met motivering in het auditlog.
+**V2. Wanneer gaat het geld naar de verkoper?**
+Je schreef "vrijgegeven wanneer de klant heeft ontvangen". De koper kan na ontvangst nog een probleem melden.
+Opties: (a) direct als de koper ontvangst bevestigt, (b) na bevestiging plus 48 uur om een probleem te melden, (c) zoals nu: na de meldtermijn plus nog 7 dagen.
+Standaard: (b). Bevestigt de koper niets, dan geldt een levering na 7 dagen als ontvangen.
 Antwoord:
 
-**15. Reputatiescore**
-Twee gescheiden waarden bestaan: sterren en de Trust Index. De masterbriefing vraagt tijdvensters, minimumaantallen en een beroepsproces.
-Vragen: vanaf hoeveel transacties tonen we een score, en over welke periode telt het?
-Standaard: vanaf 10 afgeronde transacties, laatste 12 maanden.
+**V3. Welke sms-dienst?**
+Mailgun doet geen sms.
+Opties: (a) Bird (MessageBird), (b) CM.com (doet ook iDIN, handig als dat via hen gaat), (c) Twilio, (d) anders.
+Standaard: (b) als Remco iDIN via CM.com regelt, anders (a).
 Antwoord:
 
-**16. Publicatierechten: vooraf of achteraf modereren?**
-Nu: een kavel gaat direct live en beheer beoordeelt daarna, met een risicoscan.
-Opties: (a) zo laten, (b) eerst goedkeuren, dan live.
-Standaard: (a).
+**V4. Wat doet de bot bij twijfel over een kavel?**
+Opties: (a) terug naar de verkoper met de reden, (b) naar een medewerker, (c) terug naar de verkoper bij een ontbrekend gegeven en naar een medewerker bij twijfel over echtheid of verboden waar.
+Standaard: (c).
 Antwoord:
 
-**17. Verboden categorieën**
-De lijst is leeg; de wizard blokkeert dus niets.
-Nodig van jou: de lijst (bijvoorbeeld wapens, levende dieren, geneesmiddelen).
+**V5. Mailgun: domein en regio**
+Nodig zodra je het opzet: het afzenderdomein (bijvoorbeeld mail.aucvy.nl), het afzenderadres, de API-sleutel en of het account in de EU-regio staat.
 Antwoord:
 
-**18. Biedregel bij de reserveprijs**
-Als een automatisch maximum de reserveprijs haalt: de prijs tot de reserve tillen (gangbaar) of op het hoogste tegenbod laten?
-Standaard: tillen tot de reserve.
+**V6. Blog via de Eazyonline-API**
+Nodig: de URL van de API en een sleutel voor Aucvy, net als bij FitnessAannemer.
+Antwoord:
+
+**V7. Remco en iDIN**
+Via welke partij loopt iDIN (bijvoorbeeld CM.com, Signicat of een bank), en wanneer zijn er testgegevens?
 Antwoord:
 
 ---
 
-## D. Mail en CMS
+## Vragen die bij Don liggen
 
-**19. Eazyonline Mail Builder: hergebruiken, en onder welke afspraak?**
-De masterbriefing vraagt eerst een vergelijking. Die code zit niet in de Aucvy-repository.
-Nodig van jou: toegang tot de Mail Builder-code en de afspraak over IP en licentie.
-Opties: (a) hergebruiken, (b) eigen templates in Aucvy bouwen.
-Standaard: (b) voor de transactionele mails; marketingmails pas na jouw keuze.
-Antwoord:
+Tot Don antwoordt, geldt de standaardkeuze en loopt de bouw door.
 
-**20. Mailprovider en afzenderdomein**
-Nodig: welke provider (bijvoorbeeld Postmark, Mailgun, Resend), welk afzenderadres, en SPF, DKIM en DMARC op het domein.
-Standaard: geen; lokaal gaat alles naar het logbestand.
-Antwoord:
-
-**21. Eazyonline CMS: hergebruiken, en onder welke afspraak?**
-Zelfde vraag als bij de Mail Builder. Zonder CMS blijven de uitlegpagina's code en komt er geen blog.
-Opties: (a) hergebruiken, (b) klein eigen CMS in Aucvy (pagina's, blog, redirects), (c) voorlopig geen CMS.
-Standaard: (c); redirects en noindex zijn al gebouwd.
-Antwoord:
-
-**22. Tenants (white-label omgevingen): ja of nee?**
-De masterbriefing gaat uit van tenants. Dat raakt elke tabel, query, cache en mailtemplate; het is de grootste verbouwing van alles en moet vóór de rest besloten worden.
-Standaard: nee, één omgeving; branding en rechten per organisatie.
-Antwoord:
-
-**23. AI-regio**
-Anthropic via het EU-endpoint zodra beschikbaar, of standaard?
-Standaard: EU zodra beschikbaar.
-Antwoord:
-
----
-
-## E. Juridisch en marketing
-
-**24. Juridische teksten**
-Nodig van jou: algemene voorwaarden, veilingvoorwaarden, privacyverklaring, cookieverklaring. En: komt er een cookiebanner?
-Standaard: geen livegang zonder deze teksten; de pagina's staan er binnen een dag na ontvangst.
-Antwoord:
-
-**25. De home**
-De nieuwe home toont een demo met fictieve bedragen en functies die nog in ontwikkeling zijn (promotie op andere kanalen, kopers uitnodigen, biedplannen), nu met een disclaimer. En de drie gezichten in de hero zijn stockfoto's.
-Opties: (a) zo laten met disclaimer, (b) beperken tot wat werkt, (c) eigen foto's aanleveren.
-Standaard: (a).
-Antwoord:
-
-**26. Huisstijl voor de deel-visual**
-De gedeelde advertentie (briefing onderdeel 7) vraagt formaten en stijl.
-Nodig van jou: logo's, kleuren, gewenste formaten.
-Antwoord:
-
----
-
-## F. Pakketten en infrastructuur (één ja per regel)
-
-**27. Beveiligingsupdates** van league/commonmark en symfony/http-foundation (composer) en vier ontwikkeltools (npm). Eén commando per kant, daarna de tests.
-Standaard: wachten op akkoord, want het raakt de afhankelijkheden.
-Antwoord:
-
-**28. Sanctum** voor de import-API (kavels aanleveren via ERP of koppeling).
-Antwoord:
-
-**29. Larastan en Deptrac** (statische analyse in de CI).
-Antwoord:
-
-**30. Redis en Horizon** (queues en cache; nodig voor de kijkersteller op grote veilingen).
-Antwoord:
-
-**31. Meilisearch** (zoeken op volume; nu MySQL, goed tot enkele duizenden kavels).
-Antwoord:
-
-**32. Sentry** (foutmonitoring; nu de systeempagina en het logbestand).
-Antwoord:
-
-**33. Staging-omgeving op Plesk** met sandbox-sleutels.
-Nodig van jou: toegang tot de hosting.
-Antwoord:
-
-**34. Marktdatabron met licentie** voor vergelijkbare aanbiedingen met URL en datum in de waarde-indicatie.
-Antwoord:
-
-**35. Vervoerder of transportpartner met API** (nu een nepindicatie).
-Antwoord:
-
----
-
-## G. Team
-
-**36. Werkverdeling met Yaël**
-De masterbriefing noemt Yaël naast Boyd. Welke modules doet wie, en wie beslist bij overlap?
-Antwoord:
-
----
-
-## Wat al klaar staat en niet op jou wacht
-
-Veilingen, bieden, afslag, koop direct, orders, uitbetalingsstatus, geschilroute, verificatiestatussen met handmatige beoordeling, 2FA per mail, organisatierollen, Auction Studio, import, Ivy (herkennen, schrijven, waarderen, documenten, biedadvies, vertalen), verkopersprofiel met reviews en Trust Index, meldingen, volglijst, alerts, backoffice, systeempagina, AVG-export en -verwijdering, doorverwijzingen, SEO. In totaal 873 geautomatiseerde tests.
+| # | Vraag | Standaard tot het antwoord er is |
+| --- | --- | --- |
+| 2 | Wie verkoopt en wie factureert, juridisch | Koper betaalt aan het platform, platform factureert de fee aan de verkoper, verkoper factureert de kavel |
+| 3 | Btw, marge, verlegging, buitenland | Alleen Nederland; marge waar de verkoper dat aangeeft, anders 21% |
+| 5 | Boekhoudkoppeling | Csv-export |
+| 6 | Prijzen per pakket, Ivy Boost, opgeld, borgdrempel | Zoals het nu staat |
+| 13 | Gerealiseerde prijzen openbaar | Nee |
+| 18 | Biedregel bij de reserveprijs | Tillen tot de reserve |
+| 24 | Privacyverklaring en cookieverklaring | Geen livegang zonder deze teksten |
+| 33 | Toegang tot de hosting voor staging | Geen staging |
+| D1 | **Herroepingsrecht (nieuw).** Zakelijke verkopers verkopen online aan particulieren. Bij online verkoop van een bedrijf aan een consument geldt normaal 14 dagen bedenktijd; de uitzondering voor veilingen geldt alleen als de koper er persoonlijk bij kan zijn. Geldt de bedenktijd hier, en zo ja: wie betaalt het terugsturen, en hoe verhoudt het zich tot de afslag en koop direct? | We tonen de wettelijke informatie bij elke koop en bouwen een herroepingsmelding naast de geschilroute, zodra Don dit bevestigt |
+| D2 | **Escrow op de site (nieuw).** Mag de site zeggen dat het geld bij Stripe blijft tot de koper ontvangen heeft? Het woord "escrow" of "derdengeldenrekening" gebruiken we niet zonder zijn akkoord. | Wel de feitelijke zin, niet het woord escrow |

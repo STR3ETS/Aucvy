@@ -43,7 +43,7 @@ function publishableDraft(User $seller): Lot
 }
 
 it('publiceert één keer bij twee aanvragen met dezelfde sleutel', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $lot = publishableDraft($seller);
 
     $first = $this->actingAs($seller)
@@ -64,7 +64,7 @@ it('publiceert één keer bij twee aanvragen met dezelfde sleutel', function () 
 });
 
 it('geeft bij een dubbele klik zonder sleutel dezelfde publicatie terug', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     $lot = publishableDraft($seller);
 
     $first = $this->actingAs($seller)->postJson("/api/drafts/{$lot->id}/publish")->assertOk()->json('url');

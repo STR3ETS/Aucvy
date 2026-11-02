@@ -12,6 +12,7 @@ return [
     'kyc_required' => 'Rond eerst je verificatie af. Dat is nodig vóór je eerste bod of kavel.',
     'kyc_pending' => 'Je identiteitscontrole is in behandeling. Je krijgt een mail zodra die is beoordeeld.',
     'kyc_rejected' => 'Je identiteitscontrole is niet goedgekeurd. De reden staat in je mail en bij je verificatie; je kunt het opnieuw proberen.',
+    'business_account_required' => 'Verkopen op Aucvy kan alleen zakelijk. Koppel je bedrijf (KvK) bij je verificatie; kopen kan wel als particulier.',
     'kyb_required' => 'Je bedrijf is nog niet gecontroleerd. Rond de KvK-controle af bij je verificatie.',
     'iban_required' => 'Er is nog geen rekeningnummer bekend om naar uit te betalen. Vul het aan bij je verificatie.',
 ];

@@ -26,6 +26,7 @@ use App\Http\Controllers\OrderMessageController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\RedirectFallbackController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ReviewReportController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SaleStudioController;
 use App\Http\Controllers\SavedSearchController;
@@ -40,6 +41,7 @@ use App\Http\Controllers\Staff\LiveRoomController;
 use App\Http\Controllers\Staff\ModerationController;
 use App\Http\Controllers\Staff\QueueController;
 use App\Http\Controllers\Staff\RedirectController;
+use App\Http\Controllers\Staff\ReviewModerationController;
 use App\Http\Controllers\Staff\RiskController;
 use App\Http\Controllers\Staff\SupportTicketController;
 use App\Http\Controllers\Staff\SystemController;
@@ -301,6 +303,10 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/reviews/{review}/reactie', [ReviewController::class, 'reply'])
         ->middleware('throttle:5,10')
         ->name('reviews.reply');
+    // Melden haalt niets weg; een medewerker beslist (Google-principe).
+    Route::post('/reviews/{review}/melden', [ReviewReportController::class, 'store'])
+        ->middleware('throttle:10,10')
+        ->name('reviews.report');
 
     /*
      | De inzage-export (hfst. 15): tijdelijk getekende link uit de mail,
@@ -362,6 +368,8 @@ Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group
     Route::get('/bedrijven', [BackofficeController::class, 'companies'])->name('companies');
     Route::get('/bedrijven/{company:id}', [BackofficeController::class, 'showCompany'])->name('companies.show')->withTrashed();
     Route::get('/reviews', [BackofficeController::class, 'reviews'])->name('reviews');
+    Route::post('/reviews/{review}/publiceren', [ReviewModerationController::class, 'publish'])->name('reviews.publish');
+    Route::post('/reviews/{review}/verwijderen', [ReviewModerationController::class, 'remove'])->name('reviews.remove');
     Route::get('/bezichtigingen', [BackofficeController::class, 'viewings'])->name('viewings');
     Route::get('/ai-runs', [BackofficeController::class, 'aiRuns'])->name('ai-runs');
 

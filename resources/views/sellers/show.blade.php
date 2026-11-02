@@ -145,6 +145,24 @@
                             @if ($review->body)
                                 <p class="mt-1 text-sm">"{{ $review->body }}"</p>
                             @endif
+                            @auth
+                                @if (auth()->id() !== $review->reviewer_id)
+                                    <details class="mt-2 text-xs">
+                                        <summary class="cursor-pointer text-aj-muted underline">Review melden</summary>
+                                        <form method="POST" action="{{ route('reviews.report', $review) }}" class="mt-2 flex flex-wrap gap-2">
+                                            @csrf
+                                            <label class="sr-only" for="reden-{{ $review->id }}">Reden</label>
+                                            <select id="reden-{{ $review->id }}" name="reason" required class="rounded-aj-sm border border-aj-border-strong px-2 text-sm" style="min-height:36px">
+                                                @foreach (\App\Reviews\ReviewReason::reportable() as $reason)
+                                                    <option value="{{ $reason->value }}">{{ ucfirst($reason->label()) }}</option>
+                                                @endforeach
+                                            </select>
+                                            <input type="text" name="note" maxlength="1000" placeholder="Toelichting (optioneel)" aria-label="Toelichting" class="min-w-0 flex-1 rounded-aj-sm border border-aj-border-strong px-2 text-sm" style="min-height:36px">
+                                            <button type="submit" class="btn btn-ghost" style="height:36px;font-size:12px">Melden</button>
+                                        </form>
+                                    </details>
+                                @endif
+                            @endauth
                             @if ($review->seller_reply)
                                 <p class="mt-2 border-l-2 border-aj-border-strong pl-3 text-sm text-aj-muted">
                                     Reactie verkoper: "{{ $review->seller_reply }}"
@@ -167,8 +185,12 @@
                 </ul>
             @endif
 
+            @if (session('status'))
+                <p class="mt-3 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">{{ session('status') }}</p>
+            @endif
             <p class="mt-3 text-xs text-aj-muted">
-                Alleen kopers die de kavel afnamen kunnen beoordelen. Reviews worden niet verwijderd op verzoek.
+                Alleen kopers die de kavel afnamen kunnen beoordelen. De verkoper kan reageren, maar niets verwijderen.
+                Een medewerker haalt een review alleen offline bij scheldwoorden, discriminatie, politiek, persoonsgegevens of als hij niet over de aankoop gaat.
             </p>
         </section>
 

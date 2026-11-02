@@ -58,12 +58,17 @@ final class PermissionEngine
     }
 
     /**
-     * Publiceren: een zakelijk account heeft een goedgekeurde KvK-controle
-     * nodig (KYB). Een particulier account mag na de identiteitscontrole.
+     * Publiceren: alleen zakelijk, met een goedgekeurde KvK-controle (KYB).
+     * Zakelijke verkopers, particuliere kopers (besluit Raph, 2 november
+     * 2026); een particulier account mag wel bieden en kopen.
      */
     private function business(User $user): Decision
     {
-        if ($user->type === UserType::Business && ! ($user->company?->isVerified() ?? false)) {
+        if ($user->type !== UserType::Business || $user->company === null) {
+            return Decision::deny(DenialReason::BusinessAccountRequired);
+        }
+
+        if (! $user->company->isVerified()) {
             return Decision::deny(DenialReason::KybRequired);
         }
 
@@ -71,10 +76,8 @@ final class PermissionEngine
     }
 
     /**
-     * Uitbetalen: dezelfde eisen als publiceren, plus een rekeningnummer.
-     * Het rekeningnummer staat op het bedrijf; een particulier verkoper
-     * heeft nog geen plek om er een vast te leggen, dus die eis geldt
-     * alleen zakelijk tot dat besluit is genomen.
+     * Uitbetalen: dezelfde eisen als publiceren, plus een rekeningnummer
+     * op het bedrijf.
      */
     private function payout(User $user): Decision
     {
@@ -84,7 +87,7 @@ final class PermissionEngine
             return $business;
         }
 
-        if ($user->type === UserType::Business && $user->company?->payout_iban_last4 === null) {
+        if ($user->company?->payout_iban_last4 === null) {
             return Decision::deny(DenialReason::IbanRequired);
         }
 

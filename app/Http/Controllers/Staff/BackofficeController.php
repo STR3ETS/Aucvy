@@ -315,9 +315,22 @@ final class BackofficeController extends Controller
 
     public function reviews(Request $request): View
     {
+        // Te beoordelen: automatisch tegengehouden, of gepubliceerd met een
+        // openstaande melding. Die staan bovenaan, de rest daaronder.
+        $toReview = Review::query()
+            ->with(['reviewer', 'seller', 'order.lot', 'reports' => fn ($query) => $query->whereNull('handled_at')->with('reporter')])
+            ->where(fn ($query) => $query
+                ->where('moderation_status', Review::STATUS_HELD)
+                ->orWhereHas('reports', fn ($reports) => $reports->whereNull('handled_at')))
+            ->where('moderation_status', '!=', Review::STATUS_REMOVED)
+            ->oldest('id')
+            ->get();
+
         return view('admin.reviews', [
+            'toReview' => $toReview,
             'reviews' => Review::query()
                 ->with(['reviewer', 'seller', 'order.lot'])
+                ->when($request->query('status'), fn ($query, $status) => $query->where('moderation_status', $status))
                 ->latest('id')
                 ->paginate(25)
                 ->withQueryString(),
