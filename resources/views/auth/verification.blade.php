@@ -61,9 +61,6 @@
                             Bevestigen
                         </button>
                     </form>
-                    @error('code')
-                        <p class="mt-1 text-xs text-aj-error">{{ $message }}</p>
-                    @enderror
                     <form method="POST" action="{{ route('verification.phone.resend') }}" class="mt-2">
                         @csrf
                         <button type="submit" class="text-xs font-semibold underline">Stuur een nieuwe code</button>
@@ -78,9 +75,6 @@
                         </form>
                     </details>
                 @endif
-                @error('phone')
-                    <p class="mt-1 text-xs text-aj-error">{{ $message }}</p>
-                @enderror
                 @if ($user->phone === null)
                     <form method="POST" action="{{ route('verification.phone') }}" class="mt-2 flex gap-2">
                         @csrf

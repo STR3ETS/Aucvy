@@ -193,6 +193,8 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/verificatie/telefoon/opnieuw', [VerificationController::class, 'resendPhoneCode'])->middleware('throttle:5,10')->name('verification.phone.resend');
     Route::post('/verificatie/telefoon/bevestigen', [VerificationController::class, 'confirmPhone'])->middleware('throttle:20,10')->name('verification.phone.confirm');
     Route::post('/verificatie/identiteit', [VerificationController::class, 'storeIdentity'])->name('verification.identity');
+    Route::get('/verificatie/identiteit/terug', [VerificationController::class, 'identityReturn'])->middleware('throttle:20,10')->name('verification.identity.return');
+    Route::get('/verificatie/identiteit/nepbank', [VerificationController::class, 'fakeBank'])->middleware('signed')->name('verification.identity.fake');
     Route::post('/verificatie/kvk', [VerificationController::class, 'storeKvk'])->name('verification.kvk');
     Route::post('/verificatie/ubo', [VerificationController::class, 'storeUbo'])->name('verification.ubo');
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Compliance\Identity\FakeIdentityProvider;
+use App\Compliance\Identity\IdentityProvider;
 use App\Ivy\Contracts\LlmProvider;
 use App\Ivy\Providers\AnthropicProvider;
 use App\Ivy\Providers\FakeProvider;
@@ -58,6 +60,11 @@ class AppServiceProvider extends ServiceProvider
         // zodat tests kunnen meelezen met wat de log-driver verstuurde.
         $this->app->singleton(SmsSender::class, fn (): SmsSender => match (config('aucvy.sms.driver')) {
             default => new LogSmsSender,
+        });
+
+        // Identiteit via de bank (iDIN, V7); 'manual' komt hier nooit langs.
+        $this->app->bind(IdentityProvider::class, fn (): IdentityProvider => match (config('aucvy.identity.provider')) {
+            default => new FakeIdentityProvider,
         });
     }
 

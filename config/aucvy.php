@@ -237,6 +237,15 @@ return [
     ],
 
     /*
+     | Identiteit via de bank (besluit Raph, 2 november 2026: iDIN, partij in
+     | overleg met Remco, V7). 'manual' is de compliance-queue zoals nu;
+     | 'fake' is de nepbank voor lokaal. Een echte partij is één klasse erbij.
+     */
+    'identity' => [
+        'provider' => env('AUCVY_IDENTITY_PROVIDER', 'manual'),
+    ],
+
+    /*
      | Sms voor de telefoonbevestiging (besluit Raph, 2 november 2026). Tot de
      | partij gekozen is (V3) gaat alles naar het log.
      */

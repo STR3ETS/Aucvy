@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Compliance\Identity\FakeIdentityProvider;
+use App\Compliance\Identity\IdentityProvider;
 use App\Enums\KycStatus;
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
@@ -109,6 +111,11 @@ final class VerificationController extends Controller
             return redirect()->route('verification.overview');
         }
 
+        // Via de bank (iDIN, besluit Raph 2 november 2026) zodra er een partij is.
+        if (config('aucvy.identity.provider') !== 'manual') {
+            return redirect()->away(app(IdentityProvider::class)->start($user, route('verification.identity.return')));
+        }
+
         $before = $user->kyc_status;
         $approved = (bool) config('aucvy.verification.auto_approve');
 
@@ -130,6 +137,63 @@ final class VerificationController extends Controller
         }
 
         return redirect()->route('verification.overview');
+    }
+
+    /**
+     * Terug van de bank: alleen de uitkomst telt, met de referentie in het
+     * auditlog. Geen naam, geboortedatum of adres opgeslagen.
+     */
+    public function identityReturn(Request $request, IdentityProvider $provider): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->kyc_status === KycStatus::Verified) {
+            return redirect()->route('verification.overview');
+        }
+
+        $result = $provider->complete($user, $request);
+
+        if (! $result->passes()) {
+            $reason = $result->verified ? 'minor' : ($result->failure ?? 'failed');
+
+            Audit::record('user.identity_failed', $user, $user, after: ['provider' => $provider->name(), 'reason' => $reason]);
+
+            return redirect()->route('verification.overview')
+                ->withErrors(['identity' => __('verification.identity.bank_'.($reason === 'minor' ? 'minor' : ($reason === 'cancelled' ? 'cancelled' : 'failed')))]);
+        }
+
+        $before = $user->kyc_status;
+
+        $user->kyc_status = KycStatus::Verified;
+        $user->kyc_requested_at = now();
+        $user->kyc_verified_at = now();
+        $user->kyc_note = null;
+        $user->save();
+
+        $user->refreshBidPermission();
+
+        Audit::record('user.kyc_changed', $user, $user, ['status' => $before->value], [
+            'status' => KycStatus::Verified->value,
+            'via' => $provider->name(),
+            'reference' => $result->reference,
+        ]);
+
+        $user->notify(new VerificationDecided(KycStatus::Verified));
+
+        return redirect()->route('verification.overview')->with('status', __('verification.identity.bank_verified'));
+    }
+
+    /**
+     * De nepbank (alleen met de fake-provider): bevestigen of annuleren.
+     */
+    public function fakeBank(Request $request): View
+    {
+        abort_unless(config('aucvy.identity.provider') === 'fake' && (int) $request->query('user') === $request->user()->id, 404);
+
+        return view('auth.fake-bank', [
+            'confirmUrl' => FakeIdentityProvider::returnUrl($request->user(), 'ok'),
+            'cancelUrl' => FakeIdentityProvider::returnUrl($request->user(), 'cancel'),
+        ]);
     }
 
     /**

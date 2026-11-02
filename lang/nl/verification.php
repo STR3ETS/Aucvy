@@ -19,6 +19,10 @@ return [
     ],
 
     'identity' => [
+        'bank_verified' => 'Je identiteit is bevestigd via je bank. Je kunt bieden.',
+        'bank_cancelled' => 'Je hebt de bevestiging bij je bank afgebroken. Probeer het opnieuw wanneer je wilt.',
+        'bank_minor' => 'Bieden en verkopen kan vanaf 18 jaar.',
+        'bank_failed' => 'De bevestiging bij je bank is niet gelukt. Probeer het opnieuw, of neem contact op.',
         'pending' => 'Je aanvraag is binnen. Een medewerker kijkt ernaar; meestal binnen een werkdag. Je krijgt een mail met de uitkomst.',
         'rejected' => 'Niet goedgekeurd: :reason Je kunt het opnieuw proberen.',
         'rejected_no_reason' => 'Niet goedgekeurd. Je kunt het opnieuw proberen.',

@@ -19,7 +19,7 @@ Statuswoorden: **Besloten** = we bouwen ernaar. **Bij Don** = Raph vraagt het na
 | 5 | Boekhouding | Overleggen met Don | Csv-export blijft. | Bij Don |
 | 6 | Prijzen | Navragen bij Don | Alles blijft zoals het staat. | Bij Don |
 | 7 | Termijnen | Betalen direct; het geld wordt vrijgegeven als de klant heeft ontvangen | Betalen direct na winnen of kopen. Uitbetaling na bevestigde ontvangst. Zie vervolgvragen V1 en V2 voor de precieze termijnen. | Besloten, met vervolgvraag |
-| 8 | Verificatieprovider | iDIN lijkt het beste, bespreken met Remco | Een koppeling voor iDIN klaarzetten achter een eigen contract, zodat de partij straks één adapter is. Handmatige beoordeling blijft tot iDIN live is. | Besloten, wacht op Remco |
+| 8 | Verificatieprovider | iDIN lijkt het beste, bespreken met Remco | Gebouwd: identiteit via de bank achter een eigen contract (heen naar de partij, terug met alleen de uitkomst en een referentie, 18+), met een nepbank voor lokaal. Handmatige beoordeling blijft de standaard tot iDIN live is. | Gebouwd, wacht op Remco |
 | 9 | Landen en drempels | Verificatie (KYC) is noodzakelijk, land is niet bepalend | Verificatie vóór het eerste bod blijft, voor iedereen, ongeacht land of bedrag. | Besloten |
 | 10 | Doelgroep | Zakelijke verkopers, particuliere kopers | Alleen zakelijke accounts met goedgekeurde bedrijfscontrole mogen publiceren. Kopers mogen particulier zijn. Zie vervolgvraag D1 over herroepingsrecht. | Besloten |
 | 11 | Tweede factor | Akkoord voor het pakket (a) | Gebouwd: TOTP via een authenticator-app (QR of sleutel), acht herstelcodes die elk één keer werken, de mailcode als terugval; koppelen en ontkoppelen vraagt het wachtwoord. | Gebouwd |
