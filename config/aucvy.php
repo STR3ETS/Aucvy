@@ -237,6 +237,14 @@ return [
     ],
 
     /*
+     | Sms voor de telefoonbevestiging (besluit Raph, 2 november 2026). Tot de
+     | partij gekozen is (V3) gaat alles naar het log.
+     */
+    'sms' => [
+        'driver' => env('AUCVY_SMS_DRIVER', 'log'),
+    ],
+
+    /*
      | De Trust Index (preview v4, briefing hfst. 19): onder dit aantal
      | afgeronde transacties tonen we bewust géén score - er valt dan te
      | weinig te meten om eerlijk te zijn.

@@ -8,6 +8,16 @@ return [
     'reset_link_sent' => 'Als dit e-mailadres bij ons bekend is, staat er nu een herstel-link in je inbox.',
     'password_reset' => 'Je wachtwoord is gewijzigd. Je kunt inloggen.',
 
+    'phone' => [
+        'sms' => 'Je Aucvy-code is :code. Hij is :minutes minuten geldig. Deel hem met niemand.',
+        'sent' => 'We hebben een code per sms gestuurd naar :phone.',
+        'verified' => 'Je telefoonnummer is bevestigd.',
+        'invalid' => 'Die code klopt niet of is verlopen.',
+        'invalid_number' => 'Dat is geen geldig telefoonnummer. Gebruik bijvoorbeeld 06 12345678 of +32 470 12 34 56.',
+        'too_many' => 'Je hebt te vaak een code aangevraagd. Probeer het over :minutes minuten opnieuw.',
+        'too_many_tries' => 'Te veel foute pogingen. Vraag een nieuwe code aan.',
+    ],
+
     'identity' => [
         'pending' => 'Je aanvraag is binnen. Een medewerker kijkt ernaar; meestal binnen een werkdag. Je krijgt een mail met de uitkomst.',
         'rejected' => 'Niet goedgekeurd: :reason Je kunt het opnieuw proberen.',

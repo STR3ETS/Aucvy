@@ -14,6 +14,8 @@ use App\Orders\Providers\FakePaymentProvider;
 use App\Orders\Providers\MollieProvider;
 use App\Support\Shipping\Contracts\ShippingProvider;
 use App\Support\Shipping\Providers\FakeShippingProvider;
+use App\Support\Sms\LogSmsSender;
+use App\Support\Sms\SmsSender;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -50,6 +52,12 @@ class AppServiceProvider extends ServiceProvider
         // En voor transport (hfst. 14): een echte partner is één klasse erbij.
         $this->app->bind(ShippingProvider::class, fn (): ShippingProvider => match (config('aucvy.shipping.provider')) {
             default => new FakeShippingProvider,
+        });
+
+        // Sms (besluit Raph, 2 november 2026); de partij volgt (V3). Singleton,
+        // zodat tests kunnen meelezen met wat de log-driver verstuurde.
+        $this->app->singleton(SmsSender::class, fn (): SmsSender => match (config('aucvy.sms.driver')) {
+            default => new LogSmsSender,
         });
     }
 

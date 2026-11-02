@@ -189,7 +189,9 @@ Route::post('/uitloggen', [LoginController::class, 'destroy'])
 
 Route::middleware('auth')->group(function (): void {
     Route::get('/verificatie', [VerificationController::class, 'show'])->name('verification.overview');
-    Route::post('/verificatie/telefoon', [VerificationController::class, 'storePhone'])->name('verification.phone');
+    Route::post('/verificatie/telefoon', [VerificationController::class, 'storePhone'])->middleware('throttle:10,10')->name('verification.phone');
+    Route::post('/verificatie/telefoon/opnieuw', [VerificationController::class, 'resendPhoneCode'])->middleware('throttle:5,10')->name('verification.phone.resend');
+    Route::post('/verificatie/telefoon/bevestigen', [VerificationController::class, 'confirmPhone'])->middleware('throttle:20,10')->name('verification.phone.confirm');
     Route::post('/verificatie/identiteit', [VerificationController::class, 'storeIdentity'])->name('verification.identity');
     Route::post('/verificatie/kvk', [VerificationController::class, 'storeKvk'])->name('verification.kvk');
     Route::post('/verificatie/ubo', [VerificationController::class, 'storeUbo'])->name('verification.ubo');

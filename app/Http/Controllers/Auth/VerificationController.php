@@ -9,6 +9,7 @@ use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Notifications\VerificationDecided;
 use App\Support\Audit\Audit;
+use App\Support\Sms\PhoneVerification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -40,22 +41,54 @@ final class VerificationController extends Controller
     }
 
     /**
-     * Telefoonnummer vastleggen. De sms-bevestiging hoort bij dezelfde
-     * partnerkeuze als de identiteitscheck; tot die tijd is opgeven genoeg.
+     * Telefoonnummer vastleggen en meteen een code per sms sturen (besluit
+     * Raph, 2 november 2026). Bevestigd is het pas met de juiste code.
      */
-    public function storePhone(Request $request): RedirectResponse
+    public function storePhone(Request $request, PhoneVerification $verification): RedirectResponse
     {
         $validated = $request->validate([
-            'phone' => ['required', 'string', 'regex:/^\+?[0-9 ]{8,20}$/'],
+            'phone' => ['required', 'string', 'max:30'],
         ]);
 
-        // Alleen opgeslagen: er is geen sms-controle, dus ook geen "geverifieerd".
-        $user = $request->user();
-        $user->phone = $validated['phone'];
-        $user->phone_verified_at = null;
-        $user->save();
+        $phone = PhoneVerification::normalise($validated['phone']);
 
-        return redirect()->route('verification.overview');
+        if ($phone === null) {
+            throw ValidationException::withMessages(['phone' => __('verification.phone.invalid_number')]);
+        }
+
+        $user = $request->user();
+
+        if ($user->phone !== $phone || $user->phone_verified_at === null) {
+            $user->phone = $phone;
+            $user->phone_verified_at = null;
+            $user->save();
+
+            $verification->sendCode($user);
+        }
+
+        return redirect()->route('verification.overview')->with('status', __('verification.phone.sent', ['phone' => $phone]));
+    }
+
+    public function resendPhoneCode(Request $request, PhoneVerification $verification): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->phone === null || $user->phone_verified_at !== null) {
+            return redirect()->route('verification.overview');
+        }
+
+        $verification->sendCode($user);
+
+        return redirect()->route('verification.overview')->with('status', __('verification.phone.sent', ['phone' => $user->phone]));
+    }
+
+    public function confirmPhone(Request $request, PhoneVerification $verification): RedirectResponse
+    {
+        $validated = $request->validate(['code' => ['required', 'string', 'max:10']]);
+
+        $verification->confirm($request->user(), $validated['code']);
+
+        return redirect()->route('verification.overview')->with('status', __('verification.phone.verified'));
     }
 
     /**

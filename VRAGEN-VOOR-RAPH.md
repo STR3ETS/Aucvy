@@ -23,7 +23,7 @@ Statuswoorden: **Besloten** = we bouwen ernaar. **Bij Don** = Raph vraagt het na
 | 9 | Landen en drempels | Verificatie (KYC) is noodzakelijk, land is niet bepalend | Verificatie vóór het eerste bod blijft, voor iedereen, ongeacht land of bedrag. | Besloten |
 | 10 | Doelgroep | Zakelijke verkopers, particuliere kopers | Alleen zakelijke accounts met goedgekeurde bedrijfscontrole mogen publiceren. Kopers mogen particulier zijn. Zie vervolgvraag D1 over herroepingsrecht. | Besloten |
 | 11 | Tweede factor | Akkoord voor het pakket (a) | Gebouwd: TOTP via een authenticator-app (QR of sleutel), acht herstelcodes die elk één keer werken, de mailcode als terugval; koppelen en ontkoppelen vraagt het wachtwoord. | Gebouwd |
-| 12 | Telefoonnummer | Sms-dienst koppelen kan | Telefoonverificatie per sms, achter een eigen contract. Zie vervolgvraag V3 over de partij. | Besloten, wacht op partij |
+| 12 | Telefoonnummer | Sms-dienst koppelen kan | Gebouwd: telefoon bevestigen met een code per sms (6 cijfers, 10 minuten, max. 3 codes per 10 minuten), achter een eigen contract; tot de partij er is gaat de sms naar het log. Zie V3. | Gebouwd, wacht op partij |
 | 13 | Prijzen openbaar | Navragen bij Don | Verkochte kavels blijven zonder prijs. | Bij Don |
 | 14 | Reviewbeleid | Het Google-principe: de verkoper kan reageren; automatische moderatie op scheldwoorden, politieke kleuring, discriminatie | Reviews gaan door een automatische controle vóór publicatie; wat erdoor valt, wordt niet gepubliceerd en gaat naar beheer. Iedereen kan een review melden. De verkoper reageert, maar verwijdert niets. | Besloten |
 | 15 | Reputatiescore | Standaard, vanaf 10 | Score vanaf 10 afgeronde transacties, over de laatste 12 maanden. | Besloten |

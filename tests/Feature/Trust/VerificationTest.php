@@ -84,9 +84,9 @@ it('legt het telefoonnummer vast', function () {
         ->post('/verificatie/telefoon', ['phone' => '+31 6 12345678'])
         ->assertRedirect(route('verification.overview'));
 
-    // Opgeslagen, niet geverifieerd: er is geen sms-controle, dus geen vinkje
-    // dat iets belooft wat niet gecontroleerd is.
-    expect($user->fresh()->phone)->toBe('+31 6 12345678')
+    // Opgeslagen als internationaal nummer, nog niet bevestigd: dat gebeurt
+    // pas met de code uit de sms (PhoneVerificationTest).
+    expect($user->fresh()->phone)->toBe('+31612345678')
         ->and($user->fresh()->phone_verified_at)->toBeNull();
 });
 

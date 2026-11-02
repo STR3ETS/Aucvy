@@ -41,12 +41,46 @@
             {{-- 2 · Telefoon --}}
             <li class="rounded-aj-sm border border-aj-border bg-aj-surface p-4">
                 <p class="text-sm font-bold">
-                    <x-ui.step-icon :done="$user->phone !== null" />
+                    <x-ui.step-icon :done="$user->phone_verified_at !== null" />
                     Telefoonnummer
-                    @if ($user->phone !== null)
-                        <span class="font-normal text-aj-muted">- {{ $user->phone }} (opgegeven)</span>
+                    @if ($user->phone_verified_at !== null)
+                        <span class="font-normal text-aj-muted">- {{ $user->phone }} (bevestigd)</span>
+                    @elseif ($user->phone !== null)
+                        <span class="font-normal text-aj-muted">- {{ $user->phone }} (nog niet bevestigd)</span>
                     @endif
                 </p>
+                @if ($user->phone !== null && $user->phone_verified_at === null)
+                    {{-- Code per sms (besluit Raph, 2 november 2026). --}}
+                    <form method="POST" action="{{ route('verification.phone.confirm') }}" class="mt-2 flex gap-2">
+                        @csrf
+                        <input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"
+                               aria-label="Code uit de sms"
+                               class="tabular w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm tracking-[0.2em]"
+                               style="min-height:40px">
+                        <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px;flex:none">
+                            Bevestigen
+                        </button>
+                    </form>
+                    @error('code')
+                        <p class="mt-1 text-xs text-aj-error">{{ $message }}</p>
+                    @enderror
+                    <form method="POST" action="{{ route('verification.phone.resend') }}" class="mt-2">
+                        @csrf
+                        <button type="submit" class="text-xs font-semibold underline">Stuur een nieuwe code</button>
+                    </form>
+                    <details class="mt-2 text-xs">
+                        <summary class="cursor-pointer font-semibold underline">Ander nummer</summary>
+                        <form method="POST" action="{{ route('verification.phone') }}" class="mt-2 flex gap-2">
+                            @csrf
+                            <input type="tel" name="phone" required placeholder="06 12345678" aria-label="Ander telefoonnummer" autocomplete="tel"
+                                   class="w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:40px">
+                            <button type="submit" class="btn btn-ghost" style="height:40px;font-size:13px;flex:none">Code sturen</button>
+                        </form>
+                    </details>
+                @endif
+                @error('phone')
+                    <p class="mt-1 text-xs text-aj-error">{{ $message }}</p>
+                @enderror
                 @if ($user->phone === null)
                     <form method="POST" action="{{ route('verification.phone') }}" class="mt-2 flex gap-2">
                         @csrf
@@ -55,7 +89,7 @@
                                class="w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
                                style="min-height:40px">
                         <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px;flex:none">
-                            Opslaan
+                            Code sturen
                         </button>
                     </form>
                 @endif
