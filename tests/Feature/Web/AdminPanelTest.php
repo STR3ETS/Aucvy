@@ -36,8 +36,8 @@ it('weigert bezoekers en gewone gebruikers', function () {
 it('laat een medewerker binnen op het overzicht', function () {
     $this->actingAs(staffMember())->get('/admin')
         ->assertOk()
-        ->assertSee('Overzicht')
-        ->assertSee('Live kavels');
+        ->assertSee('Vandaag')
+        ->assertSee('Kavels live');
 });
 
 it('stuurt een medewerker van het werkplan door naar de backoffice', function () {

@@ -41,6 +41,7 @@ final class FakeProvider implements LlmProvider
             'screen_listing' => ['verdict' => 'approve', 'issues' => [], 'confidence' => 0.9],
             // Ivy ziet niets in een bericht; de vaste regels doen het werk.
             'moderate_message' => ['signal' => 'none', 'confidence' => 0.9],
+            'draft_ticket_reply' => ['reply' => 'Bedankt voor je bericht over "'.($input['subject'] ?? 'je vraag').'". Een medewerker zoekt dit voor je uit en komt vandaag bij je terug.', 'confidence' => 0.7],
             default => ['confidence' => 0.5],
         };
 

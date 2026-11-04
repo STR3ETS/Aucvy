@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Admin\StaffRole;
 use App\Compliance\Identity\FakeIdentityProvider;
 use App\Compliance\Identity\IdentityProvider;
 use App\Ivy\Contracts\LlmProvider;
@@ -79,6 +80,10 @@ class AppServiceProvider extends ServiceProvider
         // "Een medewerker beoordeelt - geen algoritme" (hfst. 9). Dit is die
         // medewerker.
         Gate::define('staff', fn (User $user): bool => $user->is_staff);
+
+        // Rechten per onderdeel van het control center (briefing nieuwe
+        // functies): can:admin-area,finance of can:admin-area,finance,write.
+        Gate::define('admin-area', fn (User $user, string $area, ?string $mode = null): bool => StaffRole::of($user)?->can($area, $mode === 'write') ?? false);
     }
 
     /**

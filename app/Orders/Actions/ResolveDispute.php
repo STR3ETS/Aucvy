@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Orders\Actions;
 
+use App\Admin\Ledger;
 use App\Enums\DisputeStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PayoutStatus;
@@ -62,6 +63,12 @@ final class ResolveDispute
             $dispute->handled_by = $staff->id;
             $dispute->resolved_at = now();
             $dispute->save();
+
+            // Een prijscorrectie is een terugbetaling: die verlaagt de
+            // platformomzet in de maand van de correctie (control center).
+            if ($dispute->correction_cents !== null && $dispute->correction_cents > 0) {
+                app(Ledger::class)->recordRefund($order, $dispute->correction_cents, "dispute:{$dispute->id}");
+            }
 
             /*
              | `terugdraaien` is de enige uitkomst die de koop ontbindt; alle

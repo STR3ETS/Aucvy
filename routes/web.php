@@ -25,6 +25,7 @@ use App\Http\Controllers\LotDossierController;
 use App\Http\Controllers\LotImportController;
 use App\Http\Controllers\LotIndexController;
 use App\Http\Controllers\LotManagementController;
+use App\Http\Controllers\MailgunInboundController;
 use App\Http\Controllers\MailgunWebhookController;
 use App\Http\Controllers\MollieWebhookController;
 use App\Http\Controllers\NotificationCenterController;
@@ -44,18 +45,24 @@ use App\Http\Controllers\Staff\AuditLogController;
 use App\Http\Controllers\Staff\BackofficeController;
 use App\Http\Controllers\Staff\CategoryAdminController;
 use App\Http\Controllers\Staff\ComplianceController;
+use App\Http\Controllers\Staff\ControlCenterController;
 use App\Http\Controllers\Staff\ConversationController as StaffConversationController;
+use App\Http\Controllers\Staff\CustomerController;
 use App\Http\Controllers\Staff\DisputeReviewController;
 use App\Http\Controllers\Staff\ErrorLogController;
+use App\Http\Controllers\Staff\FinanceController;
 use App\Http\Controllers\Staff\LiveRoomController;
 use App\Http\Controllers\Staff\LotDossierController as StaffLotDossierController;
 use App\Http\Controllers\Staff\ModerationController;
 use App\Http\Controllers\Staff\QueueController;
 use App\Http\Controllers\Staff\RedirectController;
+use App\Http\Controllers\Staff\ReportController;
 use App\Http\Controllers\Staff\ReviewModerationController;
 use App\Http\Controllers\Staff\RiskController;
 use App\Http\Controllers\Staff\SupportTicketController;
 use App\Http\Controllers\Staff\SystemController;
+use App\Http\Controllers\Staff\TicketController;
+use App\Http\Controllers\Staff\TransactionController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TwoFactorSettingsController;
@@ -403,7 +410,47 @@ Route::middleware(['auth', 'can:staff'])->prefix('beheer')->name('staff.')->grou
  | links. Zelfde staff-gate als de geschillenroute.
  */
 Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group(function (): void {
-    Route::get('/', [BackofficeController::class, 'index'])->name('index');
+    // Control center (briefing nieuwe functies): cijfers, Wacht op jou, systemen, lijsten.
+    Route::get('/', [ControlCenterController::class, 'index'])->name('index');
+    Route::post('/taken/{task}/klaar', [ControlCenterController::class, 'completeTask'])->name('tasks.complete');
+
+    Route::middleware('area:finance')->group(function (): void {
+        Route::get('/financien', [FinanceController::class, 'index'])->name('finance');
+        Route::post('/financien/kosten', [FinanceController::class, 'storeCost'])->name('finance.costs');
+        Route::post('/financien/uitbetalingen/{payout}/iban', [FinanceController::class, 'requestIban'])->name('finance.iban');
+        Route::post('/financien/export', [FinanceController::class, 'export'])->name('finance.export');
+    });
+
+    Route::get('/transacties', [TransactionController::class, 'index'])->middleware('area:transactions')->name('transactions');
+
+    Route::middleware('area:customers')->group(function (): void {
+        Route::get('/klanten', [CustomerController::class, 'index'])->name('customers');
+        Route::get('/klanten/{customer}', [CustomerController::class, 'show'])->name('customers.show')->withTrashed();
+        Route::post('/klanten/{customer}/notitie', [CustomerController::class, 'storeNote'])->middleware('area:customers,write')->name('customers.note');
+        Route::post('/klanten/{customer}/taak', [CustomerController::class, 'storeTask'])->middleware('area:customers,write')->name('customers.task');
+        Route::post('/klanten/{customer}/taak/{task}/klaar', [CustomerController::class, 'completeTask'])->middleware('area:customers,write')->name('customers.task.complete');
+    });
+
+    Route::middleware('area:service')->group(function (): void {
+        Route::get('/service', [TicketController::class, 'index'])->name('service');
+        Route::get('/service/{ticket}', [TicketController::class, 'show'])->name('service.show');
+        Route::middleware('area:service,write')->group(function (): void {
+            Route::post('/service/{ticket}/antwoord', [TicketController::class, 'reply'])->name('service.reply');
+            Route::post('/service/{ticket}/notitie', [TicketController::class, 'note'])->name('service.note');
+            Route::patch('/service/{ticket}', [TicketController::class, 'update'])->name('service.update');
+            Route::post('/service/{ticket}/concept', [TicketController::class, 'draft'])->name('service.draft');
+            Route::post('/service/{ticket}/opgelost', [TicketController::class, 'resolve'])->name('service.resolve');
+            Route::post('/service/{ticket}/geschil', [TicketController::class, 'dispute'])->name('service.dispute');
+        });
+    });
+
+    Route::middleware('area:reports')->group(function (): void {
+        Route::get('/rapporten', [ReportController::class, 'index'])->name('reports');
+        Route::post('/rapporten', [ReportController::class, 'run'])->name('reports.run');
+        Route::get('/rapporten/download', [ReportController::class, 'download'])->name('reports.download');
+        Route::post('/rapporten/planning', [ReportController::class, 'storeSchedule'])->name('reports.schedule');
+        Route::delete('/rapporten/planning/{schedule}', [ReportController::class, 'destroySchedule'])->name('reports.schedule.destroy');
+    });
     Route::get('/activiteit', [BackofficeController::class, 'activity'])->name('activity');
     Route::get('/live', [LiveRoomController::class, 'index'])->name('live');
     Route::get('/live/paneel', [LiveRoomController::class, 'panel'])->name('live.panel');
@@ -467,7 +514,8 @@ Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group
     Route::post('/fouten/{event}/afhandelen', [ErrorLogController::class, 'resolve'])->name('errors.resolve');
     Route::post('/fouten/{event}/heropenen', [ErrorLogController::class, 'reopen'])->name('errors.reopen');
 
-    Route::get('/support', [SupportTicketController::class, 'index'])->name('support');
+    // Oude ingang van de klantenservice; de tickets staan nu onder /admin/service.
+    Route::get('/support', [TicketController::class, 'index'])->middleware('area:service')->name('support');
     Route::post('/support/{ticket}/sluiten', [SupportTicketController::class, 'close'])->name('support.close');
     Route::post('/support/{ticket}/heropenen', [SupportTicketController::class, 'reopen'])->name('support.reopen');
 
@@ -501,6 +549,11 @@ Route::middleware('signed')->group(function (): void {
 Route::post('/webhooks/mollie', MollieWebhookController::class)
     ->middleware('throttle:120,1')
     ->name('webhooks.mollie');
+
+// Inkomende mail via een Mailgun-route wordt een ticket (control center).
+Route::post('/webhooks/mailgun/inbound', MailgunInboundController::class)
+    ->middleware('throttle:120,1')
+    ->name('webhooks.mailgun.inbound');
 
 // Afleverstatus van Mailgun; alleen met een geldige handtekening.
 Route::post('/webhooks/mailgun', MailgunWebhookController::class)

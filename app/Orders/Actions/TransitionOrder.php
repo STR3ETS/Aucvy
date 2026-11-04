@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Orders\Actions;
 
+use App\Admin\Ledger;
 use App\Enums\DepositStatus;
 use App\Enums\LotStatus;
 use App\Enums\OrderStatus;
@@ -131,6 +132,10 @@ final class TransitionOrder
             'fee_cents' => $proceeds->feeCents,
             'status' => PayoutStatus::Scheduled,
         ]);
+
+        // Het grootboek van het platform (control center): fee,
+        // administratiekosten en betaalkosten, idempotent per order.
+        app(Ledger::class)->recordPaidOrder($order->fresh(['payout', 'seller.company']));
 
         if ($order->auction_id !== null) {
             Deposit::query()

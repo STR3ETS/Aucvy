@@ -121,7 +121,7 @@ describe('beheer en opruimen', function () {
         $this->actingAs(User::factory()->create(['is_staff' => true]))
             ->get('/admin')
             ->assertOk()
-            ->assertSee('Biedingen (24 uur)');
+            ->assertSee('Biedingen op het platform')->assertSee('laatste 24 uur');
     });
 
     it('ruimt auditregels na de bewaartermijn op en laat de rest staan', function () {

@@ -250,6 +250,20 @@ return [
         // `?:` en niet een standaardwaarde: een lege regel in .env is anders
         // een leeg adres, en een mail naar '' verdwijnt zonder fout.
         'email' => env('AUCVY_SUPPORT_EMAIL') ?: env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        // Klantenservice (control center): eerste reactie van een mens binnen
+        // zoveel uur; te laat wordt een taak in "Wacht op jou".
+        'first_response_hours' => (int) env('AUCVY_SUPPORT_FIRST_RESPONSE_HOURS', 8),
+        // Mailgun-route voor inkomende mail: een mail aan dit adres wordt een ticket.
+        'inbound_address' => env('AUCVY_SUPPORT_INBOUND', 'service@aucvy.nl'),
+    ],
+
+    /*
+     | Het grootboek van het platform (control center). Betaalkosten komen
+     | straks uit de Stripe-webhook; tot dan een schatting per order.
+     */
+    'ledger' => [
+        'payment_cost_percent' => (float) env('AUCVY_PAYMENT_COST_PERCENT', 1.4),
+        'payment_cost_fixed_cents' => (int) env('AUCVY_PAYMENT_COST_FIXED_CENTS', 25),
     ],
 
     /*

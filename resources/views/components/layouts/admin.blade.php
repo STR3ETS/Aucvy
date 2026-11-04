@@ -22,28 +22,43 @@
 <body class="bg-aj-bg text-aj-text" style="font-family:'Manrope',Inter,system-ui,sans-serif">
 
     @php
-        $groups = [
-            'Operatie' => [
-                ['admin.index', 'Overzicht'],
+        // Het control center (briefing nieuwe functies), gefilterd op de rol
+        // van de medewerker. Wat al in /admin werkte, staat in dezelfde zijbalk.
+        $staffRole = App\Admin\StaffRole::of(auth()->user());
+        $allowed = fn (string $area): bool => $staffRole?->can($area) ?? false;
+        $groups = array_filter(array_map(fn (array $items) => array_values(array_filter($items)), [
+            'Werkruimte' => [
+                ['admin.index', 'Vandaag'],
+                $allowed('transactions') ? ['admin.transactions', 'Transacties'] : null,
+                $allowed('lots') ? ['admin.lots', 'Kavels'] : null,
+                $allowed('lots') ? ['admin.moderation', 'Moderatie'] : null,
+                $allowed('customers') ? ['admin.customers', 'Klanten'] : null,
                 ['admin.live', 'Live'],
-                ['admin.lots', 'Kavels'],
-                ['admin.moderation', 'Moderatie'],
-                ['admin.risk', 'Risico'],
-                ['admin.auctions', 'Veilingen'],
-                ['admin.sales', 'Gebundeld'],
-                ['admin.bids', 'Biedingen'],
-                ['admin.orders', 'Orders'],
-                ['admin.payouts', 'Uitbetalingen'],
-                ['admin.viewings', 'Bezichtigingen'],
+            ],
+            'Klantenservice' => [
+                $allowed('service') ? ['admin.service', 'Tickets en klachten'] : null,
+                $allowed('conversations') ? ['admin.conversations', 'Gesprekken'] : null,
+                $allowed('lots') ? ['admin.reviews', 'Reviews'] : null,
+                $allowed('lots') ? ['admin.viewings', 'Bezichtigingen'] : null,
+            ],
+            'Geld en cijfers' => [
+                $allowed('finance') ? ['admin.finance', 'Financiën'] : null,
+                $allowed('finance') ? ['admin.payouts', 'Uitbetalingen'] : null,
+                $allowed('finance') ? ['admin.orders', 'Orders'] : null,
+                $allowed('reports') ? ['admin.reports', 'Rapportages'] : null,
+            ],
+            'Veilingen' => [
+                $allowed('lots') ? ['admin.auctions', 'Veilingen'] : null,
+                $allowed('lots') ? ['admin.sales', 'Gebundeld'] : null,
+                $allowed('lots') ? ['admin.bids', 'Biedingen'] : null,
+                $allowed('lots') ? ['admin.risk', 'Risico'] : null,
             ],
             'Mensen' => [
-                ['admin.users', 'Gebruikers'],
-                ['admin.companies', 'Bedrijven'],
-                ['admin.compliance', 'Compliance'],
-                ['admin.support', 'Support'],
-                ['admin.reviews', 'Reviews'],
+                $allowed('customers') ? ['admin.users', 'Gebruikers'] : null,
+                $allowed('customers') ? ['admin.companies', 'Bedrijven'] : null,
+                $allowed('customers') ? ['admin.compliance', 'Compliance'] : null,
             ],
-            'Systeem' => [
+            'Systeem' => $staffRole === App\Admin\StaffRole::Owner ? [
                 ['admin.categories', 'Categorieën'],
                 ['admin.redirects', 'Doorverwijzingen'],
                 ['admin.ai-runs', 'AI-runs'],
@@ -51,8 +66,8 @@
                 ['admin.errors', 'Foutlog'],
                 ['admin.queue', 'Wachtrij'],
                 ['admin.system', 'Systeem'],
-            ],
-        ];
+            ] : [],
+        ]));
     @endphp
 
     <div class="flex min-h-screen">
@@ -81,7 +96,7 @@
                                        @if ($isActive) aria-current="page" @endif>{{ $itemLabel }}</a>
                                 </li>
                             @endforeach
-                            @if ($label === 'Operatie')
+                            @if ($label === 'Klantenservice' && $allowed('service'))
                                 <li>
                                     <a href="{{ route('staff.disputes.index') }}"
                                        @class([

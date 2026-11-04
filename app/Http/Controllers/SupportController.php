@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Admin\Tickets;
 use App\Models\Order;
-use App\Models\SupportTicket;
 use App\Notifications\SupportTicketForwarded;
 use App\Notifications\SupportTicketReceived;
 use Illuminate\Http\RedirectResponse;
@@ -47,13 +47,14 @@ final class SupportController extends Controller
             'website' => ['prohibited'],
         ]);
 
-        $ticket = SupportTicket::create([
+        $ticket = app(Tickets::class)->open([
             'user_id' => $request->user()?->id,
             'name' => $validated['name'],
             'email' => $validated['email'],
             'subject' => $validated['subject'],
             'message' => $validated['message'],
             'order_number' => $validated['order_number'] ?? null,
+            'source' => 'form',
             'ip' => $request->ip(),
         ]);
 

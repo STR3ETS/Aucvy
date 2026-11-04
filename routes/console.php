@@ -83,6 +83,13 @@ Schedule::command('watchlist:notify-ending')
  | De bewaartermijnen uit hfst. 15: in code afgedwongen, niet in een
  | document beloofd. 's Nachts, buiten de drukte.
  */
+// Control center (briefing nieuwe functies): dagcijfers, saldocontrole en de
+// reactietijd van tickets.
+Schedule::command('aucvy:build-metrics')->dailyAt('00:20');
+Schedule::command('aucvy:reconcile-balance')->dailyAt('06:30');
+Schedule::command('aucvy:check-ticket-sla')->everyFifteenMinutes();
+Schedule::command('aucvy:send-reports')->dailyAt('07:00');
+
 Schedule::command('aucvy:prune-expired')
     ->dailyAt('04:00')
     ->withoutOverlapping(60);
