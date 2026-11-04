@@ -94,7 +94,7 @@
         <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="verspreiding">
             <h2 id="verspreiding" class="text-lg font-extrabold">Verspreiding</h2>
             <p class="mt-1 text-sm text-aj-muted">Deel de kavel op je eigen kanalen; per kanaal zie je of het geplaatst is en hoe vaak erop geklikt is.</p>
-            @include('dashboard.partials.lot-distribution', ['lot' => $lot])
+            @include('dashboard.partials.lot-distribution', ['lot' => $lot, 'kit' => $kit, 'planning' => $planning])
         </section>
     @else
         <section aria-labelledby="dossier">

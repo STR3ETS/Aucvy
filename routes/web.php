@@ -10,11 +10,13 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CategoryIndexController;
+use App\Http\Controllers\ChannelConnectionController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardListController;
 use App\Http\Controllers\DevCheckoutController;
+use App\Http\Controllers\DistributionController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FunnelController;
 use App\Http\Controllers\HomeController;
@@ -25,6 +27,7 @@ use App\Http\Controllers\LotDossierController;
 use App\Http\Controllers\LotImportController;
 use App\Http\Controllers\LotIndexController;
 use App\Http\Controllers\LotManagementController;
+use App\Http\Controllers\LotShareController;
 use App\Http\Controllers\MailgunInboundController;
 use App\Http\Controllers\MailgunWebhookController;
 use App\Http\Controllers\MollieWebhookController;
@@ -41,6 +44,7 @@ use App\Http\Controllers\SaleStudioController;
 use App\Http\Controllers\SavedSearchController;
 use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\ShareImageController;
 use App\Http\Controllers\Staff\AuditLogController;
 use App\Http\Controllers\Staff\BackofficeController;
 use App\Http\Controllers\Staff\CategoryAdminController;
@@ -96,6 +100,11 @@ Route::get('/veilingen', [LotIndexController::class, 'index'])->middleware('thro
 Route::get('/veilingen/{category}', [LotIndexController::class, 'index'])->middleware('throttle:120,1')->name('lots.category');
 
 Route::get('/kavel/{lot}', [LotController::class, 'show'])->name('lots.show');
+// Delen en verspreiden (briefing nieuwe functies): deelbeeld per kavel, deling met eigen token.
+Route::get('/kavel/{lot}/deelbeeld/{format}.jpg', ShareImageController::class)->where('format', 'square|portrait|landscape')->name('lots.share-image');
+Route::post('/kavel/{lot}/delen', [LotShareController::class, 'store'])->middleware('throttle:30,10')->name('lots.share');
+Route::get('/kavel/{lot}/d/{token}', [LotShareController::class, 'show'])->where('token', '[a-z0-9]{8,24}')->name('lots.shared');
+Route::post('/kavel/{lot}/d/{token}/reactie', [LotShareController::class, 'react'])->where('token', '[a-z0-9]{8,24}')->middleware('throttle:10,10')->name('lots.shared.react');
 // Een veiling als verzameling kavels (Auction Studio, briefing sectie 1).
 Route::get('/veiling/{sale}', [SaleController::class, 'show'])->name('sales.show');
 
@@ -293,6 +302,17 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard/kavels/{lot:id}', [LotDossierController::class, 'show'])->name('dashboard.lots.show');
     Route::get('/dashboard/kavels/{lot:id}/bewerken', [LotManagementController::class, 'edit'])->name('dashboard.lots.edit');
     Route::patch('/dashboard/kavels/{lot:id}/documenten/{document}', [DocumentController::class, 'updateVisibility'])->name('dashboard.lots.documents.visibility');
+    // Verspreiding: deelkit en social push.
+    Route::post('/dashboard/kavels/{lot:id}/verspreiding/ivy', [DistributionController::class, 'askIvy'])->middleware('throttle:10,10')->name('dashboard.lots.distribution.ivy');
+    Route::post('/dashboard/kavels/{lot:id}/verspreiding/planning', [DistributionController::class, 'approvePlanning'])->name('dashboard.lots.distribution.approve');
+    Route::post('/dashboard/kavels/{lot:id}/verspreiding/{distribution}/tekst', [DistributionController::class, 'updateText'])->name('dashboard.lots.distribution.text');
+    Route::post('/dashboard/kavels/{lot:id}/verspreiding/{distribution}/geplaatst', [DistributionController::class, 'markPosted'])->name('dashboard.lots.distribution.posted');
+    Route::post('/dashboard/kavels/{lot:id}/verspreiding/{distribution}/offline', [DistributionController::class, 'markWithdrawn'])->name('dashboard.lots.distribution.withdrawn');
+    // Kanalen koppelen (/account/koppelingen).
+    Route::get('/account/koppelingen', [ChannelConnectionController::class, 'index'])->name('account.connections');
+    Route::get('/account/koppelingen/{channel}/koppelen', [ChannelConnectionController::class, 'connect'])->name('account.connections.connect');
+    Route::get('/account/koppelingen/{channel}/terug', [ChannelConnectionController::class, 'callback'])->name('account.connections.callback');
+    Route::delete('/account/koppelingen/{channel}', [ChannelConnectionController::class, 'disconnect'])->name('account.connections.disconnect');
     Route::patch('/dashboard/kavels/{lot:id}', [LotManagementController::class, 'update'])->name('dashboard.lots.update');
     Route::post('/dashboard/kavels/{lot:id}/pauzeren', [LotManagementController::class, 'pause'])->name('dashboard.lots.pause');
     Route::post('/dashboard/kavels/{lot:id}/hervatten', [LotManagementController::class, 'resume'])->name('dashboard.lots.resume');

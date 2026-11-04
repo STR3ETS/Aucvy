@@ -69,4 +69,43 @@ return [
         ],
     ],
 
+    /*
+     | Kanalen voor verspreiden (briefing nieuwe functies). Zonder sleutels
+     | toont /account/koppelingen "Koppeling volgt" en dekt de deelkit het
+     | kanaal. Facebook en Instagram delen de Meta-app; de app-review bij
+     | Meta duurt één tot drie weken.
+     */
+    'facebook' => [
+        'client_id' => env('META_APP_ID'),
+        'client_secret' => env('META_APP_SECRET'),
+        'authorize_url' => 'https://www.facebook.com/v21.0/dialog/oauth',
+        'token_url' => 'https://graph.facebook.com/v21.0/oauth/access_token',
+        'scope' => 'pages_manage_posts,pages_read_engagement',
+    ],
+
+    'instagram' => [
+        'client_id' => env('META_APP_ID'),
+        'client_secret' => env('META_APP_SECRET'),
+        'authorize_url' => 'https://www.facebook.com/v21.0/dialog/oauth',
+        'token_url' => 'https://graph.facebook.com/v21.0/oauth/access_token',
+        'scope' => 'instagram_basic,instagram_content_publish,pages_show_list',
+    ],
+
+    'linkedin' => [
+        'client_id' => env('LINKEDIN_CLIENT_ID'),
+        'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
+        'authorize_url' => 'https://www.linkedin.com/oauth/v2/authorization',
+        'token_url' => 'https://www.linkedin.com/oauth/v2/accessToken',
+        'scope' => 'openid profile w_member_social',
+    ],
+
+    'marktplaats' => [
+        // Alleen als API-partner (voorwaarden art. 7.4); tot die tijd via de deelkit.
+        'client_id' => env('MARKTPLAATS_CLIENT_ID'),
+        'client_secret' => env('MARKTPLAATS_CLIENT_SECRET'),
+        'authorize_url' => env('MARKTPLAATS_AUTHORIZE_URL'),
+        'token_url' => env('MARKTPLAATS_TOKEN_URL'),
+        'scope' => '',
+    ],
+
 ];

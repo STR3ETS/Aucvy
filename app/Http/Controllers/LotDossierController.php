@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Distribution\ShareKit;
+use App\Distribution\SocialPlanning;
 use App\Lots\Dossier\Dossier;
 use App\Models\Lot;
 use App\Models\LotActivity;
@@ -40,6 +42,9 @@ final class LotDossierController extends Controller
             'conversations' => $tab === 'berichten'
                 ? $lot->conversations()->with(['buyer', 'company', 'seller'])->orderByRaw('last_message_at is null, last_message_at desc')->get()
                 : collect(),
+            // Verspreiding: de deelkit en de social planning worden aangemaakt zodra de tab opengaat.
+            'kit' => $tab === 'verspreiding' && $lot->status->isPublic() ? app(ShareKit::class)->for($lot) : collect(),
+            'planning' => $tab === 'verspreiding' ? ($lot->status->isPublic() ? app(SocialPlanning::class)->for($lot) : app(SocialPlanning::class)->planned($lot)) : collect(),
         ]);
     }
 }

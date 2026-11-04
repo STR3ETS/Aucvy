@@ -32,7 +32,9 @@ it('zet canonical en open graph op de kavelpagina met de eerste foto', function 
         ->assertOk()
         ->assertSee('<link rel="canonical" href="'.route('lots.show', $lot).'">', escape: false)
         ->assertSee('<meta property="og:type" content="product">', escape: false)
-        ->assertSee('<meta property="og:image" content="https://images.example/koelcel.jpg">', escape: false)
+        // Elke kavel een eigen deelbeeld (briefing nieuwe functies), met maten erbij.
+        ->assertSee('<meta property="og:image" content="'.route('lots.share-image', [$lot, 'landscape']).'">', escape: false)
+        ->assertSee('<meta property="og:image:width" content="1200">', escape: false)
         ->assertSee('"@type":"Product"', escape: false)
         ->assertSee('"price":"3200.00"', escape: false)
         ->assertSee('https://schema.org/InStock');

@@ -41,6 +41,7 @@ final class FakeProvider implements LlmProvider
             'screen_listing' => ['verdict' => 'approve', 'issues' => [], 'confidence' => 0.9],
             // Ivy ziet niets in een bericht; de vaste regels doen het werk.
             'moderate_message' => ['signal' => 'none', 'confidence' => 0.9],
+            'write_channel_texts' => ['texts' => $this->channelTexts($input), 'confidence' => 0.8],
             'draft_ticket_reply' => ['reply' => 'Bedankt voor je bericht over "'.($input['subject'] ?? 'je vraag').'". Een medewerker zoekt dit voor je uit en komt vandaag bij je terug.', 'confidence' => 0.7],
             default => ['confidence' => 0.5],
         };
@@ -137,6 +138,31 @@ final class FakeProvider implements LlmProvider
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
+    /**
+     * Nepteksten per kanaal en moment, met de plekken voor bod en link.
+     *
+     * @param  array<string, mixed>  $input
+     * @return list<array{channel: string, moment: string, body: string}>
+     */
+    private function channelTexts(array $input): array
+    {
+        $title = (string) ($input['title'] ?? 'deze kavel');
+        $texts = [];
+
+        foreach ((array) ($input['channels'] ?? []) as $channel) {
+            foreach ([...(array) ($input['moments'] ?? []), 'kit'] as $moment) {
+                $lead = match ($moment) {
+                    'day_before' => "Sluit morgen: {$title}. Huidig bod {bod}.",
+                    'last_hour' => "Laatste uur voor {$title}. Huidig bod {bod}, sluit om {sluit_tijd}.",
+                    default => "Nieuw op Aucvy: {$title}. Startbod {bod}, sluit {sluit}.",
+                };
+                $texts[] = ['channel' => (string) $channel, 'moment' => $moment, 'body' => $channel === 'instagram' ? $lead.' Link in bio. #aucvy #veiling' : $lead.' {link}'];
+            }
+        }
+
+        return $texts;
+    }
+
     private function translate(array $input): array
     {
         $tag = '['.strtoupper((string) ($input['locale'] ?? 'en')).'] ';

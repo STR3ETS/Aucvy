@@ -25,6 +25,8 @@
     // zonder querystring), het deelbeeld en het Open Graph-type.
     'canonical' => null,
     'image' => null,
+    'imageWidth' => null,
+    'imageHeight' => null,
     'ogType' => 'website',
     // Gefilterde en gepagineerde zoekpagina's: wel volgen, niet indexeren
     // (masterbriefing 7.3), de canonical wijst al naar de schone URL.
@@ -78,6 +80,10 @@
         <meta property="og:description" content="{{ $description }}">
     @endif
     <meta property="og:image" content="{{ $shareImage }}">
+    @if ($imageWidth && $imageHeight)
+        <meta property="og:image:width" content="{{ $imageWidth }}">
+        <meta property="og:image:height" content="{{ $imageHeight }}">
+    @endif
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $shareTitle }}">
     <meta name="twitter:image" content="{{ $shareImage }}">

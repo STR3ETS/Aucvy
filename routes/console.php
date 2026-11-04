@@ -89,6 +89,7 @@ Schedule::command('aucvy:build-metrics')->dailyAt('00:20');
 Schedule::command('aucvy:reconcile-balance')->dailyAt('06:30');
 Schedule::command('aucvy:check-ticket-sla')->everyFifteenMinutes();
 Schedule::command('aucvy:send-reports')->dailyAt('07:00');
+Schedule::command('aucvy:social-push')->everyFiveMinutes();
 
 Schedule::command('aucvy:prune-expired')
     ->dailyAt('04:00')

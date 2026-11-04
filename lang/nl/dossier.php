@@ -99,6 +99,7 @@ return [
             'withdrawn' => 'Offline gehaald op :channel',
             'shared' => 'Gedeeld via :channel',
             'opened' => 'Gedeelde link geopend',
+            'planned' => 'Social planning goedgekeurd: :count berichten',
         ],
         'live' => [
             'started' => 'Uitzending gestart',

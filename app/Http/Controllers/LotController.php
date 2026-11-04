@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Distribution\ShareKit;
 use App\Enums\OrderStatus;
 use App\Enums\SaleType;
 use App\Enums\ViewingStatus;
 use App\Http\Resources\AuctionStateResource;
 use App\Models\Lot;
+use App\Models\LotShare;
 use App\Models\Order;
 use App\Models\Review;
 use App\Models\Viewing;
@@ -54,8 +56,18 @@ final class LotController extends Controller
 
         $lang = $request->query('lang') === 'en' ? 'en' : 'nl';
 
+        // Een bezoek via een link met herkomst telt als klik bij het kanaal (alleen echte cijfers).
+        if ($request->query('utm_source') && $request->query('utm_campaign') === 'kavel-'.$lot->public_id) {
+            ShareKit::recordClick($lot, (string) $request->query('utm_source'), $request->query('utm_content'), $request->hasSession() ? 'session' : null);
+        }
+
         return view('lots.show', [
             'lot' => $lot,
+            // Een gedeelde link: de notitie van de deler boven de kavel.
+            'share' => $request->attributes->get('share'),
+            'ownShares' => $request->user() !== null
+                ? LotShare::query()->where('lot_id', $lot->id)->where('user_id', $request->user()->id)->latest('id')->limit(10)->get()
+                : collect(),
             'lang' => $lang,
             'translation' => $lang === 'en' ? $lot->translation('en') : null,
             'hasTranslation' => $lot->translation('en') !== null,

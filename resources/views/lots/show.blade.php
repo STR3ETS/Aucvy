@@ -3,10 +3,9 @@
 @use('App\Support\Money\Money')
 
 @php
-    $firstMedia = $lot->media->first()?->path;
-    $shareImage = $firstMedia === null
-        ? null
-        : (Str::startsWith($firstMedia, ['http://', 'https://']) ? $firstMedia : asset($firstMedia));
+    // Elke kavel een eigen deelbeeld (briefing nieuwe functies): liggend, 1200 × 630.
+    $shareImage = route('lots.share-image', [$lot, 'landscape']);
+    [$shareWidth, $shareHeight] = \App\Distribution\ShareVisual::dimensions('landscape');
     $isLive = $lot->status->isPublic() && $auction !== null && ! $auction->isClosed();
     $structured = [
         '@context' => 'https://schema.org',
@@ -35,7 +34,7 @@
 @endpush
 
 <x-layouts.public :title="$lot->title" :heading="$translation['title'] ?? $lot->title" :description="Str::limit($lot->description, 155)"
-    :eyebrow="$lot->category?->name ?? 'Kavel'" :image="$shareImage" og-type="product" :canonical="route('lots.show', $lot)">
+    :eyebrow="$lot->category?->name ?? 'Kavel'" :image="$shareImage" :image-width="$shareWidth" :image-height="$shareHeight" og-type="product" :canonical="route('lots.show', $lot)">
     {{-- Het kruimelpad staat in de paginakop; de titel is de kop zelf. --}}
     <x-slot:crumbs>
         <a href="{{ route('lots.index') }}">Veilingen</a>
@@ -73,6 +72,10 @@
             met een schermlezer (hfst. 11).
         --}}
         <div aria-live="polite" class="sr-only" x-text="announcement"></div>
+
+        @if (isset($share) && $share !== null)
+            @include('lots.partials.shared-banner', ['lot' => $lot, 'share' => $share])
+        @endif
 
         {{--
             Op mobiel: foto's eerst, dan pas prijs en bod. Je moet eerst zien
@@ -415,14 +418,7 @@
                             </a>
                         @endguest
 
-                        <button type="button" class="btn btn-ghost flex-1" @click="share()">
-                            <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor"
-                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="5" cy="10" r="2.2"/><circle cx="15" cy="4.5" r="2.2"/><circle cx="15" cy="15.5" r="2.2"/>
-                                <path d="m7 9 6-3.6M7 11l6 3.6"/>
-                            </svg>
-                            <span x-text="copied ? 'Gekopieerd!' : 'Delen'"></span>
-                        </button>
+                        @include('lots.partials.share-menu', ['lot' => $lot, 'ownShares' => $ownShares ?? collect()])
 
                         {{-- Web push (hfst. 14): "overboden" hoort binnen twee
                              seconden op je scherm, ook met de site dicht. --}}

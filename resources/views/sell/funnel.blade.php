@@ -580,10 +580,13 @@
                         <h2 class="text-lg font-extrabold">Waar wil je publiceren?</h2>
                         <p class="mt-1 text-sm text-aj-muted">
                             Je kavel komt op Aucvy, in de zoekresultaten en bij de categorie.
-                            {{-- Campagnebeheer raakt promotiebudget en valt buiten de MVP
-                                 (beslissing hfst. 2b). Eerlijk benoemen, niet nabouwen. --}}
-                            Extra kanalen - Marktplaats, sociale media - komen later; die vragen een promotiebudget.
                         </p>
+                        {{-- Verspreiden (briefing nieuwe functies): de deelkit dekt elk kanaal vanaf dag één; koppelingen komen per kanaal. --}}
+                        <ul class="mt-3 space-y-1.5 text-sm">
+                            <li><span class="font-bold">Deelkit</span>: zodra de kavel live staat, krijg je per kanaal (Facebook, Instagram, LinkedIn, Marktplaats, WhatsApp, mail) een tekst van Nova, een beeld in drie formaten en een link met herkomst. Je plaatst zelf en ziet de klikken per kanaal.</li>
+                            <li><span class="font-bold">Social push</span>: één planning met drie momenten (start, dag voor sluiting, laatste uur) die je in één keer goedkeurt. Bij sluiting gaat alles offline.</li>
+                            <li><span class="font-bold">Gekoppelde kanalen</span>: plaatst Aucvy zelf, zodra je een kanaal hebt gekoppeld onder Account, Koppelingen. Marktplaats vraagt betaald adverteren en één advertentie per kavel.</li>
+                        </ul>
                         <button type="button" class="btn btn-primary mt-4" @click="step = 6">
                             Door naar de kosten
                         </button>

@@ -18,6 +18,11 @@ return [
 
     'display_timezone' => env('AUCVY_DISPLAY_TIMEZONE', 'Europe/Amsterdam'),
 
+    // Delen en verspreiden: het lettertype van het deelbeeld (Manrope, OFL).
+    'distribution' => [
+        'font' => env('AUCVY_SHARE_FONT', resource_path('fonts/Manrope-Variable.ttf')),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Biedmotor

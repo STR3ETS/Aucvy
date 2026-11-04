@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Lots\Management;
 
 use App\Enums\LotStatus;
+use App\Jobs\WithdrawLotFromChannels;
 use App\Models\Auction;
 use App\Models\Lot;
 use App\Models\User;
@@ -48,6 +49,9 @@ final class PauseLot
                 'reason' => $reason,
                 'ends_at' => $auction->ends_at->toIso8601String(),
             ]);
+
+            // Gepauzeerd is niet live: advertenties offline, planning stopt.
+            WithdrawLotFromChannels::dispatch($locked->id)->afterCommit();
 
             return $locked;
         });

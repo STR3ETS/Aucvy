@@ -49,7 +49,8 @@
             ['dashboard.disputes', ['dashboard.disputes'], 'Geschillen', 'shield-check'],
         ])),
         'Account' => array_values(array_filter([
-            ['account.settings', ['account.*'], 'Instellingen', 'settings'],
+            ['account.settings', ['account.settings', 'account.profile', 'account.two-factor.*'], 'Instellingen', 'settings'],
+            ['account.connections', ['account.connections', 'account.connections.*'], 'Koppelingen', 'send'],
             $user->company_id !== null ? ['organisation.show', ['organisation.*'], 'Organisatie', 'building'] : null,
             $user->company_id !== null ? ['team.index', ['team.*'], 'Team', 'users'] : null,
         ])),
