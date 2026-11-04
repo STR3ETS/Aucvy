@@ -26,7 +26,7 @@
 
 @unless ($isSeller)
     <section class="rounded-aj-s border border-aj-border bg-aj-surface p-4" aria-labelledby="vraag-kop"
-             x-data="{ open: {{ $errors->hasAny(['body', 'kind', 'lot_part', 'verification', 'lot']) ? 'true' : 'false' }}, kind: 'question' }">
+             x-data="{ open: {{ $errors->hasAny(['body', 'kind', 'lot_part', 'verification', 'lot']) || request()->filled('vraag') ? 'true' : 'false' }}, kind: 'question' }">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h2 id="vraag-kop" class="text-sm font-extrabold">Vraag aan de verkoper</h2>
@@ -58,7 +58,7 @@
                         <div class="mt-1 flex flex-wrap gap-2">
                             @foreach (\App\Models\Conversation::PARTS as $part)
                                 <label class="cursor-pointer rounded-full border border-aj-border px-3 py-1 text-xs font-bold has-[:checked]:bg-aj-navy has-[:checked]:text-white">
-                                    <input type="radio" name="lot_part" value="{{ $part }}" class="sr-only" @checked(old('lot_part', 'specificaties') === $part)>
+                                    <input type="radio" name="lot_part" value="{{ $part }}" class="sr-only" @checked(old('lot_part', request()->query('vraag', 'specificaties')) === $part)>
                                     {{ __('messaging.parts.'.$part) }}
                                 </label>
                             @endforeach

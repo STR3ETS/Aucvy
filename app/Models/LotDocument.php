@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * (hfst. 15).
  */
 #[Fillable([
-    'lot_id', 'kind', 'path', 'original_filename', 'mime_type', 'size_bytes',
+    'lot_id', 'kind', 'visibility', 'path', 'original_filename', 'mime_type', 'size_bytes',
 ])]
 #[ObservedBy(DossierObserver::class)]
 class LotDocument extends Model
@@ -35,7 +35,24 @@ class LotDocument extends Model
             'size_bytes' => 'integer',
             'ai_checked_at' => 'datetime',
             'ai_findings' => 'array',
+            'view_count' => 'integer',
+            'last_viewed_at' => 'datetime',
         ];
+    }
+
+    public function isPdf(): bool
+    {
+        return $this->mime_type === 'application/pdf';
+    }
+
+    public function isImage(): bool
+    {
+        return str_starts_with((string) $this->mime_type, 'image/');
+    }
+
+    public function visibilityLabel(): string
+    {
+        return __('documents.visibility.'.($this->getAttributes()['visibility'] ?? 'public'));
     }
 
     public function lot(): BelongsTo

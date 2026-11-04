@@ -34,12 +34,21 @@ final class DossierObserver
     {
         $this->safely(fn () => match (true) {
             $model instanceof LotDocument => $model->wasChanged('ai_checked_at') && $model->ai_checked_at !== null
-                ? $this->project->document($model, 'checked')
+                ? $this->markChecked($model)
                 : null,
             $model instanceof MailDelivery => $model->wasChanged('status')
                 ? $this->project->mail($model, $model->status)
                 : null,
         });
+    }
+
+    private function markChecked(LotDocument $document): void
+    {
+        if (($document->getAttributes()['checked_by'] ?? null) === null) {
+            $document->newQuery()->whereKey($document->id)->update(['checked_by' => 'lex']);
+        }
+
+        $this->project->document($document, 'checked');
     }
 
     private function safely(callable $projection): void

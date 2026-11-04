@@ -15,6 +15,7 @@ use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardListController;
 use App\Http\Controllers\DevCheckoutController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FunnelController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalController;
@@ -108,6 +109,10 @@ Route::get('/voorwaarden', [LegalController::class, 'terms'])->name('legal.terms
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('legal.privacy');
 Route::get('/cookies', [LegalController::class, 'cookies'])->name('legal.cookies');
 Route::post('/cookies/voorkeur', [CookieConsentController::class, 'store'])->middleware('throttle:30,1')->name('cookies.consent');
+
+// Documenten-oogje (briefing nieuwe functies): bekijken na controle op de server; het bestand via een getekende URL.
+Route::get('/documenten/{document}/bekijk', [DocumentController::class, 'show'])->name('documents.view');
+Route::get('/documenten/{document}/bestand', [DocumentController::class, 'file'])->name('documents.file');
 
 // Blog uit het CMS van Eazyonline (besluit Raph, 2 november 2026).
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
@@ -280,6 +285,7 @@ Route::middleware('auth')->group(function (): void {
     // Het kaveldossier (briefing nieuwe functies): tabs Overzicht, Berichten, Documenten, Verspreiding, Dossier.
     Route::get('/dashboard/kavels/{lot:id}', [LotDossierController::class, 'show'])->name('dashboard.lots.show');
     Route::get('/dashboard/kavels/{lot:id}/bewerken', [LotManagementController::class, 'edit'])->name('dashboard.lots.edit');
+    Route::patch('/dashboard/kavels/{lot:id}/documenten/{document}', [DocumentController::class, 'updateVisibility'])->name('dashboard.lots.documents.visibility');
     Route::patch('/dashboard/kavels/{lot:id}', [LotManagementController::class, 'update'])->name('dashboard.lots.update');
     Route::post('/dashboard/kavels/{lot:id}/pauzeren', [LotManagementController::class, 'pause'])->name('dashboard.lots.pause');
     Route::post('/dashboard/kavels/{lot:id}/hervatten', [LotManagementController::class, 'resume'])->name('dashboard.lots.resume');

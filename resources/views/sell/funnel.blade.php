@@ -153,11 +153,16 @@
                                     <option value="warranty">Garantiebewijs</option>
                                     <option value="ownership">Eigendomsbewijs</option>
                                     <option value="manual">Handleiding</option>
+                                    <option value="inspection">Keuringscertificaat</option>
+                                    <option value="maintenance">Onderhoudsrapport</option>
+                                    <option value="logbook">Logboek</option>
+                                    <option value="pickup_instruction">Ophaalinstructie</option>
+                                    <option value="nameplate">Typeplaat met serienummer (foto)</option>
                                     <option value="other">Overig</option>
                                 </select>
                                 <label class="btn btn-ghost" style="height:40px;font-size:14px">
-                                    PDF kiezen
-                                    <input type="file" accept="application/pdf" class="sr-only"
+                                    Bestand kiezen
+                                    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" class="sr-only"
                                            @change="uploadDocument($event.target.files[0], kind); $event.target.value = ''">
                                 </label>
                             </div>

@@ -110,6 +110,11 @@ return [
         'warranty' => 'Garantiebewijs',
         'ownership' => 'Eigendomsbewijs',
         'manual' => 'Handleiding',
+        'inspection' => 'Keuringscertificaat',
+        'maintenance' => 'Onderhoudsrapport',
+        'logbook' => 'Logboek',
+        'pickup_instruction' => 'Ophaalinstructie',
+        'nameplate' => 'Typeplaat met serienummer',
         'other' => 'Overig',
     ],
 

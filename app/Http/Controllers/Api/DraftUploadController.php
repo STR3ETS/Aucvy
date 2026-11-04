@@ -9,6 +9,7 @@ use App\Enums\LotStatus;
 use App\Enums\MediaType;
 use App\Http\Controllers\Controller;
 use App\Lots\CompletenessScore;
+use App\Lots\Documents\DocumentVisibility;
 use App\Lots\DraftAccess;
 use App\Models\Lot;
 use App\Models\LotDocument;
@@ -130,7 +131,7 @@ final class DraftUploadController extends Controller
         $lot = $this->access->resolve($request, $lot);
 
         $validated = $request->validate([
-            'file' => ['required', 'file', 'mimes:pdf', 'max:15360'],
+            'file' => ['required', 'file', 'mimes:'.implode(',', DocumentKind::acceptedMimes()), 'max:15360'],
             'kind' => ['required', Rule::enum(DocumentKind::class)],
         ]);
 
@@ -143,6 +144,7 @@ final class DraftUploadController extends Controller
         $document = LotDocument::create([
             'lot_id' => $lot->id,
             'kind' => $validated['kind'],
+            'visibility' => DocumentVisibility::defaultFor(DocumentKind::from($validated['kind'])),
             // Private disk: een eigendomsbewijs hoort nooit achter een raadbare
             // URL. Inzien gaat straks via een kortlevende signed URL.
             'path' => $file->store('documents/'.$lot->public_id, 'local'),

@@ -311,35 +311,7 @@
                     Documenten staan op een private disk (hfst. 15); hier staat
                     wát er is en of Lex het bekeken heeft, niet het bestand zelf.
                 --}}
-                @if ($lot->documents->isNotEmpty())
-                    <section id="documenten" aria-label="Documenten">
-                        <h2 class="text-lg font-extrabold">Documenten</h2>
-                        <ul class="mt-2 space-y-2">
-                            @foreach ($lot->documents as $document)
-                                <li class="flex flex-wrap items-center gap-3 rounded-aj-sm border border-aj-border bg-aj-surface p-3 text-sm">
-                                    <svg class="size-5 shrink-0 text-aj-muted" viewBox="0 0 20 20" fill="none"
-                                         stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
-                                         stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M11.5 2.5h-6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-10m-4-4 4 4m-4-4v4h4"/>
-                                    </svg>
-                                    <span class="min-w-0 flex-1">
-                                        <span class="block font-semibold">{{ $document->kind->label() }}</span>
-                                        <span class="block truncate text-xs text-aj-muted">
-                                            {{ $document->original_filename }}
-                                            · {{ number_format($document->size_bytes / 1024, 0, ',', '.') }} kB
-                                        </span>
-                                    </span>
-                                    @if ($document->wasCheckedByIvy())
-                                        <span class="flex shrink-0 items-center gap-1.5 text-xs font-bold text-aj-success-text">
-                                            <x-ui.agent-avatar agent="lex" class="size-5" />
-                                            Gecontroleerd door Lex
-                                        </span>
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ul>
-                    </section>
-                @endif
+                @include('lots.partials.documents', ['lot' => $lot])
             </div>
 
             {{-- Zijkolom ---------------------------------------------------- --}}
