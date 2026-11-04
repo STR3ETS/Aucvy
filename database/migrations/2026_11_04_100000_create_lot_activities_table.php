@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('type', 40);
             $table->string('actor_type', 10)->default('system');
             $table->foreignId('actor_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('visibility', 10)->default('staff');
+            $table->string('visibility', 16)->default('staff');
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->json('payload')->nullable();
             $table->string('source_ref', 60)->nullable()->unique();

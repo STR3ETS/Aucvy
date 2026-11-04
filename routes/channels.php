@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -23,6 +24,17 @@ use Illuminate\Support\Facades\Broadcast;
  */
 Broadcast::channel('user.{userId}', function (User $user, string $userId): bool {
     return $user->id === (int) $userId;
+});
+
+/**
+ * Een gesprek (briefing nieuwe functies): alleen de twee partijen en
+ * beheer. Het kanaal geeft alleen een seintje; de tekst haalt de client op
+ * met zijn eigen rechten.
+ */
+Broadcast::channel('conversation.{conversationId}', function (User $user, string $conversationId): bool {
+    $conversation = Conversation::query()->find((int) $conversationId);
+
+    return $conversation !== null && ($user->is_staff || $conversation->isParticipant($user));
 });
 
 /**

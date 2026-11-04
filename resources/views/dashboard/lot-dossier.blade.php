@@ -23,7 +23,7 @@
         @foreach (\App\Http\Controllers\LotDossierController::TABS as $name)
             @php
                 $badge = match ($name) {
-                    'berichten' => $counts->get('message', 0),
+                    'berichten' => $lot->conversations()->count(),
                     'documenten' => $lot->documents->count(),
                     'verspreiding' => $counts->get('distribution', 0),
                     default => null,
@@ -82,7 +82,7 @@
         <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="berichten">
             <h2 id="berichten" class="text-lg font-extrabold">Berichten over deze kavel</h2>
             <p class="mt-1 text-sm text-aj-muted">Korte vragen van kopers en gesprekken na een bod of verkoop. Alles blijft in het dossier.</p>
-            @include('dashboard.partials.lot-conversations', ['lot' => $lot])
+            @include('dashboard.partials.lot-conversations', ['lot' => $lot, 'conversations' => $conversations])
         </section>
     @elseif ($tab === 'documenten')
         <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="documenten">

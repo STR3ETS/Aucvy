@@ -39,6 +39,8 @@ final class FakeProvider implements LlmProvider
             // De nepcontrole keurt goed; de vaste regels in ScreenListing
             // (verboden waar, prijs, documenten) blijven gewoon gelden.
             'screen_listing' => ['verdict' => 'approve', 'issues' => [], 'confidence' => 0.9],
+            // Ivy ziet niets in een bericht; de vaste regels doen het werk.
+            'moderate_message' => ['signal' => 'none', 'confidence' => 0.9],
             default => ['confidence' => 0.5],
         };
 

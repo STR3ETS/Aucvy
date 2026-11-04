@@ -37,6 +37,9 @@ final class LotDossierController extends Controller
             'activities' => Dossier::timeline($lot, 'seller', $request->user(), $tab === 'dossier' && $source !== '' ? $source : null, limit: $tab === 'dossier' ? 200 : 6),
             'counts' => LotActivity::query()->where('lot_id', $lot->id)->visibleTo('seller', $request->user())
                 ->selectRaw('source, count(*) as aantal')->groupBy('source')->pluck('aantal', 'source'),
+            'conversations' => $tab === 'berichten'
+                ? $lot->conversations()->with(['buyer', 'company', 'seller'])->orderByRaw('last_message_at is null, last_message_at desc')->get()
+                : collect(),
         ]);
     }
 }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CategoryIndexController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardListController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\FunnelController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LotController;
+use App\Http\Controllers\LotConversationController;
 use App\Http\Controllers\LotDossierController;
 use App\Http\Controllers\LotImportController;
 use App\Http\Controllers\LotIndexController;
@@ -41,6 +43,7 @@ use App\Http\Controllers\Staff\AuditLogController;
 use App\Http\Controllers\Staff\BackofficeController;
 use App\Http\Controllers\Staff\CategoryAdminController;
 use App\Http\Controllers\Staff\ComplianceController;
+use App\Http\Controllers\Staff\ConversationController as StaffConversationController;
 use App\Http\Controllers\Staff\DisputeReviewController;
 use App\Http\Controllers\Staff\ErrorLogController;
 use App\Http\Controllers\Staff\LiveRoomController;
@@ -262,6 +265,18 @@ Route::middleware('auth')->group(function (): void {
      | hervatten, dupliceren, opnieuw plaatsen en bulk.
      */
     Route::post('/dashboard/kavels/bulk', [LotManagementController::class, 'bulk'])->middleware('throttle:10,10')->name('dashboard.lots.bulk');
+    // Berichten (briefing nieuwe functies): inbox en gesprek voor koper en verkoper.
+    Route::get('/dashboard/berichten', [ConversationController::class, 'index'])->name('messages.index');
+    Route::get('/dashboard/berichten/{conversation}', [ConversationController::class, 'show'])->name('messages.show');
+    Route::post('/dashboard/berichten/{conversation}', [ConversationController::class, 'store'])->middleware('throttle:60,10')->name('messages.store');
+    Route::get('/dashboard/berichten/{conversation}/berichten', [ConversationController::class, 'messages'])->name('messages.poll');
+    Route::get('/dashboard/berichten/{conversation}/bijlage/{message}', [ConversationController::class, 'attachment'])->name('messages.attachment');
+    Route::post('/dashboard/berichten/{conversation}/publiceren/{message}', [ConversationController::class, 'publish'])->name('messages.publish');
+    Route::post('/dashboard/berichten/{conversation}/melden', [ConversationController::class, 'report'])->middleware('throttle:10,10')->name('messages.report');
+    Route::post('/dashboard/berichten/{conversation}/blokkeren', [ConversationController::class, 'block'])->name('messages.block');
+    Route::post('/kavel/{lot}/vraag', [LotConversationController::class, 'ask'])->middleware('throttle:20,10')->name('lots.ask');
+    Route::post('/dashboard/kavels/{lot:id}/bericht/{buyer}', [LotConversationController::class, 'message'])->middleware('throttle:20,10')->name('dashboard.lots.message');
+
     // Het kaveldossier (briefing nieuwe functies): tabs Overzicht, Berichten, Documenten, Verspreiding, Dossier.
     Route::get('/dashboard/kavels/{lot:id}', [LotDossierController::class, 'show'])->name('dashboard.lots.show');
     Route::get('/dashboard/kavels/{lot:id}/bewerken', [LotManagementController::class, 'edit'])->name('dashboard.lots.edit');
@@ -390,6 +405,16 @@ Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group
     Route::post('/kavels/concepten-verwijderen', [BackofficeController::class, 'destroyDraftLots'])->name('lots.destroy-drafts');
     Route::get('/kavels/{lot:id}', [BackofficeController::class, 'showLot'])->name('lots.show')->withTrashed();
     Route::get('/kavels/{lot:id}/dossier', [StaffLotDossierController::class, 'show'])->name('lots.dossier')->withTrashed();
+
+    // De operator: wachtrij en meelezen (briefing nieuwe functies).
+    Route::get('/gesprekken', [StaffConversationController::class, 'index'])->name('conversations');
+    Route::get('/gesprekken/{conversation}', [StaffConversationController::class, 'show'])->name('conversations.show');
+    Route::post('/gesprekken/{conversation}/vrijgeven/{message}', [StaffConversationController::class, 'release'])->name('conversations.release');
+    Route::post('/gesprekken/{conversation}/bevestigen/{message}', [StaffConversationController::class, 'confirm'])->name('conversations.confirm');
+    Route::post('/gesprekken/{conversation}/reageren', [StaffConversationController::class, 'reply'])->name('conversations.reply');
+    Route::post('/gesprekken/{conversation}/notitie', [StaffConversationController::class, 'note'])->name('conversations.note');
+    Route::post('/gesprekken/{conversation}/geschil', [StaffConversationController::class, 'dispute'])->name('conversations.dispute');
+    Route::post('/gesprekken/{conversation}/waarschuwen', [StaffConversationController::class, 'warn'])->name('conversations.warn');
     Route::post('/ai-runs/verwijderen', [BackofficeController::class, 'destroyAiRuns'])->name('ai-runs.destroy');
     Route::get('/veilingen', [BackofficeController::class, 'auctions'])->name('auctions');
     Route::get('/gebundelde-veilingen', [BackofficeController::class, 'sales'])->name('sales');

@@ -155,6 +155,16 @@ class Lot extends Model
         return $this->hasMany(Viewing::class);
     }
 
+    public function publicAnswers(): HasMany
+    {
+        return $this->hasMany(LotPublicAnswer::class)->latest('id');
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
     public function order(): HasOne
     {
         return $this->hasOne(Order::class);

@@ -36,6 +36,7 @@
             ['dashboard.sales', ['dashboard.sales', 'dashboard.sales.*'], 'Veilingen', 'clock'],
             ['dashboard.bids', ['dashboard.bids'], 'Biedingen', 'trending-up'],
             ['orders.index', ['orders.*'], 'Bestellingen', 'shopping-bag'],
+            ['messages.index', ['messages.*'], 'Berichten', 'message-circle'],
         ],
         'Volgen' => [
             ['dashboard.watchlist', ['dashboard.watchlist'], 'Volglijst', 'heart'],

@@ -110,6 +110,8 @@
 
                 <x-lot.seller-card :lot="$lot" :stats="$sellerStats" />
 
+                @include('lots.partials.ask', ['lot' => $lot])
+
                 {{-- Waarde-indicatie: alleen als alle drie de velden er zijn, en
                      nooit als exact bedrag bij lage zekerheid (hfst. 8). --}}
                 @if ($lot->hasValueEstimate())

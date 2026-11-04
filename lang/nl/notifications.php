@@ -238,6 +238,22 @@ return [
     ],
 
     /*
+     | Berichten tussen koper en verkoper (briefing nieuwe functies).
+     */
+    'conversation_unread' => [
+        'subject' => 'Nieuw bericht van :from over ":lot"',
+        'push' => 'Open het gesprek om te lezen en te antwoorden.',
+        'line' => ':from schreef je over ":lot":',
+        'action' => 'Open het gesprek',
+    ],
+    'seller_warned' => [
+        'subject' => 'Waarschuwing over je gesprek bij ":lot"',
+        'line' => 'Een medewerker van Aucvy las mee in je gesprek over ":lot" en heeft een opmerking:',
+        'rule' => 'Betaling, prijs en ophaalafspraken lopen via de bestelling. Zo blijft het geld van de koper beschermd en jouw uitbetaling zeker.',
+        'action' => 'Open het gesprek',
+    ],
+
+    /*
      | Alerts en volglijst (briefing sectie 3 en 8).
      */
     'alert_matches' => [

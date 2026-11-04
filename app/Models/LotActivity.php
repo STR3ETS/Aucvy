@@ -58,6 +58,9 @@ class LotActivity extends Model
 
     public const string STAFF = 'staff';
 
+    /** Een gesprek: de koper in het gesprek (user_id), de verkoper en beheer. */
+    public const string CONVERSATION = 'conversation';
+
     /**
      * @return array<string, string>
      */
@@ -100,7 +103,7 @@ class LotActivity extends Model
         }
 
         $levels = match ($role) {
-            'seller' => [self::PUBLIC, self::SELLER, self::PARTIES],
+            'seller' => [self::PUBLIC, self::SELLER, self::PARTIES, self::CONVERSATION],
             'buyer' => [self::PUBLIC, self::BUYER, self::PARTIES],
             default => [self::PUBLIC],
         };
@@ -109,7 +112,7 @@ class LotActivity extends Model
             $query->whereIn('visibility', $levels);
 
             if ($user !== null) {
-                $query->orWhere(fn (Builder $query) => $query->where('visibility', self::USER)->where('user_id', $user->id));
+                $query->orWhere(fn (Builder $query) => $query->whereIn('visibility', [self::USER, self::CONVERSATION])->where('user_id', $user->id));
             }
         });
     }
