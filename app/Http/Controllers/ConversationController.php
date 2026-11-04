@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Lots\Dossier\Dossier;
 use App\Messaging\Operator\OperatorActions;
 use App\Messaging\PublishAnswer;
 use App\Messaging\SendMessage;
@@ -55,7 +56,9 @@ final class ConversationController extends Controller
             'user' => $user,
             'isBuyer' => $conversation->isBuyer($user),
             'others' => Conversation::query()->forParticipant($user)->whereKeyNot($conversation->id)
-                ->with(['lot', 'buyer', 'company', 'seller'])->latest('last_message_at')->limit(8)->get(),
+                ->with(['lot.media', 'buyer', 'company', 'seller', 'order'])->latest('last_message_at')->limit(8)->get(),
+            // "Alles over deze kavel" naast het gesprek (ontwerp van november): het dossier, alleen wat deze lezer mag zien.
+            'dossier' => Dossier::timeline($conversation->lot, $conversation->isBuyer($user) ? 'buyer' : 'seller', $user, orderId: $conversation->order_id, limit: 8),
         ]);
     }
 

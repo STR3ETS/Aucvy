@@ -3,6 +3,33 @@
 <x-layouts.public :title="$pageTitle ?? 'Veilingen'" eyebrow="Ontdek" :noindex="$noindex ?? false"
     :intro="$pageIntro ?? 'Kavels van geverifieerde verkopers, met de waarde-indicatie van Ivy erbij. Zoek, filter of vraag het gewoon in je eigen woorden.'">
 
+    @unless (isset($pageTitle))
+        {{-- De kop van november: één gradientwoord, twee knoppen, drie beloftes en Ivy als voorbeeldgesprek. --}}
+        <x-slot:headline>Veilingen van <span class="g">geverifieerde verkopers.</span></x-slot:headline>
+        <x-slot:lead>
+            <p style="margin:0">Elke kavel met de waarde-indicatie van Atlas erbij. Zoek, filter of vraag het gewoon in je eigen woorden.</p>
+            <div class="page-actions" style="margin-top:18px">
+                <a class="btn btn-primary" href="{{ route('dashboard.alerts') }}">Alert instellen</a>
+                <a class="btn btn-outline-white" href="{{ route('lots.buy-now') }}">Direct kopen</a>
+            </div>
+            <div class="d-hero-trust">
+                <span><i aria-hidden="true">✓</i><b>Geen opgeld</b>&nbsp;voor kopers</span>
+                <span><i aria-hidden="true">✓</i><b>Kosten</b>&nbsp;vooraf zichtbaar</span>
+                <span><i aria-hidden="true">✓</i><b>Rondkijken</b>&nbsp;zonder verificatie</span>
+            </div>
+        </x-slot:lead>
+        @if (\App\Ivy\Chat\IvyFlags::on('ivy.enabled'))
+            <x-slot:actions>
+                <button type="button" class="d-hero-ivy" @click="$dispatch('ivy-open', { text: 'Ik zoek een koelcel onder de € 1.000.' })" aria-label="Vraag het Ivy">
+                    <span class="top"><span>● Aucvy</span><span>Ivy, jouw AI-hulp</span></span>
+                    <span class="q">Ik zoek een koelcel onder de € 1.000.</span>
+                    <span class="a"><img src="{{ asset('images/agents/ivy.jpg') }}" alt=""><span>Zeg wat je zoekt en ik laat zien wat er live staat, met de waarde-indicatie van Atlas erbij.</span></span>
+                    <span class="chips"><span>Toon alles</span><span>Alert instellen</span><span>Hoe werkt afslag?</span></span>
+                </button>
+            </x-slot:actions>
+        @endif
+    @endunless
+
     {{--
         Alles hierbinnen wisselt zonder harde reload (lots-index.js): links en
         formulieren blijven gewone GET's, fetch haalt dezelfde pagina op en
@@ -211,4 +238,30 @@
     </div>
 
     </div>
+
+    @unless (isset($pageTitle))
+        @php $facts = \App\Support\PlatformFacts::all(); @endphp
+        {{-- De twee banden onder de lijst (ontwerp van november): de afspraken met een getal, en de weg naar verkopen. --}}
+        <section class="d-facts-band" aria-label="Afspraken">
+            <h2>Afspraken met <span class="g">een getal erachter.</span></h2>
+            <div class="d-facts-grid">
+                <div><b>€ 0</b><span>opgeld voor de koper, en gratis plaatsen voor jou</span></div>
+                <div><b>{{ $facts['payment_deadline_hours'] }} u</b><span>om te betalen na de hamerslag</span></div>
+                <div><b>{{ $facts['dispute_window_hours'] }} u</b><span>meldtermijn voor de koper na levering</span></div>
+                <div><b>{{ $facts['seller_response_hours'] }} u</b><span>voor jouw reactie als er iets gemeld wordt</span></div>
+            </div>
+        </section>
+
+        <section class="cta-band" style="margin-top:24px" aria-label="Verkopen">
+            <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
+            <div class="cta-band-text">
+                <h2>Wat staat er <span class="g">bij jou stil?</span></h2>
+                <p>Begin met één foto. Een concept maken kan zonder account. Publiceren doe je met een geverifieerd zakelijk account.</p>
+            </div>
+            <div class="cta-band-actions">
+                <a class="btn btn-primary" href="{{ route('sell') }}">Start met één foto</a>
+                <a class="btn btn-outline-white" href="{{ route('how-it-works') }}">Hoe het werkt</a>
+            </div>
+        </section>
+    @endunless
 </x-layouts.public>

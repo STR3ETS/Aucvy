@@ -433,3 +433,51 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-step:hover{border-color:#0e1526}
 .d-step.is-on{background:#2f6bff;border-color:#2f6bff;color:#fff}
 .d-step.is-done{background:#e8f6ef;border-color:#cdeedc;color:#177249}
+
+/* ---------- berichten: drie kolommen van november ---------- */
+.d-msg-layout{display:grid;grid-template-columns:280px minmax(0,1fr) 270px;gap:16px;align-items:start}
+.d-conv{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid rgba(14,21,38,.09);border-radius:14px;background:#fff;color:#0e1526;transition:border-color .2s,background .2s}
+.d-conv:hover{border-color:rgba(14,21,38,.2)}
+.d-conv.is-on{border-color:#2f6bff;background:#f5f8ff}
+.d-conv-thumb{width:52px;height:52px;flex:0 0 auto;border-radius:10px;background:#e9edf5;overflow:hidden}
+.d-conv-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.d-conv-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.d-conv-body strong{font-size:14px;line-height:1.35}
+.d-conv-body>span{font-size:13px;color:#4d5566}
+.d-conv-unread{flex:0 0 auto;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#2f6bff;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.d-thread{display:flex;flex-direction:column;border:1px solid rgba(14,21,38,.09);border-radius:16px;background:#fff;min-width:0}
+.d-thread-head{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(14,21,38,.08)}
+.d-thread-list{list-style:none;margin:0;padding:16px;display:flex;flex-direction:column;gap:14px;max-height:60vh;overflow-y:auto}
+.d-thread-compose{padding:14px 16px;border-top:1px solid rgba(14,21,38,.08)}
+.d-thread-compose-row{display:flex;gap:8px;align-items:flex-start}
+.d-thread-compose-row .d-textarea{flex:1 1 auto}
+.d-dossier{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.d-dossier li{display:flex;gap:10px;align-items:flex-start}
+.d-dossier-icon{width:28px;height:28px;flex:0 0 auto;border-radius:50%;background:#eef3ff;color:#2f6bff;display:flex;align-items:center;justify-content:center}
+.d-dossier li>span:last-child{min-width:0;display:flex;flex-direction:column}
+.d-dossier strong{font-size:13px}
+.d-dossier span span{font-size:12.5px;color:#4d5566}
+@media (max-width:1180px){.d-msg-layout{grid-template-columns:260px minmax(0,1fr)}.d-msg-layout>aside{grid-column:1/-1}}
+@media (max-width:760px){.d-msg-layout{grid-template-columns:1fr}}
+
+/* ---------- veilingen: de banden van november ---------- */
+.d-facts-band{position:relative;overflow:hidden;margin-top:48px;padding:52px 56px;border-radius:24px;color:#fff;background:#0c1326}
+.d-facts-band h2{margin:0;font-size:clamp(28px,3.4vw,44px);line-height:1.05;letter-spacing:-.035em;font-weight:800;max-width:14ch}
+.d-facts-band .g,.c .page-hero .g,.c .cta-band .g{background:linear-gradient(125deg,#6e9bff 0%,#b08cff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.d-facts-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;margin-top:36px}
+.d-facts-grid b{display:block;font-size:clamp(40px,5vw,64px);line-height:1;font-weight:800;letter-spacing:-.04em;background:linear-gradient(125deg,#6e9bff 0%,#b08cff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.d-facts-grid span{display:block;margin-top:10px;font-size:14px;line-height:1.5;color:rgba(255,255,255,.78)}
+.d-hero-trust{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:18px;font-size:13px;color:rgba(255,255,255,.78)}
+.d-hero-trust span{display:inline-flex;align-items:center;gap:7px}
+.d-hero-trust b{color:#fff}
+.d-hero-trust i{width:16px;height:16px;border-radius:50%;background:#1c8a5b;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:10px;font-weight:800}
+.d-hero-ivy{width:100%;max-width:440px;padding:16px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(255,255,255,.05);color:#fff;text-align:left;cursor:pointer;font:inherit}
+.d-hero-ivy .top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:rgba(255,255,255,.7)}
+.d-hero-ivy .q{margin:12px 0 0 auto;max-width:80%;padding:10px 14px;border-radius:12px 12px 2px 12px;background:linear-gradient(125deg,#2f6bff,#7c3aed);font-size:13px;font-weight:600;width:fit-content}
+.d-hero-ivy .a{display:flex;gap:10px;margin-top:10px;font-size:13px;line-height:1.5;color:rgba(255,255,255,.85)}
+.d-hero-ivy .a img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none}
+.d-hero-ivy .a span{padding:10px 12px;border-radius:2px 12px 12px 12px;background:rgba(255,255,255,.08)}
+.d-hero-ivy .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.d-hero-ivy .chips span{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.18);font-size:12px;font-weight:700}
+@media (max-width:1080px){.d-facts-grid{grid-template-columns:repeat(2,1fr)}.d-facts-band{padding:36px 28px}}
+@media (max-width:640px){.d-facts-grid{grid-template-columns:1fr}.d-facts-band{padding:28px 20px;border-radius:16px}}

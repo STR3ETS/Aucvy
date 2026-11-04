@@ -177,7 +177,11 @@
                             @if ($eyebrow)
                                 <span class="eyebrow">{{ $eyebrow }}</span>
                             @endif
-                            <h1 id="page-title">{{ $heading ?? $title }}</h1>
+                            @isset($headline)
+                                <h1 id="page-title">{{ $headline }}</h1>
+                            @else
+                                <h1 id="page-title">{{ $heading ?? $title }}</h1>
+                            @endisset
                             @isset($lead)
                                 <div class="lead">{{ $lead }}</div>
                             @elseif ($intro)
