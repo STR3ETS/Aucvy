@@ -88,17 +88,14 @@ it('vraagt om een volledige herlaad bij te veel events', function () {
 });
 
 it('lekt geen volledige naam in de eventpayload', function () {
-    app(PlaceBid::class)->handle(
-        $this->auction,
-        User::factory()->verified()->create(['name' => 'Robert Jansen', 'display_name' => null]),
-        100_000,
-        (string) Str::uuid(),
-    );
+    $bidder = User::factory()->verified()->create(['name' => 'Robert Jansen', 'display_name' => null]);
+
+    app(PlaceBid::class)->handle($this->auction, $bidder, 100_000, (string) Str::uuid());
 
     $response = test()->getJson(eventsUrl($this->auction->fresh()))->assertOk();
 
     expect(json_encode($response->json()))
-        ->toContain('R. Jansen')
+        ->toContain($bidder->publicName())
         ->not->toContain('Robert Jansen');
 });
 

@@ -23,6 +23,29 @@
         </x-ui.empty-state>
     @else
         <div class="grid gap-5 lg:grid-cols-[1fr_300px] lg:items-start">
+            {{-- De staffel (besluit Raph en Don, 2 november 2026): omzet op Aucvy in de laatste twaalf maanden bepaalt de fee. --}}
+            @if (isset($tier))
+                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="staffel">
+                    <h2 id="staffel" class="text-sm font-extrabold">Je succesfee: {{ rtrim(rtrim(number_format($feePercentage, 1, ',', '.'), '0'), ',') }}%</h2>
+                    <p class="mt-1 text-xs text-aj-muted">
+                        Op basis van {{ Money::format($tier['revenue_cents']) }} omzet op Aucvy in de laatste twaalf maanden.
+                        @if ($tier['next'])
+                            Nog {{ Money::format($tier['next']['remaining_cents']) }} tot {{ rtrim(rtrim(number_format($tier['next']['percent'], 1, ',', '.'), '0'), ',') }}%.
+                        @else
+                            Dit is de laagste trede.
+                        @endif
+                        Het tarief ligt vast op het moment van verkoop en wordt nooit achteraf verrekend.
+                    </p>
+                    <ul class="mt-3 flex flex-wrap gap-1.5 text-xs">
+                        @foreach ($tier['tiers'] as $step)
+                            <li @class(['rounded-full px-2.5 py-1 font-bold', 'bg-aj-navy text-white' => (float) $step['percent'] === (float) $feePercentage, 'border border-aj-border' => (float) $step['percent'] !== (float) $feePercentage])>
+                                {{ $step['up_to_cents'] === null ? 'daarboven' : 'tot '.Money::format($step['up_to_cents']) }}: {{ rtrim(rtrim(number_format($step['percent'], 1, ',', '.'), '0'), ',') }}%
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
             <section class="overflow-x-auto rounded-aj-s border border-aj-border bg-aj-surface" aria-label="Verkopen">
                 <table class="admin-table">
                     <thead><tr><th>Bestelling</th><th>Kavel</th><th class="text-right">Hamer</th><th class="text-right">Fee</th><th class="text-right">Btw</th><th class="text-right">Netto</th><th>Uitbetaling</th></tr></thead>

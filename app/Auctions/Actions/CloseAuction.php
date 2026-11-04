@@ -115,6 +115,7 @@ final class CloseAuction
             'seller_id' => $lot->seller_id,
             'hammer_cents' => $costs->hammerCents,
             'buyer_premium_cents' => $costs->buyerPremiumCents,
+            'admin_fee_cents' => $costs->adminFeeCents,
             'transport_cents' => $costs->transportCents,
             'vat_cents' => $costs->vatCents,
             'total_cents' => $costs->totalCents,

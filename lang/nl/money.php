@@ -17,6 +17,7 @@ return [
     'lines' => [
         'hammer' => 'Bod',
         'buyer_premium' => 'Opgeld',
+        'admin_fee' => 'Administratiekosten',
         'transport' => 'Transport',
         'vat' => 'Btw :rate%',
         'margin' => 'Btw',
@@ -26,6 +27,7 @@ return [
     ],
 
     'notes' => [
+        'admin_fee' => 'Per bestelling, voor de factuur en de afhandeling; exclusief btw.',
         // Zichtbaar maken dát er een margeregeling geldt is geen detail: het
         // scheelt een zakelijke koper 21% die hij niet kan terugvorderen.
         'margin' => 'Margeregeling - btw niet verrekenbaar',

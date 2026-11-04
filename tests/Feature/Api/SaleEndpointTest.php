@@ -9,6 +9,7 @@ use App\Models\Lot;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\WatchlistItem;
+use App\Support\Money\Money;
 use Illuminate\Support\Str;
 
 function idempotent(): array
@@ -92,7 +93,8 @@ describe('koop-direct', function () {
         ], idempotent())
             ->assertOk()
             ->assertJsonPath('confirmed', false)
-            ->assertJsonPath('costs.total_cents', 234_000);
+            // Inclusief de administratiekosten per order (N4), uit dezelfde Money-klasse.
+            ->assertJsonPath('costs.total_cents', Money::forOrder($this->auction->lot, 200_000, 34_000)->totalCents);
 
         expect(Order::count())->toBe(0)
             ->and($this->auction->fresh()->buy_now_active)->toBeTrue();
@@ -106,7 +108,7 @@ describe('koop-direct', function () {
         ], idempotent())
             ->assertCreated()
             ->assertJsonPath('confirmed', true)
-            ->assertJsonPath('order.total_cents', 200_000)
+            ->assertJsonPath('order.total_cents', Money::forOrder($this->auction->lot, 200_000)->totalCents)
             ->assertJsonPath('state.status', 'closed');
 
         expect(Order::count())->toBe(1);

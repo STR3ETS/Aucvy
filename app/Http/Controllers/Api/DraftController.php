@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\LotCondition;
 use App\Enums\LotStatus;
 use App\Enums\SaleType;
+use App\Enums\VatRegime;
 use App\Http\Controllers\Controller;
 use App\Lots\DraftAccess;
 use App\Lots\DraftPayload;
@@ -44,6 +45,8 @@ final class DraftController extends Controller
             'status' => LotStatus::Draft,
             'draft_token' => $token,
             'quantity' => 1,
+            'unit' => 'stuk',
+            'vat_regime' => VatRegime::Margin,
             'pickup_only' => true,
         ]);
 
@@ -78,6 +81,8 @@ final class DraftController extends Controller
             // Waar de hoeveelheid in geteld wordt (besluit Raph: "hoeveelheid
             // van een eenheid" is een publicatiecriterium).
             'unit' => ['sometimes', 'nullable', Rule::in(array_keys((array) config('listings.unit_options')))],
+            // Marge of btw, per kavel gekozen door de verkoper (besluit Don, vraag 3).
+            'vat_regime' => ['sometimes', Rule::enum(VatRegime::class)],
             'pickup_only' => ['sometimes', 'boolean'],
             'viewing_available' => ['sometimes', 'boolean'],
             'transport_from_cents' => ['sometimes', 'nullable', 'integer', 'min:0'],

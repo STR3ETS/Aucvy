@@ -13,16 +13,18 @@ use App\Models\User;
 | geld verliest (hfst. 7 en 15).
 */
 
-it('toont een bieder als initiaal plus achternaam', function () {
+it('toont een bieder als "Bieder" met een nummer, nooit zijn naam (N7)', function () {
     $user = User::factory()->create(['name' => 'Robert Jansen', 'display_name' => null]);
 
-    expect($user->publicName())->toBe('R. Jansen');
+    expect($user->publicName())->toMatch('/^Bieder [0-9]{4,5}$/')
+        ->and($user->publicName())->not->toContain('Jansen');
 });
 
-it('houdt tussenvoegsels heel', function () {
+it('houdt hetzelfde nummer voor dezelfde bieder', function () {
     $user = User::factory()->create(['name' => 'Marieke de Vries', 'display_name' => null]);
 
-    expect($user->publicName())->toBe('M. de Vries');
+    expect($user->publicName())->toBe($user->fresh()->publicName())
+        ->and(User::factory()->create()->publicName())->not->toBe($user->publicName());
 });
 
 it('gebruikt een zelfgekozen weergavenaam als die er is', function () {
@@ -51,7 +53,7 @@ it('lekt geen naam, e-mailadres of maximumbod in de publieke biedpayload', funct
     $serialised = json_encode($payload);
 
     expect($payload)->toHaveKeys(['sequence', 'amount_cents', 'bidder_label', 'type'])
-        ->and($payload['bidder_label'])->toBe('R. Jansen')
+        ->and($payload['bidder_label'])->toBe($user->publicName())
         ->and($serialised)
         ->not->toContain('robert@voorbeeld.nl')
         ->not->toContain('Robert Jansen')

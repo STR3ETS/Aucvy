@@ -229,7 +229,7 @@
                                 <span class="block p-4">
                                     <span class="block text-xs font-bold uppercase tracking-wide text-aj-muted">{{ $lot->category?->name ?? 'Kavel' }}</span>
                                     <span class="block truncate text-sm font-bold">{{ $lot->title }}</span>
-                                    <span class="block text-xs text-aj-muted">Verkocht{{ $lot->auction?->closed_at ? ' · '.$lot->auction->closed_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMMM YYYY') : '' }}</span>
+                                    <span class="block text-xs text-aj-muted">Verkocht{{ \App\Support\PlatformFacts::publicSoldPrices() && $lot->relationLoaded('order') && $lot->order ? ' voor '.\App\Support\Money\Money::format($lot->order->hammer_cents) : '' }}{{ $lot->auction?->closed_at ? ' · '.$lot->auction->closed_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMMM YYYY') : '' }}</span>
                                 </span>
                             </a>
                         </li>
@@ -239,7 +239,7 @@
                     <p class="mt-3 text-sm text-aj-muted">Geen verkochte kavels in deze categorie.</p>
                 @endif
                 <div class="mt-4">{{ $soldLots->links() }}</div>
-                <p class="mt-3 text-xs text-aj-muted">Gerealiseerde prijzen zijn niet openbaar.</p>
+                <p class="mt-3 text-xs text-aj-muted">{{ \App\Support\PlatformFacts::publicSoldPrices() ? 'Gerealiseerde prijzen zijn openbaar, zoals de biedgeschiedenis op elke kavel.' : 'Gerealiseerde prijzen zijn niet openbaar.' }}</p>
             </section>
         @endif
     </div>

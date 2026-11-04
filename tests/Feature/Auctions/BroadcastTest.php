@@ -104,13 +104,13 @@ describe('payload-hygiene', function () {
 
         bidAs($this->auction, $user, 100_000);
 
-        Event::assertDispatched(BidPlaced::class, function (BidPlaced $event): bool {
+        Event::assertDispatched(BidPlaced::class, function (BidPlaced $event) use ($user): bool {
             $payload = json_encode($event->broadcastWith());
 
             return ! str_contains($payload, 'Robert Jansen')
                 && ! str_contains($payload, 'robert@voorbeeld.nl')
                 && ! str_contains($payload, '240000')
-                && str_contains($payload, 'R. Jansen');
+                && str_contains($payload, $user->publicName());
         });
     });
 

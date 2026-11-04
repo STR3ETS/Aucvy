@@ -53,6 +53,7 @@ final class DraftPayload
                 'year' => $lot->year,
                 'quantity' => $lot->quantity,
                 'unit' => $lot->unit,
+                'vat_regime' => $lot->vat_regime?->value,
                 // De uitkomst van de laatste controle, als die de kavel terugstuurde.
                 'screening' => $lot->screening,
                 'pickup_only' => $lot->pickup_only,

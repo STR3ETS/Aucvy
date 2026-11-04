@@ -8,6 +8,7 @@ use App\Enums\CompanyPlan;
 use App\Enums\VatRegime;
 use App\Models\Company;
 use App\Models\Lot;
+use App\Support\PlatformFacts;
 use InvalidArgumentException;
 
 /**
@@ -55,6 +56,7 @@ final class Money
             vatRegime: $lot->vat_regime,
             hammerCents: $hammerCents,
             transportCents: $transportCents,
+            adminFeeCents: PlatformFacts::adminFeeCents(),
         );
     }
 
@@ -69,6 +71,7 @@ final class Money
         int $hammerCents,
         int $transportCents = 0,
         ?float $buyerPremiumPercent = null,
+        ?int $adminFeeCents = null,
     ): OrderCosts {
         self::guardNotNegative($hammerCents, 'hammerCents');
         self::guardNotNegative($transportCents, 'transportCents');
@@ -76,15 +79,20 @@ final class Money
         $premiumPercent = $buyerPremiumPercent ?? self::buyerPremiumPercent();
         $buyerPremiumCents = self::percentageOf($hammerCents, $premiumPercent);
 
-        $vatCents = self::computeVat($vatRegime, $hammerCents, $buyerPremiumCents, $transportCents);
+        // Administratiekosten van het platform (N4): altijd met btw, ook bij
+        // een kavel onder de margeregeling, want het is een dienst van Aucvy.
+        $adminFeeCents ??= 0;
+        $vatCents = self::computeVat($vatRegime, $hammerCents, $buyerPremiumCents, $transportCents)
+            + self::percentageOf($adminFeeCents, self::vatRatePercent());
 
         return new OrderCosts(
             hammerCents: $hammerCents,
             buyerPremiumCents: $buyerPremiumCents,
             transportCents: $transportCents,
             vatCents: $vatCents,
-            totalCents: $hammerCents + $buyerPremiumCents + $transportCents + $vatCents,
+            totalCents: $hammerCents + $buyerPremiumCents + $adminFeeCents + $transportCents + $vatCents,
             vatRegime: $vatRegime,
+            adminFeeCents: $adminFeeCents,
         );
     }
 
@@ -100,9 +108,12 @@ final class Money
     {
         self::guardNotNegative($hammerCents, 'hammerCents');
 
-        $feePercentage = $company !== null
-            ? (float) $company->fee_percentage
-            : CompanyPlan::Start->defaultFeePercentage();
+        // Staffel op de omzet van de verkoper (besluit Raph en Don, 2 november
+        // 2026); het tarief ligt vast op het moment van verkoop. Zonder
+        // staffel geldt het oude tarief per pakket.
+        $feePercentage = PlatformFacts::usesFeeTiers()
+            ? PlatformFacts::feePercentageFor($company)
+            : ($company !== null ? (float) $company->fee_percentage : CompanyPlan::Start->defaultFeePercentage());
 
         $feeCents = self::percentageOf($hammerCents, $feePercentage);
 

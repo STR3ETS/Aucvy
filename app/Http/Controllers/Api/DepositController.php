@@ -8,6 +8,7 @@ use App\Enums\DepositStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Auction;
 use App\Models\Deposit;
+use App\Support\PlatformFacts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -34,7 +35,8 @@ final class DepositController extends Controller
                 'auction_id' => $auction->id,
             ],
             [
-                'amount_cents' => (int) config('aucvy.deposit.threshold_cents'),
+                // De trede die bij het beoogde bod hoort (N6); zonder bedrag de eerste trede.
+                'amount_cents' => PlatformFacts::depositRequiredFor(max($request->integer('amount_cents'), (int) config('aucvy.deposit.threshold_cents') + 1)),
                 'provider' => (string) config('aucvy.payments.provider'),
                 'status' => DepositStatus::Pending,
             ],

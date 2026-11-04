@@ -10,6 +10,10 @@ use App\Models\Order;
 use App\Support\Money\Money;
 use App\Support\Money\OrderCosts;
 
+// Deze tests rekenen de kale som na; de staffel en de administratiekosten
+// (besluiten van 2 november 2026) hebben hun eigen tests in PlatformFactsTest.
+beforeEach(fn () => config(['aucvy.pricing.use_fee_tiers' => false, 'aucvy.pricing.admin_fee_cents' => 0]));
+
 it('leest het btw-regime van de kavel', function () {
     $margin = Lot::factory()->create(['vat_regime' => VatRegime::Margin]);
     $taxed = Lot::factory()->create(['vat_regime' => VatRegime::Vat21]);

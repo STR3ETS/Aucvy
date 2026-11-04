@@ -74,9 +74,10 @@ final class AcceptDutchPrice
             // tweede klik landt hier en krijgt een nette melding.
             $this->guards->ensureOpen($locked);
             $this->guards->ensureNotSeller($locked, $user);
-            $this->guards->ensureVerified($user);
 
             $price = $this->calculator->priceAt($locked);
+
+            $this->guards->ensureVerified($user, $price);
 
             if (! $this->calculator->isWithinTolerance($locked, $seenPriceCents)) {
                 throw BidRejected::priceMoved($price);

@@ -9,6 +9,8 @@ use App\Enums\VatRegime;
 use App\Models\Lot;
 use App\Models\Order;
 use App\Models\User;
+use App\Support\Money\Money;
+use App\Support\PlatformFacts;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -35,8 +37,10 @@ class OrderFactory extends Factory
             'buyer_premium_cents' => 0,
             'transport_cents' => $transport,
             // Margeregeling: geen verrekenbare btw voor de koper.
-            'vat_cents' => 0,
-            'total_cents' => $hammer + $transport,
+            // De administratiekosten per order (N4) met btw, zoals Money::forOrder ze rekent.
+            'admin_fee_cents' => PlatformFacts::adminFeeCents(),
+            'vat_cents' => Money::percentageOf(PlatformFacts::adminFeeCents(), Money::vatRatePercent()),
+            'total_cents' => $hammer + $transport + PlatformFacts::adminFeeCents() + Money::percentageOf(PlatformFacts::adminFeeCents(), Money::vatRatePercent()),
             'vat_regime' => VatRegime::Margin,
 
             'status' => OrderStatus::AwaitingPayment,

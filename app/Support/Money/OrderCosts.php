@@ -24,6 +24,7 @@ final readonly class OrderCosts
         public int $vatCents,
         public int $totalCents,
         public VatRegime $vatRegime,
+        public int $adminFeeCents = 0,
     ) {}
 
     /**
@@ -42,6 +43,7 @@ final readonly class OrderCosts
             vatCents: $order->vat_cents,
             totalCents: $order->total_cents,
             vatRegime: $order->vat_regime,
+            adminFeeCents: (int) ($order->getAttributes()['admin_fee_cents'] ?? 0),
         );
     }
 
@@ -52,7 +54,8 @@ final readonly class OrderCosts
             && $this->transportCents === $other->transportCents
             && $this->vatCents === $other->vatCents
             && $this->totalCents === $other->totalCents
-            && $this->vatRegime === $other->vatRegime;
+            && $this->vatRegime === $other->vatRegime
+            && $this->adminFeeCents === $other->adminFeeCents;
     }
 
     /**
@@ -60,9 +63,9 @@ final readonly class OrderCosts
      */
     public function taxableBaseCents(): int
     {
-        return $this->vatRegime->isDeductible()
+        return ($this->vatRegime->isDeductible()
             ? $this->hammerCents + $this->buyerPremiumCents + $this->transportCents
-            : 0;
+            : 0) + $this->adminFeeCents;
     }
 
     /**
@@ -82,6 +85,10 @@ final readonly class OrderCosts
 
         if ($this->buyerPremiumCents > 0) {
             $lines[] = new CostLine('buyer_premium', __('money.lines.buyer_premium'), $this->buyerPremiumCents);
+        }
+
+        if ($this->adminFeeCents > 0) {
+            $lines[] = new CostLine('admin_fee', __('money.lines.admin_fee'), $this->adminFeeCents, __('money.notes.admin_fee'));
         }
 
         $lines[] = new CostLine(
@@ -116,6 +123,7 @@ final readonly class OrderCosts
         return [
             'hammer_cents' => $this->hammerCents,
             'buyer_premium_cents' => $this->buyerPremiumCents,
+            'admin_fee_cents' => $this->adminFeeCents,
             'transport_cents' => $this->transportCents,
             'vat_cents' => $this->vatCents,
             'total_cents' => $this->totalCents,

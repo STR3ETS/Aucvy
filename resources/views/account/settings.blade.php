@@ -25,6 +25,12 @@
                            class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
                 </label>
                 <label class="block">
+                    <span class="text-sm font-bold">Biednaam</span>
+                    <span class="block text-xs text-aj-muted">Zo zien verkopers en andere bieders je. Leeg is "Bieder {{ $user->bidderNumber() }}". Nooit je echte naam, mailadres of telefoonnummer.</span>
+                    <input type="text" name="display_name" value="{{ old('display_name', $user->display_name) }}" maxlength="40" placeholder="Bieder {{ $user->bidderNumber() }}"
+                           class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                </label>
+                <label class="block">
                     <span class="text-sm font-bold">Telefoonnummer</span>
                     <span class="block text-xs text-aj-muted">Een nieuw nummer vraagt om een nieuwe bevestiging bij je verificatie.</span>
                     <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" autocomplete="tel" placeholder="+31 6 12345678"

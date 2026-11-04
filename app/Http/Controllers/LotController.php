@@ -37,7 +37,7 @@ final class LotController extends Controller
             throw new NotFoundHttpException;
         }
 
-        $lot->load(['seller', 'company', 'category.parent', 'location', 'media', 'documents']);
+        $lot->load(['seller', 'company', 'category.parent', 'location', 'media', 'documents', 'order.buyer', 'publicAnswers']);
 
         $auction = $lot->auction()->first();
 

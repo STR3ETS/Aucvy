@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'order_number', 'lot_id', 'auction_id', 'buyer_id', 'seller_id',
-    'hammer_cents', 'buyer_premium_cents', 'transport_cents', 'vat_cents',
+    'hammer_cents', 'buyer_premium_cents', 'admin_fee_cents', 'transport_cents', 'vat_cents',
     'total_cents', 'vat_regime', 'status', 'payment_deadline_at',
 ])]
 #[RouteKey('order_number')]
@@ -37,6 +37,7 @@ class Order extends Model
             'vat_regime' => VatRegime::class,
             'hammer_cents' => 'integer',
             'buyer_premium_cents' => 'integer',
+            'admin_fee_cents' => 'integer',
             'transport_cents' => 'integer',
             'vat_cents' => 'integer',
             'total_cents' => 'integer',

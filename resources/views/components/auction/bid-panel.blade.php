@@ -178,6 +178,15 @@
                             <span x-show="state.viewer?.state !== 'lost'">Deze veiling is gesloten.</span>
                         </p>
                     </template>
+
+                    {{-- Gerealiseerde prijs en biednaam zijn openbaar (vraag 13, besluit Don). --}}
+                    @php $soldOrder = \App\Support\PlatformFacts::publicSoldPrices() ? $auction->lot?->order : null; @endphp
+                    @if ($soldOrder)
+                        <p class="mt-2 text-sm text-white/90">
+                            Verkocht voor <span class="tabular font-extrabold">{{ \App\Support\Money\Money::format($soldOrder->hammer_cents) }}</span>
+                            aan {{ $soldOrder->buyer?->publicName() ?? 'een koper' }}.
+                        </p>
+                    @endif
                 </div>
             </template>
 

@@ -7,6 +7,7 @@ use App\Models\Auction;
 use App\Models\Deposit;
 use App\Models\Lot;
 use App\Models\User;
+use App\Support\PlatformFacts;
 
 /*
 | De borg vóór het bieden (hfst. 9): boven de drempel eerst reserveren, en de
@@ -64,7 +65,8 @@ it('reserveert de borg via de nepcheckout en dan mag het bod erdoor', function (
 
     expect($response->json('checkout_url'))->toContain('/dev/borg/')
         ->and($deposit->status)->toBe(DepositStatus::Pending)
-        ->and($deposit->amount_cents)->toBe((int) config('aucvy.deposit.threshold_cents'));
+        // De eerste borgtrede (N6): 200 euro boven 2.500 euro.
+        ->and($deposit->amount_cents)->toBe(PlatformFacts::depositRequiredFor(250_001));
 
     // Stap 2: de nepreservering bevestigen.
     $this->actingAs($this->bidder)

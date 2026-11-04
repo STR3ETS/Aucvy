@@ -110,6 +110,49 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Prijzen en treden (besluiten Raph en Don, 2 november 2026)
+    |--------------------------------------------------------------------------
+    |
+    | Eén bron voor alle getallen die in chat, mail en op pagina's terugkomen;
+    | zie App\Support\PlatformFacts. Niets hiervan staat ergens hardcoded.
+    |
+    */
+
+    'pricing' => [
+        // Succesfee als staffel over de omzet op Aucvy in de laatste twaalf
+        // maanden (hamerbedrag); het tarief ligt vast op het moment van verkoop.
+        'use_fee_tiers' => (bool) env('AUCVY_USE_FEE_TIERS', true),
+        'fee_tier_window_months' => 12,
+        'fee_tiers' => [
+            ['up_to_cents' => 2_500_000, 'percent' => 15.0],
+            ['up_to_cents' => 5_000_000, 'percent' => 12.5],
+            ['up_to_cents' => 25_000_000, 'percent' => 10.0],
+            ['up_to_cents' => 50_000_000, 'percent' => 9.0],
+            ['up_to_cents' => 100_000_000, 'percent' => 8.0],
+            ['up_to_cents' => 250_000_000, 'percent' => 7.0],
+            ['up_to_cents' => null, 'percent' => 6.0],
+        ],
+
+        // Administratiekosten voor de koper, per order, exclusief btw (N4).
+        'admin_fee_cents' => (int) env('AUCVY_ADMIN_FEE_CENTS', 1_500),
+
+        // Tot dit bedrag bieden met bevestigd e-mailadres en telefoonnummer;
+        // daarboven is de identiteitscheck nodig (N5).
+        'bid_free_limit_cents' => (int) env('AUCVY_BID_FREE_LIMIT_CENTS', 25_000),
+
+        // Algemene borg, exclusief btw, in treden op het bod (N6).
+        'deposit_tiers' => [
+            ['above_cents' => 250_000, 'deposit_cents' => 20_000],
+            ['above_cents' => 1_000_000, 'deposit_cents' => 50_000],
+            ['above_cents' => 2_500_000, 'deposit_cents' => 100_000],
+        ],
+
+        // Gerealiseerde prijzen en biednamen zijn openbaar (vraag 13).
+        'public_sold_prices' => (bool) env('AUCVY_PUBLIC_SOLD_PRICES', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Orders en uitbetaling
     |--------------------------------------------------------------------------
     |

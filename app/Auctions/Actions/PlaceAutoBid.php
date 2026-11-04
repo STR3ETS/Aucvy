@@ -51,7 +51,7 @@ final class PlaceAutoBid
                 $this->guards->ensureSaleType($locked, SaleType::Auction);
                 $this->guards->ensureOpen($locked);
                 $this->guards->ensureNotSeller($locked, $user);
-                $this->guards->ensureVerified($user);
+                $this->guards->ensureVerified($user, $maxAmountCents);
                 // Over het maximum, niet over de huidige prijs: je verplicht je
                 // tot dit bedrag, dus daar hoort de borg bij te passen.
                 $this->guards->ensureDepositCovers($locked, $user, $maxAmountCents);

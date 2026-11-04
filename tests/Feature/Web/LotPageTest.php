@@ -128,7 +128,7 @@ describe('niets mag uitlekken', function () {
         $response = $this->get(lotUrl($this->lot))->assertOk();
 
         expect($response->getContent())
-            ->toContain('R. Jansen')
+            ->toContain($bidder->publicName())
             ->not->toContain('Robert Jansen');
     });
 

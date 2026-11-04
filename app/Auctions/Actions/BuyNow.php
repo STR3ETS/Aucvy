@@ -81,10 +81,11 @@ final class BuyNow
 
             $this->guards->ensureOpen($locked);
             $this->guards->ensureNotSeller($locked, $user);
-            $this->guards->ensureVerified($user);
             $this->guardAvailable($locked);
 
             $price = $locked->buy_now_price_cents;
+
+            $this->guards->ensureVerified($user, $price);
 
             $this->guards->ensureDepositCovers($locked, $user, $price);
 

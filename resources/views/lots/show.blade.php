@@ -319,8 +319,8 @@
                 @if ($state === null)
                     @if ($lot->status === \App\Enums\LotStatus::Sold)
                         <x-ui.empty-state
-                            title="Deze kavel is verkocht"
-                            body="De verkoop is afgerond. Bekijk vergelijkbare kavels hieronder of blader verder.">
+                            :title="\App\Support\PlatformFacts::publicSoldPrices() && $lot->order ? 'Verkocht voor '.Money::format($lot->order->hammer_cents) : 'Deze kavel is verkocht'"
+                            :body="\App\Support\PlatformFacts::publicSoldPrices() && $lot->order ? 'Aan '.($lot->order->buyer?->publicName() ?? 'een koper').'. Bekijk vergelijkbare kavels hieronder of blader verder.' : 'De verkoop is afgerond. Bekijk vergelijkbare kavels hieronder of blader verder.'">
                             <x-slot:action>
                                 <x-ui.button :href="route('lots.index')">Naar de veilingen</x-ui.button>
                             </x-slot:action>

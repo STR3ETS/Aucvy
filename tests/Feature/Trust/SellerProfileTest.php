@@ -52,7 +52,8 @@ it('toont verkochte kavels zonder prijs, filterbaar op categorie', function () {
         ->assertSee('Verkochte kavels')
         ->assertSee('Designkeuken Siemens')
         ->assertSee('Heftruck Linde H25')
-        ->assertSee('Gerealiseerde prijzen zijn niet openbaar')
+        // Openbaar (vraag 13), maar alleen bij een echte order; hier is er geen.
+        ->assertSee('Gerealiseerde prijzen zijn openbaar')
         ->assertDontSee('9.400,00')
         ->assertDontSee('12.500,00');
 

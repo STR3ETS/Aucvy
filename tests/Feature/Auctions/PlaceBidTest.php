@@ -356,7 +356,7 @@ describe('de eventstroom', function () {
 
         $payload = json_encode(AuctionEvent::sole()->payload);
 
-        expect($payload)->toContain('R. Jansen')
+        expect($payload)->toContain($user->publicName())
             ->not->toContain('Robert Jansen');
     });
 });

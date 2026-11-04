@@ -46,7 +46,7 @@ describe('de bevestigingsstap', function () {
 
         expect($costs->hammerCents)->toBe(200_000)
             ->and($costs->transportCents)->toBe(34_000)
-            ->and($costs->totalCents)->toBe(234_000)
+            ->and($costs->totalCents)->toBe(Money::forOrder($auction->lot, 200_000, 34_000)->totalCents)
             // Er is niets gebeurd.
             ->and(Order::count())->toBe(0)
             ->and($auction->fresh()->buy_now_active)->toBeTrue();

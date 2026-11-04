@@ -61,6 +61,24 @@
                             </template>
                         </div>
 
+                        {{-- Hoeveelheid met eenheid (publicatiecriterium, besluit Raph 2 november 2026). --}}
+                        <div class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                            <label class="grid gap-1">
+                                <span class="font-bold">Aantal</span>
+                                <input type="number" min="1" max="100000" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3" style="min-height:40px"
+                                       :value="draft?.quantity ?? 1" @change="set('quantity', Math.max(1, parseInt($event.target.value || '1', 10)))">
+                            </label>
+                            <label class="grid gap-1">
+                                <span class="font-bold">Eenheid</span>
+                                <select class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3" style="min-height:40px"
+                                        :value="draft?.unit ?? 'stuk'" @change="set('unit', $event.target.value)">
+                                    @foreach (config('listings.unit_options') as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                        </div>
+
                         <label class="mt-4 block">
                             <span class="text-sm font-bold">In je eigen woorden</span>
                             <textarea rows="3" placeholder="Ik stop met mijn restaurant en wil alles verkopen."
@@ -177,6 +195,21 @@
                                 </template>
                             </ul>
                         </div>
+
+                        {{-- Marge of btw (besluit Don, vraag 3): de verkoper kiest per kavel. --}}
+                        <fieldset class="mt-5 rounded-aj-sm border border-aj-border bg-aj-bg p-3 text-sm">
+                            <legend class="px-1 font-bold">Btw op deze kavel</legend>
+                            <div class="mt-1 grid gap-2 sm:grid-cols-2">
+                                <label class="flex items-start gap-2 rounded-aj-sm border border-aj-border bg-aj-surface p-2">
+                                    <input type="radio" name="vat_regime" value="margin" class="mt-0.5" :checked="(draft?.vat_regime ?? 'margin') === 'margin'" @change="set('vat_regime', 'margin')">
+                                    <span><span class="font-bold">Margeregeling</span><span class="block text-xs text-aj-muted">Gebruikt goed, geen btw op de factuur; wel de vermelding "bijzondere regeling, gebruikte goederen".</span></span>
+                                </label>
+                                <label class="flex items-start gap-2 rounded-aj-sm border border-aj-border bg-aj-surface p-2">
+                                    <input type="radio" name="vat_regime" value="vat_21" class="mt-0.5" :checked="draft?.vat_regime === 'vat_21'" @change="set('vat_regime', 'vat_21')">
+                                    <span><span class="font-bold">Btw 21%</span><span class="block text-xs text-aj-muted">Btw-goed: de koper betaalt 21% over het bod en kan die als ondernemer terugvragen.</span></span>
+                                </label>
+                            </div>
+                        </fieldset>
 
                         {{-- Garantie (publicatiecriterium, besluit Raph 2 november 2026). --}}
                         <div class="mt-5 grid gap-3 rounded-aj-sm border border-aj-border bg-aj-bg p-3 text-sm sm:grid-cols-2">

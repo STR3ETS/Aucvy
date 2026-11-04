@@ -15,6 +15,7 @@ use App\Models\Auction;
 use App\Models\Bid;
 use App\Models\Deposit;
 use App\Models\User;
+use App\Support\PlatformFacts;
 
 /**
  * De voorwaarden waaraan elk bod moet voldoen.
@@ -60,8 +61,25 @@ final class BidGuards
      * zoeken of volgen. De gate zit hier hard in de motor en niet alleen in de
      * UI (hfst. 13.6).
      */
-    public function ensureVerified(User $user): void
+    public function ensureVerified(User $user, ?int $amountCents = null): void
     {
+        /*
+         | Twee treden (besluit Raph en Don, 2 november 2026): tot de vrije
+         | grens bieden met een bevestigd e-mailadres en telefoonnummer;
+         | daarboven de identiteitscheck.
+         */
+        if ($amountCents !== null && $amountCents <= PlatformFacts::bidFreeLimitCents()) {
+            if ($user->isBlocked()) {
+                throw BidRejected::because(BidRejectionReason::Blocked);
+            }
+
+            if ($user->hasVerifiedEmail() && ($user->getAttributes()['phone_verified_at'] ?? null) !== null) {
+                return;
+            }
+
+            throw BidRejected::because(BidRejectionReason::NotVerified);
+        }
+
         $decision = $this->permissions->decide($user, Permission::Bid);
 
         if ($decision->denied()) {
@@ -79,14 +97,18 @@ final class BidGuards
      */
     public function ensureDepositCovers(Auction $auction, User $user, int $amountCents): void
     {
-        if ($amountCents <= (int) config('aucvy.deposit.threshold_cents')) {
+        $required = PlatformFacts::depositRequiredFor($amountCents);
+
+        if ($required === 0) {
             return;
         }
 
+        // De borg in treden (N6): een hoger bod kan een hogere borg vragen.
         $covered = Deposit::query()
             ->where('auction_id', $auction->id)
             ->where('user_id', $user->id)
             ->covering()
+            ->where('amount_cents', '>=', $required)
             ->exists();
 
         if (! $covered) {

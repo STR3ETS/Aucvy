@@ -59,16 +59,13 @@ describe('de stand', function () {
     });
 
     it('geeft de biedhistorie zonder volledige namen', function () {
-        app(PlaceBid::class)->handle(
-            $this->auction,
-            User::factory()->verified()->create(['name' => 'Robert Jansen', 'display_name' => null]),
-            100_000,
-            (string) Str::uuid(),
-        );
+        $bidder = User::factory()->verified()->create(['name' => 'Robert Jansen', 'display_name' => null]);
+
+        app(PlaceBid::class)->handle($this->auction, $bidder, 100_000, (string) Str::uuid());
 
         $response = test()->getJson(stateUrl($this->auction->fresh()))->assertOk();
 
-        expect($response->json('history.0.bidder_label'))->toBe('R. Jansen')
+        expect($response->json('history.0.bidder_label'))->toBe($bidder->publicName())
             ->and(json_encode($response->json()))->not->toContain('Robert Jansen');
     });
 });

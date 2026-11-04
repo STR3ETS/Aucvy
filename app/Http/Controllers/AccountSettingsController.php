@@ -53,10 +53,14 @@ final class AccountSettingsController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
+            'display_name' => ['nullable', 'string', 'min:3', 'max:40', 'regex:/^[\pL\pN .\-]+$/u'],
             'phone' => ['nullable', 'string', 'regex:/^\+?[0-9 ]{8,20}$/'],
         ]);
 
         $user = $request->user();
+
+        // De biednaam: nooit een e-mailadres of telefoonnummer, en niet leeg (dan het nummer van Aucvy).
+        $user->display_name = filled($validated['display_name'] ?? null) ? trim($validated['display_name']) : null;
 
         // Een ander nummer is een nieuw nummer: de bevestiging vervalt.
         if (($validated['phone'] ?? null) !== $user->phone) {

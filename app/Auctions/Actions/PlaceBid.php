@@ -89,7 +89,7 @@ final class PlaceBid
                 $this->guards->ensureSaleType($locked, SaleType::Auction);
                 $this->guards->ensureOpen($locked);
                 $this->guards->ensureNotSeller($locked, $user);
-                $this->guards->ensureVerified($user);
+                $this->guards->ensureVerified($user, $amountCents);
                 $this->guards->ensureDepositCovers($locked, $user, $amountCents);
                 // Vóór de bedragcontrole: "je bent al de hoogste bieder" is een
                 // nuttiger antwoord dan "je bod is te laag".

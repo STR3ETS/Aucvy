@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Dashboard\SellerFinance;
-use App\Enums\CompanyPlan;
 use App\Models\Bid;
 use App\Models\Dispute;
 use App\Models\Lot;
 use App\Models\LotMedia;
 use App\Models\Payout;
+use App\Support\PlatformFacts;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -91,7 +91,12 @@ final class DashboardListController extends Controller
             'totals' => $finance->totals($lines),
             'perMonth' => $perMonth,
             'thisMonth' => $perMonth->get(now()->timezone(config('aucvy.display_timezone'))->format('Y-m'), $finance->totals(collect())),
-            'feePercentage' => (float) ($request->user()->company?->fee_percentage ?? CompanyPlan::Start->defaultFeePercentage()),
+            'feePercentage' => PlatformFacts::feePercentageFor($request->user()->company),
+            'tier' => [
+                'revenue_cents' => PlatformFacts::revenueCentsFor($request->user()->company),
+                'next' => PlatformFacts::nextTierFor(PlatformFacts::revenueCentsFor($request->user()->company)),
+                'tiers' => PlatformFacts::feeTiers(),
+            ],
         ]);
     }
 

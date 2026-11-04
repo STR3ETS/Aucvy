@@ -23,7 +23,8 @@ class DepositFactory extends Factory
         return [
             'user_id' => User::factory()->verified(),
             'auction_id' => Auction::factory(),
-            'amount_cents' => 25_000,
+            // Groot genoeg voor elke borgtrede (N6).
+            'amount_cents' => 100_000,
             'provider' => 'mollie',
             'provider_id' => 'tr_'.fake()->bothify('??????????'),
             'status' => DepositStatus::Pending,

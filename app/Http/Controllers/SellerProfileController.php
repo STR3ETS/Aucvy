@@ -78,7 +78,7 @@ final class SellerProfileController extends Controller
             'liveLots' => Lot::query()
                 ->where('seller_id', $user->id)
                 ->where('status', LotStatus::Live)
-                ->with(['media', 'auction', 'category'])
+                ->with(['media', 'auction', 'category', 'order'])
                 ->latest('published_at')
                 ->limit(6)
                 ->get(),

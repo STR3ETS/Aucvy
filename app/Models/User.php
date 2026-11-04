@@ -268,20 +268,45 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->save();
     }
 
+    /**
+     * De biednaam (N7, besluit Raph 2 november 2026): Aucvy maakt er een,
+     * zoals "Bieder 4821", en de koper kan hem wijzigen. Nooit de echte naam.
+     */
     public function publicName(): string
     {
         if ($this->display_name !== null && $this->display_name !== '') {
             return $this->display_name;
         }
 
-        $parts = preg_split('/\s+/', trim((string) $this->name)) ?: [];
+        return 'Bieder '.$this->bidderNumber();
+    }
 
-        if (count($parts) < 2) {
-            return $parts[0] ?? 'Onbekend';
+    public function bidderNumber(): int
+    {
+        $number = $this->getAttributes()['bidder_number'] ?? null;
+
+        // Een ander exemplaar van dezelfde gebruiker kan het nummer al gemaakt hebben.
+        if ($number === null && $this->exists) {
+            $number = self::query()->whereKey($this->id)->value('bidder_number');
         }
 
-        $initial = mb_strtoupper(mb_substr((string) array_shift($parts), 0, 1));
+        if ($number !== null) {
+            $this->setAttribute('bidder_number', (int) $number);
 
-        return $initial.'. '.implode(' ', $parts);
+            return (int) $number;
+        }
+
+        // Een willekeurig nummer dat nog vrij is; nooit het id, dat verraadt het aantal accounts.
+        do {
+            $number = random_int(1000, 99999);
+        } while (self::query()->where('bidder_number', $number)->exists());
+
+        if ($this->exists) {
+            self::query()->whereKey($this->id)->update(['bidder_number' => $number]);
+        }
+
+        $this->setAttribute('bidder_number', $number);
+
+        return $number;
     }
 }
