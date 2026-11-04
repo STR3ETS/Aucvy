@@ -99,7 +99,7 @@
                         </a>
                         <div class="lot-tile-body">
                             <span class="cat">{{ $lot->category?->name ?? 'Zonder categorie' }}</span>
-                            <h3>@if ($url)<a href="{{ $url }}">{{ $lot->title }}</a>@else{{ $lot->title }}@endif</h3>
+                            <h3>@if ($lot->status === LotStatus::Draft && $url)<a href="{{ $url }}">{{ $lot->title }}</a>@else<a href="{{ route('dashboard.lots.show', $lot) }}">{{ $lot->title }}</a>@endif</h3>
                             <div class="lot-tile-meta">
                                 @if ($lot->auction)
                                     <span><b class="tabular">{{ Money::format($lot->currentPriceCents()) }}</b></span>

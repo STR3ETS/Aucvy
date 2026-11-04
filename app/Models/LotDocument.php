@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\DocumentKind;
+use App\Observers\DossierObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'lot_id', 'kind', 'path', 'original_filename', 'mime_type', 'size_bytes',
 ])]
+#[ObservedBy(DossierObserver::class)]
 class LotDocument extends Model
 {
     use HasFactory;

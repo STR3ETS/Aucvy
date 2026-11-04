@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Observers\DossierObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +21,7 @@ use LogicException;
     'actor_id', 'action', 'subject_type', 'subject_id', 'before', 'after',
     'ip', 'created_at',
 ])]
+#[ObservedBy(DossierObserver::class)]
 class AuditLog extends Model
 {
     use HasFactory;

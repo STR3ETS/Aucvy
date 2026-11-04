@@ -3,7 +3,7 @@
 
 <x-layouts.dashboard :title="$lot->title" eyebrow="Mijn kavels" :intro="$lot->public_id.' · '.$lot->status->label().($lot->auction ? ' · stand '.Money::format($lot->currentPriceCents()) : '')">
     <x-slot:crumbs>
-        <a href="{{ route('dashboard.lots') }}">Mijn kavels</a> <span aria-hidden="true">/</span> <span>{{ $lot->public_id }}</span>
+        <a href="{{ route('dashboard.lots') }}">Mijn kavels</a> <span aria-hidden="true">/</span> <a href="{{ route('dashboard.lots.show', $lot) }}">{{ $lot->public_id }}</a> <span aria-hidden="true">/</span> <span>Bewerken</span>
     </x-slot:crumbs>
 
     <x-slot:actions>

@@ -23,6 +23,12 @@ final class RecordMailDelivery
             $messageId = $event->sent->getMessageId();
             $notification = $event->data['__laravel_notification'] ?? null;
             $mailer = (string) config('mail.default');
+            $headers = $event->message->getHeaders();
+
+            // Het kavel en de order uit de metadata (zie TagMailWithLot), zodat
+            // de mail in het kaveldossier komt.
+            $lotId = $headers->has('X-Metadata-lot_id') ? (int) $headers->get('X-Metadata-lot_id')->getBodyAsString() : null;
+            $orderId = $headers->has('X-Metadata-order_id') ? (int) $headers->get('X-Metadata-order_id')->getBodyAsString() : null;
 
             foreach ($event->message->getTo() as $address) {
                 $email = Str::lower($address->getAddress());
@@ -31,6 +37,8 @@ final class RecordMailDelivery
                     'message_id' => $messageId === '' ? null : trim($messageId, '<>'),
                     'to_email' => $email,
                     'user_id' => User::query()->where('email', $email)->value('id'),
+                    'lot_id' => $lotId ?: null,
+                    'order_id' => $orderId ?: null,
                     'subject' => Str::limit((string) $event->message->getSubject(), 290),
                     'kind' => is_string($notification) ? class_basename($notification) : null,
                     'mailer' => $mailer,

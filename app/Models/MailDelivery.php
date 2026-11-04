@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Observers\DossierObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Eén verzonden mail en wat Mailgun erover terugmeldde.
  */
-#[Fillable(['message_id', 'to_email', 'user_id', 'subject', 'kind', 'mailer', 'status', 'failure_reason', 'last_event_at'])]
+#[Fillable(['message_id', 'to_email', 'user_id', 'lot_id', 'order_id', 'subject', 'kind', 'mailer', 'status', 'failure_reason', 'last_event_at'])]
+#[ObservedBy(DossierObserver::class)]
 class MailDelivery extends Model
 {
     public const string STATUS_SENT = 'sent';

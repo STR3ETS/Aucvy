@@ -18,6 +18,7 @@ use App\Http\Controllers\FunnelController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LotController;
+use App\Http\Controllers\LotDossierController;
 use App\Http\Controllers\LotImportController;
 use App\Http\Controllers\LotIndexController;
 use App\Http\Controllers\LotManagementController;
@@ -43,6 +44,7 @@ use App\Http\Controllers\Staff\ComplianceController;
 use App\Http\Controllers\Staff\DisputeReviewController;
 use App\Http\Controllers\Staff\ErrorLogController;
 use App\Http\Controllers\Staff\LiveRoomController;
+use App\Http\Controllers\Staff\LotDossierController as StaffLotDossierController;
 use App\Http\Controllers\Staff\ModerationController;
 use App\Http\Controllers\Staff\QueueController;
 use App\Http\Controllers\Staff\RedirectController;
@@ -260,6 +262,8 @@ Route::middleware('auth')->group(function (): void {
      | hervatten, dupliceren, opnieuw plaatsen en bulk.
      */
     Route::post('/dashboard/kavels/bulk', [LotManagementController::class, 'bulk'])->middleware('throttle:10,10')->name('dashboard.lots.bulk');
+    // Het kaveldossier (briefing nieuwe functies): tabs Overzicht, Berichten, Documenten, Verspreiding, Dossier.
+    Route::get('/dashboard/kavels/{lot:id}', [LotDossierController::class, 'show'])->name('dashboard.lots.show');
     Route::get('/dashboard/kavels/{lot:id}/bewerken', [LotManagementController::class, 'edit'])->name('dashboard.lots.edit');
     Route::patch('/dashboard/kavels/{lot:id}', [LotManagementController::class, 'update'])->name('dashboard.lots.update');
     Route::post('/dashboard/kavels/{lot:id}/pauzeren', [LotManagementController::class, 'pause'])->name('dashboard.lots.pause');
@@ -385,6 +389,7 @@ Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group
     Route::get('/kavels', [BackofficeController::class, 'lots'])->name('lots');
     Route::post('/kavels/concepten-verwijderen', [BackofficeController::class, 'destroyDraftLots'])->name('lots.destroy-drafts');
     Route::get('/kavels/{lot:id}', [BackofficeController::class, 'showLot'])->name('lots.show')->withTrashed();
+    Route::get('/kavels/{lot:id}/dossier', [StaffLotDossierController::class, 'show'])->name('lots.dossier')->withTrashed();
     Route::post('/ai-runs/verwijderen', [BackofficeController::class, 'destroyAiRuns'])->name('ai-runs.destroy');
     Route::get('/veilingen', [BackofficeController::class, 'auctions'])->name('auctions');
     Route::get('/gebundelde-veilingen', [BackofficeController::class, 'sales'])->name('sales');

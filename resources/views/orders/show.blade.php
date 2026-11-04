@@ -70,6 +70,14 @@
                 {{-- Tijdlijn: wat er gebeurd is, op volgorde. --------------- --}}
                 <x-orders.timeline :entries="$timeline" />
 
+                {{-- Dossier (briefing nieuwe functies): alles rond deze kavel en
+                     order, alleen wat deze lezer mag zien. --}}
+                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="dossier">
+                    <h2 id="dossier" class="text-sm font-extrabold">Dossier</h2>
+                    <p class="mt-1 text-xs text-aj-muted">Berichten, mail, documenten en geld rond deze kavel, op volgorde.</p>
+                    <x-dossier.timeline :activities="$dossier" :show-actor="false" class="mt-3" empty="Nog niets in het dossier." />
+                </section>
+
                 {{-- Berichten tussen koper, verkoper en support (briefing sectie 7). --}}
                 <x-orders.messages :order="$order" :messages="$order->messages" :action="route('orders.messages.store', $order)" :viewer="auth()->user()" />
 

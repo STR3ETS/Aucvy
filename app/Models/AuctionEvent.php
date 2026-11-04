@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AuctionEventType;
+use App\Observers\DossierObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Append-only. De bron voor replay na een netwerkdip én voor het auditlog.
  */
 #[Fillable(['auction_id', 'sequence', 'type', 'payload', 'created_at'])]
+#[ObservedBy(DossierObserver::class)]
 class AuctionEvent extends Model
 {
     use HasFactory;

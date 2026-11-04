@@ -3,7 +3,7 @@
 
 <x-layouts.admin :title="$lot->title" :subtitle="$lot->public_id.' · '.$lot->status->label().' · '.$lot->sale_type->label()">
     <p class="text-sm text-aj-muted">
-        <a href="{{ route('admin.lots') }}" class="underline">Kavels</a> · {{ $lot->public_id }}
+        <a href="{{ route('admin.lots') }}" class="underline">Kavels</a> · {{ $lot->public_id }} · <a href="{{ route('admin.lots.dossier', $lot) }}" class="underline">Dossier</a>
     </p>
 
     {{-- Moderatie: beoordeeld of niet, en de knoppen om dat nu te doen. --}}

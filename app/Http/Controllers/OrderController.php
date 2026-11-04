@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Lots\Dossier\Dossier;
 use App\Models\Order;
 use App\Orders\OrderTimeline;
 use App\Support\Money\OrderCosts;
@@ -51,6 +52,7 @@ final class OrderController extends Controller
             'isBuyer' => $user->id === $order->buyer_id,
             'openDispute' => $order->disputes->first(fn ($dispute) => $dispute->status->isOpen()),
             'timeline' => app(OrderTimeline::class)->for($order),
+            'dossier' => Dossier::timeline($order->lot, $user->id === $order->buyer_id ? 'buyer' : 'seller', $user, orderId: $order->id, limit: 50),
         ]);
     }
 }
