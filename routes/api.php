@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\DraftController;
 use App\Http\Controllers\Api\DraftUploadController;
 use App\Http\Controllers\Api\DutchAcceptController;
 use App\Http\Controllers\Api\IvyTaskController;
+use App\Http\Controllers\Api\LiveViewerController;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\ScanController;
 use App\Http\Controllers\Api\ShippingQuoteController;
@@ -84,6 +85,9 @@ Route::prefix('auctions/{auction}')->name('auctions.')->group(function (): void 
  | deelbare URL is, maar dit is een interface en geen pagina - de client heeft
  | het id al uit de veilingstand.
  */
+// Kijken bij een uitzending mag zonder account (briefing nieuwe functies, live).
+Route::get('lots/{lot:id}/live', LiveViewerController::class)->middleware('throttle:60,1')->name('lots.live');
+
 Route::middleware('auth')->group(function (): void {
     Route::post('lots/{lot:id}/watch', [WatchlistController::class, 'store'])->name('lots.watch');
     Route::delete('lots/{lot:id}/watch', [WatchlistController::class, 'destroy'])->name('lots.unwatch');

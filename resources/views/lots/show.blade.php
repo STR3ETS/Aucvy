@@ -84,6 +84,10 @@
         <div class="mt-4 grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start">
 
             <div class="space-y-6">
+                @if ($liveSession ?? null)
+                    @include('lots.partials.live-viewer', ['lot' => $lot, 'session' => $liveSession])
+                @endif
+
                 <x-lot.media-gallery :lot="$lot" />
 
                 <div>

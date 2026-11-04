@@ -22,6 +22,8 @@ use App\Http\Controllers\FunnelController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LegalController;
+use App\Http\Controllers\LiveStudioController;
+use App\Http\Controllers\LiveWebhookController;
 use App\Http\Controllers\LotController;
 use App\Http\Controllers\LotConversationController;
 use App\Http\Controllers\LotDossierController;
@@ -315,6 +317,11 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/dashboard/kavels/{lot:id}/verspreiding/{distribution}/tekst', [DistributionController::class, 'updateText'])->name('dashboard.lots.distribution.text');
     Route::post('/dashboard/kavels/{lot:id}/verspreiding/{distribution}/geplaatst', [DistributionController::class, 'markPosted'])->name('dashboard.lots.distribution.posted');
     Route::post('/dashboard/kavels/{lot:id}/verspreiding/{distribution}/offline', [DistributionController::class, 'markWithdrawn'])->name('dashboard.lots.distribution.withdrawn');
+    // Live uitzenden (briefing nieuwe functies): de studio van de verkoper, achter de vlag aucvy.live.enabled.
+    Route::get('/dashboard/kavels/{lot:id}/live', [LiveStudioController::class, 'show'])->name('dashboard.lots.live');
+    Route::post('/dashboard/kavels/{lot:id}/live', [LiveStudioController::class, 'start'])->middleware('throttle:10,10')->name('dashboard.lots.live.start');
+    Route::post('/dashboard/kavels/{lot:id}/live/{session}/go', [LiveStudioController::class, 'goLive'])->name('dashboard.lots.live.go');
+    Route::post('/dashboard/kavels/{lot:id}/live/{session}/stop', [LiveStudioController::class, 'end'])->name('dashboard.lots.live.end');
     // Kanalen koppelen (/account/koppelingen).
     Route::get('/account/koppelingen', [ChannelConnectionController::class, 'index'])->name('account.connections');
     Route::get('/account/koppelingen/{channel}/koppelen', [ChannelConnectionController::class, 'connect'])->name('account.connections.connect');
@@ -593,6 +600,11 @@ Route::middleware('signed')->group(function (): void {
 Route::post('/webhooks/mollie', MollieWebhookController::class)
     ->middleware('throttle:120,1')
     ->name('webhooks.mollie');
+
+// Webhooks van de mediaserver (LiveKit): kijkersaantallen en het einde van een kamer, met handtekening.
+Route::post('/webhooks/live', LiveWebhookController::class)
+    ->middleware('throttle:240,1')
+    ->name('webhooks.live');
 
 // Inkomende mail via een Mailgun-route wordt een ticket (control center).
 Route::post('/webhooks/mailgun/inbound', MailgunInboundController::class)

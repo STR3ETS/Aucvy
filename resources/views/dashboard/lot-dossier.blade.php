@@ -10,6 +10,9 @@
     <x-slot:actions>
         @if ($lot->status->isPublic())
             <a class="btn btn-white" href="{{ route('lots.show', $lot) }}">Bekijk op de site</a>
+            @if (\App\Live\LiveSessions::enabled() && $lot->auction && ! $lot->auction->isClosed())
+                <a class="btn btn-outline-white" href="{{ route('dashboard.lots.live', $lot) }}">Live gaan</a>
+            @endif
         @endif
         <a class="btn btn-outline-white" href="{{ route('dashboard.lots.edit', $lot) }}">Bewerken</a>
     </x-slot:actions>

@@ -10,6 +10,9 @@ use App\Compliance\Identity\IdentityProvider;
 use App\Ivy\Contracts\LlmProvider;
 use App\Ivy\Providers\AnthropicProvider;
 use App\Ivy\Providers\FakeProvider;
+use App\Live\FakeLiveProvider;
+use App\Live\LiveKitProvider;
+use App\Live\LiveProvider;
 use App\Models\Auction;
 use App\Models\User;
 use App\Orders\Contracts\PaymentProvider;
@@ -66,6 +69,17 @@ class AppServiceProvider extends ServiceProvider
         // Identiteit via de bank (iDIN, V7); 'manual' komt hier nooit langs.
         $this->app->bind(IdentityProvider::class, fn (): IdentityProvider => match (config('aucvy.identity.provider')) {
             default => new FakeIdentityProvider,
+        });
+
+        // Live veilen (briefing nieuwe functies): LiveKit Cloud, later zelf gehost; zonder sleutels de nepversie.
+        $this->app->singleton(LiveProvider::class, fn (): LiveProvider => match (config('aucvy.live.provider')) {
+            'livekit' => new LiveKitProvider(
+                (string) config('aucvy.live.livekit.host'),
+                (string) config('aucvy.live.livekit.api_key'),
+                (string) config('aucvy.live.livekit.api_secret'),
+                config('aucvy.live.livekit.ws_url'),
+            ),
+            default => new FakeLiveProvider,
         });
     }
 

@@ -9,7 +9,9 @@ use App\Enums\OrderStatus;
 use App\Enums\SaleType;
 use App\Enums\ViewingStatus;
 use App\Http\Resources\AuctionStateResource;
+use App\Live\LiveSessions;
 use App\Lots\Interest\Interest;
+use App\Models\LiveSession;
 use App\Models\Lot;
 use App\Models\LotShare;
 use App\Models\LotSignal;
@@ -71,6 +73,8 @@ final class LotController extends Controller
         return view('lots.show', [
             'lot' => $lot,
             'interest' => Interest::forBuyer($lot),
+            // Een lopende uitzending (achter de vlag): de kijker boven de foto's.
+            'liveSession' => LiveSessions::enabled() ? LiveSession::query()->where('lot_id', $lot->id)->where('status', LiveSession::LIVE)->latest('id')->first() : null,
             // Een gedeelde link: de notitie van de deler boven de kavel.
             'share' => $request->attributes->get('share'),
             'ownShares' => $request->user() !== null

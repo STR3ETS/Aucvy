@@ -33,6 +33,28 @@ return [
     ],
 
     /*
+     | Live veilen (briefing nieuwe functies): achter een vlag, eerst een
+     | besloten proef na Stripe Connect. LiveKit Cloud als mediaserver, later
+     | zelf gehost; `fake` draait zonder server. Kijkersmaximum per
+     | uitzending en een maandbudget in kijkminuten met een alert.
+     */
+    'live' => [
+        'enabled' => (bool) env('AUCVY_LIVE_ENABLED', false),
+        'provider' => env('AUCVY_LIVE_PROVIDER', 'fake'),
+        'max_viewers' => (int) env('AUCVY_LIVE_MAX_VIEWERS', 500),
+        'monthly_budget_minutes' => (int) env('AUCVY_LIVE_BUDGET_MINUTES', 600),
+        'fake_webhook_secret' => env('AUCVY_LIVE_FAKE_SECRET', 'fake'),
+        // De browserclient van LiveKit; wordt alleen geladen als er een uitzending loopt.
+        'client_script' => env('AUCVY_LIVE_CLIENT_SCRIPT', 'https://cdn.jsdelivr.net/npm/livekit-client@2.9.0/dist/livekit-client.umd.min.js'),
+        'livekit' => [
+            'host' => env('LIVEKIT_HOST'),
+            'ws_url' => env('LIVEKIT_WS_URL'),
+            'api_key' => env('LIVEKIT_API_KEY'),
+            'api_secret' => env('LIVEKIT_API_SECRET'),
+        ],
+    ],
+
+    /*
      | Mail Builder en reeksen (briefing nieuwe functies). Service gaat
      | altijd; activatie tot iemand zich afmeldt; campagne alleen met een
      | uitdrukkelijke ja. Don toetst de indeling; dit zijn de standaarden.
