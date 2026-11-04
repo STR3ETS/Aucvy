@@ -127,3 +127,73 @@ De blauwe kleur van Don ging verloren bij het doorsturen; per regel is niet te z
 | Voorwaarden (24) | Er al, van Yourauc (Remco) | Documenten opvragen (N11) |
 | Hosting (33) | Geen antwoord; de software blijft van Yourauc en wordt aan Aucvy verhuurd | Eigendom en hosting bespreken (N12) |
 | Wie factureert (2) | Niet beantwoord | Standaard blijft |
+
+---
+
+## Vervolgvragen na de bouw van 4 november
+
+Alles uit de briefing nieuwe functies, de Ivy-briefing en de twee canvassen is gebouwd. Wat hieronder staat is wat van buiten moet komen; tot het er is, geldt de standaardkeuze en werkt het onderdeel in de handmatige of nepstand.
+
+**N14. Meta-app voor Facebook en Instagram**
+Plaatsen op een bedrijfspagina en op Instagram vraagt een Meta-app met app-review (één tot drie weken). Nodig: app-id en app-secret (META_APP_ID, META_APP_SECRET). Tot die tijd dekt de deelkit elk kanaal: tekst, beeld in drie formaten en link met herkomst, zelf plaatsen.
+Standaard: deelkit.
+Antwoord:
+
+**N15. LinkedIn-app**
+Plaatsen namens de ingelogde persoon via Share on LinkedIn. Nodig: client-id en client-secret (LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET). Bedrijfspagina's vragen een aparte goedkeuring.
+Standaard: deelkit.
+Antwoord:
+
+**N16. EAN-dienst (Go-UPC)**
+Productopzoeking op streepjescode. Go-UPC kost € 74,95 per maand voor 5.000 verzoeken. Advies uit de briefing: eerst met 50 echte labels uit de eigen categorieën testen. Nodig: de sleutel (GO_UPC_KEY). Tot die tijd wordt de code opgeslagen en leest Ivy de typeplaat.
+Standaard: geen dienst, wel scannen en typeplaat lezen.
+Antwoord:
+
+**N17. LiveKit voor live uitzenden**
+Nodig: een LiveKit Cloud-account (pilot ongeveer $ 69 per maand), host, websocket-URL, API-sleutel en secret (LIVEKIT_*). Vooraf bevestigen dat de verwerking in de EU kan. Voorstel uit de briefing: eerst een besloten proef achter de vlag, na Stripe Connect. De browserclient laadt nu van een CDN; als npm-pakket toevoegen kan na jouw akkoord.
+Standaard: vlag uit; studio en kijker draaien in oefenstand zonder mediaserver.
+Antwoord:
+
+**N18. Mailgun-subdomein voor marketing**
+Service en marketing elk een eigen subdomein met SPF, DKIM en DMARC. Nodig: het marketingdomein in Mailgun en de naam van die mailer (AUCVY_MARKETING_MAILER).
+Standaard: alles via de servicemailer.
+Antwoord:
+
+**N19. Gegevens van Aucvy op facturen**
+Op elke factuur staan naam, adres, KVK-nummer en btw-nummer van Aucvy B.V. Nodig: adres, postcode en plaats, KVK, btw-nummer (AUCVY_COMPANY_*). Het factuurvoorstel zelf (verkoper factureert de kavel, Aucvy de administratiekosten en de succesfee) moet de boekhouder toetsen (zie D6).
+Standaard: naam Aucvy B.V., adres leeg.
+Antwoord:
+
+**N20. Marktplaats als partner**
+Automatisch plaatsen mag alleen als API-partner (voorwaarden art. 7.4) en een link in een gratis advertentie alleen tegen betaling (art. 1.3). Vraag Marktplaats schriftelijk of doorverwijzen naar een lopende veiling is toegestaan. Tot die tijd: deelkit, één advertentie per kavel.
+Standaard: deelkit.
+Antwoord:
+
+**N21. Drempels en tijden van Ivy (besluit 11 uit de Ivy-briefing)**
+Stille uren 22:00 tot 08:00, bundelen van biedingen per 15 minuten, interesse één keer per dag, maximaal 5 gastfoto's van 10 MB, gastgesprekken 30 dagen, gastfoto's 24 uur. Alles staat in de instellingen.
+Standaard: zoals genoemd.
+Antwoord:
+
+**N22. Hot-regel en tellers**
+Hot bij de hoogste 10% van de categorie over 48 uur, met minimaal 50 kijkers en 3 bieders. De jurist leest regel en tekst mee voor publicatie (hoofdbriefing p. 27).
+Standaard: zoals genoemd, drempels in de instellingen.
+Antwoord:
+
+**N23. Chatmodel en budget van Ivy**
+Ivy gebruikt een goedkoper model voor eenvoudige vragen en het sterkere voor advies en foto's (AUCVY_AI_CHAT_MODEL_FAST, AUCVY_AI_MODEL), met het bestaande dagbudget per gast, per account en per omgeving. Wil je andere grenzen?
+Standaard: zoals nu in de instellingen.
+Antwoord:
+
+---
+
+## Nieuwe vragen voor Don (na de bouw van 4 november)
+
+| # | Vraag | Standaard tot het antwoord er is |
+| --- | --- | --- |
+| D3 | Mailindeling: 37 service, 6 activatie, 3 campagne. Klopt de indeling, en mag activatie zonder uitdrukkelijke ja (afmelden mogelijk) terwijl campagne een ja vraagt? | Zoals voorgesteld; instelbaar |
+| D4 | Automatisch bieden via Ivy: het mandaat ("Bevestig: automatisch bieden tot X. Elk bod is bindend...") en wat in de veilingvoorwaarden moet | Gebouwd, tekstversie vastgelegd; fase 5 niet live zonder akkoord |
+| D5 | Mag een verkoper de reserve verlagen tijdens de veiling? | Vlag uit; alleen de melding "Jouw beslissing" |
+| D6 | Factuurvoorstel: verkoper factureert de kavel aan de koper (opgemaakt door Aucvy namens de verkoper), Aucvy factureert administratiekosten aan de koper en succesfee aan de verkoper; creditnota bij prijscorrectie; margeregeling zonder btw | Zo gebouwd; de boekhouder toetst |
+| D7 | Privacyverklaring aanvullen voor chat, foto's en AI-verwerking; AI-melding in het eerste bericht (artikel 50 AI Act) | Melding staat erin; tekst van de verklaring wacht |
+| D8 | Bewaartermijnen: gesprekken 12 maanden, gastgesprekken 30 dagen, gastfoto's 24 uur, voorstellen zo lang als order en audit | Zoals voorgesteld |
+| D9 | Mag een koper de aankoopfactuur van de verkoper inzien (besluit 9 hoofdbriefing)? | Kavelfactuur zichtbaar voor beide partijen; aankoopfactuur (document) na gunning |
