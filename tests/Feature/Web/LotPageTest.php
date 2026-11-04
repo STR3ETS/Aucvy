@@ -98,7 +98,7 @@ describe('eerste render', function () {
     it('toont de kostenopbouw uit de money-klasse', function () {
         $this->get(lotUrl($this->lot))
             ->assertOk()
-            ->assertSee('Kosten vóór je biedt')
+            ->assertSee('Kostenopbouw bij dit bod')
             ->assertSee('Margeregeling - btw niet verrekenbaar');
     });
 });

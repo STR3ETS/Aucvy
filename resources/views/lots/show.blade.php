@@ -27,6 +27,42 @@
             'seller' => ['@type' => 'Organization', 'name' => $lot->seller?->publicName() ?? config('app.name')],
         ],
     ];
+
+    // De regel onder de titel en de staat op de foto, zoals in het ontwerp van november.
+    $saleLabel = match ($lot->sale_type) {
+        SaleType::Dutch => 'afslag',
+        SaleType::BuyNow => 'koop direct',
+        default => 'veiling',
+    };
+    $lead = implode(' · ', array_values(array_filter([
+        $lot->location?->city,
+        $lot->condition ? mb_strtolower($lot->condition->label()) : null,
+        $saleLabel,
+    ])));
+    $lastChance = $auction !== null && ! $auction->isClosed() && $auction->ends_at->isBefore(now()->addDay());
+    $galleryStatus = match (true) {
+        $auction === null || $auction->isClosed() => ['tone-grey', $lot->status === \App\Enums\LotStatus::Sold ? 'Verkocht' : 'Gesloten'],
+        $lot->sale_type === SaleType::Dutch => ['tone-atlas', 'Afslag'],
+        $lot->sale_type === SaleType::BuyNow => ['tone-ok', 'Koop direct'],
+        $lastChance => ['tone-warn', 'Laatste kans'],
+        default => ['tone-live', 'Live'],
+    };
+    $priceNow = $lot->currentPriceCents();
+    $facts = array_values(array_filter([
+        $lot->documents->contains(fn ($document) => $document->kind === DocumentKind::Invoice) ? ['file', 'Aankoopfactuur aanwezig'] : null,
+        $lot->location ? ['eye', $lot->location->publicLabel().($lot->viewing_available ? ', bezichtiging mogelijk' : '')] : null,
+        $lot->transport_from_cents ? ['truck', 'Transport vanaf '.Money::format($lot->transport_from_cents)] : ($lot->pickup_only ? ['truck', 'Zelf ophalen in overleg'] : null),
+        $lot->quantity > 1 ? ['shopping-bag', $lot->quantity.' × '.config('listings.unit_options.'.$lot->unit, $lot->unit)] : null,
+        $lot->warranty !== null && $lot->warranty !== 'none' ? ['shield-check', config('listings.warranty_options.'.$lot->warranty).($lot->warranty_until ? ' tot '.$lot->warranty_until->isoFormat('D MMM YYYY') : '')] : null,
+    ]));
+    $trustPoints = array_values(array_filter([
+        $lot->company?->isVerified() ? 'Verkoper geverifieerd' : null,
+        'Kosten vóór het bieden',
+        $auction !== null ? 'Biedhistorie vastgelegd' : null,
+        $lot->viewing_available ? 'Bezichtiging mogelijk' : null,
+        $lot->pickup_only ? 'Zelf ophalen in overleg' : 'Transport- en ophaalopties',
+        'Support bij geschillen',
+    ]));
 @endphp
 
 @push('head')
@@ -34,7 +70,7 @@
 @endpush
 
 <x-layouts.public :title="$lot->title" :heading="$translation['title'] ?? $lot->title" :description="Str::limit($lot->description, 155)"
-    :eyebrow="$lot->category?->name ?? 'Kavel'" :image="$shareImage" :image-width="$shareWidth" :image-height="$shareHeight" og-type="product" :canonical="route('lots.show', $lot)" :ivy-lot="$lot" ivy-page="kavel">
+    :eyebrow="($lot->category?->name ?? 'Kavel').' · Kavel #'.$lot->public_id" :intro="$lead" :image="$shareImage" :image-width="$shareWidth" :image-height="$shareHeight" og-type="product" :canonical="route('lots.show', $lot)" :ivy-lot="$lot" ivy-page="kavel">
     {{-- Op mobiel staat de Ivy-knop boven de biedbalk, nooit eroverheen. --}}
     <style>@media (max-width: 1023px) { .ivy-root { --ivy-offset: 76px; } }</style>
     {{-- Het kruimelpad staat in de paginakop; de titel is de kop zelf. --}}
@@ -53,7 +89,8 @@
     {{--
         Eén Alpine-component bezit de stand; alles eronder leest eruit.
         Dat voorkomt de klassieke fout waarbij het biedpaneel iets anders toont
-        dan de teller ernaast (hfst. 11).
+        dan de teller ernaast (hfst. 11). De opbouw is die van het ontwerp van
+        november: links foto's en inhoud, rechts de biedkaart.
     --}}
     <div @if ($state) x-data="auction({{ Js::from($state) }})" @endif
          data-lot-nav
@@ -68,265 +105,155 @@
             </p>
         @endif
 
-        {{--
-            Prijswijzigingen worden voorgelezen, maar afgeknepen tot één melding
-            per drie seconden. Elke bieding voorlezen maakt de pagina onbruikbaar
-            met een schermlezer (hfst. 11).
-        --}}
+        {{-- Prijswijzigingen worden voorgelezen, afgeknepen tot één melding per drie seconden (hfst. 11). --}}
         <div aria-live="polite" class="sr-only" x-text="announcement"></div>
 
         @if (isset($share) && $share !== null)
             @include('lots.partials.shared-banner', ['lot' => $lot, 'share' => $share])
         @endif
 
-        {{--
-            Op mobiel: foto's eerst, dan pas prijs en bod. Je moet eerst zien
-            wát je koopt (hfst. 12). Op desktop staat het biedpaneel rechts.
-        --}}
-        <div class="mt-4 grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+        {{-- Op mobiel: foto's eerst, dan pas prijs en bod (hfst. 12). Op desktop staat de biedkaart rechts. --}}
+        <div class="mt-4 grid gap-7 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start xl:grid-cols-[minmax(0,1fr)_320px]">
 
-            <div class="space-y-6">
+            <div class="d-stack" style="gap:20px">
                 @if ($liveSession ?? null)
                     @include('lots.partials.live-viewer', ['lot' => $lot, 'session' => $liveSession])
                 @endif
 
-                <x-lot.media-gallery :lot="$lot" />
-
-                <div>
-                    <ul class="flex flex-wrap gap-2 text-sm">
-                        @if ($lot->location)
-                            <li class="rounded-full bg-aj-bg px-3 py-1">{{ $lot->location->publicLabel() }}</li>
-                        @endif
-                        @if ($lot->transport_from_cents)
-                            <li class="rounded-full bg-aj-bg px-3 py-1">
-                                Transport vanaf {{ Money::format($lot->transport_from_cents) }}
-                            </li>
-                        @endif
-                        <li class="rounded-full bg-aj-bg px-3 py-1">{{ $lot->condition?->label() }}</li>
-                        @if ($lot->quantity > 1)
-                            <li class="rounded-full bg-aj-bg px-3 py-1">{{ $lot->quantity }} × {{ config('listings.unit_options.'.$lot->unit, $lot->unit) }}</li>
-                        @endif
-                        @if ($lot->warranty !== null && $lot->warranty !== 'none')
-                            <li class="rounded-full bg-aj-bg px-3 py-1">
-                                {{ config('listings.warranty_options.'.$lot->warranty) }}@if ($lot->warranty_until) tot {{ $lot->warranty_until->isoFormat('D MMM YYYY') }}@endif
-                            </li>
-                        @endif
-                        @if ($lot->documents->contains(fn ($document) => $document->kind === DocumentKind::Invoice))
-                            <li class="rounded-full bg-aj-bg px-3 py-1">Aankoopfactuur aanwezig</li>
-                        @endif
-                    </ul>
-                </div>
+                <x-lot.media-gallery :lot="$lot" :status="$galleryStatus" :watching="$interest['now'] ?? 0" />
 
                 <x-lot.seller-card :lot="$lot" :stats="$sellerStats" />
 
-                @include('lots.partials.interest', ['lot' => $lot, 'interest' => $interest])
-
-                @include('lots.partials.ask', ['lot' => $lot])
-
-                {{-- Waarde-indicatie: alleen als alle drie de velden er zijn, en
-                     nooit als exact bedrag bij lage zekerheid (hfst. 8). --}}
-                @if ($lot->hasValueEstimate())
-                    <div class="rounded-aj-s border border-aj-violet/20 bg-aj-violet/5 p-4">
-                        <div class="flex items-start gap-3">
-                            <x-ui.agent-avatar agent="ivy" class="size-9 shrink-0" />
-                            <div class="min-w-0 flex-1">
-                                <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-                                    <p class="text-sm font-extrabold text-aj-violet">
-                                        Marktadvies van Ivy
-                                        <span class="block text-xs font-normal text-aj-muted">AI-specialist</span>
-                                    </p>
-                                    <p class="text-right text-sm font-bold">
-                                        Marktwaarde
-                                        <span class="font-normal text-aj-muted">
-                                            (indicatie) · {{ $lot->value_confidence->label() }}
-                                        </span>
-                                        <span class="tabular block">
-                                            {{ Money::format($lot->value_min_cents) }} –
-                                            {{ Money::format($lot->value_max_cents) }}
-                                        </span>
-                                    </p>
-                                </div>
+                {{-- Ivy insight: waarde-indicatie, interesse en documentatie in één zin, en drie vragen die het gesprek openen. --}}
+                @php
+                    $insightParts = [];
+                    if ($lot->hasValueEstimate()) {
+                        $insightParts[] = 'Marktwaarde '.Money::format($lot->value_min_cents).' – '.Money::format($lot->value_max_cents).' (indicatie).';
+                        $insightParts[] = $lot->mayShowValueComparison()
+                            ? $lot->value_confidence->label().'.'
+                            : $lot->value_confidence->label().': te weinig vergelijkbare verkopen voor een scherpe schatting - een bezichtiging is hier verstandig.';
+                    }
+                    if ($interest['hot'] ?? false) {
+                        $insightParts[] = 'Interesse hoog.';
+                    } elseif (($interest['bidders'] ?? 0) > 0) {
+                        $insightParts[] = ($interest['bidders'] === 1 ? '1 bieder' : $interest['bidders'].' bieders').' tot nu toe.';
+                    }
+                    if ($lot->documents->isNotEmpty()) {
+                        $insightParts[] = $lot->documents->every(fn ($document) => $document->wasCheckedByIvy()) ? 'Documentatie gecontroleerd door Lex.' : 'Documentatie aanwezig.';
+                    }
+                    $insightQuestions = $lot->sale_type === SaleType::BuyNow
+                        ? ['Is dit een eerlijke prijs?', 'Wat kost dit totaal?', 'Vergelijk met alternatieven']
+                        : ['Wat is een verstandig bod?', 'Wat kost dit totaal?', 'Vergelijk met alternatieven'];
+                @endphp
+                @if (\App\Ivy\Chat\IvyFlags::on('ivy.enabled') || $insightParts !== [])
+                    <div class="d-insight">
+                        <div class="d-insight-head">
+                            <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">
+                            <div>
+                                <strong>Ivy insight</strong>
+                                <span>{{ $insightParts !== [] ? implode(' ', $insightParts) : 'Ivy kent deze kavel: de tekst, de documenten en de interesse. Stel haar een vraag.' }}</span>
                             </div>
                         </div>
-
-                        {{--
-                            De prijsas als balk, over de volle kaartbreedte: groen
-                            (onder de indicatie, gunstig voor de koper) via amber
-                            naar rood (erboven). Het felle, afgeronde segment ís de
-                            marktwaarde; de vage baan is de volledige as. Het donkere
-                            streepje is het huidige bod - alleen bij voldoende
-                            zekerheid, want bij lage zekerheid is die vergelijking
-                            geen koopargument (hfst. 8).
-                        --}}
-                        @php
-                            $axisMin = (int) floor($lot->value_min_cents * 0.7);
-                            $axisMax = max((int) ceil($lot->value_max_cents * 1.3), $axisMin + 100);
-                            $axisPosition = fn (int $cents): float => round(max(2, min(98, ($cents - $axisMin) / ($axisMax - $axisMin) * 100)), 1);
-                            $bandLeft = $axisPosition($lot->value_min_cents);
-                            $bandWidth = max(2, $axisPosition($lot->value_max_cents) - $bandLeft);
-                            $axisGradient = 'linear-gradient(90deg,#1c8a5b 0%,#b4690e 55%,#c0392b 100%)';
-
-                            // Het streepje wijst naar de prijs die hier telt: de
-                            // vaste prijs bij koop direct, anders de live stand.
-                            $markerPriceExpression = $lot->sale_type === SaleType::BuyNow
-                                ? '(state.buy_now?.price_cents ?? state.price_cents)'
-                                : 'state.price_cents';
-                            $markerLabel = match ($lot->sale_type) {
-                                SaleType::BuyNow => 'vaste prijs',
-                                SaleType::Dutch => 'huidige prijs',
-                                default => 'huidig bod',
-                            };
-                        @endphp
-                        <div class="mt-3">
-                            <div class="relative h-2.5"
-                                 title="Marktwaarde {{ Money::format($lot->value_min_cents) }} – {{ Money::format($lot->value_max_cents) }}">
-                                <div class="absolute inset-0 rounded-full opacity-25"
-                                     style="background:{{ $axisGradient }}"></div>
-
-                                {{-- Zelfde verloop, uitgelijnd op de as (background-size
-                                     en -position), zodat de kleuren exact doorlopen. --}}
-                                <div class="absolute inset-y-0 rounded-full"
-                                     style="left:{{ $bandLeft }}%;width:{{ $bandWidth }}%;
-                                            background-image:{{ $axisGradient }};
-                                            background-size:{{ round(10000 / $bandWidth, 2) }}% 100%;
-                                            background-position-x:{{ round(100 * $bandLeft / (100 - $bandWidth), 2) }}%"></div>
-
-                                @if ($state !== null && $lot->mayShowValueComparison())
-                                    <div class="absolute -top-2 h-[26px] w-[3px] -translate-x-1/2 rounded-full bg-aj-navy"
-                                         :style="`left: ${Math.max(2, Math.min(98, (({{ $markerPriceExpression }} ?? 0) - {{ $axisMin }}) / {{ $axisMax - $axisMin }} * 100))}%`"
-                                         title="{{ ucfirst($markerLabel) }}"></div>
-                                @endif
+                        @if (\App\Ivy\Chat\IvyFlags::on('ivy.enabled'))
+                            <div class="d-insight-label">Vraag het Ivy over deze kavel</div>
+                            <div class="d-chips">
+                                @foreach ($insightQuestions as $question)
+                                    <button type="button" class="d-chip" @click="$dispatch('ivy-open', { text: @js($question) })">{{ $question }}</button>
+                                @endforeach
                             </div>
-
-                            @if ($state !== null && $lot->mayShowValueComparison())
-                                <p class="mt-1.5 text-[11px] text-aj-muted">
-                                    <span class="inline-flex items-center gap-1">
-                                        <span class="inline-block h-3 w-[3px] rounded-full bg-aj-navy"></span>
-                                        {{ $markerLabel }}
-                                    </span>
-                                </p>
-                            @endif
-                        </div>
-
-                        @unless ($lot->mayShowValueComparison())
-                            <p class="mt-1 text-xs text-aj-muted">
-                                Te weinig vergelijkbare verkopen voor een scherpe schatting -
-                                een bezichtiging is hier verstandig.
-                            </p>
-                        @endunless
-
+                        @endif
                     </div>
                 @endif
 
                 @if ($lot->sale && $lot->sale->isPublished())
                     {{-- Onderdeel van een veiling met meerdere kavels (Auction Studio). --}}
-                    <p class="rounded-aj-sm border border-aj-blue/30 bg-aj-blue/5 px-4 py-3 text-sm">
-                        Onderdeel van de veiling <a class="font-bold underline" href="{{ route('sales.show', $lot->sale) }}">{{ $lot->sale->title }}</a>
-                        <span class="text-aj-muted">· {{ $lot->sale->lots()->count() }} kavels, sluiten vanaf {{ $lot->sale->ends_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') }}</span>
+                    <p class="d-soft" style="margin:0">
+                        Onderdeel van de veiling <a class="d-link" href="{{ route('sales.show', $lot->sale) }}">{{ $lot->sale->title }}</a>
+                        <span class="d-muted">· {{ $lot->sale->lots()->count() }} kavels, sluiten vanaf {{ $lot->sale->ends_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') }}</span>
                     </p>
                 @endif
 
-                {{-- Beschrijving naast het vertrouwensblok, zoals in het ontwerp. --}}
-                <div class="grid gap-5 sm:grid-cols-[1.4fr_1fr] sm:items-start">
-                    <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5">
-                        <h2 class="text-lg font-extrabold">{{ $translation ? 'Description' : 'Omschrijving' }}</h2>
-                        {{-- Vertaling door Ivy (briefing stap 4): op verzoek, met de Nederlandse tekst als bindende versie. --}}
-                        @if ($translation)
-                            <p class="mt-2 rounded-aj-sm border border-aj-border bg-aj-bg px-3 py-2 text-xs text-aj-muted" lang="en">Automatically translated by Ivy. The Dutch text is the binding version. <a class="font-bold underline" href="{{ route('lots.show', $lot) }}" hreflang="nl">Toon Nederlands</a></p>
-                            <p class="mt-2 whitespace-pre-line text-sm text-aj-soft" lang="en">{{ $translation['description'] }}</p>
-                        @else
-                            @if ($hasTranslation)
-                                <p class="mt-1 text-xs text-aj-muted"><a class="font-bold underline" href="{{ route('lots.show', ['lot' => $lot, 'lang' => 'en']) }}" hreflang="en" lang="en">Read in English</a></p>
-                            @endif
-                            <p class="mt-2 whitespace-pre-line text-sm text-aj-soft">{{ $lot->description }}</p>
-                        @endif
-                    </section>
+                {{-- Documenten staan op een private disk (hfst. 15); hier staat wát er is en of Lex het bekeken heeft. --}}
+                @include('lots.partials.documents', ['lot' => $lot])
 
-                    <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Vertrouwen">
-                        <h2 class="text-lg font-extrabold">Vertrouwen</h2>
-                        <ul class="mt-3 space-y-2.5 text-sm">
-                            @php
-                                $trustPoints = array_values(array_filter([
-                                    $lot->company?->isVerified() ? 'Verkoper geverifieerd' : null,
-                                    'Kosten vóór het bieden',
-                                    $auction !== null ? 'Biedhistorie vastgelegd' : null,
-                                    $lot->viewing_available ? 'Bezichtiging mogelijk' : null,
-                                    $lot->pickup_only ? 'Zelf ophalen in overleg' : 'Transport- en ophaalopties',
-                                    'Support bij geschillen',
-                                ]));
-                            @endphp
-                            @foreach ($trustPoints as $point)
-                                <li class="flex items-center gap-2.5">
-                                    <svg class="size-4 shrink-0 text-aj-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $point }}
-                                </li>
-                            @endforeach
-                        </ul>
-                        <a href="{{ route('assurance') }}" class="mt-4 inline-block text-sm font-bold text-aj-blue-text underline">
-                            Hoe werkt zekerheid bij Aucvy?
-                        </a>
-                    </section>
+                <div>
+                    <h2 class="d-h2-page">{{ $translation ? 'Description' : 'Omschrijving' }}</h2>
+                    {{-- Vertaling door Ivy (briefing stap 4): op verzoek, met de Nederlandse tekst als bindende versie. --}}
+                    @if ($translation)
+                        <p class="d-soft" style="margin:8px 0 0" lang="en">Automatically translated by Ivy. The Dutch text is the binding version. <a class="d-link" href="{{ route('lots.show', $lot) }}" hreflang="nl">Toon Nederlands</a></p>
+                        <p class="d-prose" lang="en">{{ $translation['description'] }}</p>
+                    @else
+                        @if ($hasTranslation)
+                            <p class="d-hint"><a class="d-link" href="{{ route('lots.show', ['lot' => $lot, 'lang' => 'en']) }}" hreflang="en" lang="en">Read in English</a></p>
+                        @endif
+                        <p class="d-prose">{{ $lot->description }}</p>
+                    @endif
                 </div>
 
-                @if ($lot->specifications)
-                    <section>
-                        <h2 class="text-lg font-extrabold">Specificaties</h2>
-                        <dl class="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-                            @php $schemaKeys = []; @endphp
-                            @foreach ($lot->category?->effectiveSpecificationsSchema() ?? [] as $field)
-                                @php
-                                    $schemaKeys[] = $field['key'];
-                                    $value = $lot->specifications[$field['key']] ?? null;
-                                    $value = is_array($value) || $value === null ? $value : ['value' => $value];
-                                @endphp
-                                @if ($value !== null && ($value['value'] ?? null) !== null)
-                                    <div class="flex justify-between gap-3 border-b border-aj-border py-1">
-                                        <dt class="text-aj-muted">{{ $field['label'] }}</dt>
-                                        <dd class="font-semibold">
-                                            @if (is_bool($value['value']))
-                                                {{ $value['value'] ? 'Ja' : 'Nee' }}
-                                            @else
-                                                {{ $value['value'] }}{{ isset($field['unit']) ? ' '.$field['unit'] : '' }}
-                                            @endif
-                                            {{-- De herkomst blijft navolgbaar: door Ivy ingevuld
-                                                 of door de verkoper (hfst. 5). --}}
-                                            @if (($value['source'] ?? null) === 'ai')
-                                                <span class="text-xs font-normal text-aj-violet">· door Ivy</span>
-                                            @endif
-                                        </dd>
-                                    </div>
-                                @endif
+                @if ($facts !== [] || $lot->condition)
+                    <div>
+                        <h2 class="d-h2-page">Conditie en gebreken</h2>
+                        @if ($lot->condition)
+                            <p class="d-prose">Staat volgens de verkoper: {{ mb_strtolower($lot->condition->label()) }}. Gebreken staan in de omschrijving en op de foto's; wat niet vermeld is, kun je navragen.</p>
+                        @endif
+                        <ul class="d-facts">
+                            @foreach ($facts as [$icon, $fact])
+                                <li><x-v4.icon :name="$icon" :size="15" stroke="2" /> {{ $fact }}</li>
                             @endforeach
-                            {{-- Kenmerken buiten het schema: wat Ivy of de verkoper er los bij zette. --}}
-                            @foreach (collect($lot->specifications)->except($schemaKeys) as $key => $value)
-                                @php $entry = is_array($value) ? $value : ['value' => $value]; @endphp
-                                @if (($entry['value'] ?? null) !== null && ! is_array($entry['value']))
-                                    <div class="flex justify-between gap-3 border-b border-aj-border py-1">
-                                        <dt class="text-aj-muted">{{ ucfirst(str_replace('_', ' ', (string) $key)) }}</dt>
-                                        <dd class="font-semibold">
-                                            @if (is_bool($entry['value'])) {{ $entry['value'] ? 'Ja' : 'Nee' }} @else {{ $entry['value'] }} @endif
-                                            @if (($entry['source'] ?? null) === 'ai')
-                                                <span class="text-xs font-normal text-aj-violet">· door Ivy</span>
-                                            @endif
-                                        </dd>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </dl>
-                    </section>
+                        </ul>
+                    </div>
                 @endif
 
-                {{--
-                    Documenten staan op een private disk (hfst. 15); hier staat
-                    wát er is en of Lex het bekeken heeft, niet het bestand zelf.
-                --}}
-                @include('lots.partials.documents', ['lot' => $lot])
+                @php
+                    $specRows = [];
+                    $schemaKeys = [];
+                    foreach ($lot->category?->effectiveSpecificationsSchema() ?? [] as $field) {
+                        $schemaKeys[] = $field['key'];
+                        $value = $lot->specifications[$field['key']] ?? null;
+                        $value = is_array($value) || $value === null ? $value : ['value' => $value];
+                        if ($value !== null && ($value['value'] ?? null) !== null) {
+                            $specRows[] = [$field['label'], is_bool($value['value']) ? ($value['value'] ? 'Ja' : 'Nee') : $value['value'].(isset($field['unit']) ? ' '.$field['unit'] : ''), ($value['source'] ?? null) === 'ai'];
+                        }
+                    }
+                    foreach (collect($lot->specifications ?? [])->except($schemaKeys) as $key => $value) {
+                        $entry = is_array($value) ? $value : ['value' => $value];
+                        if (($entry['value'] ?? null) !== null && ! is_array($entry['value'])) {
+                            $specRows[] = [ucfirst(str_replace('_', ' ', (string) $key)), is_bool($entry['value']) ? ($entry['value'] ? 'Ja' : 'Nee') : $entry['value'], ($entry['source'] ?? null) === 'ai'];
+                        }
+                    }
+                    if ($lot->brand) {
+                        array_unshift($specRows, ['Merk', $lot->brand, false]);
+                    }
+                    if ($lot->condition) {
+                        $specRows[] = ['Conditie', $lot->condition->label(), false];
+                    }
+                    $specRows[] = ['Btw-regeling', $lot->vat_regime?->label() ?? 'Volgens factuur', false];
+                @endphp
+                @if ($specRows !== [])
+                    <div>
+                        <h2 class="d-h2-page" style="margin-bottom:8px">Specificaties</h2>
+                        <dl class="d-specs">
+                            @foreach ($specRows as [$label, $value, $byIvy])
+                                <div class="d-spec">
+                                    <dt>{{ $label }}</dt>
+                                    {{-- De herkomst blijft navolgbaar: door Ivy ingevuld of door de verkoper (hfst. 5). --}}
+                                    <dd>{{ $value }}@if ($byIvy) <small>· door Ivy</small>@endif</dd>
+                                </div>
+                            @endforeach
+                        </dl>
+                    </div>
+                @endif
+
+                @include('lots.partials.ask-answers', ['lot' => $lot])
+
+                {{-- Bij koop direct valt er geen biedhistorie te tonen. --}}
+                @if ($state !== null && $lot->sale_type !== SaleType::BuyNow)
+                    <x-auction.bid-history />
+                @endif
             </div>
 
             {{-- Zijkolom ---------------------------------------------------- --}}
-            <aside class="space-y-4 lg:sticky lg:top-4">
+            <aside class="d-stack lg:sticky lg:top-4">
                 @if ($state === null)
                     @if ($lot->status === \App\Enums\LotStatus::Sold)
                         <x-ui.empty-state
@@ -342,60 +269,79 @@
                             body="Er is nog geen verkooproute gekoppeld." />
                     @endif
                 @else
-                    {{--
-                        Eén verkoopvorm tegelijk. Drie tabs plus biedpaneel plus
-                        koop-direct naast elkaar is keuzestress op 390px
-                        (hfst. 12).
-                    --}}
+                    {{-- Eén verkoopvorm tegelijk (hfst. 12). De interesse staat in de kaart, onder de stand. --}}
                     @if ($lot->sale_type === SaleType::Dutch)
-                        <x-auction.dutch-panel />
+                        <x-auction.dutch-panel>
+                            @include('lots.partials.interest', ['lot' => $lot, 'interest' => $interest])
+                        </x-auction.dutch-panel>
                     @elseif ($lot->sale_type === SaleType::BuyNow)
-                        {{-- Koop direct heeft geen biedpaneel: vaste prijs,
-                             wie het eerst koopt (hfst. 6). --}}
-                        <x-auction.buy-now-hero />
+                        <x-auction.buy-now-hero>
+                            @include('lots.partials.interest', ['lot' => $lot, 'interest' => $interest])
+                        </x-auction.buy-now-hero>
                     @else
-                        <x-auction.bid-panel :auction="$auction" />
+                        <x-auction.bid-panel :auction="$auction">
+                            @include('lots.partials.interest', ['lot' => $lot, 'interest' => $interest])
 
-                        {{-- Ivy naast het biedpaneel (Ivy-briefing hfst. 9): vraag over de kavel, en het niveau per kavel (K4). --}}
+                            {{-- De kostenopbouw bij dit bod, met het vanaf-tarief voor transport; na een postcode komt de verse opbouw ervoor in de plaats (hfst. 13.3). --}}
+                            <div x-data="{ liveCosts: null }" @shipping-quoted.window="liveCosts = $event.detail">
+                                <template x-if="! liveCosts">
+                                    <div>
+                                        <x-lot.cost-breakdown id="kosten" :costs="$costs" title="Kostenopbouw bij dit bod" :note="__('money.notes.estimate')" transport-note="Vanaf-tarief - bereken hieronder je postcode" />
+                                    </div>
+                                </template>
+                                <template x-if="liveCosts">
+                                    <div id="kosten">
+                                        <h3 class="d-h3" style="font-size:14px;font-weight:700">Kostenopbouw bij dit bod</h3>
+                                        <div class="d-costs" style="margin-top:8px">
+                                            <template x-for="line in liveCosts.lines" :key="line.key">
+                                                <div class="d-row">
+                                                    <span><span x-text="line.label"></span><template x-if="line.note"><small x-text="line.note"></small></template></span>
+                                                    <strong x-text="line.formatted"></strong>
+                                                </div>
+                                            </template>
+                                            <div class="d-row is-total"><span>Jij betaalt</span><strong x-text="liveCosts.total_formatted"></strong></div>
+                                        </div>
+                                        <p class="d-hint" style="margin-top:8px">Met jouw transportindicatie - definitief na bevestiging.</p>
+                                    </div>
+                                </template>
+                            </div>
+
+                            {{-- Een veiling kan daarnaast een koop-direct-prijs hebben; die vervalt zodra er overheen geboden is. --}}
+                            @if ($auction->buy_now_price_cents !== null)
+                                <x-auction.buy-now-panel />
+                            @endif
+                        </x-auction.bid-panel>
+
+                        {{-- Ivy naast het biedpaneel (Ivy-briefing hfst. 9): het niveau per kavel (K4). --}}
                         @if (\App\Ivy\Chat\IvyFlags::on('ivy.enabled'))
-                            <div class="rounded-aj-sm border border-aj-border bg-aj-surface p-4" x-data="{ open: false }">
-                                <button type="button" class="btn btn-ghost w-full justify-center" style="height:40px;font-size:13px" @click="$dispatch('ivy-open', { text: null })">
-                                    <img src="{{ asset('images/agents/ivy.jpg') }}" alt="" class="size-5 rounded-full"> Vraag Ivy over deze kavel
-                                </button>
-                                @auth
-                                    @if (! $lot->isManagedBy(auth()->user()) && ! $auction->isClosed())
-                                        @php $ivyMode = \App\Models\IvyLotMode::for(auth()->user(), $lot); $ivyModeRow = \App\Models\IvyLotMode::query()->where('user_id', auth()->id())->where('lot_id', $lot->id)->whereNull('ended_at')->first(); @endphp
-                                        <button type="button" class="mt-2 w-full text-left text-xs font-semibold underline" @click="open = !open">Hoeveel mag Ivy doen? <span class="text-aj-muted">Nu: {{ __('ivy.modes.'.$ivyMode) }}{{ $ivyModeRow?->limit_cents ? ' tot '.Money::format($ivyModeRow->limit_cents) : '' }}</span></button>
-                                        <form method="POST" action="{{ route('ivy.lot-mode', $lot) }}" x-show="open" x-cloak class="mt-2 space-y-2 text-sm" x-data="{ mode: @js($ivyMode) }">
+                            @auth
+                                @if (! $lot->isManagedBy(auth()->user()) && ! $auction->isClosed())
+                                    @php $ivyMode = \App\Models\IvyLotMode::for(auth()->user(), $lot); $ivyModeRow = \App\Models\IvyLotMode::query()->where('user_id', auth()->id())->where('lot_id', $lot->id)->whereNull('ended_at')->first(); @endphp
+                                    <div class="d-side-card" x-data="{ open: false, mode: @js($ivyMode) }">
+                                        <button type="button" class="d-link" style="text-align:left" @click="open = !open" :aria-expanded="open">Hoeveel mag Ivy doen? <span class="d-muted">Nu: {{ __('ivy.modes.'.$ivyMode) }}{{ $ivyModeRow?->limit_cents ? ' tot '.Money::format($ivyModeRow->limit_cents) : '' }}</span></button>
+                                        <form method="POST" action="{{ route('ivy.lot-mode', $lot) }}" x-show="open" x-cloak class="d-stack-tight text-sm">
                                             @csrf
                                             <label class="flex items-start gap-2"><input type="radio" name="mode" value="notify" x-model="mode" class="mt-1"> <span><span class="font-bold">Zelf bieden</span><span class="block text-xs text-aj-muted">Ivy helpt alleen met informatie en meldt wat er speelt.</span></span></label>
                                             <label class="flex items-start gap-2"><input type="radio" name="mode" value="ask" x-model="mode" class="mt-1"> <span><span class="font-bold">Ivy waarschuwt mij</span><span class="block text-xs text-aj-muted">Bij elk moment zet ze een voorstel klaar en vraagt wat je wilt.</span></span></label>
                                             @if (\App\Ivy\Chat\IvyFlags::on('ivy.proposals'))
                                                 <label class="flex items-start gap-2"><input type="radio" name="mode" value="auto" x-model="mode" class="mt-1"> <span><span class="font-bold">Automatisch tot mijn limiet</span><span class="block text-xs text-aj-muted">Via het bestaande autobod; boven je limiet biedt ze nooit. Je bevestigt het mandaat eerst.</span></span></label>
-                                                <div x-show="mode === 'auto'" x-cloak class="flex items-center gap-2 pl-6"><span class="text-xs">Limiet €</span><input type="number" name="limit" min="1" step="1" inputmode="numeric" class="w-32 rounded-aj-sm border border-aj-border-strong px-2" style="min-height:36px"></div>
+                                                <div x-show="mode === 'auto'" x-cloak class="flex items-center gap-2 pl-6"><span class="text-xs">Limiet €</span><input type="number" name="limit" min="1" step="1" inputmode="numeric" class="d-input" style="width:130px;margin:0"></div>
                                             @endif
-                                            <button type="submit" class="btn btn-dark" style="height:36px;font-size:12px">Opslaan</button>
-                                            @error('limit')<p class="text-xs text-aj-error">{{ $message }}</p>@enderror
+                                            <button type="submit" class="d-btn d-btn-sm d-btn-sq" style="align-self:flex-start">Opslaan</button>
+                                            @error('limit')<p class="d-hint is-warn">{{ $message }}</p>@enderror
                                         </form>
-                                    @endif
-                                @endauth
-                            </div>
-                        @endif
-
-                        {{-- Een veiling kan daarnaast een koop-direct-prijs
-                             hebben; die vervalt zodra er overheen geboden is. --}}
-                        @if ($auction->buy_now_price_cents !== null)
-                            <x-auction.buy-now-panel />
+                                    </div>
+                                @endif
+                            @endauth
                         @endif
                     @endif
 
                     {{-- Volgen en delen: licht, naast de zware koopacties. --}}
-                    <div class="flex gap-2"
+                    <div class="d-pair"
                          x-data="{
                             watching: {{ $isWatching ? 'true' : 'false' }},
                             count: {{ $watcherCount }},
                             busy: false,
-                            copied: false,
                             async toggle() {
                                 if (this.busy) return;
                                 this.busy = true;
@@ -416,34 +362,19 @@
                                 }
                                 this.busy = false;
                             },
-                            async share() {
-                                const url = window.location.href;
-                                if (navigator.share) {
-                                    try { await navigator.share({ title: {{ Js::from($lot->title) }}, url }); } catch (error) {}
-                                    return;
-                                }
-                                try {
-                                    await navigator.clipboard.writeText(url);
-                                    this.copied = true;
-                                    setTimeout(() => this.copied = false, 2000);
-                                } catch (error) {
-                                    window.prompt('Kopieer de link:', url);
-                                }
-                            },
                          }">
                         @auth
-                            <button type="button" class="btn btn-ghost flex-1" @click="toggle()"
-                                    :aria-pressed="watching">
+                            <button type="button" class="d-btn d-btn-secondary" @click="toggle()" :aria-pressed="watching">
                                 <svg class="size-4" viewBox="0 0 20 20" :fill="watching ? 'currentColor' : 'none'"
                                      stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M10 17s-6.5-4.1-6.5-8.6a3.6 3.6 0 0 1 6.5-2.1 3.6 3.6 0 0 1 6.5 2.1C16.5 12.9 10 17 10 17Z"/>
                                 </svg>
                                 <span x-text="watching ? 'Gevolgd' : 'Volgen'"></span>
-                                <span class="tabular text-aj-muted" x-show="count > 0" x-text="count"></span>
+                                <span class="tabular d-muted" x-show="count > 0" x-text="count"></span>
                             </button>
                         @endauth
                         @guest
-                            <a href="{{ route('login') }}" class="btn btn-ghost flex-1">
+                            <a href="{{ route('login') }}" class="d-btn d-btn-secondary">
                                 <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor"
                                      stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M10 17s-6.5-4.1-6.5-8.6a3.6 3.6 0 0 1 6.5-2.1 3.6 3.6 0 0 1 6.5 2.1C16.5 12.9 10 17 10 17Z"/>
@@ -453,275 +384,67 @@
                         @endguest
 
                         @include('lots.partials.share-menu', ['lot' => $lot, 'ownShares' => $ownShares ?? collect()])
-
-                        {{-- Web push (hfst. 14): "overboden" hoort binnen twee
-                             seconden op je scherm, ook met de site dicht. --}}
-                        @auth
-                            <button type="button" class="btn btn-ghost flex-1" x-data="pushToggle"
-                                    x-show="supported && ! denied" x-cloak
-                                    :disabled="busy" @click="toggle()"
-                                    :aria-pressed="enabled"
-                                    :title="enabled ? 'Meldingen staan aan op dit apparaat' : 'Krijg direct een melding als je overboden wordt'">
-                                <svg class="size-4" viewBox="0 0 20 20" :fill="enabled ? 'currentColor' : 'none'"
-                                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                     stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M10 3a4.5 4.5 0 0 0-4.5 4.5c0 3.2-1 4.4-1.8 5.2h12.6c-.8-.8-1.8-2-1.8-5.2A4.5 4.5 0 0 0 10 3Z"/>
-                                    <path d="M8.3 15.7a1.8 1.8 0 0 0 3.4 0"/>
-                                </svg>
-                                <span x-text="enabled ? 'Meldingen aan' : 'Meldingen'"></span>
-                            </button>
-                        @endauth
                     </div>
+
+                    {{-- Web push (hfst. 14): "overboden" hoort binnen twee seconden op je scherm, ook met de site dicht. --}}
+                    @auth
+                        <button type="button" class="d-btn d-btn-secondary d-btn-wide" x-data="pushToggle"
+                                x-show="supported && ! denied" x-cloak
+                                :disabled="busy" @click="toggle()"
+                                :aria-pressed="enabled"
+                                :title="enabled ? 'Meldingen staan aan op dit apparaat' : 'Krijg direct een melding als je overboden wordt'">
+                            <x-v4.icon name="bell" :size="16" stroke="2" />
+                            <span x-text="enabled ? 'Meldingen aan' : 'Meldingen bij overboden'"></span>
+                        </button>
+                    @endauth
 
                     @auth
                         @if ($lot->seller_id === auth()->id())
                             {{-- Eigenaar: delen met herkomst per kanaal (briefing stap 10) en snel naar bewerken. --}}
-                            <div class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4">
-                                <p class="text-sm font-extrabold">Jouw kavel delen</p>
-                                <p class="mt-1 text-xs text-aj-muted">Elke link heeft een eigen herkomst, zodat je ziet wat werkt.</p>
-                                <x-lots.share :lot="$lot" compact class="mt-3" />
+                            <div class="d-side-card">
+                                <h3>Jouw kavel delen</h3>
+                                <p class="d-note">Elke link heeft een eigen herkomst, zodat je ziet wat werkt.</p>
+                                <x-lots.share :lot="$lot" compact />
                                 @unless ($lot->viewing_available)
-                                    <a href="{{ route('dashboard.lots.edit', $lot) }}" class="btn btn-ghost mt-3 w-full justify-center" style="height:40px;font-size:13px">Kavel bewerken</a>
+                                    <a href="{{ route('dashboard.lots.edit', $lot) }}" class="d-btn d-btn-secondary d-btn-wide d-btn-sq">Kavel bewerken</a>
                                 @endunless
                             </div>
                         @endif
                     @endauth
 
-                    {{-- Bezichtiging: moment voorstellen; het adres volgt per
-                         mail, pas na bevestiging van de verkoper (hfst. 7). --}}
-                    @if ($lot->viewing_available)
-                        <div id="bezichtiging" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4">
-                            <p class="text-sm font-extrabold">Bezichtiging plannen</p>
+                    @include('lots.partials.ask', ['lot' => $lot])
 
-                            @guest
-                                <p class="mt-1 text-sm text-aj-muted">
-                                    Kijken vóór je biedt kan. Log in om een moment voor te stellen.
-                                </p>
-                                <a href="{{ route('login') }}" class="btn btn-ghost mt-3 w-full justify-center"
-                                   style="height:40px;font-size:13px">Inloggen</a>
-                            @endguest
-
-                            @auth
-                                @if ($lot->seller_id === auth()->id())
-                                    <p class="mt-1 text-sm text-aj-muted">
-                                        Kopers stellen hier een kijkmoment voor; jij bevestigt per mail.
-                                    </p>
-                                    <a href="{{ route('dashboard.lots.edit', $lot) }}" class="btn btn-ghost mt-3 w-full justify-center" style="height:40px;font-size:13px">Kavel bewerken</a>
-                                @elseif ($viewerViewing !== null)
-                                    <p class="mt-1 flex items-start gap-2 text-sm {{ $viewerViewing->mayReceiveAddress() ? 'text-aj-success-text' : 'text-aj-muted' }}">
-                                        <svg class="mt-0.5 size-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/>
-                                        </svg>
-                                        @if ($viewerViewing->mayReceiveAddress())
-                                            Bevestigd voor {{ $viewerViewing->slot_at->timezone(config('aucvy.display_timezone'))->isoFormat('dddd D MMMM, HH:mm') }}.
-                                            Het adres staat in je mail.
-                                        @else
-                                            Aanvraag verstuurd voor {{ $viewerViewing->slot_at->timezone(config('aucvy.display_timezone'))->isoFormat('dddd D MMMM, HH:mm') }}.
-                                            Je ontvangt het adres per mail zodra de verkoper bevestigt.
-                                        @endif
-                                    </p>
-                                @else
-                                    <div x-data="{
-                                            slot: '',
-                                            note: '',
-                                            busy: false,
-                                            done: null,
-                                            error: null,
-                                            async submit() {
-                                                this.error = null;
-                                                if (! this.slot) { this.error = 'Kies eerst een moment.'; return; }
-                                                this.busy = true;
-                                                try {
-                                                    const response = await fetch('/api/lots/{{ $lot->id }}/viewings', {
-                                                        method: 'POST',
-                                                        headers: {
-                                                            'Content-Type': 'application/json',
-                                                            'Accept': 'application/json',
-                                                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                                                        },
-                                                        body: JSON.stringify({ slot_at: this.slot, note: this.note || null }),
-                                                    });
-                                                    const data = await response.json().catch(() => ({}));
-                                                    if (response.ok) {
-                                                        this.done = data.viewing;
-                                                    } else {
-                                                        this.error = data?.message ?? 'Dat lukte niet - probeer het opnieuw.';
-                                                    }
-                                                } catch (error) {
-                                                    this.error = 'Geen verbinding - probeer het zo opnieuw.';
-                                                }
-                                                this.busy = false;
-                                            },
-                                         }">
-                                        <template x-if="! done">
-                                            <div>
-                                                <p class="mt-1 text-sm text-aj-muted">
-                                                    Stel een moment voor. Het adres ontvang je per mail zodra de verkoper bevestigt.
-                                                </p>
-                                                <label class="mt-3 block">
-                                                    <span class="sr-only">Moment</span>
-                                                    <input type="datetime-local" x-model="slot"
-                                                           min="{{ now(config('aucvy.display_timezone'))->addHours(2)->format('Y-m-d\TH:i') }}"
-                                                           class="w-full rounded-aj-sm border border-aj-border-strong bg-white px-3 text-sm text-aj-text"
-                                                           style="min-height: 44px">
-                                                </label>
-                                                <label class="mt-2 block">
-                                                    <span class="sr-only">Bericht voor de verkoper</span>
-                                                    <input type="text" x-model="note" maxlength="500"
-                                                           placeholder="Bericht voor de verkoper (niet verplicht)"
-                                                           class="w-full rounded-aj-sm border border-aj-border-strong bg-white px-3 text-sm text-aj-text"
-                                                           style="min-height: 44px">
-                                                </label>
-                                                <button type="button" class="btn btn-primary mt-3 w-full justify-center"
-                                                        style="height:44px;font-size:14px"
-                                                        :disabled="busy" @click="submit()">
-                                                    <span x-show="! busy">Bezichtiging aanvragen</span>
-                                                    <span x-show="busy" x-cloak>Versturen…</span>
-                                                </button>
-                                                <p x-show="error" x-cloak role="alert"
-                                                   class="mt-2 text-xs font-semibold text-aj-error" x-text="error"></p>
-                                            </div>
-                                        </template>
-                                        <template x-if="done">
-                                            <p class="mt-1 text-sm text-aj-muted">
-                                                Aanvraag verstuurd voor <span class="font-semibold" x-text="done.slot_display"></span>.
-                                                Je ontvangt het adres per mail zodra de verkoper bevestigt.
-                                            </p>
-                                        </template>
-                                    </div>
-                                @endif
-                            @endauth
-                        </div>
-                    @endif
-
-                    {{-- Transportindicatie (hfst. 7): postcode in, prijs uit.
-                         Een indicatie met houdbaarheid, geen offerte. --}}
-                    @if ($lot->transport_from_cents !== null)
-                        <div class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4"
-                             x-data="{
-                                postcode: '',
-                                busy: false,
-                                quote: null,
-                                error: null,
-                                async calc() {
-                                    this.error = null;
-                                    this.busy = true;
-                                    try {
-                                        const response = await fetch('/api/shipping/quote', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Accept': 'application/json',
-                                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
-                                            },
-                                            body: JSON.stringify({ lot_id: {{ $lot->id }}, postcode: this.postcode }),
-                                        });
-                                        const data = await response.json().catch(() => ({}));
-                                        if (response.ok) {
-                                            this.quote = data.quote;
-                                            // De kostenopbouw hieronder springt mee
-                                            // met jouw transportbedrag.
-                                            if (data.costs) this.$dispatch('shipping-quoted', data.costs);
-                                        } else {
-                                            this.quote = null;
-                                            this.error = data?.message ?? 'Dat lukte niet - probeer het opnieuw.';
-                                        }
-                                    } catch (error) {
-                                        this.quote = null;
-                                        this.error = 'Geen verbinding - probeer het zo opnieuw.';
-                                    }
-                                    this.busy = false;
-                                },
-                             }">
-                            <p class="text-sm font-extrabold">Transportindicatie</p>
-                            <p class="mt-1 text-xs text-aj-muted">
-                                Vanaf {{ Money::format($lot->transport_from_cents) }} - vul je postcode in
-                                voor een indicatie naar jouw adres.
-                            </p>
-                            <div class="mt-3 flex gap-2">
-                                <label class="sr-only" for="shipping-postcode">Postcode</label>
-                                <input id="shipping-postcode" type="text" inputmode="text" autocomplete="postal-code"
-                                       placeholder="1234 AB" maxlength="7"
-                                       x-model="postcode" @keydown.enter.prevent="calc()"
-                                       class="tabular w-full rounded-aj-sm border border-aj-border-strong bg-white px-3 text-sm text-aj-text"
-                                       style="min-height: 44px">
-                                <button type="button" class="btn btn-ghost shrink-0" style="height:44px;font-size:13px"
-                                        :disabled="busy" @click="calc()">
-                                    <span x-show="! busy">Bereken</span>
-                                    <span x-show="busy" x-cloak>Even rekenen…</span>
-                                </button>
-                            </div>
-                            <p x-show="quote" x-cloak class="mt-2 text-sm" aria-live="polite">
-                                <span class="tabular font-extrabold" x-text="quote?.amount_formatted"></span>
-                                <span class="block text-xs text-aj-muted">
-                                    Indicatie, 24 uur geldig. Het definitieve bedrag staat in de kostenopbouw.
-                                </span>
-                            </p>
-                            <p x-show="error" x-cloak role="alert"
-                               class="mt-2 text-xs font-semibold text-aj-error" x-text="error"></p>
-                        </div>
-                    @endif
+                    @include('lots.partials.viewing-and-transport', ['lot' => $lot])
 
                     @if ($lot->sale_type === SaleType::Auction && ! $auction->isClosed() && config('aucvy.ai.enabled'))
                         <x-auction.ivy-advice :lot="$lot" />
                     @endif
 
-                    {{--
-                        De kostenopbouw. Standaard met het vanaf-tarief voor
-                        transport; berekent de kijker een postcode-indicatie,
-                        dan komt de vers berekende opbouw van de server ervoor
-                        in de plaats (nooit client-side rekenen, hfst. 13.3).
-                    --}}
-                    <div x-data="{ liveCosts: null }" @shipping-quoted.window="liveCosts = $event.detail">
-                        <template x-if="! liveCosts">
-                            <div>
-                                <x-lot.cost-breakdown
-                                    id="kosten"
-                                    :costs="$costs"
-                                    :note="__('money.notes.estimate')"
-                                    transport-note="Vanaf-tarief - bereken hierboven je postcode" />
-                            </div>
-                        </template>
-
-                        <template x-if="liveCosts">
-                            <div id="kosten" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4">
-                                <p class="text-sm font-extrabold">{{ __('Kosten vóór je biedt') }}</p>
-                                <dl class="mt-3 space-y-1.5 text-sm">
-                                    <template x-for="line in liveCosts.lines" :key="line.key">
-                                        <div class="flex items-baseline justify-between gap-4">
-                                            <dt class="text-aj-muted">
-                                                <span x-text="line.label"></span>
-                                                <template x-if="line.note">
-                                                    <span class="block text-xs" x-text="line.note"></span>
-                                                </template>
-                                            </dt>
-                                            <dd class="tabular shrink-0 font-semibold" x-text="line.formatted"></dd>
-                                        </div>
-                                    </template>
-                                    <div class="flex items-baseline justify-between gap-4 border-t border-aj-border pt-2">
-                                        <dt class="font-extrabold">{{ __('money.lines.total') }}</dt>
-                                        <dd class="tabular shrink-0 text-lg font-extrabold" x-text="liveCosts.total_formatted"></dd>
-                                    </div>
-                                </dl>
-                                <p class="mt-3 text-xs text-aj-muted">
-                                    Met jouw transportindicatie - definitief na bevestiging.
-                                </p>
-                            </div>
-                        </template>
-                    </div>
-
-                    {{-- Bij koop direct valt er geen biedhistorie te tonen. --}}
-                    @if ($lot->sale_type !== SaleType::BuyNow)
-                        <x-auction.bid-history />
+                    @if ($lot->sale_type !== SaleType::Auction)
+                        <x-lot.cost-breakdown id="kosten" class="d-side-card" :costs="$costs" :note="__('money.notes.estimate')" transport-note="Vanaf-tarief - bereken hierboven je postcode" />
                     @endif
                 @endif
+
+                <div class="d-trust" aria-label="Vertrouwen">
+                    <h3>Vertrouwen</h3>
+                    <p class="d-note">Dit staat vast bij deze kavel.</p>
+                    <ul>
+                        @foreach ($trustPoints as $point)
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/></svg>
+                                <span>{{ $point }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                    <a href="{{ route('assurance') }}" class="d-link" style="display:inline-flex;align-items:center;min-height:44px">Hoe werkt zekerheid bij Aucvy?</a>
+                </div>
             </aside>
         </div>
 
         {{-- Vergelijkbare kavels: dezelfde kaart als op de veilingenpagina. --}}
         @if ($similarLots->isNotEmpty())
             <section id="vergelijkbaar" class="mt-12" aria-label="Vergelijkbare kavels">
-                <h2 class="text-xl font-extrabold tracking-tight">Vergelijkbare kavels</h2>
+                <h2 style="margin:0;font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.01em">Vergelijkbare kavels</h2>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     @foreach ($similarLots as $similarLot)
                         <x-lot.card :lot="$similarLot" />

@@ -13,36 +13,33 @@
     Er wordt hier niets opgeteld en niets omgerekend: het totaal dat hier staat
     is hetzelfde getal dat straks op de order en bij de betaalprovider staat.
     Zouden ze uiteenlopen, dan is dat per definitie een bug en geen afronding
-    (hfst. 9).
+    (hfst. 9). Opmaak: de grijze tabel uit het ontwerp van november.
 --}}
-<div {{ $attributes->merge(['class' => 'rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4']) }}>
-    <p class="text-sm font-extrabold">{{ $title ?? __('Kosten vóór je biedt') }}</p>
+<div {{ $attributes }}>
+    <h3 class="d-h3" style="font-size:14px;font-weight:700">{{ $title ?? __('Kosten vóór je biedt') }}</h3>
 
-    <dl class="mt-3 space-y-1.5 text-sm">
+    <div class="d-costs" style="margin-top:8px">
         @foreach ($costs->lines() as $line)
-            <div class="flex items-baseline justify-between gap-4">
-                @php $isIndicativeTransport = $transportNote !== null && $line->key === 'transport' && $costs->transportCents > 0; @endphp
-                <dt class="text-aj-muted">
+            @php $isIndicativeTransport = $transportNote !== null && $line->key === 'transport' && $costs->transportCents > 0; @endphp
+            <div class="d-row">
+                <span>
                     {{ $line->label }}
                     @if ($line->note)
-                        <span class="block text-xs">{{ $line->note }}</span>
+                        <small>{{ $line->note }}</small>
                     @elseif ($isIndicativeTransport)
-                        <span class="block text-xs">{{ $transportNote }}</span>
+                        <small>{{ $transportNote }}</small>
                     @endif
-                </dt>
-                <dd class="tabular shrink-0 font-semibold">{{ $isIndicativeTransport ? 'vanaf ' : '' }}{{ $line->formatted() }}</dd>
+                </span>
+                <strong>{{ $isIndicativeTransport ? 'vanaf ' : '' }}{{ $line->formatted() }}</strong>
             </div>
         @endforeach
-
-        <div class="flex items-baseline justify-between gap-4 border-t border-aj-border pt-2">
-            <dt class="font-extrabold">{{ __('money.lines.total') }}</dt>
-            <dd class="tabular shrink-0 text-lg font-extrabold">
-                {{ \App\Support\Money\Money::format($costs->totalCents) }}
-            </dd>
+        <div class="d-row is-total">
+            <span>Jij betaalt</span>
+            <strong>{{ \App\Support\Money\Money::format($costs->totalCents) }}</strong>
         </div>
-    </dl>
+    </div>
 
     @if ($note)
-        <p class="mt-3 text-xs text-aj-muted">{{ $note }}</p>
+        <p class="d-hint" style="margin-top:8px">{{ $note }}</p>
     @endif
 </div>

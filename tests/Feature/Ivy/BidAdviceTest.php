@@ -49,7 +49,7 @@ it('staat als paneel op de kavelpagina voor ingelogde kijkers', function () {
         ->assertSee('Biedadvies van Atlas')
         ->assertSee('Jij beslist')
         // Bieden is een bewuste sleep, geen klik.
-        ->assertSee('slide-confirm', false)
+        ->assertSee('d-slide', false)
         ->assertSee('Sleep om');
 });
 

@@ -68,7 +68,7 @@ final class InterestOverview
      */
     private function tipFor(Lot $lot, Collection $weekly): ?string
     {
-        $insight = $weekly->first(fn (AiInsight $insight): bool => (int) ($insight->action_params['lot'] ?? 0) === $lot->id
+        $insight = $weekly->first(fn (AiInsight $insight): bool => ($insight->action_params['lot'] ?? null) === $lot->slug
             || str_contains((string) $insight->title, (string) $lot->title));
 
         return $insight?->title;

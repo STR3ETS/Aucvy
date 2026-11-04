@@ -35,7 +35,7 @@ it('geeft het dashboard en de bestellingen de dashboardschil met zijbalk', funct
         ->assertSee('class="no-js c dash"', escape: false)
         ->assertSee('dash-side', escape: false)
         ->assertSee('dash-band', escape: false)
-        ->assertSee('stat-tile', escape: false)
+        ->assertSee('d-tile', escape: false)
         ->assertSee('Anna de Vries')
         ->assertDontSee('footer-c');
 })->with(['/dashboard', '/dashboard/kavels', '/dashboard/biedingen', '/dashboard/uitbetalingen', '/dashboard/geschillen', '/bestellingen']);

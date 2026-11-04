@@ -892,3 +892,6 @@
   .c .dash-tiles,.c .dash-tiles:has(.action-stack){grid-template-columns:1fr 1fr;gap:10px}
   .c .dash-band h1{font-size:26px}
 }
+/* De kavelpagina van november: de kicker als pil, de regel eronder als intro. */
+.c .page-hero:has(+ .page-body [data-lot-nav]) .eyebrow{display:inline-flex;padding:8px 14px;border:1px solid rgba(255,255,255,.2);border-radius:99px;background:rgba(255,255,255,.04);font-size:12px;letter-spacing:.12em;color:#d5dae7;margin-bottom:16px}
+.c .page-hero:has(+ .page-body [data-lot-nav]) h1{font-size:clamp(34px,4.4vw,56px)}

@@ -1,4 +1,4 @@
-@props(['lot'])
+@props(['lot', 'status' => null, 'watching' => 0])
 
 @php
     $media = $lot->media;
@@ -8,36 +8,38 @@
         'alt' => $item->alt ?? '',
     ])->values();
 
-    $visibleThumbs = 6;
+    $visibleThumbs = 4;
     $hiddenCount = max(0, $media->count() - $visibleThumbs);
 @endphp
 
 {{--
     Foto's staan op mobiel bewust bovenaan, vóór prijs en bod: je moet eerst
-    zien wát je koopt (hfst. 12).
+    zien wát je koopt (hfst. 12). Opmaak: de galerij uit het ontwerp van
+    november, met de staat, de kijkers en het bijschrift als pillen op de
+    foto en vier tegels eronder.
 
     De vaste beeldverhouding staat op de container en niet op het beeld zelf,
     zodat er geen layout shift optreedt terwijl de foto laadt.
 --}}
-<div {{ $attributes->merge(['class' => 'space-y-3']) }}>
+<div {{ $attributes->merge(['class' => 'd-stack-tight']) }}>
     @if ($media->isEmpty())
         {{--
             Geen stockbeeld en geen grijs vlak dat zich voordoet als een foto.
             Wie levert de fotografie staat nog open (hfst. 18), en tot die tijd
             is eerlijk zijn beter dan doen alsof.
         --}}
-        <div class="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2
-                    rounded-aj-s border border-dashed border-aj-border-strong bg-aj-bg text-center">
+        <div class="flex aspect-[16/9] w-full flex-col items-center justify-center gap-2 text-center"
+             style="border:1px dashed rgba(14,21,38,.2);border-radius:16px;background:#f3f5f9">
             <span class="text-sm font-semibold text-aj-muted">Nog geen foto's</span>
             <span class="max-w-xs px-6 text-xs text-aj-muted">
                 Vraag de verkoper om beeld voordat je biedt - of plan een bezichtiging.
             </span>
         </div>
     @else
-        <div x-data="{ items: {{ Js::from($items) }}, active: 0, lightbox: false }">
-            <figure class="relative overflow-hidden rounded-aj-s border border-aj-border">
+        <div x-data="{ items: {{ Js::from($items) }}, active: 0, lightbox: false }" class="d-stack-tight">
+            <figure class="relative m-0" style="position:relative">
                 {{-- Klik op de hoofdfoto opent de volledige weergave. --}}
-                <button type="button" class="block w-full cursor-zoom-in" @click="lightbox = true"
+                <button type="button" class="block w-full cursor-zoom-in" style="border-radius:16px;overflow:hidden;padding:0;border:0;background:#e9edf5" @click="lightbox = true"
                         aria-label="Foto op volledige grootte bekijken">
                     <img src="{{ $media->first()->path }}"
                          :src="items[active].path"
@@ -45,41 +47,38 @@
                          :alt="items[active].alt || {{ Js::from($lot->title) }}"
                          width="{{ $media->first()->width }}"
                          height="{{ $media->first()->height }}"
-                         class="aspect-[4/3] w-full object-cover"
+                         class="w-full object-cover" style="display:block;aspect-ratio:16/9"
                          loading="eager">
                 </button>
-
+                @if ($status)
+                    <span class="d-gallery-status d-tag {{ $status[0] }}">{{ $status[1] }}</span>
+                @endif
+                @if ($watching > 0)
+                    <span class="d-gallery-pill" style="top:12px;right:12px"><x-v4.icon name="eye" :size="14" stroke="2.2" /> {{ $watching }} kijken nu</span>
+                @endif
                 {{-- Teller plus bijschrift, zodat je weet wáár je kijkt. --}}
-                <figcaption class="pointer-events-none absolute bottom-3 left-3 rounded-full bg-aj-navy/70 px-3 py-1 text-xs text-white"
+                <figcaption class="d-gallery-pill" style="left:12px;bottom:12px"
                             x-text="(active + 1) + '/' + items.length + (items[active].alt ? ' · ' + items[active].alt : '')">
                 </figcaption>
             </figure>
 
             @if ($media->count() > 1)
-                {{-- Maximaal zes tegels; de laatste telt wat er nog meer is
-                     en opent de volledige weergave. --}}
-                <ul class="mt-2 grid grid-cols-6 gap-2" role="list">
+                {{-- Vier tegels; de laatste telt wat er nog meer is en opent de volledige weergave. --}}
+                <div class="d-thumbs" role="list">
                     @foreach ($media->take($visibleThumbs) as $index => $item)
                         @php $isOverflowTile = $loop->iteration === $visibleThumbs && $hiddenCount > 0; @endphp
-                        <li>
-                            <button type="button"
-                                    class="relative block w-full overflow-hidden rounded-aj-sm border-2"
-                                    :class="active === {{ $index }} && ! {{ $isOverflowTile ? 'true' : 'false' }} ? 'border-aj-blue' : 'border-transparent'"
-                                    @click="{{ $isOverflowTile ? "active = {$index}; lightbox = true" : "active = {$index}" }}"
-                                    @unless ($isOverflowTile) :aria-pressed="active === {{ $index }}" @endunless
-                                    aria-label="{{ $isOverflowTile ? "Alle {$media->count()} foto's bekijken" : 'Foto '.($index + 1).($item->alt ? ', '.$item->alt : '') }}">
-                                <img src="{{ $item->path }}"
-                                     alt=""
-                                     class="aspect-square w-full object-cover"
-                                     loading="lazy">
-                                @if ($isOverflowTile)
-                                    <span class="absolute inset-0 flex items-center justify-center bg-aj-navy/60
-                                                 text-sm font-extrabold text-white">+{{ $hiddenCount }}</span>
-                                @endif
-                            </button>
-                        </li>
+                        <button type="button" role="listitem"
+                                :class="active === {{ $index }} && ! {{ $isOverflowTile ? 'true' : 'false' }} && 'is-on'"
+                                @click="{{ $isOverflowTile ? "active = {$index}; lightbox = true" : "active = {$index}" }}"
+                                @unless ($isOverflowTile) :aria-pressed="active === {{ $index }}" @endunless
+                                aria-label="{{ $isOverflowTile ? "Alle {$media->count()} foto's bekijken" : 'Foto '.($index + 1).($item->alt ? ', '.$item->alt : '') }}">
+                            <img src="{{ $item->path }}" alt="" loading="lazy">
+                            @if ($isOverflowTile)
+                                <span class="absolute inset-0 flex items-center justify-center text-sm font-extrabold text-white" style="background:rgba(12,19,38,.6)">+{{ $hiddenCount }}</span>
+                            @endif
+                        </button>
                     @endforeach
-                </ul>
+                </div>
             @endif
 
             {{-- Volledige weergave: onbijgesneden beeld, bladeren met de
@@ -137,25 +136,13 @@
     @endif
 
     {{-- Wat er naast foto's nog is: documenten en bezichtiging. --}}
-    <ul class="flex flex-wrap gap-2 text-sm">
-        <li class="rounded-full border border-aj-border-strong bg-aj-surface px-3 py-1 font-semibold">
-            Foto's <span class="tabular text-aj-muted">{{ $media->count() }}</span>
-        </li>
+    <div class="d-chips">
+        <span class="d-chip is-blue">Foto's <span class="tabular" style="color:#4d5566">{{ $media->count() }}</span></span>
         @if ($lot->documents->isNotEmpty())
-            <li>
-                <a href="#documenten"
-                   class="block rounded-full border border-aj-border-strong bg-aj-surface px-3 py-1 font-semibold">
-                    Documenten <span class="tabular text-aj-muted">{{ $lot->documents->count() }}</span>
-                </a>
-            </li>
+            <a href="#documenten" class="d-chip">Documenten <span class="tabular" style="color:#4d5566">{{ $lot->documents->count() }}</span></a>
         @endif
         @if ($lot->viewing_available)
-            <li>
-                <a href="#bezichtiging"
-                   class="block rounded-full border border-aj-border-strong bg-aj-surface px-3 py-1 font-semibold">
-                    Bezichtiging plannen
-                </a>
-            </li>
+            <a href="#bezichtiging" class="d-chip"><x-v4.icon name="clock" :size="15" stroke="2.2" /> Bezichtiging plannen</a>
         @endif
-    </ul>
+    </div>
 </div>
