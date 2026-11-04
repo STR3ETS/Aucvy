@@ -42,6 +42,17 @@ final class FakeProvider implements LlmProvider
             // Ivy ziet niets in een bericht; de vaste regels doen het werk.
             'moderate_message' => ['signal' => 'none', 'confidence' => 0.9],
             'write_channel_texts' => ['texts' => $this->channelTexts($input), 'confidence' => 0.8],
+            // De neptypeplaat: leesbaar merk en model, een bouwjaar, vermogen en serienummer.
+            'read_nameplate' => [
+                'brand' => $input['brand'] ?: 'Hyster',
+                'model' => $input['model'] ?: 'H2.5FT',
+                'year' => 2018,
+                'power' => '45 kW',
+                'serial_number' => 'SN-'.strtoupper(substr(md5((string) ($input['document_id'] ?? '0')), 0, 8)),
+                'gtin' => null,
+                'confidence' => 0.85,
+                'field_confidence' => ['brand' => 0.95, 'model' => 0.9, 'year' => 0.7, 'power' => 0.8, 'serial_number' => 0.9],
+            ],
             'draft_ticket_reply' => ['reply' => 'Bedankt voor je bericht over "'.($input['subject'] ?? 'je vraag').'". Een medewerker zoekt dit voor je uit en komt vandaag bij je terug.', 'confidence' => 0.7],
             default => ['confidence' => 0.5],
         };

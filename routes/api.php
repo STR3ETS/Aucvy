@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\DraftUploadController;
 use App\Http\Controllers\Api\DutchAcceptController;
 use App\Http\Controllers\Api\IvyTaskController;
 use App\Http\Controllers\Api\PushSubscriptionController;
+use App\Http\Controllers\Api\ScanController;
 use App\Http\Controllers\Api\ShippingQuoteController;
 use App\Http\Controllers\Api\ViewerPresenceController;
 use App\Http\Controllers\Api\ViewingController;
@@ -120,6 +121,12 @@ Route::prefix('drafts')->name('drafts.')->group(function (): void {
     Route::patch('{lot:id}', [DraftController::class, 'update'])->middleware('throttle:120,1')->name('update');
     Route::post('{lot:id}/confirm', [DraftController::class, 'confirm'])->middleware('throttle:60,1')->name('confirm');
     Route::post('{lot:id}/publish', [DraftController::class, 'publish'])->name('publish');
+
+    // Scannen (briefing nieuwe functies): productcode met controlegetal, typeplaat door Ivy gelezen.
+    Route::middleware('throttle:30,1')->group(function (): void {
+        Route::post('{lot:id}/scan/gtin', [ScanController::class, 'gtin'])->name('scan.gtin');
+        Route::post('{lot:id}/scan/nameplate', [ScanController::class, 'nameplate'])->name('scan.nameplate');
+    });
 
     Route::middleware('throttle:30,1')->group(function (): void {
         Route::post('{lot:id}/media', [DraftUploadController::class, 'storeMedia'])->name('media.store');

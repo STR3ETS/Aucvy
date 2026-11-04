@@ -120,15 +120,26 @@
                                     <input type="file" accept="image/*" capture="environment" class="sr-only"
                                            @change="uploadPhotos([...$event.target.files]); $event.target.value = ''">
                                 </label>
-                                {{-- Typeplaatje of barcode lezen met de barcodelezer van de browser (briefing stap 1). --}}
-                                <label class="btn btn-ghost" style="height:40px;font-size:13.5px" x-show="canScan" x-cloak>
-                                    <x-v4.icon name="scan-search" :size="16" stroke="2.2" /> Label of barcode scannen
+                                {{-- Barcode: de lezer van de browser waar die er is, anders leest Ivy de foto (briefing: scanner voor alle browsers). --}}
+                                <label class="btn btn-ghost" style="height:40px;font-size:13.5px">
+                                    <x-v4.icon name="scan-search" :size="16" stroke="2.2" /> Barcode scannen
                                     <input type="file" accept="image/*" capture="environment" class="sr-only"
                                            @change="scanBarcode($event.target.files[0]); $event.target.value = ''">
                                 </label>
+                                {{-- Typeplaat: Ivy leest merk, model, bouwjaar, vermogen en serienummer. De foto blijft intern. --}}
+                                <label class="btn btn-ghost" style="height:40px;font-size:13.5px">
+                                    <x-v4.icon name="camera" :size="16" stroke="2.2" /> Typeplaat lezen
+                                    <input type="file" accept="image/*" capture="environment" class="sr-only"
+                                           @change="scanNameplate($event.target.files[0]); $event.target.value = ''">
+                                </label>
                             </div>
-                            <p class="mt-2 text-xs text-aj-muted" x-show="scan.busy" x-cloak>Barcode zoeken…</p>
-                            <p class="mt-2 text-xs text-aj-success-text" x-show="scan.result" x-cloak>Barcode <b x-text="scan.result"></b> gevonden en bij de kenmerken gezet.</p>
+                            <form class="mt-2 flex flex-wrap items-center gap-2" @submit.prevent="submitGtin()">
+                                <label class="text-xs font-bold" for="gtin-input">Of typ de productcode (EAN)</label>
+                                <input id="gtin-input" type="text" inputmode="numeric" x-model="scan.code" maxlength="20" placeholder="8712345678906" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-2 text-sm" style="min-height:36px;width:180px">
+                                <button type="submit" class="btn btn-ghost" style="height:36px;font-size:12px" :disabled="scan.busy || !scan.code">Opzoeken</button>
+                            </form>
+                            <p class="mt-2 text-xs text-aj-muted" x-show="scan.busy" x-cloak x-text="scan.busyText"></p>
+                            <p class="mt-2 text-xs text-aj-success-text" x-show="scan.result" x-text="scan.result" x-cloak></p>
                             <p class="mt-2 text-xs text-aj-error" x-show="scan.error" x-text="scan.error" x-cloak></p>
                         </div>
 

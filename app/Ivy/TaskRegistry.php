@@ -54,7 +54,8 @@ final class TaskRegistry
 
     public static function isDraftScoped(string $name): bool
     {
-        return isset(self::DRAFT_TASKS[$name]);
+        // De typeplaat start via het scan-endpoint (met document), niet via tasks.store; wel dezelfde funnelpoort.
+        return isset(self::DRAFT_TASKS[$name]) || $name === 'read_nameplate';
     }
 
     public static function forLot(string $name, Lot $lot): AiTask

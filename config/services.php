@@ -99,6 +99,11 @@ return [
         'scope' => 'openid profile w_member_social',
     ],
 
+    // EAN-opzoeking (briefing nieuwe functies): eerst de eigen cache, dan Go-UPC. Zonder sleutel alleen de cache.
+    'go_upc' => [
+        'key' => env('GO_UPC_KEY'),
+    ],
+
     'marktplaats' => [
         // Alleen als API-partner (voorwaarden art. 7.4); tot die tijd via de deelkit.
         'client_id' => env('MARKTPLAATS_CLIENT_ID'),

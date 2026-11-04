@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'public_id', 'seller_id', 'company_id', 'category_id', 'sale_id', 'sale_position', 'location_id',
-    'project_id', 'title', 'slug', 'description', 'brand', 'model', 'year',
+    'project_id', 'title', 'slug', 'description', 'brand', 'model', 'gtin', 'serial_number', 'year',
     'quantity', 'condition', 'specifications', 'status', 'sale_type', 'vat_regime',
     'completeness_score', 'value_min_cents', 'value_max_cents',
     'value_confidence', 'pickup_only', 'viewing_available',

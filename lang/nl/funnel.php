@@ -37,6 +37,8 @@ return [
         'document' => 'Ivy, uit je documenten (:percent% zeker)',
         'ivy' => 'Geschreven door Ivy (:percent% zeker)',
         'benchmark' => 'Indicatie op basis van :count vergelijkbare aanbiedingen',
+        'nameplate' => 'Ivy, van de typeplaat (:percent% zeker)',
+        'ean' => 'Uit de productcode, via een EAN-dienst (:percent% zeker)',
     ],
 
     'fields' => [

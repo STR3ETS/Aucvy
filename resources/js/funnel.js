@@ -32,7 +32,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         step: 0,
         dictating: null,
         recognition: null,
-        scan: { busy: false, result: null, error: null },
+        scan: { busy: false, busyText: '', result: null, error: null, code: '' },
         saving: false,
         publishing: false,
         saved: false,
@@ -452,9 +452,20 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             return typeof window !== 'undefined' && 'BarcodeDetector' in window;
         },
 
+        // Scannen (briefing nieuwe functies): barcode met de lezer van de
+        // browser waar die er is, anders leest Ivy het label. De code wordt
+        // op controlegetal gecheckt en opgezocht in de eigen cache en de
+        // EAN-dienst; merk en model komen als voorstel met bron.
         async scanBarcode(file) {
-            if (!file || !this.canScan) return;
-            this.scan = { busy: true, result: null, error: null };
+            if (!file) return;
+
+            if (!this.canScan) {
+                await this.scanNameplate(file, 'Geen barcodelezer in deze browser; Ivy leest het label…');
+
+                return;
+            }
+
+            this.scan = { ...this.scan, busy: true, busyText: 'Barcode zoeken…', result: null, error: null };
 
             try {
                 const bitmap = await createImageBitmap(file);
@@ -462,24 +473,93 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                 const codes = await detector.detect(bitmap);
 
                 if (!codes.length) {
-                    this.scan = { busy: false, result: null, error: 'Geen barcode gevonden. Probeer een scherpere foto van dichtbij.' };
+                    await this.scanNameplate(file, 'Geen barcode herkend; Ivy leest het label…');
 
                     return;
                 }
 
                 const code = String(codes[0].rawValue).trim();
 
-                // Het kenmerk kan pas op een concept; de eerste actie in een
-                // verse wizard kan deze scan zijn.
-                await this.ensureDraft();
-                this.setSpec(/^\d{8,14}$/.test(code) ? 'ean' : 'barcode', code);
-                this.scan = { busy: false, result: code, error: null };
+                if (/^\d{8,14}$/.test(code)) {
+                    await this.lookupGtin(code);
+                } else {
+                    await this.ensureDraft();
+                    this.setSpec('barcode', code);
+                    this.scan = { ...this.scan, busy: false, result: 'Code ' + code + ' bij de kenmerken gezet.', error: null };
+                }
 
                 // Het label hoort bij de kavel: de foto gaat gewoon mee.
                 this.uploadPhotos([file]);
             } catch (error) {
-                this.scan = { busy: false, result: null, error: 'Scannen lukte niet op dit apparaat.' };
+                await this.scanNameplate(file, 'Scannen lukte niet op dit apparaat; Ivy leest het label…');
             }
+        },
+
+        async submitGtin() {
+            const code = String(this.scan.code ?? '').trim();
+            if (!code) return;
+            await this.lookupGtin(code);
+        },
+
+        async lookupGtin(code) {
+            this.scan = { ...this.scan, busy: true, busyText: 'Productcode controleren en opzoeken…', result: null, error: null };
+            await this.ensureDraft();
+
+            const response = await this.request(`/api/drafts/${this.draft.id}/scan/gtin`, 'POST', { code });
+
+            if (!response) {
+                this.scan = { ...this.scan, busy: false, error: this.error ?? 'Dit is geen geldige productcode.' };
+
+                return;
+            }
+
+            if (response.draft) this.apply(response);
+            this.scan = { ...this.scan, busy: false, code: '', result: response.message, error: null };
+        },
+
+        // Typeplaat: de foto wordt een intern document (niet een kavelfoto);
+        // Ivy leest merk, model, bouwjaar, vermogen en serienummer.
+        async scanNameplate(file, busyText = 'Ivy leest de typeplaat…') {
+            if (!file) return;
+            this.scan = { ...this.scan, busy: true, busyText, result: null, error: null };
+            await this.ensureDraft();
+
+            const body = new FormData();
+            body.append('file', file);
+
+            const started = await this.request(`/api/drafts/${this.draft.id}/scan/nameplate`, 'POST', body);
+
+            if (!started) {
+                this.scan = { ...this.scan, busy: false, error: this.error ?? 'De typeplaat kon niet worden gelezen.' };
+
+                return;
+            }
+
+            this.draft.documents.push(started.document);
+
+            for (let attempt = 0; attempt < 40; attempt++) {
+                await new Promise((resolve) => setTimeout(resolve, 1500));
+                const poll = await this.request(`/api/ivy/tasks/${started.run.id}`, 'GET');
+                const status = poll?.run?.status;
+
+                if (status === 'completed') {
+                    const fresh = await this.request(`/api/drafts/${this.draft.id}`, 'GET');
+                    if (fresh?.draft) this.apply(fresh);
+                    const fields = this.draft ?? {};
+                    const parts = [fields.brand ? 'merk ' + fields.brand : null, fields.model ? 'model ' + fields.model : null, fields.year ? 'bouwjaar ' + fields.year : null].filter(Boolean);
+                    this.scan = { ...this.scan, busy: false, result: parts.length ? 'Ivy las de typeplaat: ' + parts.join(', ') + '. Controleer de velden; de bron staat erbij.' : 'Ivy kon weinig lezen op deze plaat. Probeer een scherpere foto van dichtbij.', error: null };
+
+                    return;
+                }
+
+                if (status === 'failed' || status === 'skipped') {
+                    this.scan = { ...this.scan, busy: false, error: 'Ivy kon de typeplaat nu niet lezen. Vul merk en model zelf in.' };
+
+                    return;
+                }
+            }
+
+            this.scan = { ...this.scan, busy: false, error: 'Dit duurt langer dan verwacht; de velden worden ingevuld zodra Ivy klaar is.' };
         },
 
         // SEO-voorbeeld ---------------------------------------------------------

@@ -17,7 +17,8 @@ it('biedt dicteren en een barcodescan aan in de wizard', function () {
     $this->get(route('sell'))
         ->assertOk()
         ->assertSee('Dicteren')
-        ->assertSee('Label of barcode scannen')
+        ->assertSee('Barcode scannen')
+        ->assertSee('Typeplaat lezen')
         ->assertSee('scanBarcode(', escape: false)
         ->assertSee("dictate('description')", escape: false);
 });
