@@ -13,6 +13,7 @@ use App\Models\Dispute;
 use App\Models\User;
 use App\Notifications\DisputeResolved;
 use App\Notifications\MoneyNeedsAttention;
+use App\Orders\Invoicing\Invoices;
 use App\Support\Audit\Audit;
 use App\Support\Money\Money;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +69,7 @@ final class ResolveDispute
             // platformomzet in de maand van de correctie (control center).
             if ($dispute->correction_cents !== null && $dispute->correction_cents > 0) {
                 app(Ledger::class)->recordRefund($order, $dispute->correction_cents, "dispute:{$dispute->id}");
+                app(Invoices::class)->creditNote($dispute->fresh('order'));
             }
 
             /*

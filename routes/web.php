@@ -20,6 +20,7 @@ use App\Http\Controllers\DistributionController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FunnelController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LotController;
 use App\Http\Controllers\LotConversationController;
@@ -372,6 +373,7 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/bestellingen', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/bestellingen/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('/facturen/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
     Route::post('/bestellingen/{order}/berichten', [OrderMessageController::class, 'store'])->middleware('throttle:30,10')->name('orders.messages.store');
 
     Route::post('/bestellingen/{order}/betalen', [OrderActionController::class, 'pay'])->name('orders.pay');

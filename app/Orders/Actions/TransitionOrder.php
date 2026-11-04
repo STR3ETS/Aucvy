@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Notifications\MoneyNeedsAttention;
 use App\Notifications\OrderStatusChanged;
 use App\Notifications\ReviewRequested;
+use App\Orders\Invoicing\Invoices;
 use App\Support\Audit\Audit;
 use App\Support\Money\Money;
 use Illuminate\Support\Facades\DB;
@@ -136,6 +137,9 @@ final class TransitionOrder
         // Het grootboek van het platform (control center): fee,
         // administratiekosten en betaalkosten, idempotent per order.
         app(Ledger::class)->recordPaidOrder($order->fresh(['payout', 'seller.company']));
+
+        // Facturen (hoofdbriefing p. 7): kavel namens de verkoper, administratiekosten en succesfee.
+        app(Invoices::class)->forPaidOrder($order->fresh(['payout', 'lot', 'buyer.company', 'seller.company']));
 
         if ($order->auction_id !== null) {
             Deposit::query()

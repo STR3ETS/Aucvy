@@ -46,6 +46,21 @@
                 </section>
             @endif
 
+            @if ($invoices->isNotEmpty())
+                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="facturen">
+                    <h2 id="facturen" class="text-sm font-extrabold">Facturen</h2>
+                    <p class="text-xs text-aj-muted">Kavelfacturen namens jou aan de koper, en de facturen van Aucvy voor de succesfee. Opslaan als pdf via Afdrukken.</p>
+                    <ul class="mt-3 divide-y divide-aj-border text-sm">
+                        @foreach ($invoices as $invoice)
+                            <li class="flex flex-wrap items-center justify-between gap-2 py-2">
+                                <span><span class="font-bold">{{ $invoice->number }}</span> · {{ __('invoices.for.'.$invoice->kind) }}<span class="block text-xs text-aj-muted">{{ $invoice->issued_at->isoFormat('D MMM YYYY') }} · bestelling {{ $invoice->order->order_number }}</span></span>
+                                <span class="flex items-center gap-3"><span class="tabular font-bold">{{ Money::format($invoice->total_cents) }}</span><a href="{{ route('invoices.show', $invoice) }}" class="font-semibold underline">Bekijken</a></span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
             <section class="overflow-x-auto rounded-aj-s border border-aj-border bg-aj-surface" aria-label="Verkopen">
                 <table class="admin-table">
                     <thead><tr><th>Bestelling</th><th>Kavel</th><th class="text-right">Hamer</th><th class="text-right">Fee</th><th class="text-right">Btw</th><th class="text-right">Netto</th><th>Uitbetaling</th></tr></thead>

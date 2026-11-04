@@ -18,6 +18,15 @@ return [
 
     'display_timezone' => env('AUCVY_DISPLAY_TIMEZONE', 'Europe/Amsterdam'),
 
+    // De gegevens van Aucvy zelf op facturen (hoofdbriefing p. 7); adres, KVK en btw-nummer vult Raph aan.
+    'company' => [
+        'name' => env('AUCVY_COMPANY_NAME', 'Aucvy B.V.'),
+        'address' => env('AUCVY_COMPANY_ADDRESS', ''),
+        'postal_city' => env('AUCVY_COMPANY_POSTAL_CITY', ''),
+        'kvk' => env('AUCVY_COMPANY_KVK'),
+        'vat' => env('AUCVY_COMPANY_VAT'),
+    ],
+
     // Delen en verspreiden: het lettertype van het deelbeeld (Manrope, OFL).
     'distribution' => [
         'font' => env('AUCVY_SHARE_FONT', resource_path('fonts/Manrope-Variable.ttf')),

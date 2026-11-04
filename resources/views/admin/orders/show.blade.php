@@ -30,6 +30,9 @@
                 <div class="flex justify-between gap-3"><dt class="text-aj-muted">Verkoper</dt>
                     <dd class="font-semibold"><a href="{{ route('admin.users.show', $order->seller) }}" class="text-aj-blue-text underline">{{ $order->seller->name }}</a></dd>
                 </div>
+                @foreach ($order->invoices as $invoice)
+                    <div class="flex justify-between gap-3"><dt class="text-aj-muted">{{ $invoice->kindLabel() }}</dt><dd><a href="{{ route('invoices.show', $invoice) }}" class="font-semibold underline">{{ $invoice->number }}</a></dd></div>
+                @endforeach
                 <div class="flex justify-between gap-3"><dt class="text-aj-muted">Uitbetaling</dt>
                     <dd class="font-semibold">{{ $order->payout?->status->label() ?? 'nog niet aangemaakt' }}</dd>
                 </div>

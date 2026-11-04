@@ -224,7 +224,7 @@ final class BackofficeController extends Controller
 
     public function showOrder(Order $order): View
     {
-        $order->load(['lot', 'buyer', 'seller', 'payments', 'payout', 'disputes.reporter', 'review.reviewer', 'messages.author']);
+        $order->load(['lot', 'buyer', 'seller', 'payments', 'payout', 'disputes.reporter', 'review.reviewer', 'messages.author', 'invoices']);
 
         return view('admin.orders.show', ['order' => $order]);
     }

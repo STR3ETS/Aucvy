@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Dashboard\SellerFinance;
 use App\Models\Bid;
 use App\Models\Dispute;
+use App\Models\Invoice;
 use App\Models\Lot;
 use App\Models\LotMedia;
 use App\Models\Payout;
@@ -91,6 +92,11 @@ final class DashboardListController extends Controller
             'totals' => $finance->totals($lines),
             'perMonth' => $perMonth,
             'thisMonth' => $perMonth->get(now()->timezone(config('aucvy.display_timezone'))->format('Y-m'), $finance->totals(collect())),
+            'invoices' => Invoice::query()->with('order')
+                ->where(fn ($query) => $query->where('recipient_user_id', $request->user()->id)
+                    ->orWhere('issuer_company_id', $request->user()->company_id)
+                    ->orWhereHas('order', fn ($order) => $order->where('seller_id', $request->user()->id)))
+                ->latest('id')->limit(100)->get(),
             'feePercentage' => PlatformFacts::feePercentageFor($request->user()->company),
             'tier' => [
                 'revenue_cents' => PlatformFacts::revenueCentsFor($request->user()->company),

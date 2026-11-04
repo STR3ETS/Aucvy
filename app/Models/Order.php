@@ -77,6 +77,11 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class)->orderBy('id');
+    }
+
     public function payout(): HasOne
     {
         return $this->hasOne(Payout::class);

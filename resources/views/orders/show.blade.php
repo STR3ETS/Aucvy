@@ -227,6 +227,19 @@
             <aside class="space-y-4">
                 <x-lot.cost-breakdown :costs="$costs" title="Kostenopbouw" />
 
+                {{-- Facturen (hoofdbriefing p. 7): koper ziet kavel en administratiekosten, verkoper ziet kavel en succesfee. --}}
+                @php $invoices = $order->invoices->filter(fn ($invoice) => $isBuyer ? in_array($invoice->kind, ['lot', 'admin_fee', 'credit'], true) : in_array($invoice->kind, ['lot', 'fee', 'credit'], true)); @endphp
+                @if ($invoices->isNotEmpty())
+                    <div class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4" aria-label="Facturen">
+                        <p class="text-sm font-extrabold">Facturen</p>
+                        <ul class="mt-2 space-y-1.5 text-sm">
+                            @foreach ($invoices as $invoice)
+                                <li class="flex items-center justify-between gap-2"><span>{{ $invoice->kindLabel() }} <span class="text-xs text-aj-muted">{{ $invoice->number }}</span></span><a href="{{ route('invoices.show', $invoice) }}" class="font-semibold underline">Bekijken</a></li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 @if (! $isBuyer && $order->payout !== null)
                     <div class="rounded-aj-sm border border-aj-border-strong bg-aj-surface p-4" aria-label="Uitbetaling">
                         <p class="text-sm font-extrabold">Jouw uitbetaling</p>
