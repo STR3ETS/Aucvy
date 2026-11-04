@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Dashboard\ActivityFeed;
+use App\Dashboard\BuyerOverview;
 use App\Dashboard\DemandForecast;
 use App\Dashboard\HeadlineStats;
 use App\Dashboard\IntentFunnel;
+use App\Dashboard\InterestOverview;
+use App\Dashboard\SellerCharts;
 use App\Dashboard\SignalSync;
 use App\Dashboard\TeamActivity;
 use App\Enums\AiAgent;
@@ -42,6 +45,9 @@ final class DashboardController extends Controller
         DemandForecast $forecast,
         HeadlineStats $stats,
         ActivityFeed $feed,
+        SellerCharts $charts,
+        InterestOverview $interest,
+        BuyerOverview $buyer,
     ): View|RedirectResponse {
         $user = $request->user();
 
@@ -74,6 +80,7 @@ final class DashboardController extends Controller
             ->get();
 
         $trend = $isSeller ? $this->revenueTrend($user) : null;
+        $weekly = $insights->where('type', 'weekly');
 
         return view('dashboard.index', [
             'isSeller' => $isSeller,
@@ -86,10 +93,21 @@ final class DashboardController extends Controller
             // Taken (signalen mét knop), meldingen en tickets in één lijst.
             'feed' => $feed->for($user, $insights->filter(fn (AiInsight $insight): bool => $insight->hasAction())),
             // Wat Ivy deze week zag: observaties, bewust zonder knoppen.
-            'weekly' => $insights->where('type', 'weekly'),
+            'weekly' => $weekly,
             'done' => $isSeller ? $activity->forSeller($user) : [],
             'intent' => $isSeller ? $funnel->forSeller($user) : null,
             'forecast' => $isSeller ? $forecast->forSeller($user) : null,
+            // Het ontwerp van november: de grafieken, de interesse per kavel en de lijsten.
+            'revenue' => $isSeller ? $charts->revenueByMonth($user) : null,
+            'hours' => $isSeller ? $charts->bidsPerHour($user) : null,
+            'interest' => $isSeller ? $interest->forSeller($user, $weekly) : [],
+            'liveLots' => $isSeller ? $interest->liveLots($user) : collect(),
+            'drafts' => $isSeller ? $interest->drafts($user) : collect(),
+            'openBids' => $isSeller ? [] : $buyer->openBids($user),
+            'watching' => $isSeller ? collect() : $buyer->watching($user),
+            'purchases' => $isSeller ? collect() : $buyer->purchases($user),
+            'toPay' => $isSeller ? null : $buyer->toPay($user),
+            'alerts' => $isSeller ? 0 : $buyer->activeAlerts($user),
             'isNew' => ! $user->lots()->exists()
                 && ! $user->purchases()->exists()
                 && ! $user->bids()->exists(),

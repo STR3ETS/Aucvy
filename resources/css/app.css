@@ -25,6 +25,12 @@
  */
 @import './hybrid.css' layer(components);
 
+/*
+ | Het ontwerp van november (briefing-nieuwste): de gedeelde onderdelen van
+ | de ontworpen pagina's als d-klassen. Zie design.css.
+ */
+@import './design.css' layer(components);
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../views/**/*.blade.php';

@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
  * een knop (wat jouw akkoord of actie vraagt), meldingen is wat per mail of
  * push ging, tickets zijn je eigen supportvragen.
  *
- * @phpstan-type Item array{kind: string, title: string, body: string|null, url: string, at: CarbonInterface, unread: bool, icon: string, tone: string, agent: string|null, dismiss_id: int|null}
+ * @phpstan-type Item array{kind: string, title: string, body: string|null, url: string, at: CarbonInterface, unread: bool, icon: string, tone: string, agent: string|null, action: string|null, dismiss_id: int|null}
  */
 final class ActivityFeed
 {
@@ -47,6 +47,7 @@ final class ActivityFeed
                 InsightSeverity::Info => 'blue',
             },
             'agent' => $insight->agent->value,
+            'action' => $insight->action_label,
             'dismiss_id' => $insight->id,
         ]));
 
@@ -64,6 +65,7 @@ final class ActivityFeed
                 'icon' => $icon,
                 'tone' => $tone,
                 'agent' => null,
+                'action' => null,
                 'dismiss_id' => null,
             ]);
         });
@@ -87,6 +89,7 @@ final class ActivityFeed
                 'icon' => 'message-circle',
                 'tone' => $ticket->isOpen() ? 'purple' : 'grey',
                 'agent' => null,
+                'action' => null,
                 'dismiss_id' => null,
             ]));
 

@@ -59,6 +59,8 @@
     ];
     $hasTiles = isset($tiles);
     $unreadCount = $user->unreadNotifications()->count();
+    // De tellers achter Meldingen in het menu, zoals in het ontwerp van november.
+    $counts = ['notifications.index' => $unreadCount];
 @endphp
 
 <!DOCTYPE html>
@@ -100,12 +102,13 @@
                 <span class="avatar" aria-hidden="true">
                     {{ $initials !== '' ? $initials : 'A' }}
                     @if ($user->kyc_status->allowsBidding())
-                        <span class="badge" title="Geverifieerd"><x-v4.icon name="check" :size="11" stroke="3" /></span>
+                        <span class="badge" title="Geverifieerd"><x-v4.icon name="check" :size="9" stroke="3" /></span>
                     @endif
                 </span>
-                <b>{{ $user->name }}</b>
-                <span class="line">{{ $user->company?->name ?? ($user->type?->label() ?? 'Particulier') }}</span>
-                <span class="line">{{ $user->email }}</span>
+                <span class="dash-profile-text">
+                    <b>{{ $user->company?->name ?? $user->name }}</b>
+                    <span class="line">{{ $user->company !== null ? 'Zakelijk' : ($user->type?->label() ?? 'Particulier') }} · {{ $user->kyc_status->allowsBidding() ? 'geverifieerd' : 'nog niet geverifieerd' }}</span>
+                </span>
             </a>
 
             <nav class="dash-nav" aria-label="Dashboardonderdelen">
@@ -115,14 +118,19 @@
                     {{ $itemLabel }}
                 </a>
                 @foreach ($groups as $label => $items)
+                    <div class="dash-nav-group">
                     <p class="dash-nav-label">{{ $label }}</p>
                     @foreach ($items as [$route, $patterns, $itemLabel, $icon])
-                        @php $isOn = request()->routeIs(...$patterns); @endphp
+                        @php $isOn = request()->routeIs(...$patterns); $count = $counts[$route] ?? 0; @endphp
                         <a href="{{ route($route) }}"{!! $isOn ? ' class="is-on" aria-current="page"' : '' !!}>
                             <span class="ic"><x-v4.icon :name="$icon" :size="17" stroke="2.2" /></span>
                             {{ $itemLabel }}
+                            @if ($count > 0)
+                                <span class="count" aria-label="{{ $count }} nieuw">{{ $count > 99 ? '99+' : $count }}</span>
+                            @endif
                         </a>
                     @endforeach
+                    </div>
                 @endforeach
             </nav>
 
@@ -160,23 +168,20 @@
             <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
 
             <header class="dash-bar">
-                <div class="dash-bar-title">
-                    <b>{{ $title }}</b>
-                    <span>{{ $subtitle }}</span>
-                </div>
+                <nav class="dash-crumbs" aria-label="Kruimelpad"><a href="{{ route('dashboard') }}">Dashboard</a> / {{ $heading ?? $title }}</nav>
                 <form class="dash-search" method="GET" action="{{ route('lots.index') }}" role="search">
                     <x-v4.icon name="search" :size="16" stroke="2.2" />
                     <label class="sr-only" for="dash-q">Zoek kavels</label>
                     <input id="dash-q" name="q" type="search" placeholder="Zoek kavels, categorieën of merken" autocomplete="off">
                     <kbd>Enter</kbd>
                 </form>
-                <a class="dash-bar-link" href="{{ route('faq') }}"><x-v4.icon name="message-circle" :size="16" stroke="2" /> Hulp</a>
                 <a class="dash-bar-link dash-bell" href="{{ route('notifications.index') }}" aria-label="Meldingen{{ $unreadCount > 0 ? ', '.$unreadCount.' ongelezen' : '' }}">
                     <x-v4.icon name="bell" :size="16" stroke="2" />
                     @if ($unreadCount > 0)
                         <span class="notif-count" aria-hidden="true">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
                     @endif
                 </a>
+                <button type="button" class="dash-bar-link" @click="window.dispatchEvent(new CustomEvent('ivy-open'))">Vraag Ivy</button>
                 <x-marketing.user-menu />
             </header>
 
@@ -210,6 +215,18 @@
             <main id="hoofdinhoud" tabindex="-1" class="dash-body">
                 {{ $slot }}
             </main>
+
+            <footer class="d-foot">
+                <div class="d-foot-brand">
+                    <b><svg class="mark" width="20" height="20" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg> Aucvy</b>
+                    <span>© {{ now()->year }} Aucvy B.V. Het AI-commerceplatform voor zakelijke goederen.</span>
+                </div>
+                <nav aria-label="Voettekst">
+                    <a href="{{ route('legal.terms') }}">Voorwaarden</a>
+                    <a href="{{ route('legal.privacy') }}">Privacy</a>
+                    <a href="{{ route('contact') }}">Contact</a>
+                </nav>
+            </footer>
         </div>
     </div>
 
