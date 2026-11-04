@@ -34,7 +34,9 @@
 @endpush
 
 <x-layouts.public :title="$lot->title" :heading="$translation['title'] ?? $lot->title" :description="Str::limit($lot->description, 155)"
-    :eyebrow="$lot->category?->name ?? 'Kavel'" :image="$shareImage" :image-width="$shareWidth" :image-height="$shareHeight" og-type="product" :canonical="route('lots.show', $lot)">
+    :eyebrow="$lot->category?->name ?? 'Kavel'" :image="$shareImage" :image-width="$shareWidth" :image-height="$shareHeight" og-type="product" :canonical="route('lots.show', $lot)" :ivy-lot="$lot" ivy-page="kavel">
+    {{-- Op mobiel staat de Ivy-knop boven de biedbalk, nooit eroverheen. --}}
+    <style>@media (max-width: 1023px) { .ivy-root { --ivy-offset: 76px; } }</style>
     {{-- Het kruimelpad staat in de paginakop; de titel is de kop zelf. --}}
     <x-slot:crumbs>
         <a href="{{ route('lots.index') }}">Veilingen</a>
@@ -353,6 +355,32 @@
                         <x-auction.buy-now-hero />
                     @else
                         <x-auction.bid-panel :auction="$auction" />
+
+                        {{-- Ivy naast het biedpaneel (Ivy-briefing hfst. 9): vraag over de kavel, en het niveau per kavel (K4). --}}
+                        @if (\App\Ivy\Chat\IvyFlags::on('ivy.enabled'))
+                            <div class="rounded-aj-sm border border-aj-border bg-aj-surface p-4" x-data="{ open: false }">
+                                <button type="button" class="btn btn-ghost w-full justify-center" style="height:40px;font-size:13px" @click="$dispatch('ivy-open', { text: null })">
+                                    <img src="{{ asset('images/agents/ivy.jpg') }}" alt="" class="size-5 rounded-full"> Vraag Ivy over deze kavel
+                                </button>
+                                @auth
+                                    @if (! $lot->isManagedBy(auth()->user()) && ! $auction->isClosed())
+                                        @php $ivyMode = \App\Models\IvyLotMode::for(auth()->user(), $lot); $ivyModeRow = \App\Models\IvyLotMode::query()->where('user_id', auth()->id())->where('lot_id', $lot->id)->whereNull('ended_at')->first(); @endphp
+                                        <button type="button" class="mt-2 w-full text-left text-xs font-semibold underline" @click="open = !open">Hoeveel mag Ivy doen? <span class="text-aj-muted">Nu: {{ __('ivy.modes.'.$ivyMode) }}{{ $ivyModeRow?->limit_cents ? ' tot '.Money::format($ivyModeRow->limit_cents) : '' }}</span></button>
+                                        <form method="POST" action="{{ route('ivy.lot-mode', $lot) }}" x-show="open" x-cloak class="mt-2 space-y-2 text-sm" x-data="{ mode: @js($ivyMode) }">
+                                            @csrf
+                                            <label class="flex items-start gap-2"><input type="radio" name="mode" value="notify" x-model="mode" class="mt-1"> <span><span class="font-bold">Zelf bieden</span><span class="block text-xs text-aj-muted">Ivy helpt alleen met informatie en meldt wat er speelt.</span></span></label>
+                                            <label class="flex items-start gap-2"><input type="radio" name="mode" value="ask" x-model="mode" class="mt-1"> <span><span class="font-bold">Ivy waarschuwt mij</span><span class="block text-xs text-aj-muted">Bij elk moment zet ze een voorstel klaar en vraagt wat je wilt.</span></span></label>
+                                            @if (\App\Ivy\Chat\IvyFlags::on('ivy.proposals'))
+                                                <label class="flex items-start gap-2"><input type="radio" name="mode" value="auto" x-model="mode" class="mt-1"> <span><span class="font-bold">Automatisch tot mijn limiet</span><span class="block text-xs text-aj-muted">Via het bestaande autobod; boven je limiet biedt ze nooit. Je bevestigt het mandaat eerst.</span></span></label>
+                                                <div x-show="mode === 'auto'" x-cloak class="flex items-center gap-2 pl-6"><span class="text-xs">Limiet €</span><input type="number" name="limit" min="1" step="1" inputmode="numeric" class="w-32 rounded-aj-sm border border-aj-border-strong px-2" style="min-height:36px"></div>
+                                            @endif
+                                            <button type="submit" class="btn btn-dark" style="height:36px;font-size:12px">Opslaan</button>
+                                            @error('limit')<p class="text-xs text-aj-error">{{ $message }}</p>@enderror
+                                        </form>
+                                    @endif
+                                @endauth
+                            </div>
+                        @endif
 
                         {{-- Een veiling kan daarnaast een koop-direct-prijs
                              hebben; die vervalt zodra er overheen geboden is. --}}

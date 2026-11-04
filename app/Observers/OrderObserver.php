@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
+use App\Ivy\Alerts\AlertRules;
 use App\Lots\Dossier\ProjectSources;
 use App\Models\Order;
 use App\Notifications\OrderCreated;
@@ -32,6 +33,8 @@ final class OrderObserver
     {
         if ($order->wasChanged('status')) {
             $this->safely(fn () => $this->project->orderStatus($order));
+            // Ivy-alerts over voortgang, betaling en uitbetaling (Ivy-briefing hfst. 8).
+            $this->safely(fn () => app(AlertRules::class)->handleOrderStatus($order->fresh(['lot', 'buyer', 'seller'])));
         }
     }
 

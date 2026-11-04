@@ -93,6 +93,12 @@ Schedule::command('aucvy:social-push')->everyFiveMinutes();
 Schedule::command('aucvy:hot-score')->hourly();
 Schedule::command('aucvy:automations')->everyFifteenMinutes();
 Schedule::command('aucvy:send-campaigns')->everyTenMinutes();
+// Ivy (Ivy-briefing hfst. 8): voorstellen verlopen en reservewaarschuwing elke minuut, dagoverzicht om 18:00.
+Schedule::command('aucvy:ivy expire')->everyMinute();
+Schedule::command('aucvy:ivy reserve')->everyMinute();
+Schedule::command('aucvy:ivy digest')->dailyAt('18:00');
+Schedule::command('aucvy:ivy idle')->hourly();
+Schedule::command('aucvy:ivy prune')->dailyAt('03:30');
 
 Schedule::command('aucvy:prune-expired')
     ->dailyAt('04:00')

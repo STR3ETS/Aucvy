@@ -1,5 +1,7 @@
 @props([
     'title' => null,
+    'ivyLot' => null,
+    'ivyPage' => null,
     // De kop in de band; standaard de paginatitel.
     'heading' => null,
     'eyebrow' => null,
@@ -217,6 +219,7 @@
 
     <x-privacy.cookie-banner />
 
+    <x-ivy.launcher :lot="$ivyLot ?? null" :page="$ivyPage ?? (request()->route()?->getName() ?? 'dashboard')" />
     @stack('scripts')
 </body>
 </html>

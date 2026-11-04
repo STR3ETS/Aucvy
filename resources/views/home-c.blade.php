@@ -29,7 +29,8 @@
         <span class="w"><span>goederen</span></span>
       </h1>
       <p class="lead" data-hero>Maak een foto van wat je wilt verkopen. Ivy herkent het, Nova schrijft de advertentie en Atlas onderbouwt de waarde. Jij kiest de verkoopvorm en keurt goed.</p>
-      <form class="ask" data-hero action="{{ route('lots.index') }}" method="get" role="search">
+      {{-- De demo-chat is Ivy zelf: de vraag opent het paneel; zonder JavaScript wordt het een zoekopdracht. --}}
+      <form class="ask" data-hero action="{{ route('lots.index') }}" method="get" role="search" onsubmit="if (window.Alpine) { window.dispatchEvent(new CustomEvent('ivy-open', { detail: { text: this.q.value } })); return false; }">
         <label>
           {{-- TOEVOEGING: Ivy's gezicht in plaats van het sterretje. --}}
           <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">

@@ -21,6 +21,9 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FunnelController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\IvyChatController;
+use App\Http\Controllers\IvyInboxController;
+use App\Http\Controllers\IvyProposalController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LiveStudioController;
 use App\Http\Controllers\LiveWebhookController;
@@ -59,6 +62,7 @@ use App\Http\Controllers\Staff\CustomerController;
 use App\Http\Controllers\Staff\DisputeReviewController;
 use App\Http\Controllers\Staff\ErrorLogController;
 use App\Http\Controllers\Staff\FinanceController;
+use App\Http\Controllers\Staff\IvyAdminController;
 use App\Http\Controllers\Staff\LiveRoomController;
 use App\Http\Controllers\Staff\LotDossierController as StaffLotDossierController;
 use App\Http\Controllers\Staff\MailBuilderController;
@@ -103,6 +107,13 @@ Route::get('/veilingen', [LotIndexController::class, 'index'])->middleware('thro
 
 // Dezelfde pagina, met de categorie voorgeselecteerd (hfst. 7).
 Route::get('/veilingen/{category}', [LotIndexController::class, 'index'])->middleware('throttle:120,1')->name('lots.category');
+
+// Ivy als gesprekspartner (Ivy-briefing): het paneel werkt ook zonder account (bezoeker), met een gasttoken.
+Route::prefix('ivy')->name('ivy.')->middleware('throttle:60,1')->group(function (): void {
+    Route::get('/gesprek', [IvyChatController::class, 'show'])->name('show');
+    Route::post('/berichten', [IvyChatController::class, 'store'])->middleware('throttle:20,1')->name('send');
+    Route::post('/upload', [IvyChatController::class, 'upload'])->middleware('throttle:10,10')->name('upload');
+});
 
 // Afmelden voor marketingmail: via de voet of met één klik (List-Unsubscribe-Post); de link is getekend.
 Route::get('/mail/afmelden/{user}/{stream}', [MailConsentController::class, 'show'])->name('mail.unsubscribe');
@@ -317,6 +328,14 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/dashboard/kavels/{lot:id}/verspreiding/{distribution}/tekst', [DistributionController::class, 'updateText'])->name('dashboard.lots.distribution.text');
     Route::post('/dashboard/kavels/{lot:id}/verspreiding/{distribution}/geplaatst', [DistributionController::class, 'markPosted'])->name('dashboard.lots.distribution.posted');
     Route::post('/dashboard/kavels/{lot:id}/verspreiding/{distribution}/offline', [DistributionController::class, 'markWithdrawn'])->name('dashboard.lots.distribution.withdrawn');
+    // Ivy: voorstellen bevestigen, de inbox, keuzes bij alerts, niveau per kavel, meldingsvoorkeuren.
+    Route::get('/ivy/voorstellen/{proposal}', [IvyProposalController::class, 'show'])->name('ivy.proposals.show');
+    Route::post('/ivy/voorstellen/{proposal}/bevestigen', [IvyProposalController::class, 'confirm'])->middleware('throttle:30,1')->name('ivy.proposals.confirm');
+    Route::post('/ivy/voorstellen/{proposal}/afwijzen', [IvyProposalController::class, 'reject'])->name('ivy.proposals.reject');
+    Route::get('/dashboard/ivy', [IvyInboxController::class, 'index'])->name('ivy.inbox');
+    Route::post('/dashboard/ivy/voorkeuren', [IvyInboxController::class, 'preferences'])->name('ivy.preferences');
+    Route::post('/ivy/alerts/{alert}/keuze/{choice}', [IvyInboxController::class, 'choose'])->name('ivy.alerts.choose');
+    Route::post('/ivy/kavels/{lot}/niveau', [IvyInboxController::class, 'mode'])->name('ivy.lot-mode');
     // Live uitzenden (briefing nieuwe functies): de studio van de verkoper, achter de vlag aucvy.live.enabled.
     Route::get('/dashboard/kavels/{lot:id}/live', [LiveStudioController::class, 'show'])->name('dashboard.lots.live');
     Route::post('/dashboard/kavels/{lot:id}/live', [LiveStudioController::class, 'start'])->middleware('throttle:10,10')->name('dashboard.lots.live.start');
@@ -484,6 +503,14 @@ Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group
         Route::get('/rapporten', [ReportController::class, 'index'])->name('reports');
         Route::post('/rapporten', [ReportController::class, 'run'])->name('reports.run');
         Route::get('/rapporten/download', [ReportController::class, 'download'])->name('reports.download');
+    });
+
+    // Ivy in beheer: noodremmen, kennisbank, onbekende vragen, leads, overdrachten. Eigenaar.
+    Route::middleware('area:system')->group(function (): void {
+        Route::get('/ivy', [IvyAdminController::class, 'index'])->name('ivy');
+        Route::post('/ivy/vlag', [IvyAdminController::class, 'toggle'])->name('ivy.flag');
+        Route::post('/ivy/kennisbank/{article?}', [IvyAdminController::class, 'saveArticle'])->name('ivy.kb');
+        Route::post('/ivy/overdrachten/{handoff}', [IvyAdminController::class, 'closeHandoff'])->name('ivy.handoff');
     });
 
     // Mail Builder (briefing nieuwe functies): 46 mails, reeksen, campagnes. Eigenaar en marketing.

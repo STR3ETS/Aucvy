@@ -7,6 +7,9 @@ namespace App\Providers;
 use App\Admin\StaffRole;
 use App\Compliance\Identity\FakeIdentityProvider;
 use App\Compliance\Identity\IdentityProvider;
+use App\Ivy\Chat\AnthropicChatProvider;
+use App\Ivy\Chat\ChatProvider;
+use App\Ivy\Chat\FakeChatProvider;
 use App\Ivy\Contracts\LlmProvider;
 use App\Ivy\Providers\AnthropicProvider;
 use App\Ivy\Providers\FakeProvider;
@@ -69,6 +72,12 @@ class AppServiceProvider extends ServiceProvider
         // Identiteit via de bank (iDIN, V7); 'manual' komt hier nooit langs.
         $this->app->bind(IdentityProvider::class, fn (): IdentityProvider => match (config('aucvy.identity.provider')) {
             default => new FakeIdentityProvider,
+        });
+
+        // Ivy als gesprekspartner (Ivy-briefing IVY-003): chat met tools; de nepversie draait zonder sleutel.
+        $this->app->bind(ChatProvider::class, fn (): ChatProvider => match (config('aucvy.ivy.chat_provider')) {
+            'anthropic' => new AnthropicChatProvider,
+            default => new FakeChatProvider,
         });
 
         // Live veilen (briefing nieuwe functies): LiveKit Cloud, later zelf gehost; zonder sleutels de nepversie.

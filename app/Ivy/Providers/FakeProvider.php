@@ -43,6 +43,7 @@ final class FakeProvider implements LlmProvider
             'moderate_message' => ['signal' => 'none', 'confidence' => 0.9],
             'write_channel_texts' => ['texts' => $this->channelTexts($input), 'confidence' => 0.8],
             // De neptypeplaat: leesbaar merk en model, een bouwjaar, vermogen en serienummer.
+            'analyse_guest_photo' => ['object_type' => 'Professionele koelkast, rvs', 'condition' => 'gebruikt, lichte gebruikssporen zichtbaar', 'person_visible' => false, 'confidence' => 0.7],
             'read_nameplate' => [
                 'brand' => $input['brand'] ?: 'Hyster',
                 'model' => $input['model'] ?: 'H2.5FT',

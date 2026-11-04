@@ -24,6 +24,9 @@
     // Zoekmachines en deelknoppen: de canonieke URL (standaard de huidige
     // zonder querystring), het deelbeeld en het Open Graph-type.
     'canonical' => null,
+    // Ivy weet op welke pagina je zit; de kavelpagina geeft de kavel mee.
+    'ivyLot' => null,
+    'ivyPage' => null,
     'image' => null,
     'imageWidth' => null,
     'imageHeight' => null,
@@ -230,6 +233,8 @@
 
     <x-privacy.cookie-banner />
 
+    {{-- Ivy op elke pagina (Ivy-briefing hfst. 9); de kavelpagina geeft de kavel mee. --}}
+    <x-ivy.launcher :lot="$ivyLot ?? null" :page="$ivyPage ?? (request()->route()?->getName() ?? 'onbekend')" />
     @stack('scripts')
 </body>
 </html>

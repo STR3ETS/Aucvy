@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 #[Fillable([
     'subject_type', 'subject_id', 'user_id', 'agent', 'task', 'model',
-    'input', 'output', 'confidence', 'tokens_in', 'tokens_out', 'cost_cents',
+    'input', 'output', 'confidence', 'tokens_in', 'tokens_out', 'cost_cents', 'conversation_id', 'ivy_role',
     'latency_ms', 'status', 'error', 'cache_key',
 ])]
 class AiRun extends Model

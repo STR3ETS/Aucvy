@@ -3,27 +3,69 @@
 declare(strict_types=1);
 
 /*
- | Wat de UI naast een Ivy-uitkomst zet. De teksten horen bij de
- | ConfidencePolicy (hfst. 8): bij lage zekerheid geen exacte bedragen als
- | advies - de formulering houdt daar al rekening mee.
+ | Ivy als gesprekspartner (Ivy-briefing).
  */
-
 return [
 
-    // De client krijgt bij een mislukte run één eigen zin; de echte fout staat in het log.
-    'failed' => 'De analyse is niet gelukt. Probeer het later opnieuw of vul het zelf in.',
-    'guest_limit' => 'Te veel Ivy-verzoeken vanaf dit adres vandaag. Log in om verder te gaan.',
-
-    'confidence' => [
-        'low' => 'Lage zekerheid - zie dit als een eerste richting en controleer alles zelf.',
-        'medium' => 'Redelijke zekerheid - loop de ingevulde velden even na.',
-        'high' => 'Hoge zekerheid - gebaseerd op duidelijk herkenbaar materiaal.',
+    'roles' => [
+        'visitor' => 'bezoeker',
+        'buyer' => 'koper',
+        'seller' => 'verkoper',
     ],
 
-    'tasks' => [
-        'recognise_lot' => 'Object herkennen',
-        'draft_listing' => 'Advertentie schrijven',
-        'estimate_value' => 'Waarde schatten',
+    'proposals' => [
+        'bid' => 'Bod',
+        'auto_bid' => 'Automatisch bieden',
+        'dutch_accept' => 'Afmijnen',
+        'buy_now' => 'Koop direct',
+        'reserve_change' => 'Reserve verlagen',
+        'publish' => 'Publiceren',
+    ],
+
+    'proposal_status' => [
+        'proposed' => 'klaargezet',
+        'shown' => 'wacht op je ja',
+        'confirmed' => 'bevestigd',
+        'executed' => 'uitgevoerd',
+        'price_changed' => 'prijs veranderd, opnieuw bevestigen',
+        'expired' => 'verlopen',
+        'rejected' => 'niet uitgevoerd',
+        'cancelled' => 'geannuleerd',
+    ],
+
+    'proposal' => [
+        'executed' => 'Gedaan.',
+        'closed' => 'De veiling is gesloten; er is niets geboden.',
+        'expired' => 'Dit voorstel is verlopen.',
+        'rejected' => 'Dit voorstel is niet uitgevoerd.',
+        'cancelled' => 'Dit voorstel is geannuleerd.',
+        'confirmed' => 'Wordt uitgevoerd.',
+    ],
+
+    'bid' => [
+        'price_changed' => 'Het bod is net veranderd. Bevestig opnieuw met het actuele bedrag.',
+        'rejected' => 'Het bod is geweigerd.',
+    ],
+
+    'modes' => [
+        'notify' => 'Alleen melden',
+        'ask' => 'Eerst vragen',
+        'auto' => 'Automatisch tot limiet',
+    ],
+
+    'alerts' => [
+        'outbid' => ['title' => 'Overboden'],
+        'new_bid' => ['title' => 'Nieuw bod'],
+        'won' => ['title' => 'Gewonnen'],
+        'lost' => ['title' => 'Niet gewonnen'],
+        'progress' => ['title' => 'Voortgang'],
+        'interest' => ['title' => 'Interesse'],
+        'reserve_not_met' => ['title' => 'Jouw beslissing'],
+        'draft_idle' => ['title' => 'Nog te doen'],
+        'sold' => ['title' => 'Verkocht'],
+        'unsold' => ['title' => 'Niet verkocht'],
+        'payment_received' => ['title' => 'Betaling binnen'],
+        'payout' => ['title' => 'Uitbetaling'],
     ],
 
 ];

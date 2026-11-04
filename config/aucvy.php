@@ -33,6 +33,30 @@ return [
     ],
 
     /*
+     | Ivy als gesprekspartner (Ivy-briefing): de noodremmen per onderdeel,
+     | de chatprovider, bundel- en stille uren, bewaartermijnen voor gasten.
+     | De vlaggen zijn in beheer om te zetten zonder deploy.
+     */
+    'ivy' => [
+        'chat_provider' => env('AUCVY_IVY_CHAT_PROVIDER', 'fake'),
+        'flags' => [
+            'ivy.enabled' => (bool) env('AUCVY_IVY_ENABLED', true),
+            'ivy.website' => true,
+            'ivy.seller' => true,
+            'ivy.buyer' => true,
+            'ivy.proposals' => true,
+            'ivy.reserve_change' => false,
+            'auctions.dutch' => (bool) env('AUCVY_DUTCH_ENABLED', false),
+        ],
+        'bundle_minutes' => 15,
+        'quiet_start' => 22,
+        'quiet_end' => 8,
+        'guest_retention_days' => 30,
+        'guest_photo_hours' => 24,
+        'guest_upload_max' => 5,
+    ],
+
+    /*
      | Live veilen (briefing nieuwe functies): achter een vlag, eerst een
      | besloten proef na Stripe Connect. LiveKit Cloud als mediaserver, later
      | zelf gehost; `fake` draait zonder server. Kijkersmaximum per
@@ -277,6 +301,8 @@ return [
          */
         'provider' => env('AUCVY_AI_PROVIDER', 'fake'),
         'model' => env('AUCVY_AI_MODEL', 'claude-opus-5'),
+        // Goedkoper model voor eenvoudige chatvragen; het sterkere voor advies en foto's (Ivy-briefing hfst. 13).
+        'chat_model_fast' => env('AUCVY_AI_CHAT_MODEL_FAST', 'claude-sonnet-5'),
 
         /*
          | Onderdeel van de cachesleutel: hash(input + promptversie). Wijzigt

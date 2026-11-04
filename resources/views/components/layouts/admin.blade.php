@@ -62,6 +62,7 @@
                 $allowed('customers') ? ['admin.compliance', 'Compliance'] : null,
             ],
             'Systeem' => $staffRole === App\Admin\StaffRole::Owner ? [
+                ['admin.ivy', 'Ivy'],
                 ['admin.categories', 'Categorieën'],
                 ['admin.redirects', 'Doorverwijzingen'],
                 ['admin.ai-runs', 'AI-runs'],
