@@ -1,8 +1,9 @@
 @use('App\Enums\LotStatus')
+@use('App\Enums\SaleType')
 @use('App\Support\Money\Money')
 
 @php
-    // Vijf groepen voor de filterchips; de status zelf blijft op de kaart staan.
+    // Vijf groepen voor de filterchips; de status zelf blijft op de rij staan.
     $groupOf = fn (LotStatus $status): string => match (true) {
         in_array($status, [LotStatus::Live, LotStatus::Closing], true) => 'live',
         $status === LotStatus::Draft => 'concept',
@@ -12,10 +13,12 @@
         default => 'overig',
     };
     $groups = ['live' => 'Live', 'concept' => 'Concept', 'gepland' => 'Gepland', 'gepauzeerd' => 'Gepauzeerd', 'verkocht' => 'Verkocht', 'overig' => 'Overig'];
+    $tagTone = ['live' => 'tone-live', 'concept' => 'tone-warn', 'gepland' => 'tone-atlas', 'gepauzeerd' => 'tone-grey', 'verkocht' => 'tone-ok', 'overig' => 'tone-grey'];
     $counts = $lots->countBy(fn ($lot): string => $groupOf($lot->status));
     $bidders = (int) $lots
         ->filter(fn ($lot): bool => $groupOf($lot->status) === 'live')
         ->sum(fn ($lot): int => (int) ($lot->auction?->bidder_count ?? 0));
+    $displayTimezone = config('aucvy.display_timezone');
 @endphp
 
 <x-layouts.dashboard title="Mijn kavels" eyebrow="Dashboard" intro="Alles wat je hebt geplaatst, met de stand van elke veiling en wat er nog in de la ligt.">
@@ -25,10 +28,10 @@
     </x-slot:actions>
 
     <x-slot:tiles>
-        <x-dashboard.tile tone="blue" icon="gavel" label="Live" :value="$counts->get('live', 0)" sub="nu te zien voor kopers" />
-        <x-dashboard.tile tone="green" icon="users" label="Bieders" :value="$bidders" sub="op je lopende veilingen" />
-        <x-dashboard.tile tone="orange" icon="clock" label="Concepten" :value="$counts->get('concept', 0)" sub="nog niet gepubliceerd" :href="$counts->get('concept', 0) > 0 ? route('sell') : null" />
-        <x-dashboard.tile tone="purple" icon="badge-check" label="Verkocht" :value="$counts->get('verkocht', 0)" sub="met een koper" :href="route('orders.index')" />
+        <x-dashboard.tile tone="blue" label="Live" :value="$counts->get('live', 0)" sub="nu te zien voor kopers" />
+        <x-dashboard.tile tone="green" label="Bieders" :value="$bidders" sub="op je lopende veilingen" />
+        <x-dashboard.tile tone="orange" label="Concepten" :value="$counts->get('concept', 0)" sub="nog niet gepubliceerd" :href="$counts->get('concept', 0) > 0 ? route('sell') : null" />
+        <x-dashboard.tile tone="purple" label="Verkocht" :value="$counts->get('verkocht', 0)" sub="met een koper" :href="route('orders.index')" />
     </x-slot:tiles>
 
     @if ($lots->isEmpty())
@@ -41,28 +44,27 @@
         </x-ui.empty-state>
     @else
         @if (session('status'))
-            <p class="mb-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">{{ session('status') }}</p>
+            <p class="d-soft is-ok" style="margin:0 0 14px">{{ session('status') }}</p>
         @endif
         @if ($errors->any())
-            <div role="alert" class="mb-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">{{ $errors->first() }}</div>
+            <div role="alert" class="d-soft is-err" style="margin:0 0 14px">{{ $errors->first() }}</div>
         @endif
 
-        {{-- Filteren en zoeken gebeurt in de browser: de lijst is al geladen. Bulk gaat via één formulier om de grid heen. --}}
+        {{-- Filteren en zoeken gebeurt in de browser: de lijst is al geladen. Bulk gaat via één formulier om de lijst heen. --}}
         <form method="POST" action="{{ route('dashboard.lots.bulk') }}" x-data="{ filter: 'alle', q: '', selected: [] }">
             @csrf
-            <div class="list-tools">
-                <div class="chip-row" role="group" aria-label="Filter op status">
-                    <button type="button" class="filter-chip" :class="filter === 'alle' && 'is-on'" @click="filter = 'alle'">Alle <span>{{ $lots->count() }}</span></button>
+            <div class="d-card-head" style="align-items:center;margin-bottom:14px">
+                <div class="d-chips" role="group" aria-label="Filter op status">
+                    <button type="button" class="d-chip" :class="filter === 'alle' && 'is-on'" @click="filter = 'alle'">Alle <span class="d-muted" style="font-weight:700">{{ $lots->count() }}</span></button>
                     @foreach ($groups as $key => $label)
                         @if ($counts->get($key, 0) > 0)
-                            <button type="button" class="filter-chip" :class="filter === '{{ $key }}' && 'is-on'" @click="filter = '{{ $key }}'">{{ $label }} <span>{{ $counts->get($key) }}</span></button>
+                            <button type="button" class="d-chip" :class="filter === '{{ $key }}' && 'is-on'" @click="filter = '{{ $key }}'">{{ $label }} <span class="d-muted" style="font-weight:700">{{ $counts->get($key) }}</span></button>
                         @endif
                     @endforeach
                 </div>
-                <label class="list-search">
-                    <x-v4.icon name="search" :size="15" stroke="2.2" />
+                <label style="flex:0 1 240px">
                     <span class="sr-only">Zoek in je kavels</span>
-                    <input type="search" x-model="q" placeholder="Zoek in je kavels" autocomplete="off">
+                    <input type="search" x-model="q" placeholder="Zoek in je kavels" autocomplete="off" class="d-input" style="margin:0">
                 </label>
             </div>
 
@@ -74,7 +76,7 @@
                 <button type="button" class="link" @click="selected = []">Niets selecteren</button>
             </div>
 
-            <ul class="lot-grid">
+            <div class="d-stack-tight">
                 @foreach ($lots as $lot)
                     @php
                         $group = $groupOf($lot->status);
@@ -83,54 +85,77 @@
                             $lot->status->isPublic() => route('lots.show', $lot),
                             default => null,
                         };
+                        $dossierUrl = $lot->status === LotStatus::Draft ? $url : route('dashboard.lots.show', $lot);
+                        $auction = $lot->auction;
+                        $interest = $lot->status === LotStatus::Draft ? null : \App\Lots\Interest\Interest::forBuyer($lot);
+                        $metaParts = ['Kavel #'.$lot->public_id];
+                        if ($auction !== null) {
+                            if ($lot->sale_type === SaleType::Dutch) {
+                                $metaParts[] = 'afslag';
+                            }
+                            $metaParts[] = $auction->bidder_count.' '.($auction->bidder_count === 1 ? 'bieder' : 'bieders');
+                            if (! $auction->isClosed()) {
+                                $metaParts[] = 'sluit '.$auction->ends_at->timezone($displayTimezone)->diffForHumans();
+                            } elseif ($lot->order?->payout !== null) {
+                                $metaParts[] = mb_strtolower($lot->order->payout->status->label());
+                            }
+                        } elseif ($lot->status === LotStatus::Draft) {
+                            $metaParts = [$lot->completeness_score.'% compleet', 'bewerkt '.$lot->updated_at->timezone($displayTimezone)->diffForHumans()];
+                        } else {
+                            $metaParts[] = 'nog geen veiling gepland';
+                        }
+                        [$amountLabel, $amount] = match (true) {
+                            $lot->status === LotStatus::Draft => ['met je concept', 'Verder'],
+                            $lot->status === LotStatus::Sold && $lot->order !== null => ['Verkocht voor', Money::format($lot->order->hammer_cents)],
+                            $auction !== null && $lot->sale_type === SaleType::Dutch => ['Prijs nu', Money::format($lot->currentPriceCents())],
+                            $auction !== null && $lot->sale_type === SaleType::BuyNow => ['Vaste prijs', Money::format($lot->currentPriceCents())],
+                            $auction !== null => ['Huidig bod', Money::format($lot->currentPriceCents())],
+                            default => ['', ''],
+                        };
                     @endphp
-                    <li class="lot-tile" data-group="{{ $group }}" data-title="{{ Str::lower($lot->title) }}"
-                        x-show="(filter === 'alle' || filter === $el.dataset.group) && (q === '' || $el.dataset.title.includes(q.toLowerCase()))">
+                    <article class="d-listrow" data-group="{{ $group }}" data-title="{{ Str::lower($lot->title) }}"
+                             x-show="(filter === 'alle' || filter === $el.dataset.group) && (q === '' || $el.dataset.title.includes(q.toLowerCase()))">
                         <label class="pick">
                             <input type="checkbox" name="lots[]" value="{{ $lot->id }}" x-model="selected" aria-label="Selecteer {{ $lot->title }}">
                         </label>
-                        <a class="lot-tile-media" href="{{ $url ?? route('dashboard.lots') }}" aria-label="{{ $lot->title }}">
+                        <a href="{{ $dossierUrl ?? route('dashboard.lots') }}" aria-label="{{ $lot->title }}" style="flex:0 0 auto">
                             @if ($lot->cover_path)
-                                <img src="{{ $lot->cover_path }}" alt="" loading="lazy">
+                                <img class="d-listrow-thumb" src="{{ $lot->cover_path }}" alt="" loading="lazy">
                             @else
-                                <span class="empty" aria-hidden="true"><x-v4.icon name="image" :size="28" stroke="1.6" /></span>
+                                <span class="d-listrow-thumb" style="display:flex;align-items:center;justify-content:center;color:#9aa3b5" aria-hidden="true"><x-v4.icon name="image" :size="24" stroke="1.6" /></span>
                             @endif
-                            <span class="status {{ $group }}">{{ $lot->status->label() }}</span>
                         </a>
-                        <div class="lot-tile-body">
-                            <span class="cat">{{ $lot->category?->name ?? 'Zonder categorie' }}</span>
-                            <h3>@if ($lot->status === LotStatus::Draft && $url)<a href="{{ $url }}">{{ $lot->title }}</a>@else<a href="{{ route('dashboard.lots.show', $lot) }}">{{ $lot->title }}</a>@endif</h3>
-                            <div class="lot-tile-meta">
-                                @if ($lot->auction)
-                                    <span><b class="tabular">{{ Money::format($lot->currentPriceCents()) }}</b></span>
-                                    <span>{{ $lot->auction->bidder_count }} {{ $lot->auction->bidder_count === 1 ? 'bieder' : 'bieders' }}</span>
-                                    @unless ($lot->auction->isClosed())
-                                        <span>sluit {{ $lot->auction->ends_at->timezone(config('aucvy.display_timezone'))->diffForHumans() }}</span>
-                                    @endunless
-                                @elseif ($lot->status === LotStatus::Draft)
-                                    <span><b class="tabular">{{ $lot->completeness_score }}%</b> compleet</span>
-                                    <span>bewerkt {{ $lot->updated_at->timezone(config('aucvy.display_timezone'))->diffForHumans() }}</span>
-                                @else
-                                    <span>Nog geen veiling gepland</span>
-                                @endif
-                            </div>
-                            <div class="lot-tile-actions">
-                                @if ($lot->status === LotStatus::Draft)
-                                    <a href="{{ $url }}" class="btn btn-primary">{{ __('dashboard.actions.continue_draft') }}</a>
-                                @elseif (in_array($lot->status, [LotStatus::Unsold, LotStatus::Cancelled], true))
-                                    <button type="submit" class="btn btn-primary" formaction="{{ route('dashboard.lots.duplicate', ['lot' => $lot->id, 'relist' => 1]) }}" formmethod="POST">Opnieuw plaatsen</button>
-                                    @if ($url)<a href="{{ $url }}" class="btn btn-ghost">Bekijk</a>@endif
-                                @elseif (in_array($lot->status, [LotStatus::Scheduled, LotStatus::Live, LotStatus::Closing, LotStatus::Paused], true))
-                                    <a href="{{ route('dashboard.lots.edit', $lot) }}" class="btn btn-primary">{{ $lot->status === LotStatus::Paused ? 'Hervatten' : 'Bewerken' }}</a>
-                                    @if ($url)<a href="{{ $url }}" class="btn btn-ghost">Bekijk</a>@endif
-                                @elseif ($url)
-                                    <a href="{{ $url }}" class="btn btn-ghost">Bekijk</a>
+                        <div class="d-listrow-body">
+                            <strong><a href="{{ $dossierUrl }}">{{ $lot->title ?: 'Concept zonder titel' }}</a></strong>
+                            <span class="d-listrow-meta">{{ implode(' · ', $metaParts) }}</span>
+                            @if ($interest !== null)
+                                <div class="d-counts">
+                                    <span title="kijkers"><x-v4.icon name="eye" :size="14" stroke="2" />{{ number_format($interest['viewers'], 0, ',', '.') }}</span>
+                                    <span title="keer opgeslagen"><x-v4.icon name="heart" :size="14" stroke="2" />{{ $interest['saved'] }}</span>
+                                    <span title="keer gedeeld"><x-v4.icon name="share" :size="14" stroke="2" />{{ $interest['shared'] }}</span>
+                                </div>
+                            @endif
+                            <div class="d-listrow-tags">
+                                <span class="d-tag {{ $tagTone[$group] }}">{{ $lot->status->label() }}</span>
+                                @if ($lot->is_hot)
+                                    <span class="d-tag tone-hot"><x-v4.icon name="flame" :size="12" stroke="2.4" /> Hot</span>
                                 @endif
                             </div>
                         </div>
-                    </li>
+                        <div class="d-listrow-right">
+                            <b>{{ $amount }}</b>
+                            <span>{{ $amountLabel }}</span>
+                            @if ($lot->status === LotStatus::Draft)
+                                <a href="{{ $url }}" class="d-btn d-btn-sm">{{ __('dashboard.actions.continue_draft') }}</a>
+                            @elseif (in_array($lot->status, [LotStatus::Unsold, LotStatus::Cancelled], true))
+                                <button type="submit" class="d-btn d-btn-secondary d-btn-sm" formaction="{{ route('dashboard.lots.duplicate', ['lot' => $lot->id, 'relist' => 1]) }}" formmethod="POST">Opnieuw plaatsen</button>
+                            @elseif (in_array($lot->status, [LotStatus::Scheduled, LotStatus::Live, LotStatus::Closing, LotStatus::Paused], true))
+                                <a href="{{ route('dashboard.lots.edit', $lot) }}" class="d-btn d-btn-secondary d-btn-sm">{{ $lot->status === LotStatus::Paused ? 'Hervatten' : 'Bewerken' }}</a>
+                            @endif
+                        </div>
+                    </article>
                 @endforeach
-            </ul>
+            </div>
         </form>
     @endif
 </x-layouts.dashboard>

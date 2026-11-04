@@ -25,7 +25,7 @@ final class OrderController extends Controller
         return view('orders.index', [
             'buying' => Order::query()
                 ->where('buyer_id', $user->id)
-                ->with('lot')
+                ->with('lot.media')
                 ->latest('id')
                 ->get(),
             'selling' => Order::query()

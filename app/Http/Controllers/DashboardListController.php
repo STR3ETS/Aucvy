@@ -35,7 +35,7 @@ final class DashboardListController extends Controller
                     ->whereColumn('lot_media.lot_id', 'lots.id')
                     ->orderBy('position')
                     ->limit(1)])
-                ->with(['auction', 'category'])
+                ->with(['auction', 'category', 'order.payout'])
                 ->orderByRaw('published_at is null desc')
                 ->latest('published_at')
                 ->get(),
@@ -55,7 +55,7 @@ final class DashboardListController extends Controller
                 ->from('bids')
                 ->where('user_id', $request->user()->id)
                 ->groupBy('auction_id'))
-            ->with(['auction.lot'])
+            ->with(['auction.lot.media', 'auction.lot.order'])
             ->latest('id')
             ->limit(500)
             ->get();
