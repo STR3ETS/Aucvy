@@ -9,8 +9,10 @@ use App\Enums\OrderStatus;
 use App\Enums\SaleType;
 use App\Enums\ViewingStatus;
 use App\Http\Resources\AuctionStateResource;
+use App\Lots\Interest\Interest;
 use App\Models\Lot;
 use App\Models\LotShare;
+use App\Models\LotSignal;
 use App\Models\Order;
 use App\Models\Review;
 use App\Models\Viewing;
@@ -61,8 +63,14 @@ final class LotController extends Controller
             ShareKit::recordClick($lot, (string) $request->query('utm_source'), $request->query('utm_content'), $request->hasSession() ? 'session' : null);
         }
 
+        // Interesse (hoofdbriefing p. 7): een kijker telt één keer per dag, een weergave elke keer.
+        $visitor = Interest::visitorHash($request);
+        Interest::record($lot, LotSignal::VIEWER, $visitor, $request->user(), Interest::sourceOf($request));
+        Interest::record($lot, LotSignal::VIEW, $visitor, $request->user());
+
         return view('lots.show', [
             'lot' => $lot,
+            'interest' => Interest::forBuyer($lot),
             // Een gedeelde link: de notitie van de deler boven de kavel.
             'share' => $request->attributes->get('share'),
             'ownShares' => $request->user() !== null

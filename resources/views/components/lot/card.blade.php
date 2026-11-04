@@ -57,6 +57,7 @@
         <div class="ph"><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="300" fill="#e3e7f0"/><rect x="40" y="150" width="320" height="90" fill="#cfd5e2"/><rect x="60" y="80" width="120" height="70" fill="#b9c2d4"/><rect x="220" y="60" width="140" height="90" fill="#c5cddc"/><rect x="40" y="240" width="320" height="8" fill="#aab3c7"/></svg></div>
       @endif
       <span class="status {{ $statusClass }}">@if ($statusClass === 'live')<i></i>@endif{{ $statusLabel }}</span>
+      @if ($lot->is_hot)<span class="status hot" style="left:auto;right:12px;background:#fbe9f4;color:#b0247f">Hot</span>@endif
     </div>
     <div class="body">
       <span class="cat">{{ $lot->category?->name }}@if ($lot->location) · {{ $lot->location->city }}@endif</span>

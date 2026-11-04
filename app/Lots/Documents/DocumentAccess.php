@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Lots\Documents;
 
 use App\Lots\Dossier\Dossier;
+use App\Lots\Interest\Interest;
 use App\Models\LotActivity;
 use App\Models\LotDocument;
+use App\Models\LotSignal;
 use App\Models\User;
 use App\Support\Audit\Audit;
 use Illuminate\Support\Facades\URL;
@@ -66,6 +68,8 @@ final class DocumentAccess
     {
         $document->increment('view_count');
         $document->forceFill(['last_viewed_at' => now()])->save();
+
+        Interest::record($document->lot, LotSignal::DOCUMENT, $user !== null ? 'u'.$user->id : substr(hash('sha256', (string) $ip), 0, 32), $user);
 
         $isStaff = $user !== null && $user->is_staff && ! $document->lot->isManagedBy($user);
 

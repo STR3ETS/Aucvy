@@ -24,6 +24,19 @@ return [
     ],
 
     /*
+     | Interesse en Hot (hoofdbriefing p. 7). Hot als de score van de
+     | afgelopen 48 uur bij de hoogste 10% van de categorie hoort, met
+     | minimaal 50 kijkers en bij een veiling 3 bieders. Drempels instelbaar.
+     */
+    'interest' => [
+        'window_hours' => 48,
+        'top_fraction' => 0.10,
+        'min_viewers' => (int) env('AUCVY_HOT_MIN_VIEWERS', 50),
+        'min_bidders' => (int) env('AUCVY_HOT_MIN_BIDDERS', 3),
+        'weights' => ['viewer' => 1, 'document' => 2, 'saved' => 3, 'shared' => 3, 'bidder' => 5],
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Biedmotor
     |--------------------------------------------------------------------------

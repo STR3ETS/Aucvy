@@ -6,9 +6,11 @@ namespace App\Http\Controllers;
 
 use App\Distribution\Channel;
 use App\Lots\Dossier\Dossier;
+use App\Lots\Interest\Interest;
 use App\Models\Lot;
 use App\Models\LotActivity;
 use App\Models\LotShare;
+use App\Models\LotSignal;
 use App\Notifications\ShareReaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -44,6 +46,8 @@ final class LotShareController extends Controller
             'note' => isset($validated['note']) && trim($validated['note']) !== '' ? trim($validated['note']) : null,
             'created_at' => now(),
         ]);
+
+        Interest::record($lot, LotSignal::SHARED, Interest::visitorHash($request), $request->user());
 
         if ($request->user() !== null) {
             Dossier::record(

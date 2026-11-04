@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Lots\Interest\Interest;
 use App\Models\Lot;
+use App\Models\LotSignal;
 use App\Models\WatchlistItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,6 +28,8 @@ final class WatchlistController extends Controller
             'user_id' => $request->user()->id,
             'lot_id' => $lot->id,
         ]);
+
+        Interest::record($lot, LotSignal::SAVED, Interest::visitorHash($request), $request->user());
 
         return response()->json(['watching' => true], 201);
     }

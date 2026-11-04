@@ -50,6 +50,9 @@
             </div>
 
             <aside class="space-y-4">
+                @if ($lot->status->isPublic())
+                    @include('dashboard.partials.lot-interest', ['lot' => $lot])
+                @endif
                 <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="status">
                     <h2 id="status" class="text-sm font-extrabold">Status</h2>
                     <dl class="mt-3 space-y-1.5 text-sm">

@@ -52,6 +52,7 @@
                 <div class="ph" aria-hidden="true"><x-v4.icon name="image" :size="40" stroke="1.4" style="color:#fff" /></div>
             @endif
             <span class="v4-badge v4-badge--{{ $badgeClass }}">@if ($badgeClass === 'live')<i aria-hidden="true"></i>@endif{{ $badgeLabel }}</span>
+            @if ($lot->is_hot)<span class="v4-badge" style="left:auto;right:12px;background:#fbe9f4;color:#b0247f">Hot</span>@endif
         </div>
         <div class="body">
             <div>

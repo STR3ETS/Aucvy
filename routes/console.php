@@ -90,6 +90,7 @@ Schedule::command('aucvy:reconcile-balance')->dailyAt('06:30');
 Schedule::command('aucvy:check-ticket-sla')->everyFifteenMinutes();
 Schedule::command('aucvy:send-reports')->dailyAt('07:00');
 Schedule::command('aucvy:social-push')->everyFiveMinutes();
+Schedule::command('aucvy:hot-score')->hourly();
 
 Schedule::command('aucvy:prune-expired')
     ->dailyAt('04:00')

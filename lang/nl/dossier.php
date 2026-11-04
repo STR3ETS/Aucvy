@@ -40,6 +40,7 @@ return [
             'media_changed' => "Foto's gewijzigd",
             'paused' => 'Kavel gepauzeerd',
             'resumed' => 'Kavel hervat',
+            'hot' => 'Hot: veel interesse in deze kavel',
         ],
         'auction' => [
             'first_bid' => 'Eerste bod: :amount',

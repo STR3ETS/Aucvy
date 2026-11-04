@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'quantity', 'condition', 'specifications', 'status', 'sale_type', 'vat_regime',
     'completeness_score', 'value_min_cents', 'value_max_cents',
     'value_confidence', 'pickup_only', 'viewing_available',
-    'transport_from_cents', 'draft_token', 'draft_meta', 'field_sources', 'translations', 'published_at',
+    'transport_from_cents', 'draft_token', 'draft_meta', 'field_sources', 'translations', 'published_at', 'interest_score', 'is_hot', 'hot_since',
     'unit', 'warranty', 'warranty_until',
 ])]
 #[RouteKey('slug')]
@@ -63,6 +63,8 @@ class Lot extends Model
             'field_sources' => 'array',
             'translations' => 'array',
             'published_at' => 'datetime',
+            'is_hot' => 'boolean',
+            'hot_since' => 'datetime',
             'reviewed_at' => 'datetime',
         ];
     }
