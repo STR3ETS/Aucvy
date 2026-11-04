@@ -51,7 +51,7 @@
             </section>
 
             <aside class="space-y-4">
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="over">
+                <section class="d-card" aria-labelledby="over">
                     <h2 id="over" class="text-sm font-extrabold">Over dit document</h2>
                     <dl class="mt-2 space-y-1 text-sm">
                         <div class="flex justify-between gap-3"><dt class="text-aj-muted">Toegevoegd</dt><dd class="font-semibold">{{ $document->created_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM YYYY') }}</dd></div>
@@ -65,7 +65,7 @@
                     @endif
                 </section>
 
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="alle">
+                <section class="d-card" aria-labelledby="alle">
                     <h2 id="alle" class="text-sm font-extrabold">Alle documenten</h2>
                     <ul class="mt-2 space-y-1 text-sm">
                         @foreach ($siblings as $sibling)

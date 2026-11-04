@@ -31,7 +31,7 @@
     <div class="grid gap-5 lg:grid-cols-[1fr_380px] lg:items-start">
         <div class="space-y-5">
             {{-- De kavels in de veiling, in sluitvolgorde. --}}
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="kavels">
+            <section class="d-card" aria-labelledby="kavels">
                 <div class="flex flex-wrap items-center gap-3">
                     <h2 id="kavels" class="text-lg font-extrabold">Kavels</h2>
                     <p class="text-xs text-aj-muted">In deze volgorde sluiten ze, {{ intdiv($sale->closing_gap_seconds, 60) }} {{ $sale->closing_gap_seconds === 60 ? 'minuut' : 'minuten' }} na elkaar.</p>
@@ -83,7 +83,7 @@
             </section>
 
             @if ($state !== SaleState::Cancelled && $state !== SaleState::Closed)
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="toevoegen">
+                <section class="d-card" aria-labelledby="toevoegen">
                     <h2 id="toevoegen" class="text-sm font-extrabold">Kavels toevoegen</h2>
                     <p class="mt-1 text-xs text-aj-muted">Je concepten die nog in geen veiling zitten. Een kavel die al live is houdt zijn eigen looptijd.</p>
                     @if ($attachable->isEmpty())
@@ -120,7 +120,7 @@
                 </section>
             @endif
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="gegevens">
+            <section class="d-card" aria-labelledby="gegevens">
                 <h2 id="gegevens" class="text-sm font-extrabold">Gegevens</h2>
                 <form method="POST" action="{{ route('dashboard.sales.update', $sale) }}" class="mt-3">
                     @csrf @method('PATCH')
@@ -133,7 +133,7 @@
             </section>
 
             @if ($state !== SaleState::Cancelled && $state !== SaleState::Closed)
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Annuleren">
+                <section class="d-card" aria-label="Annuleren">
                     <form method="POST" action="{{ route('dashboard.sales.cancel', $sale) }}" onsubmit="return confirm('Veiling annuleren? Concepten komen weer los te staan.')">
                         @csrf
                         <button type="submit" class="btn btn-ghost w-full justify-center" style="color:var(--color-aj-error)">Veiling annuleren</button>

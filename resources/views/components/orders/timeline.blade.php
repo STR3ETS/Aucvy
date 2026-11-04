@@ -4,7 +4,7 @@
     De tijdlijn van een bestelling: wat er gebeurd is, op volgorde. De
     volgende stap staat in het statusblok, niet hier.
 --}}
-<section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="tijdlijn">
+<section class="d-card" aria-labelledby="tijdlijn">
     <h2 id="tijdlijn" class="text-sm font-extrabold text-aj-soft">Tijdlijn</h2>
     <ol class="order-timeline mt-4">
         @foreach ($entries as $entry)

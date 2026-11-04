@@ -27,7 +27,7 @@
     @else
         <ul class="space-y-2">
             @foreach ($searches as $search)
-                <li class="rounded-aj-s border border-aj-border bg-aj-surface p-4" x-data="{ rename: false }">
+                <li class="d-card" x-data="{ rename: false }">
                     <div class="flex flex-wrap items-center gap-3">
                         <span class="min-w-0 flex-1">
                             <a href="{{ route('lots.index', $search->query ?? []) }}" class="block truncate text-sm font-bold hover:underline">{{ $search->label() }}</a>
@@ -61,7 +61,7 @@
                         @method('PATCH')
                         <label class="sr-only" for="name-{{ $search->id }}">Naam van de alert</label>
                         <input id="name-{{ $search->id }}" type="text" name="name" value="{{ $search->name }}" maxlength="80" placeholder="Bijvoorbeeld: heftrucks onder 10.000"
-                               class="min-w-0 flex-1 rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:40px">
+                               class="min-w-0 flex-1 d-input" style="min-height:40px">
                         <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px">Opslaan</button>
                     </form>
                 </li>

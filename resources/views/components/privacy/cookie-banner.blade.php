@@ -25,7 +25,7 @@
          role="dialog" aria-modal="false" aria-labelledby="cookie-banner-title"
          class="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4" style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px)">
         <form method="POST" action="{{ route('cookies.consent') }}" x-ref="form" @submit.prevent="save($event.submitter?.value ?? 'custom')"
-              class="mx-auto max-w-3xl rounded-aj-s border border-aj-border bg-aj-surface p-5 text-sm shadow-lg">
+              class="mx-auto max-w-3xl d-card text-sm shadow-lg">
             @csrf
             <h2 id="cookie-banner-title" class="text-base font-extrabold">Cookies op Aucvy</h2>
             <p class="mt-1 text-aj-soft">

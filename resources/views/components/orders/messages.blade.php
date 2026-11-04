@@ -5,7 +5,7 @@
     verkoper en support in één draad. Wie wat schreef staat erbij; support
     is herkenbaar aan de eigen kleur.
 --}}
-<section id="berichten" class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="berichten-kop">
+<section id="berichten" class="d-card" aria-labelledby="berichten-kop">
     <h2 id="berichten-kop" class="text-sm font-extrabold text-aj-soft">Berichten</h2>
     <p class="mt-1 text-xs text-aj-muted">
         @if ($staff)
@@ -35,7 +35,7 @@
     <form method="POST" action="{{ $action }}" class="mt-4 grid gap-2">
         @csrf
         <label class="sr-only" for="bericht-{{ $order->id }}">Bericht</label>
-        <textarea id="bericht-{{ $order->id }}" name="body" rows="3" required maxlength="{{ \App\Models\OrderMessage::MAX_LENGTH }}" class="w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface p-3 text-sm" placeholder="{{ $staff ? 'Bericht van support aan koper en verkoper' : 'Schrijf een bericht' }}">{{ old('body') }}</textarea>
+        <textarea id="bericht-{{ $order->id }}" name="body" rows="3" required maxlength="{{ \App\Models\OrderMessage::MAX_LENGTH }}" class="w-full d-textarea" placeholder="{{ $staff ? 'Bericht van support aan koper en verkoper' : 'Schrijf een bericht' }}">{{ old('body') }}</textarea>
         @error('body')
             <p class="text-xs text-aj-error">{{ $message }}</p>
         @enderror

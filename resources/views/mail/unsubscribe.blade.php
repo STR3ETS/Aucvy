@@ -1,5 +1,5 @@
 <x-layouts.public title="Afmelden" heading="Afmelden voor mail" :intro="$stream === 'campaign' ? 'Nieuwsbrief en campagnes van Aucvy.' : 'Herinneringen en tips van Ivy.'" align="center" noindex>
-    <div class="mx-auto max-w-md rounded-aj-s border border-aj-border bg-aj-surface p-6 text-center">
+    <div class="mx-auto max-w-md d-card text-center">
         @if ($done || session('status'))
             <p class="text-sm font-bold">Je bent afgemeld.</p>
             <p class="mt-2 text-sm text-aj-muted">Mails die nodig zijn voor je account of een aankoop (betaalverzoek, uitbetaling, geschil) blijven komen. Lopende reeksen zijn gestopt.</p>

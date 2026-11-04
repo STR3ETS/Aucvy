@@ -21,7 +21,7 @@
 
     <div class="grid gap-5 lg:grid-cols-[1fr_300px] lg:items-start">
 
-        <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="bewerken">
+        <section class="d-card" aria-labelledby="bewerken">
             <h2 id="bewerken" class="text-lg font-extrabold">Bewerken</h2>
             @unless ($editable)
                 <p class="mt-1 text-sm text-aj-muted">{{ __('lots.manage.not_editable') }}</p>
@@ -35,18 +35,18 @@
                     <label class="block">
                         <span class="text-sm font-bold">Titel</span>
                         <input type="text" name="title" value="{{ old('title', $lot->title) }}" maxlength="150" @disabled($titleLocked)
-                               class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm disabled:bg-aj-bg disabled:text-aj-muted" style="min-height:var(--cta-h)">
+                               class="mt-1 w-full d-input disabled:bg-aj-bg disabled:text-aj-muted" style="min-height:var(--cta-h)">
                     </label>
 
                     <label class="block">
                         <span class="text-sm font-bold">Omschrijving</span>
-                        <textarea name="description" rows="7" class="mt-1 w-full rounded-aj-sm border border-aj-border-strong p-3 text-sm">{{ old('description', $lot->description) }}</textarea>
+                        <textarea name="description" rows="7" class="mt-1 w-full d-textarea">{{ old('description', $lot->description) }}</textarea>
                     </label>
 
                     <div class="grid gap-4 sm:grid-cols-2">
                         <label class="block">
                             <span class="text-sm font-bold">Conditie</span>
-                            <select name="condition" class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                            <select name="condition" class="mt-1 w-full d-input" style="min-height:var(--cta-h)">
                                 <option value="">Kies de conditie</option>
                                 @foreach ($conditions as $condition)
                                     <option value="{{ $condition->value }}" @selected(old('condition', $lot->condition?->value) === $condition->value)>{{ $condition->label() }}</option>
@@ -56,25 +56,25 @@
                         <label class="block">
                             <span class="text-sm font-bold">Aantal</span>
                             <input type="number" name="quantity" value="{{ old('quantity', $lot->quantity) }}" min="1" max="100000" required
-                                   class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                                   class="tabular mt-1 w-full d-input" style="min-height:var(--cta-h)">
                         </label>
                         <label class="block">
                             <span class="text-sm font-bold">Merk</span>
-                            <input type="text" name="brand" value="{{ old('brand', $lot->brand) }}" maxlength="80" class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                            <input type="text" name="brand" value="{{ old('brand', $lot->brand) }}" maxlength="80" class="mt-1 w-full d-input" style="min-height:var(--cta-h)">
                         </label>
                         <label class="block">
                             <span class="text-sm font-bold">Model of type</span>
-                            <input type="text" name="model" value="{{ old('model', $lot->model) }}" maxlength="80" class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                            <input type="text" name="model" value="{{ old('model', $lot->model) }}" maxlength="80" class="mt-1 w-full d-input" style="min-height:var(--cta-h)">
                         </label>
                         <label class="block">
                             <span class="text-sm font-bold">Bouwjaar</span>
-                            <input type="number" name="year" value="{{ old('year', $lot->year) }}" min="1900" max="{{ now()->year }}" class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                            <input type="number" name="year" value="{{ old('year', $lot->year) }}" min="1900" max="{{ now()->year }}" class="tabular mt-1 w-full d-input" style="min-height:var(--cta-h)">
                         </label>
                         <label class="block">
                             <span class="text-sm font-bold">Transport vanaf (€)</span>
                             <span class="block text-xs text-aj-muted">Leeg laten als je alleen ophalen aanbiedt.</span>
                             <input type="text" inputmode="decimal" name="transport_from" value="{{ old('transport_from', $lot->transport_from_cents !== null ? number_format($lot->transport_from_cents / 100, 2, ',', '') : '') }}"
-                                   class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:var(--cta-h)">
+                                   class="tabular mt-1 w-full d-input" style="min-height:var(--cta-h)">
                         </label>
                     </div>
 
@@ -95,7 +95,7 @@
         </section>
 
         <aside class="space-y-4">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="status">
+            <section class="d-card" aria-labelledby="status">
                 <h2 id="status" class="text-sm font-extrabold">Status</h2>
                 <dl class="mt-3 space-y-1.5 text-sm">
                     <div class="flex justify-between gap-3"><dt class="text-aj-muted">Status</dt><dd class="font-semibold">{{ $lot->status->label() }}</dd></div>
@@ -113,7 +113,7 @@
                 @endif
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="acties">
+            <section class="d-card" aria-labelledby="acties">
                 <h2 id="acties" class="text-sm font-extrabold">Acties</h2>
                 <div class="mt-3 space-y-2">
                     @if (in_array($lot->status, [LotStatus::Scheduled, LotStatus::Live], true) && ($lot->auction?->bid_count ?? 0) === 0)
@@ -149,12 +149,12 @@
 
             @if ($lot->status->isPublic())
                 {{-- Delen (briefing stap 10): link met herkomst per kanaal, tekst om te plakken. --}}
-                <x-lots.share :lot="$lot" class="rounded-aj-s border border-aj-border bg-aj-surface p-5" />
+                <x-lots.share :lot="$lot" class="d-card" />
             @endif
 
             @if ($editable)
                 {{-- Foto's: toevoegen, verwijderen, omslag kiezen. Zelfde endpoints als de wizard. --}}
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Foto's"
+                <section class="d-card" aria-label="Foto's"
                          x-data="lotMedia({{ $lot->id }}, {{ Js::from($lot->media->sortBy('position')->values()->map(fn ($item) => ['id' => $item->id, 'url' => $item->path, 'position' => (int) $item->position])) }})">
                     <h2 class="text-sm font-extrabold">Foto's</h2>
                     <p class="mt-1 text-xs text-aj-muted">De eerste is de omslag. Verwijderen kan altijd; voeg eerst een nieuwe toe als je de laatste vervangt.</p>
@@ -187,7 +187,7 @@
                     <p class="mt-2 text-xs text-aj-error" x-show="error" x-text="error" x-cloak></p>
                 </section>
             @elseif ($lot->media->isNotEmpty())
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Foto's">
+                <section class="d-card" aria-label="Foto's">
                     <h2 class="text-sm font-extrabold">Foto's</h2>
                     <div class="mt-3 grid grid-cols-3 gap-2">
                         @foreach ($lot->media->sortBy('position')->take(6) as $item)
@@ -200,7 +200,7 @@
             @if ($lot->status->isPublic())
                 {{-- Engelse vertaling door Ivy (briefing stap 4). --}}
                 @php $english = $lot->translation('en'); @endphp
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Engelse vertaling">
+                <section class="d-card" aria-label="Engelse vertaling">
                     <h2 class="text-sm font-extrabold">Engelse vertaling</h2>
                     @if ($english)
                         <p class="mt-1 text-xs text-aj-muted">Door Ivy, {{ \Carbon\Carbon::parse($english['translated_at'])->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') }}. Kopers lezen hem via "Read in English" op de kavelpagina; de Nederlandse tekst blijft bindend.</p>

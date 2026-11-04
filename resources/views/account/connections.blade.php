@@ -11,7 +11,7 @@
     <ul class="grid gap-4 md:grid-cols-2">
         @foreach ($channels as $row)
             @php $connection = $row['connection']; $status = $connection?->status ?? ($row['available'] ? 'none' : 'unavailable'); @endphp
-            <li class="rounded-aj-s border border-aj-border bg-aj-surface p-5">
+            <li class="d-card">
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <h2 class="text-base font-extrabold">{{ $row['channel']->label() }}</h2>

@@ -55,7 +55,7 @@
                         @csrf
                         <input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"
                                aria-label="Code uit de sms"
-                               class="tabular w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm tracking-[0.2em]"
+                               class="tabular w-full d-input tracking-[0.2em]"
                                style="min-height:40px">
                         <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px;flex:none">
                             Bevestigen
@@ -70,7 +70,7 @@
                         <form method="POST" action="{{ route('verification.phone') }}" class="mt-2 flex gap-2">
                             @csrf
                             <input type="tel" name="phone" required placeholder="06 12345678" aria-label="Ander telefoonnummer" autocomplete="tel"
-                                   class="w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:40px">
+                                   class="w-full d-input" style="min-height:40px">
                             <button type="submit" class="btn btn-ghost" style="height:40px;font-size:13px;flex:none">Code sturen</button>
                         </form>
                     </details>
@@ -80,7 +80,7 @@
                         @csrf
                         <input type="tel" name="phone" required placeholder="+31 6 12345678"
                                aria-label="Telefoonnummer" autocomplete="tel"
-                               class="w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                               class="w-full d-input"
                                style="min-height:40px">
                         <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px;flex:none">
                             Code sturen
@@ -144,7 +144,7 @@
                             @csrf
                             <template x-for="(row, index) in rows" :key="index">
                                 <div class="grid gap-2 rounded-aj-sm border border-aj-border p-2">
-                                    <input type="text" :name="'ubos[' + index + '][name]'" x-model="row.name" placeholder="Volledige naam" required maxlength="120" class="w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:38px">
+                                    <input type="text" :name="'ubos[' + index + '][name]'" x-model="row.name" placeholder="Volledige naam" required maxlength="120" class="w-full d-input" style="min-height:38px">
                                     <div class="grid grid-cols-[1fr_1fr_64px_auto] gap-2">
                                         <input type="number" :name="'ubos[' + index + '][birth_year]'" x-model="row.birth_year" placeholder="Geb.jaar" required min="1900" max="{{ now()->year - 16 }}" class="min-w-0 rounded-aj-sm border border-aj-border-strong bg-aj-surface px-2 text-sm" style="min-height:38px">
                                         <select :name="'ubos[' + index + '][role]'" x-model="row.role" class="min-w-0 rounded-aj-sm border border-aj-border-strong bg-aj-surface px-1 text-sm" style="min-height:38px">

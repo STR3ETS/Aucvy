@@ -24,7 +24,7 @@
 
         {{-- Over de verkoper (masterbriefing 4.1): wie, waar, sinds wanneer, en
              de cijfers met hun definitie erbij. Geen contactgegevens. --}}
-        <section id="over" class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Over de verkoper">
+        <section id="over" class="d-card" aria-label="Over de verkoper">
             <div class="flex flex-wrap items-start gap-5">
                 @if ($company?->logo_path)
                     <img src="{{ $company->logo_path }}" alt="" class="size-16 shrink-0 rounded-aj-sm object-cover">
@@ -57,7 +57,7 @@
             weinig data is geen onbetrouwbaarheid.
         --}}
         @if ($trust !== null)
-            <section class="mt-8 rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-label="Trust Index">
+            <section class="mt-8 d-card" aria-label="Trust Index">
                 <div class="flex flex-wrap items-center gap-6">
                     @php
                         $size = 132;
@@ -173,7 +173,7 @@
                                     <input type="text" name="reply" required maxlength="2000"
                                            placeholder="Reageer op deze beoordeling"
                                            aria-label="Reactie op review"
-                                           class="w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                           class="w-full d-input"
                                            style="min-height:40px">
                                     <button type="submit" class="btn btn-ghost" style="height:40px;font-size:13px;flex:none">
                                         Reageren

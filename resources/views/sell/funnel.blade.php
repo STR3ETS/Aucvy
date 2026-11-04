@@ -33,10 +33,10 @@
         <nav aria-label="Stappen" class="chip-row -mx-4 px-4 sm:mx-0 sm:px-0" style="display:flex;gap:8px;overflow-x:auto">
             <template x-for="(name, index) in steps" :key="index">
                 <button type="button" @click="step = index"
-                        class="btn"
-                        :class="step === index ? 'btn-primary' : 'btn-ghost'"
-                        style="height:40px;font-size:14px;padding:0 14px;flex:none"
+                        class="d-step"
+                        :class="{ 'is-on': step === index, 'is-done': index < step }"
                         :aria-current="step === index ? 'step' : null">
+                    <svg x-show="index < step" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
                     <span x-text="(index + 1) + ' · ' + name"></span>
                 </button>
             </template>
@@ -47,7 +47,7 @@
 
                 {{-- 1 · Wat ------------------------------------------------- --}}
                 <section x-show="step === 0" x-cloak aria-label="Wat wil je verkopen">
-                    <div class="rounded-aj-s border border-aj-border bg-aj-surface p-6">
+                    <div class="d-card">
                         <h2 class="text-lg font-extrabold">Wat wil je verkopen?</h2>
                         <p class="mt-1 text-sm text-aj-muted">Kies wat het dichtst in de buurt komt - of vertel het in één zin.</p>
 
@@ -82,7 +82,7 @@
                         <label class="mt-4 block">
                             <span class="text-sm font-bold">In je eigen woorden</span>
                             <textarea rows="3" placeholder="Ik stop met mijn restaurant en wil alles verkopen."
-                                      class="mt-1 w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface p-3 text-sm"
+                                      class="mt-1 w-full d-textarea"
                                       :value="draft?.description ?? ''"
                                       @input="set('description', $event.target.value)"></textarea>
                         </label>
@@ -97,7 +97,7 @@
 
                 {{-- 2 · Aanleveren ------------------------------------------ --}}
                 <section x-show="step === 1" x-cloak aria-label="Foto's en documenten">
-                    <div class="rounded-aj-s border border-aj-border bg-aj-surface p-6">
+                    <div class="d-card">
                         <h2 class="text-lg font-extrabold">Voeg toe wat je hebt</h2>
                         <p class="mt-1 text-sm text-aj-muted">
                             Een paar foto's vanaf je telefoon zijn genoeg. Documenten kunnen ook later.
@@ -176,7 +176,7 @@
 
                             <div class="mt-3 flex flex-wrap items-center gap-2" x-data="{ kind: 'invoice' }">
                                 <select x-model="kind"
-                                        class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm"
+                                        class="d-input"
                                         style="min-height:40px" aria-label="Soort document">
                                     <option value="invoice">Factuur</option>
                                     <option value="warranty">Garantiebewijs</option>
@@ -267,7 +267,7 @@
 
                 {{-- 3 · Analyse --------------------------------------------- --}}
                 <section x-show="step === 2" x-cloak aria-label="Analyse">
-                    <div class="rounded-aj-s border border-aj-border bg-aj-surface p-6">
+                    <div class="d-card">
                         <div class="flex items-center gap-3">
                             <x-ui.agent-avatar agent="ivy" class="size-10" />
                             <h2 class="text-lg font-extrabold">
@@ -336,14 +336,14 @@
 
                 {{-- 4 · Advertentie ----------------------------------------- --}}
                 <section x-show="step === 3" x-cloak aria-label="Advertentie">
-                    <div class="space-y-4 rounded-aj-s border border-aj-border bg-aj-surface p-6">
+                    <div class="space-y-4 d-card">
                         <h2 class="text-lg font-extrabold">De advertentie</h2>
 
                         <label class="block">
                             <span class="text-sm font-bold">Titel</span>
                             <input type="text" maxlength="150"
                                    placeholder="Complete designkeuken met Siemens-apparatuur"
-                                   class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                   class="mt-1 w-full d-input"
                                    style="min-height:var(--cta-h)"
                                    :value="draft?.title ?? ''"
                                    @input="set('title', $event.target.value)">
@@ -354,7 +354,7 @@
                             <span class="text-sm font-bold">Omschrijving</span>
                             <span class="block text-xs text-aj-muted">Eerlijk over gebreken - dat verkoopt aantoonbaar beter.</span>
                             <textarea rows="6"
-                                      class="mt-1 w-full rounded-aj-sm border border-aj-border-strong p-3 text-sm"
+                                      class="mt-1 w-full d-textarea"
                                       :value="draft?.description ?? ''"
                                       @input="set('description', $event.target.value)"></textarea>
                             <x-funnel.provenance field="description" />
@@ -373,7 +373,7 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                             <label class="block">
                                 <span class="text-sm font-bold">Categorie</span>
-                                <select class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                <select class="mt-1 w-full d-input"
                                         style="min-height:var(--cta-h)"
                                         :value="draft?.category_id ?? ''"
                                         @change="set('category_id', $event.target.value ? Number($event.target.value) : null)">
@@ -391,7 +391,7 @@
 
                             <label class="block">
                                 <span class="text-sm font-bold">Conditie</span>
-                                <select class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                <select class="mt-1 w-full d-input"
                                         style="min-height:var(--cta-h)"
                                         :value="draft?.condition ?? ''"
                                         @change="set('condition', $event.target.value || null)">
@@ -406,7 +406,7 @@
                             <label class="block">
                                 <span class="text-sm font-bold">Merk</span>
                                 <input type="text" maxlength="80"
-                                       class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="draft?.brand ?? ''"
                                        @input="set('brand', $event.target.value || null)">
@@ -416,7 +416,7 @@
                             <label class="block">
                                 <span class="text-sm font-bold">Model of type</span>
                                 <input type="text" maxlength="80"
-                                       class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="draft?.model ?? ''"
                                        @input="set('model', $event.target.value || null)">
@@ -426,7 +426,7 @@
                             <label class="block">
                                 <span class="text-sm font-bold">Bouwjaar</span>
                                 <input type="number" min="1900" max="{{ now()->year }}"
-                                       class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="tabular mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="draft?.year ?? ''"
                                        @input="set('year', $event.target.value ? Number($event.target.value) : null)">
@@ -488,7 +488,7 @@
 
                 {{-- 5 · Vorm ------------------------------------------------ --}}
                 <section x-show="step === 4" x-cloak aria-label="Verkoopvorm">
-                    <div class="space-y-4 rounded-aj-s border border-aj-border bg-aj-surface p-6">
+                    <div class="space-y-4 d-card">
                         <h2 class="text-lg font-extrabold">Hoe wil je verkopen?</h2>
 
                         <div class="grid gap-2 sm:grid-cols-3">
@@ -506,7 +506,7 @@
                             <label class="block">
                                 <span class="text-sm font-bold">Startprijs (€)</span>
                                 <input type="text" inputmode="decimal"
-                                       class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="tabular mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="euro(meta.start_price_cents)"
                                        @change="setEuro('start_price_cents', $event.target.value)">
@@ -515,7 +515,7 @@
                                 <span class="text-sm font-bold">Reserveprijs (€, optioneel)</span>
                                 <span class="block text-xs text-aj-muted">Nooit publiek - alleen óf hij gehaald is.</span>
                                 <input type="text" inputmode="decimal"
-                                       class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="tabular mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="euro(meta.reserve_price_cents)"
                                        @change="setEuro('reserve_price_cents', $event.target.value)">
@@ -527,7 +527,7 @@
                             <label class="block">
                                 <span class="text-sm font-bold">Startprijs (€)</span>
                                 <input type="text" inputmode="decimal"
-                                       class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="tabular mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="euro(meta.dutch_start_cents)"
                                        @change="setEuro('dutch_start_cents', $event.target.value)">
@@ -536,7 +536,7 @@
                                 <span class="text-sm font-bold">Bodemprijs (€)</span>
                                 <span class="block text-xs text-aj-muted">Daaronder zakt hij nooit.</span>
                                 <input type="text" inputmode="decimal"
-                                       class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="tabular mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="euro(meta.dutch_floor_cents)"
                                        @change="setEuro('dutch_floor_cents', $event.target.value)">
@@ -544,7 +544,7 @@
                             <label class="block">
                                 <span class="text-sm font-bold">Stap per daling (€)</span>
                                 <input type="text" inputmode="decimal"
-                                       class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="tabular mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="euro(meta.dutch_step_cents)"
                                        @change="setEuro('dutch_step_cents', $event.target.value)">
@@ -552,7 +552,7 @@
                             <label class="block">
                                 <span class="text-sm font-bold">Interval (seconden)</span>
                                 <input type="number" min="5" max="600" placeholder="20"
-                                       class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="tabular mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="meta.dutch_interval_s ?? ''"
                                        @change="set('dutch_interval_s', Number($event.target.value) || null)">
@@ -564,7 +564,7 @@
                             <label class="block sm:max-w-xs">
                                 <span class="text-sm font-bold">Vaste prijs (€)</span>
                                 <input type="text" inputmode="decimal"
-                                       class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="tabular mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="euro(meta.buy_now_price_cents)"
                                        @change="setEuro('buy_now_price_cents', $event.target.value)">
@@ -573,7 +573,7 @@
 
                         <label class="block sm:max-w-xs" x-show="meta.sale_type" x-cloak>
                             <span class="text-sm font-bold">Looptijd</span>
-                            <select class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                            <select class="mt-1 w-full d-input"
                                     style="min-height:var(--cta-h)"
                                     :value="meta.duration_days ?? 7"
                                     @change="set('duration_days', Number($event.target.value))">
@@ -587,7 +587,7 @@
 
                 {{-- 6 · Promotie -------------------------------------------- --}}
                 <section x-show="step === 5" x-cloak aria-label="Promotie">
-                    <div class="rounded-aj-s border border-aj-border bg-aj-surface p-6">
+                    <div class="d-card">
                         <h2 class="text-lg font-extrabold">Waar wil je publiceren?</h2>
                         <p class="mt-1 text-sm text-aj-muted">
                             Je kavel komt op Aucvy, in de zoekresultaten en bij de categorie.
@@ -606,7 +606,7 @@
 
                 {{-- 7 · Kosten ---------------------------------------------- --}}
                 <section x-show="step === 6" x-cloak aria-label="Kosten">
-                    <div class="rounded-aj-s border border-aj-border bg-aj-surface p-6">
+                    <div class="d-card">
                         <h2 class="text-lg font-extrabold">Wat kost het?</h2>
 
                         <dl class="mt-4 space-y-2 text-sm">
@@ -640,7 +640,7 @@
                             <label class="block sm:max-w-xs" x-show="! draft?.pickup_only" x-cloak>
                                 <span class="text-sm font-bold">Transport vanaf (€)</span>
                                 <input type="text" inputmode="decimal"
-                                       class="tabular mt-1 w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm"
+                                       class="tabular mt-1 w-full d-input"
                                        style="min-height:var(--cta-h)"
                                        :value="euro(draft?.transport_from_cents)"
                                        @change="setEuro('transport_from_cents', $event.target.value)">
@@ -651,7 +651,7 @@
 
                 {{-- 8 · Live ------------------------------------------------ --}}
                 <section x-show="step === 7" x-cloak aria-label="Controleren en publiceren">
-                    <div class="rounded-aj-s border border-aj-border bg-aj-surface p-6">
+                    <div class="d-card">
                         <h2 class="text-lg font-extrabold">Klaar om live te gaan?</h2>
                         <p class="mt-1 text-sm text-aj-muted">Na het indienen controleert Ivy je kavel op prijs, hoeveelheid, garantie en documenten. Klopt alles, dan staat hij meteen live; anders hoor je wat er nog nodig is.</p>
 
@@ -723,8 +723,20 @@
             </div>
 
             {{-- Zijkolom: de compleetheidsmeter (briefing 13.4). --}}
-            <aside class="rounded-aj-s border border-aj-border bg-aj-surface p-5 lg:sticky lg:top-24">
-                <h2 class="text-sm font-extrabold">Compleetheid</h2>
+            <aside class="d-stack-tight lg:sticky lg:top-24">
+                {{-- Ivy naast de stappen, zoals in het ontwerp van november: per stap één zin. --}}
+                <div class="d-insight">
+                    <div class="d-insight-head">
+                        <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">
+                        <div>
+                            <strong style="color:#0e1526;font-size:15px">Ivy</strong>
+                            <span style="font-weight:500;color:#4d5566;font-size:13px">Je AI-verkoopassistent</span>
+                        </div>
+                    </div>
+                    <p class="d-prose" style="margin-top:10px;color:#0e1526" x-text="({{ Js::from(['Vertel me wat je wilt verkopen. Eén zin is genoeg; de rest vraag ik je.', 'Een paar foto\x27s vanaf je telefoon zijn genoeg. Ik herken wat erop staat.', 'Ik kijk naar je foto\x27s en vul in wat ik zeker weet. Wat ik niet weet, vraag ik je.', 'Lees mijn tekst na. Wat jij aanpast, wint altijd van wat ik schreef.', 'Veiling, afslag of koop direct: ik zet een startprijs klaar op basis van de waarde-indicatie.', 'Je kavel komt op Aucvy. Delen op je eigen kanalen regel je straks vanuit het dossier.', 'Plaatsen is gratis. Je betaalt alleen een succesfee als het verkocht is.', 'Alles staat klaar. Nog even de toets, en dan live.']) }})[step]"></p>
+                </div>
+                <div class="d-card" style="padding:16px">
+                <h2 class="d-h3" style="font-size:15px">Compleetheid</h2>
                 <div class="mt-2 h-2 overflow-hidden rounded-aj-sm bg-aj-bg" role="progressbar"
                      :aria-valuenow="completeness.score" aria-valuemin="0" aria-valuemax="100">
                     <div class="h-full bg-aj-blue transition-all duration-500"

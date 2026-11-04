@@ -8,7 +8,7 @@
 
     <div class="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
         <div class="space-y-5">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="wacht">
+            <section class="d-card" aria-labelledby="wacht">
                 <h2 id="wacht" class="text-sm font-extrabold">Wacht op jou <span class="tabular rounded-full bg-aj-bg px-2 text-xs">{{ $count }}</span></h2>
                 @if ($tasks->isEmpty())
                     <p class="mt-2 text-sm text-aj-muted">Niets wacht op je. Ik meld het zodra er iets te kiezen valt.</p>
@@ -31,7 +31,7 @@
                 @endif
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="gedaan">
+            <section class="d-card" aria-labelledby="gedaan">
                 <h2 id="gedaan" class="text-sm font-extrabold">Ivy heeft gedaan</h2>
                 <ul class="mt-3 divide-y divide-aj-border text-sm">
                     @foreach ($proposals as $proposal)
@@ -56,7 +56,7 @@
         </div>
 
         <aside class="space-y-4">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="bewaakt">
+            <section class="d-card" aria-labelledby="bewaakt">
                 <h2 id="bewaakt" class="text-sm font-extrabold">Ivy bewaakt</h2>
                 <ul class="mt-2 space-y-1.5 text-sm">
                     @foreach ($watching['modes'] as $mode)
@@ -69,7 +69,7 @@
                 </ul>
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="voorkeuren">
+            <section class="d-card" aria-labelledby="voorkeuren">
                 <h2 id="voorkeuren" class="text-sm font-extrabold">Meldingen buiten het platform</h2>
                 <p class="text-xs text-aj-muted">Per soort en per kanaal. Stil tussen {{ config('aucvy.ivy.quiet_start') }}:00 en {{ config('aucvy.ivy.quiet_end') }}:00, behalve bij kavels waarvoor je dat zelf aanzet. Service-mails zoals het betaalverzoek staan vast.</p>
                 <form method="POST" action="{{ route('ivy.preferences') }}" class="mt-2 space-y-1 text-xs">

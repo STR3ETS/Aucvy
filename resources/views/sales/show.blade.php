@@ -10,7 +10,7 @@
     <div class="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
         <div class="space-y-5">
             @if ($sale->description)
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="over">
+                <section class="d-card" aria-labelledby="over">
                     <h2 id="over" class="text-lg font-extrabold">Over deze veiling</h2>
                     <p class="mt-2 whitespace-pre-line text-sm text-aj-soft">{{ $sale->description }}</p>
                 </section>
@@ -37,7 +37,7 @@
         </div>
 
         <aside class="space-y-5">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="schema">
+            <section class="d-card" aria-labelledby="schema">
                 <h2 id="schema" class="text-sm font-extrabold">Sluitschema</h2>
                 <dl class="mt-2 space-y-1 text-sm">
                     <div class="flex justify-between gap-3"><dt class="text-aj-muted">Eerste sluiting</dt><dd class="font-semibold">{{ $sale->ends_at->timezone($tz)->isoFormat('D MMM, HH:mm') }}</dd></div>
@@ -47,7 +47,7 @@
             </section>
 
             @if ($sale->viewing_at || $sale->viewing_note)
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="bezichtiging">
+                <section class="d-card" aria-labelledby="bezichtiging">
                     <h2 id="bezichtiging" class="text-sm font-extrabold">Bezichtiging</h2>
                     @if ($sale->viewing_at)
                         <p class="mt-1 text-sm font-semibold">{{ $sale->viewing_at->timezone($tz)->isoFormat('dddd D MMMM, HH:mm') }}</p>
@@ -60,7 +60,7 @@
             @endif
 
             @if ($sale->pickup_from || $sale->pickup_until || $sale->pickup_note)
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="ophalen">
+                <section class="d-card" aria-labelledby="ophalen">
                     <h2 id="ophalen" class="text-sm font-extrabold">Ophalen</h2>
                     @if ($sale->pickup_from || $sale->pickup_until)
                         <p class="mt-1 text-sm font-semibold">{{ $sale->pickup_from?->isoFormat('D MMM') ?? '' }}{{ $sale->pickup_from && $sale->pickup_until ? ' tot en met ' : '' }}{{ $sale->pickup_until?->isoFormat('D MMM') ?? '' }}</p>
@@ -72,7 +72,7 @@
             @endif
 
             @if ($sale->terms)
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="voorwaarden">
+                <section class="d-card" aria-labelledby="voorwaarden">
                     <h2 id="voorwaarden" class="text-sm font-extrabold">Voorwaarden van de verkoper</h2>
                     <p class="mt-1 whitespace-pre-line text-sm text-aj-muted">{{ $sale->terms }}</p>
                     <p class="mt-2 text-xs text-aj-muted">Naast de <a class="underline" href="{{ route('assurance') }}">regels van Aucvy</a>, die altijd gelden.</p>

@@ -5,7 +5,7 @@
         vastleggen en de webhookverwerking aanroepen.
     --}}
     <div class="mx-auto max-w-md">
-        <div class="rounded-aj-s border border-aj-border bg-aj-surface p-6">
+        <div class="d-card">
             <p class="text-xs font-extrabold uppercase tracking-wide text-aj-soft">Nepcheckout (lokaal)</p>
             <h1 class="mt-1 text-xl font-extrabold">{{ $payment->order->order_number }}</h1>
             <p class="tabular mt-2 text-3xl font-extrabold">

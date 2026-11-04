@@ -51,7 +51,7 @@
                     <input type="hidden" name="client_key" value="{{ \Illuminate\Support\Str::uuid() }}">
                     <label for="body" class="sr-only">Je bericht</label>
                     <textarea id="body" name="body" rows="3" required maxlength="{{ ConversationMessage::MAX_LENGTH }}" placeholder="Typ een bericht"
-                              class="w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface p-3 text-sm">{{ old('body') }}</textarea>
+                              class="w-full d-textarea">{{ old('body') }}</textarea>
                     <div class="mt-2 flex flex-wrap items-center gap-2">
                         <label class="btn btn-ghost cursor-pointer" style="height:40px;font-size:13px">
                             Foto of PDF
@@ -73,7 +73,7 @@
         </section>
 
         <aside class="space-y-4">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="kavel">
+            <section class="d-card" aria-labelledby="kavel">
                 <h2 id="kavel" class="text-sm font-extrabold">Kavel</h2>
                 <a href="{{ $conversation->lot->status->isPublic() ? route('lots.show', $conversation->lot) : '#' }}" class="mt-2 block">
                     <span class="block aspect-[4/3] w-full overflow-hidden rounded-aj-sm border border-aj-border bg-aj-navy">
@@ -94,7 +94,7 @@
                 </dl>
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="veilig">
+            <section class="d-card" aria-labelledby="veilig">
                 <h2 id="veilig" class="text-sm font-extrabold">Veilig handelen</h2>
                 <p class="mt-1 text-xs text-aj-muted">Betaling, prijs en ophaalafspraken lopen via de bestelling. Zo blijft het geld beschermd tot de ontvangst.</p>
                 <div class="mt-3 flex flex-wrap gap-2">
@@ -103,7 +103,7 @@
                             @csrf
                             <button type="button" class="btn btn-ghost" style="height:36px;font-size:12px" @click="open = ! open">Melden</button>
                             <div x-show="open" x-cloak class="mt-2">
-                                <input type="text" name="note" maxlength="500" placeholder="Wat is er aan de hand?" class="w-full rounded-aj-sm border border-aj-border-strong px-3 text-sm" style="min-height:36px">
+                                <input type="text" name="note" maxlength="500" placeholder="Wat is er aan de hand?" class="w-full d-input" style="min-height:36px">
                                 <button type="submit" class="btn btn-dark mt-2" style="height:36px;font-size:12px">Melding sturen</button>
                             </div>
                         </form>
@@ -116,7 +116,7 @@
             </section>
 
             @if ($others->isNotEmpty())
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="andere">
+                <section class="d-card" aria-labelledby="andere">
                     <h2 id="andere" class="text-sm font-extrabold">Andere gesprekken</h2>
                     <ul class="mt-2 space-y-1 text-sm">
                         @foreach ($others as $other)

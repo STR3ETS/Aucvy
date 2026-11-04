@@ -17,7 +17,7 @@
     @if ($import->isDone())
         {{-- Het rapport: wat erin kwam en wat niet, met de reden per rij. --}}
         <div class="grid gap-5 lg:grid-cols-[1fr_300px] lg:items-start">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="rapport">
+            <section class="d-card" aria-labelledby="rapport">
                 <h2 id="rapport" class="text-lg font-extrabold">{{ $import->rows_created }} van {{ $import->rows_total }} rijen staan als concept klaar</h2>
                 <p class="mt-1 text-sm text-aj-muted">Elk concept opent in de wizard: foto's toevoegen, eigendom verklaren, controleren en publiceren.</p>
                 @if ($import->errors)
@@ -37,7 +37,7 @@
                     <a class="btn btn-ghost" href="{{ route('dashboard.import') }}">Nog een bestand</a>
                 </div>
             </section>
-            <aside class="rounded-aj-s border border-aj-border bg-aj-surface p-5 text-sm" aria-label="Mapping">
+            <aside class="d-card text-sm" aria-label="Mapping">
                 <h2 class="text-sm font-extrabold">Gebruikte koppeling</h2>
                 <ul class="mt-2 space-y-1 text-xs">
                     @foreach ($fields as $key => $label)
@@ -51,7 +51,7 @@
     @else
         <form method="POST" action="{{ route('dashboard.import.run', $import) }}" class="grid gap-5 lg:grid-cols-[320px_1fr] lg:items-start">
             @csrf
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="koppelen">
+            <section class="d-card" aria-labelledby="koppelen">
                 <h2 id="koppelen" class="text-sm font-extrabold">Welke kolom hoort waarbij?</h2>
                 <p class="mt-1 text-xs text-aj-muted">We hebben een voorzet gedaan op de kopteksten. Alleen de titel is verplicht.</p>
                 <div class="mt-3 grid gap-2">
@@ -70,7 +70,7 @@
                 <button type="submit" class="btn btn-primary mt-4 w-full justify-center">Importeer {{ $import->rows_total }} {{ $import->rows_total === 1 ? 'rij' : 'rijen' }} als concept</button>
             </section>
 
-            <section class="overflow-x-auto rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="voorbeeld">
+            <section class="overflow-x-auto d-card" aria-labelledby="voorbeeld">
                 <h2 id="voorbeeld" class="text-sm font-extrabold">Voorbeeld van de eerste rijen</h2>
                 <p class="mt-1 text-xs text-aj-muted">Zo leest Aucvy je bestand met de voorzet hiernaast. Rijen met een fout worden overgeslagen en staan in het rapport.</p>
                 @php $categoryNames = \App\Models\Category::query()->pluck('name', 'id'); @endphp

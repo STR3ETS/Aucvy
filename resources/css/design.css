@@ -427,3 +427,9 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
   .c .dash-main{border-radius:0;box-shadow:none}
   .d-sheet{border:0;box-shadow:none;padding:0;border-radius:0}
 }
+
+/* ---------- kavel plaatsen: de stappen van november ---------- */
+.d-step{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid rgba(14,21,38,.12);background:#fff;color:#0e1526;font:inherit;font-size:14px;font-weight:700;cursor:pointer;flex:none;transition:background .2s,color .2s,border-color .2s}
+.d-step:hover{border-color:#0e1526}
+.d-step.is-on{background:#2f6bff;border-color:#2f6bff;color:#fff}
+.d-step.is-done{background:#e8f6ef;border-color:#cdeedc;color:#177249}

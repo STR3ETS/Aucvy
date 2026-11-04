@@ -25,7 +25,7 @@
         <div class="grid gap-5 lg:grid-cols-[1fr_300px] lg:items-start">
             {{-- De staffel (besluit Raph en Don, 2 november 2026): omzet op Aucvy in de laatste twaalf maanden bepaalt de fee. --}}
             @if (isset($tier))
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="staffel">
+                <section class="d-card" aria-labelledby="staffel">
                     <h2 id="staffel" class="text-sm font-extrabold">Je succesfee: {{ rtrim(rtrim(number_format($feePercentage, 1, ',', '.'), '0'), ',') }}%</h2>
                     <p class="mt-1 text-xs text-aj-muted">
                         Op basis van {{ Money::format($tier['revenue_cents']) }} omzet op Aucvy in de laatste twaalf maanden.
@@ -47,7 +47,7 @@
             @endif
 
             @if ($invoices->isNotEmpty())
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="facturen">
+                <section class="d-card" aria-labelledby="facturen">
                     <h2 id="facturen" class="text-sm font-extrabold">Facturen</h2>
                     <p class="text-xs text-aj-muted">Kavelfacturen namens jou aan de koper, en de facturen van Aucvy voor de succesfee. Opslaan als pdf via Afdrukken.</p>
                     <ul class="mt-3 divide-y divide-aj-border text-sm">
@@ -80,7 +80,7 @@
                 </table>
             </section>
 
-            <aside class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Per maand">
+            <aside class="d-card" aria-label="Per maand">
                 <h2 class="text-sm font-extrabold">Per maand</h2>
                 <ul class="mt-3 space-y-2 text-sm">
                     @foreach ($perMonth as $month => $sum)

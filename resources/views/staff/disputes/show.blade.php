@@ -40,7 +40,7 @@
 
         {{-- De uitkomst, altijd met motivering - die gaat het auditlog in. --}}
         <form method="POST" action="{{ route('staff.disputes.resolve', $dispute) }}"
-              class="mt-6 space-y-4 rounded-aj-s border border-aj-border bg-aj-surface p-6"
+              class="mt-6 space-y-4 d-card"
               x-data="{ resolution: {{ Js::from(old('resolution', 'alsnog_leveren')) }} }">
             @csrf
             <h2 class="text-lg font-extrabold">Uitkomst</h2>
@@ -54,7 +54,7 @@
             <label class="block sm:max-w-xs">
                 <span class="text-sm font-bold">Beslissing</span>
                 <select name="resolution" required x-model="resolution"
-                        class="mt-1 w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm"
+                        class="mt-1 w-full d-input"
                         style="min-height:var(--cta-h)">
                     <option value="alsnog_leveren">Alsnog leveren - order afronden</option>
                     <option value="prijscorrectie">Prijscorrectie - order afronden</option>
@@ -67,14 +67,14 @@
                 <span class="text-sm font-bold">Bedrag terug naar de koper (euro)</span>
                 <span class="block text-xs text-aj-muted">Gaat van de uitbetaling aan de verkoper af; support regelt de terugbetaling bij de betaalprovider.</span>
                 <input type="number" name="correction" step="0.01" min="0.01" value="{{ old('correction') }}"
-                       class="mt-1 w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm"
+                       class="mt-1 w-full d-input"
                        style="min-height:var(--cta-h)">
             </label>
 
             <label class="block">
                 <span class="text-sm font-bold">Motivering</span>
                 <textarea name="notes" rows="4" required maxlength="4000"
-                          class="mt-1 w-full rounded-aj-sm border border-aj-border-strong p-3 text-sm"></textarea>
+                          class="mt-1 w-full d-textarea"></textarea>
             </label>
 
             <button type="submit" class="btn btn-primary">Uitkomst vastleggen</button>

@@ -8,7 +8,7 @@
     @endif
 
     <div class="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
-        <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="upload">
+        <section class="d-card" aria-labelledby="upload">
             <h2 id="upload" class="text-lg font-extrabold">Csv of Excel uploaden</h2>
             <p class="mt-1 text-sm text-aj-muted">Eén rij per kavel, met een kopregel. Csv (puntkomma of komma) of xlsx (het eerste werkblad); bedragen in euro's. Maximaal 500 rijen en 4 MB per bestand. In de volgende stap koppel je de kolommen.</p>
             <form method="POST" action="{{ route('dashboard.import.store') }}" enctype="multipart/form-data" class="mt-5 space-y-4">
@@ -23,7 +23,7 @@
             </form>
         </section>
 
-        <aside class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="kolommen">
+        <aside class="d-card" aria-labelledby="kolommen">
             <h2 id="kolommen" class="text-sm font-extrabold">Kolommen die we herkennen</h2>
             <p class="mt-1 text-xs text-aj-muted">Koptekst in het Nederlands of Engels; alleen de titel is verplicht.</p>
             <ul class="mt-3 grid gap-1 text-sm">
@@ -35,7 +35,7 @@
     </div>
 
     @if ($imports->isNotEmpty())
-        <section class="mt-6 rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="eerder">
+        <section class="mt-6 d-card" aria-labelledby="eerder">
             <h2 id="eerder" class="text-sm font-extrabold">Eerdere imports</h2>
             <ul class="mt-3 space-y-2 text-sm">
                 @foreach ($imports as $import)

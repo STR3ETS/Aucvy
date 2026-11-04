@@ -31,7 +31,7 @@
     @else
         <ul class="space-y-2">
             @foreach ($payouts as $payout)
-                <li class="flex flex-wrap items-center gap-3 rounded-aj-s border border-aj-border bg-aj-surface p-4">
+                <li class="flex flex-wrap items-center gap-3 d-card">
                     <span class="min-w-0 flex-1">
                         <span class="block truncate text-sm font-bold">{{ $payout->order->lot->title }}</span>
                         <span class="block text-xs text-aj-muted">

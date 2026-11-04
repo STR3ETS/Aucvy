@@ -7,7 +7,7 @@
         <div role="alert" class="mb-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">{{ $errors->first() }}</div>
     @endif
 
-    <form method="POST" action="{{ route('dashboard.sales.store') }}" class="mx-auto max-w-3xl rounded-aj-s border border-aj-border bg-aj-surface p-6">
+    <form method="POST" action="{{ route('dashboard.sales.store') }}" class="mx-auto max-w-3xl d-card">
         @csrf
         @include('dashboard.partials.sale-fields', ['sale' => null])
         <div class="mt-5 flex flex-wrap gap-2">

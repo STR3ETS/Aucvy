@@ -9,7 +9,7 @@
     $sourceLabels = ['alert' => 'Zoekalerts', 'google' => 'Google', 'instagram' => 'Instagram', 'facebook' => 'Facebook', 'linkedin' => 'LinkedIn', 'shared' => 'Gedeelde links', 'direct' => 'Direct', 'other' => 'Overig'];
 @endphp
 
-<section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="interesse">
+<section class="d-card" aria-labelledby="interesse">
     <div class="flex items-center justify-between gap-2">
         <h2 id="interesse" class="text-sm font-extrabold">Interesse</h2>
         @if ($stats['hot'])

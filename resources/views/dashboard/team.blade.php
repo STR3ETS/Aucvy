@@ -12,7 +12,7 @@
 
     <div class="grid gap-5 lg:grid-cols-[1fr_340px] lg:items-start">
         <div class="space-y-5">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="leden">
+            <section class="d-card" aria-labelledby="leden">
                 <h2 id="leden" class="text-lg font-extrabold">Teamleden</h2>
                 <p class="mt-1 text-sm text-aj-muted">{{ $members->count() }} {{ $members->count() === 1 ? 'persoon' : 'personen' }} bij {{ $company->name }}.</p>
                 <ul class="mt-4 divide-y divide-aj-border">
@@ -46,7 +46,7 @@
             </section>
 
             @if ($invitations->isNotEmpty())
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="open">
+                <section class="d-card" aria-labelledby="open">
                     <h2 id="open" class="text-sm font-extrabold">Open uitnodigingen</h2>
                     <ul class="mt-3 divide-y divide-aj-border text-sm">
                         @foreach ($invitations as $invitation)
@@ -70,14 +70,14 @@
 
         <aside class="space-y-5">
             @if ($mayManage)
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="uitnodigen">
+                <section class="d-card" aria-labelledby="uitnodigen">
                     <h2 id="uitnodigen" class="text-sm font-extrabold">Collega uitnodigen</h2>
                     <p class="mt-1 text-xs text-aj-muted">Je collega krijgt een mail met een link die veertien dagen geldig is.</p>
                     <form method="POST" action="{{ route('team.invite') }}" class="mt-3 grid gap-3">
                         @csrf
                         <label class="grid gap-1 text-sm">
                             <span class="font-bold">E-mailadres</span>
-                            <input type="email" name="email" required value="{{ old('email') }}" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:40px" placeholder="collega@bedrijf.nl">
+                            <input type="email" name="email" required value="{{ old('email') }}" class="d-input" style="min-height:40px" placeholder="collega@bedrijf.nl">
                         </label>
                         <label class="grid gap-1 text-sm">
                             <span class="font-bold">Rol</span>
@@ -92,7 +92,7 @@
                 </section>
             @endif
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="rollen">
+            <section class="d-card" aria-labelledby="rollen">
                 <h2 id="rollen" class="text-sm font-extrabold">Wat elke rol mag</h2>
                 <dl class="mt-3 space-y-3 text-sm">
                     @foreach ($roles as $role)

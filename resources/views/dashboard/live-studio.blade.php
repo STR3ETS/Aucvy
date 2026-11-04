@@ -14,7 +14,7 @@
     @endif
 
     <div class="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
-        <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="studio"
+        <section class="d-card" aria-labelledby="studio"
                  x-data="liveStudio({{ Js::from(['session' => $session?->id, 'status' => $session?->status, 'token' => $token, 'url' => $clientUrl, 'script' => $clientScript, 'room' => $session?->room, 'goLiveUrl' => $session ? route('dashboard.lots.live.go', [$lot, $session]) : null]) }})">
             <h2 id="studio" class="text-lg font-extrabold">Studio</h2>
             <p class="mt-1 text-sm text-aj-muted">Eerst de camera- en verbindingscheck, dan de aftelling, dan pas live. Valt het beeld weg, dan loopt de veiling door en blijft bieden werken.</p>
@@ -52,12 +52,12 @@
         </section>
 
         <aside class="space-y-4">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="kijkers">
+            <section class="d-card" aria-labelledby="kijkers">
                 <h2 id="kijkers" class="text-sm font-extrabold">Kijkers</h2>
                 <p class="tabular mt-1 text-2xl font-extrabold">{{ $session?->viewers_now ?? 0 }} <span class="text-xs font-normal text-aj-muted">nu · piek {{ $session?->peak_viewers ?? 0 }} · maximaal {{ $session?->max_viewers ?? config('aucvy.live.max_viewers') }}</span></p>
                 <p class="mt-2 text-xs text-aj-muted">Bieden gaat via de biedknop naast het beeld, niet via de video. De prijs loopt live mee voor iedereen.</p>
             </section>
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="regels">
+            <section class="d-card" aria-labelledby="regels">
                 <h2 id="regels" class="text-sm font-extrabold">Spelregels</h2>
                 <ul class="mt-2 list-disc space-y-1 pl-4 text-xs text-aj-muted">
                     <li>Alleen een geverifieerde zakelijke verkoper, op een eigen kavel met lopende veiling.</li>
@@ -67,7 +67,7 @@
                 </ul>
             </section>
             @if ($history->isNotEmpty())
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="eerder">
+                <section class="d-card" aria-labelledby="eerder">
                     <h2 id="eerder" class="text-sm font-extrabold">Eerdere uitzendingen</h2>
                     <ul class="mt-2 divide-y divide-aj-border text-xs">
                         @foreach ($history as $past)

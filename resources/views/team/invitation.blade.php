@@ -3,7 +3,7 @@
         <div role="alert" class="mb-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">{{ $errors->first() }}</div>
     @endif
 
-    <section class="mx-auto max-w-[560px] rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="uitnodiging">
+    <section class="mx-auto max-w-[560px] d-card" aria-labelledby="uitnodiging">
         <h2 id="uitnodiging" class="text-lg font-extrabold">{{ $invitation->company->name }}</h2>
         <p class="mt-1 text-sm text-aj-muted">
             {{ $invitation->inviter?->name ?? 'Een collega' }} nodigt je uit als <b>{{ $invitation->role->label() }}</b>.

@@ -108,7 +108,7 @@
 
                 {{-- Scene 2 · Ivy-analyse ---------------------------------- --}}
                 <template x-if="scene === 1">
-                    <div class="mx-auto w-full max-w-md rounded-aj-s border border-aj-border bg-aj-surface p-5">
+                    <div class="mx-auto w-full max-w-md d-card">
                         <div class="flex items-center gap-3">
                             <img src="{{ asset('images/agents/ivy.jpg') }}" alt="" class="size-10 rounded-full object-cover">
                             <p class="text-sm font-extrabold">Ivy kijkt mee
@@ -240,7 +240,7 @@
 
                 {{-- Scene 6 · Verkocht en uitbetaald ----------------------- --}}
                 <template x-if="scene === 5">
-                    <div class="mx-auto w-full max-w-md rounded-aj-s border border-aj-border bg-aj-surface p-5">
+                    <div class="mx-auto w-full max-w-md d-card">
                         <div class="flex items-center gap-3">
                             <img src="{{ asset('images/agents/flow.jpg') }}" alt="" class="size-10 rounded-full object-cover">
                             <p class="text-sm font-extrabold">Flow handelt af

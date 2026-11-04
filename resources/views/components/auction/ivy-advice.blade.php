@@ -12,7 +12,7 @@
     <div x-data="ivyAdvice({{ $lot->id }})"
          id="biedadvies"
          @ivy-ask.window="if (state === 'idle') ask()"
-         class="rounded-aj-s border border-aj-border bg-aj-surface p-4">
+         class="d-card">
 
         <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5">

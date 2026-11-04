@@ -5,7 +5,7 @@
     @if (session('status'))<p class="mb-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">{{ session('status') }}</p>@endif
     @if (session('warning'))<p class="mb-4 rounded-aj-sm border border-aj-warn/40 bg-aj-warn/5 p-3 text-sm">{{ session('warning') }}</p>@endif
 
-    <div class="mx-auto max-w-xl rounded-aj-s border border-aj-border bg-aj-surface p-6"
+    <div class="mx-auto max-w-xl d-card"
          x-data="{ state: {{ Js::from($proposal->status) }}, current: {{ Js::from($current_cents) }}, endsAt: {{ Js::from($ends_at?->toIso8601String()) }}, busy: false, message: null, key: {{ Js::from($idempotencyKey) }},
             async confirm() {
                 if (this.busy) return; this.busy = true; this.message = null;

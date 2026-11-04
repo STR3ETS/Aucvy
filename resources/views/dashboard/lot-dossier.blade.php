@@ -43,7 +43,7 @@
     @if ($tab === 'overzicht')
         <div class="grid gap-5 lg:grid-cols-[1fr_300px] lg:items-start">
             <div class="space-y-5">
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="laatste">
+                <section class="d-card" aria-labelledby="laatste">
                     <div class="flex items-center justify-between gap-3">
                         <h2 id="laatste" class="text-lg font-extrabold">Laatste gebeurtenissen</h2>
                         <a href="{{ route('dashboard.lots.show', [$lot, 'tab' => 'dossier']) }}" class="text-sm font-semibold underline">Hele dossier</a>
@@ -56,7 +56,7 @@
                 @if ($lot->status->isPublic())
                     @include('dashboard.partials.lot-interest', ['lot' => $lot])
                 @endif
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="status">
+                <section class="d-card" aria-labelledby="status">
                     <h2 id="status" class="text-sm font-extrabold">Status</h2>
                     <dl class="mt-3 space-y-1.5 text-sm">
                         <div class="flex justify-between gap-3"><dt class="text-aj-muted">Status</dt><dd class="font-semibold">{{ $lot->status->label() }}</dd></div>
@@ -85,19 +85,19 @@
             </aside>
         </div>
     @elseif ($tab === 'berichten')
-        <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="berichten">
+        <section class="d-card" aria-labelledby="berichten">
             <h2 id="berichten" class="text-lg font-extrabold">Berichten over deze kavel</h2>
             <p class="mt-1 text-sm text-aj-muted">Korte vragen van kopers en gesprekken na een bod of verkoop. Alles blijft in het dossier.</p>
             @include('dashboard.partials.lot-conversations', ['lot' => $lot, 'conversations' => $conversations])
         </section>
     @elseif ($tab === 'documenten')
-        <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="documenten">
+        <section class="d-card" aria-labelledby="documenten">
             <h2 id="documenten" class="text-lg font-extrabold">Documenten</h2>
             <p class="mt-1 text-sm text-aj-muted">Facturen en eigendomsbewijzen blijven privé; een handleiding of keuringsrapport mag openbaar. Lex controleert wat je toevoegt.</p>
             @include('dashboard.partials.lot-documents', ['lot' => $lot])
         </section>
     @elseif ($tab === 'verspreiding')
-        <section class="rounded-aj-s border border-aj-border bg-aj-surface p-6" aria-labelledby="verspreiding">
+        <section class="d-card" aria-labelledby="verspreiding">
             <h2 id="verspreiding" class="text-lg font-extrabold">Verspreiding</h2>
             <p class="mt-1 text-sm text-aj-muted">Deel de kavel op je eigen kanalen; per kanaal zie je of het geplaatst is en hoe vaak erop geklikt is.</p>
             @include('dashboard.partials.lot-distribution', ['lot' => $lot, 'kit' => $kit, 'planning' => $planning])

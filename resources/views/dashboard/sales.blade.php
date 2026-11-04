@@ -21,7 +21,7 @@
         <ul class="space-y-3">
             @foreach ($sales as $sale)
                 @php $state = $sale->state(); @endphp
-                <li class="flex flex-wrap items-center gap-4 rounded-aj-s border border-aj-border bg-aj-surface p-5">
+                <li class="flex flex-wrap items-center gap-4 d-card">
                     <div class="min-w-0 flex-1">
                         <a href="{{ route('dashboard.sales.edit', $sale) }}" class="text-base font-extrabold hover:underline">{{ $sale->title }}</a>
                         <p class="text-sm text-aj-muted">
