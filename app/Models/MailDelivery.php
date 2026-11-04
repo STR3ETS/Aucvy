@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Eén verzonden mail en wat Mailgun erover terugmeldde.
  */
-#[Fillable(['message_id', 'to_email', 'user_id', 'lot_id', 'order_id', 'subject', 'kind', 'mailer', 'status', 'failure_reason', 'last_event_at'])]
+#[Fillable(['message_id', 'to_email', 'user_id', 'lot_id', 'order_id', 'subject', 'kind', 'template_key', 'template_version_id', 'stream', 'automation_run_id', 'automation_step', 'campaign_id', 'mailer', 'status', 'failure_reason', 'last_event_at', 'delivered_at', 'clicked_at'])]
 #[ObservedBy(DossierObserver::class)]
 class MailDelivery extends Model
 {
@@ -37,6 +37,8 @@ class MailDelivery extends Model
     {
         return [
             'last_event_at' => 'datetime',
+            'delivered_at' => 'datetime',
+            'clicked_at' => 'datetime',
         ];
     }
 

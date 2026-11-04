@@ -24,6 +24,20 @@ return [
     ],
 
     /*
+     | Mail Builder en reeksen (briefing nieuwe functies). Service gaat
+     | altijd; activatie tot iemand zich afmeldt; campagne alleen met een
+     | uitdrukkelijke ja. Don toetst de indeling; dit zijn de standaarden.
+     | Marketing gaat via een eigen Mailgun-subdomein als die is ingesteld.
+     */
+    'mail' => [
+        'marketing_mailer' => env('AUCVY_MARKETING_MAILER'),
+        'campaign_requires_consent' => true,
+        'activation_requires_consent' => false,
+        'weekly_marketing_limit' => (int) env('AUCVY_MAIL_WEEKLY_LIMIT', 3),
+        'suppress_service_too' => false,
+    ],
+
+    /*
      | Interesse en Hot (hoofdbriefing p. 7). Hot als de score van de
      | afgelopen 48 uur bij de hoogste 10% van de categorie hoort, met
      | minimaal 50 kijkers en bij een veiling 3 bieders. Drempels instelbaar.

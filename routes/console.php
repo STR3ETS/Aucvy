@@ -91,6 +91,8 @@ Schedule::command('aucvy:check-ticket-sla')->everyFifteenMinutes();
 Schedule::command('aucvy:send-reports')->dailyAt('07:00');
 Schedule::command('aucvy:social-push')->everyFiveMinutes();
 Schedule::command('aucvy:hot-score')->hourly();
+Schedule::command('aucvy:automations')->everyFifteenMinutes();
+Schedule::command('aucvy:send-campaigns')->everyTenMinutes();
 
 Schedule::command('aucvy:prune-expired')
     ->dailyAt('04:00')

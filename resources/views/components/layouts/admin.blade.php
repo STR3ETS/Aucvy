@@ -41,6 +41,9 @@
                 $allowed('lots') ? ['admin.reviews', 'Reviews'] : null,
                 $allowed('lots') ? ['admin.viewings', 'Bezichtigingen'] : null,
             ],
+            'Marketing' => [
+                $allowed('mail') ? ['admin.mail', 'Mail Builder'] : null,
+            ],
             'Geld en cijfers' => [
                 $allowed('finance') ? ['admin.finance', 'Financiën'] : null,
                 $allowed('finance') ? ['admin.payouts', 'Uitbetalingen'] : null,

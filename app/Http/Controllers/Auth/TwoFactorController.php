@@ -92,6 +92,7 @@ final class TwoFactorController extends Controller
         // Geen "ingelogd blijven" voor wie een code moet geven: die cookie
         // zou de volgende keer zonder code inloggen (hfst. 15).
         Auth::loginUsingId($user->id, false);
+        $user->forceFill(['last_login_at' => now()])->saveQuietly();
         $request->session()->regenerate();
 
         app(DraftAccess::class)->claimFor($request);

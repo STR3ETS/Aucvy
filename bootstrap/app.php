@@ -41,7 +41,8 @@ return Application::configure(basePath: dirname(__DIR__))
          | verwerking: er wordt niets uit de payload geloofd — de status wordt
          | altijd bij de provider zelf opgehaald (hfst. 14).
          */
-        $middleware->validateCsrfTokens(except: ['webhooks/*']);
+        // Afmelden met één klik komt van de mailclient, zonder formulier (List-Unsubscribe-Post).
+        $middleware->validateCsrfTokens(except: ['webhooks/*', 'mail/afmelden/*']);
 
         // "Ingelogd blijven" omzeilt de tweede factor niet (hfst. 15).
         $middleware->web(append: [EnsureSecondFactorOnRecall::class]);

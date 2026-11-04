@@ -75,6 +75,7 @@ final class LoginController extends Controller
         }
 
         Auth::login($user, $request->boolean('remember'));
+        $user->forceFill(['last_login_at' => now()])->saveQuietly();
 
         // Voorkomt session fixation: de sessie krijgt een nieuw id.
         $request->session()->regenerate();

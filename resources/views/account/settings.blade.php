@@ -180,6 +180,22 @@
                 @endforeach
                 <button type="submit" class="btn btn-primary">Voorkeuren opslaan</button>
             </form>
+
+            {{-- Toestemming voor marketingmail (Mail Builder): service blijft altijd komen. --}}
+            <form method="POST" action="{{ route('account.mail-consent') }}" class="mt-6 space-y-3 border-t border-aj-border pt-5">
+                @csrf
+                <p class="text-sm font-bold">Mail van Aucvy</p>
+                <label class="flex items-start gap-3 rounded-aj-sm border border-aj-border bg-aj-bg p-3 text-sm">
+                    <input type="checkbox" name="activation" value="1" class="mt-0.5 size-4" @checked($mailConsent['activation'])>
+                    <span><span class="font-bold">Herinneringen en tips van Ivy</span><span class="block text-xs text-aj-muted">Een concept dat nog niet af is, een gevolgde kavel die sluit, kavels die bij je zoekvraag passen. Maximaal {{ (int) config('aucvy.mail.weekly_marketing_limit', 3) }} per week.</span></span>
+                </label>
+                <label class="flex items-start gap-3 rounded-aj-sm border border-aj-border bg-aj-bg p-3 text-sm">
+                    <input type="checkbox" name="campaign" value="1" class="mt-0.5 size-4" @checked($mailConsent['campaign'])>
+                    <span><span class="font-bold">Nieuwsbrief en campagnes</span><span class="block text-xs text-aj-muted">Nieuwe kavels per week, kijkdagen en één nieuwsbrief per maand. Alleen met jouw ja.</span></span>
+                </label>
+                <p class="text-xs text-aj-muted">Mails over je account en je aankopen (betaalverzoek, uitbetaling, geschil) zijn nodig en blijven komen.</p>
+                <button type="submit" class="btn btn-ghost">Mailvoorkeuren opslaan</button>
+            </form>
         </section>
 
         {{-- Sessies --}}

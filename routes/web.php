@@ -28,6 +28,7 @@ use App\Http\Controllers\LotImportController;
 use App\Http\Controllers\LotIndexController;
 use App\Http\Controllers\LotManagementController;
 use App\Http\Controllers\LotShareController;
+use App\Http\Controllers\MailConsentController;
 use App\Http\Controllers\MailgunInboundController;
 use App\Http\Controllers\MailgunWebhookController;
 use App\Http\Controllers\MollieWebhookController;
@@ -57,6 +58,7 @@ use App\Http\Controllers\Staff\ErrorLogController;
 use App\Http\Controllers\Staff\FinanceController;
 use App\Http\Controllers\Staff\LiveRoomController;
 use App\Http\Controllers\Staff\LotDossierController as StaffLotDossierController;
+use App\Http\Controllers\Staff\MailBuilderController;
 use App\Http\Controllers\Staff\ModerationController;
 use App\Http\Controllers\Staff\QueueController;
 use App\Http\Controllers\Staff\RedirectController;
@@ -98,6 +100,10 @@ Route::get('/veilingen', [LotIndexController::class, 'index'])->middleware('thro
 
 // Dezelfde pagina, met de categorie voorgeselecteerd (hfst. 7).
 Route::get('/veilingen/{category}', [LotIndexController::class, 'index'])->middleware('throttle:120,1')->name('lots.category');
+
+// Afmelden voor marketingmail: via de voet of met één klik (List-Unsubscribe-Post); de link is getekend.
+Route::get('/mail/afmelden/{user}/{stream}', [MailConsentController::class, 'show'])->name('mail.unsubscribe');
+Route::post('/mail/afmelden/{user}/{stream}', [MailConsentController::class, 'store'])->name('mail.unsubscribe.store');
 
 Route::get('/kavel/{lot}', [LotController::class, 'show'])->name('lots.show');
 // Delen en verspreiden (briefing nieuwe functies): deelbeeld per kavel, deling met eigen token.
@@ -352,6 +358,7 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/account/profiel', [AccountSettingsController::class, 'updateProfile'])->name('account.profile');
     Route::patch('/account/wachtwoord', [AccountSettingsController::class, 'updatePassword'])->middleware('throttle:5,10')->name('account.password');
     Route::patch('/account/meldingen', [AccountSettingsController::class, 'updateNotifications'])->name('account.notifications');
+    Route::post('/account/mail', [MailConsentController::class, 'update'])->name('account.mail-consent');
     Route::post('/account/sessies/uitloggen', [AccountSettingsController::class, 'logoutOtherSessions'])->middleware('throttle:5,10')->name('account.sessions.logout');
 
     // Authenticator-app (besluit Raph, 2 november 2026); elk beheer vraagt het wachtwoord.
@@ -468,6 +475,21 @@ Route::middleware(['auth', 'can:staff'])->prefix('admin')->name('admin.')->group
         Route::get('/rapporten', [ReportController::class, 'index'])->name('reports');
         Route::post('/rapporten', [ReportController::class, 'run'])->name('reports.run');
         Route::get('/rapporten/download', [ReportController::class, 'download'])->name('reports.download');
+    });
+
+    // Mail Builder (briefing nieuwe functies): 46 mails, reeksen, campagnes. Eigenaar en marketing.
+    Route::middleware('area:mail')->group(function (): void {
+        Route::get('/mail', [MailBuilderController::class, 'index'])->name('mail');
+        Route::get('/mail/{template}', [MailBuilderController::class, 'edit'])->name('mail.edit');
+        Route::get('/mail/{template}/preview', [MailBuilderController::class, 'preview'])->name('mail.preview');
+        Route::middleware('area:mail,write')->group(function (): void {
+            Route::put('/mail/{template}', [MailBuilderController::class, 'update'])->name('mail.update');
+            Route::post('/mail/{template}/test', [MailBuilderController::class, 'test'])->middleware('throttle:10,10')->name('mail.test');
+            Route::post('/mail/{template}/versies/{version}', [MailBuilderController::class, 'restore'])->name('mail.restore');
+            Route::post('/mail-reeksen/{automation}', [MailBuilderController::class, 'toggleAutomation'])->name('mail.automations.toggle');
+            Route::post('/mail-campagnes', [MailBuilderController::class, 'storeCampaign'])->name('mail.campaigns');
+            Route::post('/mail-campagnes/{campaign}/annuleren', [MailBuilderController::class, 'cancelCampaign'])->name('mail.campaigns.cancel');
+        });
         Route::post('/rapporten/planning', [ReportController::class, 'storeSchedule'])->name('reports.schedule');
         Route::delete('/rapporten/planning/{schedule}', [ReportController::class, 'destroySchedule'])->name('reports.schedule.destroy');
     });

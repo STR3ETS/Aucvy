@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\MailDelivery;
+use App\Models\MailSuppression;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
@@ -31,9 +32,10 @@ final class MailgunWebhookController extends Controller
 
         $data = (array) $request->input('event-data', []);
         $messageId = trim((string) data_get($data, 'message.headers.message-id', ''), '<>');
-        $status = $this->statusFor((string) ($data['event'] ?? ''), (string) ($data['severity'] ?? ''));
+        $event = (string) ($data['event'] ?? '');
+        $status = $this->statusFor($event, (string) ($data['severity'] ?? ''));
 
-        if ($messageId === '' || $status === null) {
+        if ($messageId === '') {
             return response()->noContent();
         }
 
@@ -41,6 +43,22 @@ final class MailgunWebhookController extends Controller
 
         if (is_string($data['recipient'] ?? null)) {
             $query->where('to_email', Str::lower($data['recipient']));
+        }
+
+        // Klikken tellen; open-percentages zijn onbetrouwbaar en tellen niet.
+        if ($event === 'clicked') {
+            $query->whereNull('clicked_at')->update(['clicked_at' => now(), 'last_event_at' => now()]);
+
+            return response()->noContent();
+        }
+
+        if ($status === null) {
+            return response()->noContent();
+        }
+
+        // Harde bounce of spamklacht: geen marketing meer naar dit adres.
+        if (in_array($status, MailDelivery::PROBLEMS, true) && is_string($data['recipient'] ?? null)) {
+            MailSuppression::add($data['recipient'], $status === MailDelivery::STATUS_COMPLAINED ? 'complaint' : 'bounce', 'mailgun');
         }
 
         $reason = data_get($data, 'delivery-status.description') ?: data_get($data, 'delivery-status.message') ?: ($data['reason'] ?? null);
@@ -55,6 +73,7 @@ final class MailgunWebhookController extends Controller
                 'status' => $status,
                 'failure_reason' => $status === MailDelivery::STATUS_DELIVERED ? null : Str::limit((string) $reason, 490),
                 'last_event_at' => now(),
+                'delivered_at' => $status === MailDelivery::STATUS_DELIVERED ? ($delivery->delivered_at ?? now()) : $delivery->delivered_at,
             ])->save();
         }
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\MailConsent;
+use App\Models\MailTemplate;
 use App\Models\User;
 use App\Support\Audit\Audit;
 use App\Support\TwoFactor\Authenticator;
@@ -44,6 +46,11 @@ final class AccountSettingsController extends Controller
                 'recovery_left' => $authenticator->remainingRecoveryCodes($user),
             ],
             'preferences' => collect(self::PREFERENCES)->mapWithKeys(fn (string $key): array => [$key => $user->prefers($key)])->all(),
+            // Toestemming voor activatie en campagnes (Mail Builder); service staat vast.
+            'mailConsent' => [
+                'activation' => MailConsent::statusFor($user, MailTemplate::ACTIVATION) !== MailConsent::REVOKED,
+                'campaign' => MailConsent::statusFor($user, MailTemplate::CAMPAIGN) === MailConsent::GRANTED,
+            ],
             'sessions' => $this->sessionsFor($user, $request->session()->getId()),
             'hasPush' => $user->pushSubscriptions()->exists(),
         ]);
