@@ -155,7 +155,7 @@
             <h2 class="v4-h2" id="live-title">De handel van dit moment</h2>
             <p class="v4-sub">Echte kavels, echte timers, en Ivy's waarderange als indicatie bij elk bod.</p>
         </div>
-        <a class="v4-more" href="{{ route('lots.index') }}">Alle veilingen →</a>
+        <a class="v4-more" href="{{ route('lots.index') }}">Alle veilingen <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px">
         <a class="v4-chip v4-chip--on" href="{{ route('lots.index') }}" aria-current="true">Nu live</a>
@@ -188,7 +188,7 @@
                 <span><i class="ok">✓</i>Meeste marktwerking, vaak de hoogste opbrengst voor de verkoper.</span>
                 <span><i class="warn">!</i>Je weet pas bij sluiting of je hem hebt.</span>
             </div>
-            <a class="v4-link-btn" href="{{ route('selling.guide') }}" style="margin-top:14px;align-self:flex-start">Hoe werkt veiling? →</a>
+            <a class="v4-link-btn" href="{{ route('selling.guide') }}" style="margin-top:14px;align-self:flex-start">Hoe werkt veiling? <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
         </article>
         <article class="v4-form v4-reveal" style="--d:.1s">
             <span class="v4-glyph" style="background:var(--aj-violet)"><x-v4.icon name="arrow-down" :size="19" stroke="2.3" /></span>
@@ -198,7 +198,7 @@
                 <span><i class="ok">✓</i>Snel duidelijk, en je weet exact wat je betaalt op het moment dat je klikt.</span>
                 <span><i class="warn">!</i>Er is maar één winnaar en geen tweede kans: wie eerst klikt, heeft hem.</span>
             </div>
-            <a class="v4-link-btn" href="{{ route('selling.guide') }}" style="margin-top:14px;align-self:flex-start">Hoe werkt afslag? →</a>
+            <a class="v4-link-btn" href="{{ route('selling.guide') }}" style="margin-top:14px;align-self:flex-start">Hoe werkt afslag? <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
         </article>
         <article class="v4-form v4-reveal" style="--d:.2s">
             <span class="v4-glyph" style="background:var(--aj-success-text)"><x-v4.icon name="shopping-bag" :size="19" stroke="2.3" /></span>
@@ -208,7 +208,7 @@
                 <span><i class="ok">✓</i>Geen onzekerheid en geen wachttijd.</span>
                 <span><i class="warn">!</i>Je betaalt de vaste prijs; via een veiling zou het lager (of hoger) kunnen uitvallen.</span>
             </div>
-            <a class="v4-link-btn" href="{{ route('selling.guide') }}" style="margin-top:14px;align-self:flex-start">Hoe werkt koop direct? →</a>
+            <a class="v4-link-btn" href="{{ route('selling.guide') }}" style="margin-top:14px;align-self:flex-start">Hoe werkt koop direct? <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
         </article>
     </div>
 </section>
@@ -223,7 +223,7 @@
             <span class="v4-kicker">Categorieën</span>
             <h2 class="v4-h2" id="cat-title">Van losse kavel tot compleet bedrijf</h2>
         </div>
-        <a class="v4-more" href="{{ route('lots.index') }}">Alle categorieën →</a>
+        <a class="v4-more" href="{{ route('lots.index') }}">Alle categorieën <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
     </div>
     @php
         $tiles = [

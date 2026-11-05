@@ -73,15 +73,15 @@
 
     <div class="stage" id="stage">
         <section class="pane on" data-pane="a" aria-label="Variant A: oude ontwerp">
-            <div class="pane-head"><span>A · {{ HomeVariant::Current->label() }}</span><a href="{{ $frame(HomeVariant::Current) }}" target="_blank" rel="noopener">Open los ↗</a></div>
+            <div class="pane-head"><span>A · {{ HomeVariant::Current->label() }}</span><a href="{{ $frame(HomeVariant::Current) }}" target="_blank" rel="noopener">Open los <x-v4.icon name="arrow-up-right" :size="12" stroke="2.6" style="display:inline-block;vertical-align:-1px" /></a></div>
             <div class="frame"><iframe src="{{ $frame(HomeVariant::Current) }}" title="Variant A: oude ontwerp" loading="lazy"></iframe></div>
         </section>
         <section class="pane on" data-pane="b" aria-label="Variant B: nieuw ontwerp">
-            <div class="pane-head"><span>B · {{ HomeVariant::Redesign->label() }}</span><a href="{{ $frame(HomeVariant::Redesign) }}" target="_blank" rel="noopener">Open los ↗</a></div>
+            <div class="pane-head"><span>B · {{ HomeVariant::Redesign->label() }}</span><a href="{{ $frame(HomeVariant::Redesign) }}" target="_blank" rel="noopener">Open los <x-v4.icon name="arrow-up-right" :size="12" stroke="2.6" style="display:inline-block;vertical-align:-1px" /></a></div>
             <div class="frame"><iframe src="{{ $frame(HomeVariant::Redesign) }}" title="Variant B: nieuw ontwerp" loading="lazy"></iframe></div>
         </section>
         <section class="pane on" data-pane="c" aria-label="Variant C: hybride ontwerp">
-            <div class="pane-head"><span>C · {{ HomeVariant::Hybrid->label() }}</span><a href="{{ $frame(HomeVariant::Hybrid) }}" target="_blank" rel="noopener">Open los ↗</a></div>
+            <div class="pane-head"><span>C · {{ HomeVariant::Hybrid->label() }}</span><a href="{{ $frame(HomeVariant::Hybrid) }}" target="_blank" rel="noopener">Open los <x-v4.icon name="arrow-up-right" :size="12" stroke="2.6" style="display:inline-block;vertical-align:-1px" /></a></div>
             <div class="frame"><iframe src="{{ $frame(HomeVariant::Hybrid) }}" title="Variant C: hybride ontwerp" loading="lazy"></iframe></div>
         </section>
     </div>

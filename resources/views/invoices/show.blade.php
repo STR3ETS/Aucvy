@@ -119,8 +119,8 @@
                     <p class="d-sub">Bij de margeregeling mag de btw niet apart op de factuur staan. Je betaalt het totaalbedrag, zonder btw erbovenop.</p>
                 </div>
             @endif
-            <a class="d-aside-link" href="{{ route('orders.show', $order) }}">Naar je bestelling <span aria-hidden="true">→</span></a>
-            <a class="d-aside-link" href="{{ route('orders.show', $order) }}#berichten">Vraag over deze factuur <span aria-hidden="true">→</span></a>
+            <a class="d-aside-link" href="{{ route('orders.show', $order) }}">Naar je bestelling <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
+            <a class="d-aside-link" href="{{ route('orders.show', $order) }}#berichten">Vraag over deze factuur <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
         </aside>
     </div>
 </x-layouts.dashboard>

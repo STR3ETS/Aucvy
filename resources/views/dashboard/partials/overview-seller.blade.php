@@ -24,7 +24,7 @@
             <div class="flex items-center gap-2" style="margin-top:2px">
                 <strong id="omzet-title" class="d-big">{{ Money::format($revenue['revenue_cents']) }}</strong>
                 @if ($revenue['trend'] !== null)
-                    <span class="d-trend{{ $revenue['trend'] < 0 ? ' is-down' : '' }}">{{ $revenue['trend'] < 0 ? '↘' : '↗' }} {{ abs($revenue['trend']) }}%</span>
+                    <span class="d-trend{{ $revenue['trend'] < 0 ? ' is-down' : '' }}"><x-v4.icon :name="$revenue['trend'] < 0 ? 'arrow-down-right' : 'arrow-up-right'" :size="12" stroke="2.8" /> {{ abs($revenue['trend']) }}%</span>
                 @endif
             </div>
             <div class="d-muted" style="margin-top:2px">afgeronde verkopen van de laatste twaalf maanden</div>
@@ -36,7 +36,12 @@
     @if ($revenue['revenue_cents'] === 0)
         <p class="feed-empty" style="margin-top:12px">Nog geen afgeronde verkopen. Na je eerste afgeronde verkoop tekent de grafiek hier je opbrengst per maand.</p>
     @else
-        <div class="d-line" role="img" aria-label="Opbrengst per maand, {{ collect($months)->map(fn (array $month): string => $month['label'].' '.$euro($month['revenue_cents']))->implode(', ') }}">
+        {{-- Aanwijzen of aanraken toont de maand en het bedrag; de tabel eronder is er voor wie de grafiek niet ziet. --}}
+        <div class="d-line" role="img"
+             x-data="{ i: null, months: {{ Js::from(collect($months)->map(fn (array $month): array => ['label' => $month['label'], 'amount' => $euro($month['revenue_cents']), 'y' => 100 - $month['revenue_cents'] / $peak * 100])->values()) }},
+                 at(event) { const box = this.$refs.hit.getBoundingClientRect(); const x = (event.touches ? event.touches[0].clientX : event.clientX) - box.left; this.i = Math.max(0, Math.min(this.months.length - 1, Math.round(x / box.width * (this.months.length - 1)))); },
+                 get x() { return this.months.length > 1 ? this.i / (this.months.length - 1) * 100 : 50; } }"
+             aria-label="Opbrengst per maand, {{ collect($months)->map(fn (array $month): string => $month['label'].' '.$euro($month['revenue_cents']))->implode(', ') }}">
             @foreach ($axis as $line)
                 <div class="d-line-grid" aria-hidden="true" style="top:{{ $line['top'] }}px"><span>{{ $line['label'] }}</span></div>
             @endforeach
@@ -44,6 +49,19 @@
                 <polygon points="0,100 {{ $points }} 100,100" fill="rgba(47,107,255,.12)"></polygon>
                 <polyline points="{{ $points }}" fill="none" stroke="#2f6bff" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>
             </svg>
+            <div class="d-line-hit" x-ref="hit" aria-hidden="true"
+                 @mousemove="at($event)" @mouseleave="i = null" @touchstart.passive="at($event)" @touchmove.passive="at($event)">
+                <template x-if="i !== null">
+                    <div style="display:contents">
+                        <span class="d-line-guide" :style="'left:' + x + '%'"></span>
+                        <span class="d-line-dot" :style="'left:' + x + '%;top:' + months[i].y + '%'"></span>
+                        <div class="d-line-tip" :class="i > (months.length - 1) / 2 ? 'is-left' : 'is-right'" :style="'left:' + x + '%'">
+                            <strong x-text="months[i].label"></strong>
+                            <span x-text="'Opbrengst ' + months[i].amount"></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
             <div class="d-line-x" aria-hidden="true">
                 @foreach ($months as $month)
                     <span>{{ $month['label'] }}</span>

@@ -67,8 +67,8 @@
                                     @endif
                                 </span>
                                 <span class="flex items-center gap-1">
-                                    <form method="POST" action="{{ route('dashboard.sales.move', [$sale, $lot]) }}">@csrf<input type="hidden" name="direction" value="up"><button type="submit" class="btn btn-ghost" style="height:30px;padding:0 8px;font-size:12px" aria-label="Omhoog" @disabled($loop->first)>↑</button></form>
-                                    <form method="POST" action="{{ route('dashboard.sales.move', [$sale, $lot]) }}">@csrf<input type="hidden" name="direction" value="down"><button type="submit" class="btn btn-ghost" style="height:30px;padding:0 8px;font-size:12px" aria-label="Omlaag" @disabled($loop->last)>↓</button></form>
+                                    <form method="POST" action="{{ route('dashboard.sales.move', [$sale, $lot]) }}">@csrf<input type="hidden" name="direction" value="up"><button type="submit" class="btn btn-ghost" style="height:30px;padding:0 8px;font-size:12px" aria-label="Omhoog" @disabled($loop->first)><x-v4.icon name="arrow-up" :size="14" stroke="2.6" /></button></form>
+                                    <form method="POST" action="{{ route('dashboard.sales.move', [$sale, $lot]) }}">@csrf<input type="hidden" name="direction" value="down"><button type="submit" class="btn btn-ghost" style="height:30px;padding:0 8px;font-size:12px" aria-label="Omlaag" @disabled($loop->last)><x-v4.icon name="arrow-down" :size="14" stroke="2.6" /></button></form>
                                     @if ($lot->status === LotStatus::Draft)
                                         <a class="btn btn-ghost" href="{{ route('sell', ['concept' => $lot->id]) }}" style="height:30px;padding:0 10px;font-size:12px">Wizard</a>
                                     @else

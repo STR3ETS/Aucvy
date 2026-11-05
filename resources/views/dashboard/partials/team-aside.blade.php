@@ -57,7 +57,7 @@
                             <span class="d-tag {{ $whenTone }}">{{ $when }}</span>
                         </div>
                         <p>{{ $task['title'] }}</p>
-                        <a class="d-btn d-btn-sm" href="{{ $task['url'] }}">{{ $task['action'] ?? 'Bekijken' }} →</a>
+                        <a class="d-btn d-btn-sm" href="{{ $task['url'] }}">{{ $task['action'] ?? 'Bekijken' }} <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
                     </article>
                 @endforeach
             </div>

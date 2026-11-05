@@ -57,3 +57,20 @@ it('linkt de snelle acties naar de veilingen en de wizard', function () {
         ->assertSee(route('lots.index'), escape: false)
         ->assertSee(route('sell'), escape: false);
 });
+
+it('zet wat nog niet gelezen is bovenaan, ook als het ouder is', function () {
+    $user = User::factory()->verified()->create();
+
+    $this->travelTo(now()->subDays(3));
+    $user->notify(new VerificationDecided(KycStatus::Verified));
+    $this->travelBack();
+
+    // Een nieuwere melding die al gelezen is.
+    $user->notify(new VerificationDecided(KycStatus::Rejected));
+    $user->notifications()->latest()->first()->markAsRead();
+
+    $items = collect(app(ActivityFeed::class)->for($user, collect())['items']);
+
+    expect($items->pluck('unread')->all())->toBe([true, false])
+        ->and($items[0]['at']->lt($items[1]['at']))->toBeTrue();
+});

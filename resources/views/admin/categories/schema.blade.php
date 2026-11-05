@@ -41,8 +41,8 @@
                         <td><input type="text" :name="'fields[' + index + '][options]'" x-model="row.options" :disabled="row.type !== 'select'" placeholder="Elektrisch, Diesel, LPG" class="w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface px-2 text-sm disabled:bg-aj-bg" style="min-height:36px"></td>
                         <td class="text-center"><input type="checkbox" :name="'fields[' + index + '][required]'" value="1" x-model="row.required"></td>
                         <td class="whitespace-nowrap text-right">
-                            <button type="button" class="btn btn-ghost" style="height:30px;padding:0 8px;font-size:12px" @click="move(index, -1)" aria-label="Omhoog">↑</button>
-                            <button type="button" class="btn btn-ghost" style="height:30px;padding:0 8px;font-size:12px" @click="move(index, 1)" aria-label="Omlaag">↓</button>
+                            <button type="button" class="btn btn-ghost" style="height:30px;padding:0 8px;font-size:12px" @click="move(index, -1)" aria-label="Omhoog"><x-v4.icon name="arrow-up" :size="14" stroke="2.6" /></button>
+                            <button type="button" class="btn btn-ghost" style="height:30px;padding:0 8px;font-size:12px" @click="move(index, 1)" aria-label="Omlaag"><x-v4.icon name="arrow-down" :size="14" stroke="2.6" /></button>
                             <button type="button" class="btn btn-ghost" style="height:30px;padding:0 8px;font-size:12px" @click="remove(index)" aria-label="Verwijderen">×</button>
                         </td>
                     </tr>

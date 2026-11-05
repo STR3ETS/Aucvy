@@ -100,8 +100,8 @@
         @if ($nextLot || $previousLot)
             <p class="-mt-2 hidden items-center justify-end gap-1 text-xs text-aj-muted lg:flex" aria-hidden="true">
                 Blader
-                <kbd class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-1.5 py-0.5 font-sans font-bold">&larr;</kbd>
-                <kbd class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-1.5 py-0.5 font-sans font-bold">&rarr;</kbd>
+                <kbd class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-1.5 py-0.5 font-sans font-bold"><x-v4.icon name="arrow-left" :size="11" stroke="2.6" /></kbd>
+                <kbd class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-1.5 py-0.5 font-sans font-bold"><x-v4.icon name="arrow-right" :size="11" stroke="2.6" /></kbd>
             </p>
         @endif
 

@@ -44,6 +44,7 @@
 .v4-h2{margin:8px 0 0;font-size:clamp(26px,3.4vw,38px);font-weight:800;letter-spacing:-.022em;line-height:1.12}
 .v4-sub{margin:12px 0 0;font-size:15px;color:var(--aj-muted);line-height:1.65;max-width:62ch}
 .v4-sub--dark{color:rgba(255,255,255,.6);max-width:58ch}
+.v4-more svg,.v4-link-btn svg{display:inline-block;vertical-align:-2px}
 .v4-more{font-size:13.5px;font-weight:800;color:var(--aj-blue-text);margin-bottom:38px;white-space:nowrap}
 .v4-grad-text{background:linear-gradient(125deg,#6e9bff 0%,#b08cff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 

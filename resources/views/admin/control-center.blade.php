@@ -25,7 +25,7 @@
                     <p class="tabular mt-1 text-2xl font-extrabold">{{ $tile['value'] }}</p>
                     <p class="mt-0.5 text-xs text-aj-muted">{{ $tile['sub'] }}</p>
                     @if ($tile['trend'] !== null)
-                        <p @class(['mt-1 text-xs font-bold', 'text-aj-success-text' => $tile['trend'] >= 0, 'text-aj-error' => $tile['trend'] < 0])>{{ $tile['trend'] >= 0 ? '↗' : '↘' }} {{ number_format(abs($tile['trend']), 1, ',', '.') }}% t.o.v. de vorige periode</p>
+                        <p @class(['mt-1 text-xs font-bold', 'text-aj-success-text' => $tile['trend'] >= 0, 'text-aj-error' => $tile['trend'] < 0])><x-v4.icon :name="$tile['trend'] >= 0 ? 'arrow-up-right' : 'arrow-down-right'" :size="12" stroke="2.8" class="inline-block align-[-1px]" /> {{ number_format(abs($tile['trend']), 1, ',', '.') }}% t.o.v. de vorige periode</p>
                     @endif
                 </a>
             @endforeach

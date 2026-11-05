@@ -93,8 +93,12 @@ final class ActivityFeed
                 'dismiss_id' => null,
             ]));
 
+        // Wat nog niet gelezen is staat bovenaan; daarbinnen het nieuwste eerst.
         $items = $items
-            ->sortByDesc(fn (array $item): int => $item['at']->getTimestamp())
+            ->sortBy([
+                fn (array $a, array $b): int => $b['unread'] <=> $a['unread'],
+                fn (array $a, array $b): int => $b['at']->getTimestamp() <=> $a['at']->getTimestamp(),
+            ])
             ->values()
             ->take($limit);
 
