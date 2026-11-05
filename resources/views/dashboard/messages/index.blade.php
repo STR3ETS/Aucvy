@@ -10,7 +10,7 @@
             @include('dashboard.messages.partials.list', ['items' => $conversations, 'current' => null, 'user' => $user])
 
             <section class="d-thread" aria-label="Gesprek" style="align-items:center;justify-content:center;min-height:320px">
-                <div style="text-align:center;padding:32px;max-width:36ch">
+                <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px;max-width:36ch">
                     <x-v4.icon name="message-circle" :size="28" stroke="1.8" style="color:#2f6bff" />
                     <p class="d-h3" style="margin-top:10px">Kies een gesprek</p>
                     <p class="d-sub">{{ $unreadCount > 0 ? $unreadCount.' '.($unreadCount === 1 ? 'gesprek heeft' : 'gesprekken hebben').' een nieuw bericht.' : 'Alles is gelezen. Nieuwe berichten verschijnen hier en bij je meldingen.' }}</p>
