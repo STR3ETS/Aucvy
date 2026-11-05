@@ -486,7 +486,7 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .fn-check span span{display:block;margin-top:2px;font-size:13px;line-height:1.45;color:#4d5566}
 .fn-lotcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .fn-lotcard{border:1px solid rgba(14,21,38,.12);border-radius:14px;overflow:hidden;background:#fff}
-.fn-lotcard.is-on{border-color:#2f6bff;box-shadow:inset 0 0 0 1px #2f6bff}
+.fn-lotcard.is-on{border-color:#2f6bff;box-shadow:0 0 0 1px #2f6bff}
 .fn-lotcard-media{aspect-ratio:16/10;background:#e9edf5}
 .fn-lotcard-media img{width:100%;height:100%;object-fit:cover;display:block}
 .fn-lotcard-body{display:flex;flex-direction:column;gap:2px;padding:12px 14px 14px}
