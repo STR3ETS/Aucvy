@@ -436,6 +436,102 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-step:hover{border-color:#0e1526}
 .d-step.is-on{background:#2f6bff;border-color:#2f6bff;color:#fff}
 .d-step.is-done{background:#e8f6ef;border-color:#cdeedc;color:#177249}
+.c.funnel{background:#eef1f7;color:#0e1526}
+.fn-page{padding:clamp(8px,1.4vw,20px);min-height:100vh}
+.fn-card{max-width:1200px;margin:0 auto;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 30px 80px -60px rgba(14,21,38,.5)}
+.fn-head{padding:20px clamp(18px,3vw,36px) 54px;background:#0c1326 center/cover no-repeat;color:#fff}
+.fn-head-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.fn-brand{display:inline-flex;align-items:center;gap:8px;font-size:18px;font-weight:800;letter-spacing:-.01em;color:#fff}
+.fn-head-status{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:13px;color:rgba(255,255,255,.78)}
+.fn-head-status b{color:#fff;font-weight:700}
+.fn-head-btn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1px solid rgba(255,255,255,.34);border-radius:12px;color:#fff;font-size:13px;font-weight:700;transition:background .2s,border-color .2s}
+.fn-head-btn:hover{background:rgba(255,255,255,.1);border-color:#fff}
+.fn-kicker{margin:30px 0 0;font-size:13px;font-weight:700;color:#9db8ff}
+.fn-head h1{margin:8px 0 0;font-size:clamp(26px,3.4vw,36px);font-weight:800;letter-spacing:-.02em;line-height:1.12;color:#fff;text-wrap:balance}
+.fn-lead{margin:10px 0 0;max-width:62ch;font-size:15px;line-height:1.55;color:rgba(255,255,255,.82)}
+.fn-body{position:relative;margin-top:-24px;padding:22px clamp(16px,3vw,36px) 28px;border-radius:24px 24px 0 0;background:#fff}
+.fn-drafts{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 16px;margin-bottom:14px;font-size:13px}
+.fn-drafts .draft-others{margin:0}
+.fn-steps{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.fn-grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px;align-items:start;margin-top:20px}
+.fn-main{min-width:0;display:flex;flex-direction:column;gap:18px}
+.fn-aside{display:flex;flex-direction:column;gap:14px;min-width:0}
+.fn-h2{margin:0;font-size:15px;font-weight:800;letter-spacing:-.01em}
+.fn-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.fn-divide{margin-top:4px;padding-top:16px;border-top:1px solid rgba(14,21,38,.09)}
+.fn-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fn-options.is-two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fn-option{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:16px;border:1px solid rgba(14,21,38,.12);border-radius:14px;background:#fff;color:#0e1526;font:inherit;text-align:left;cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s}
+.fn-option:hover{border-color:rgba(14,21,38,.3)}
+.fn-option.is-on{border-color:#2f6bff;background:#f1f5ff;box-shadow:inset 0 0 0 1px #2f6bff}
+.fn-option:focus-within{outline:2px solid #2f6bff;outline-offset:2px}
+.fn-option strong{font-size:15px;font-weight:800}
+.fn-option>span{font-size:13px;line-height:1.45;color:#4d5566}
+.fn-option-icon{display:flex;margin-bottom:10px;color:#2f6bff}
+.fn-option-fee{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.fn-suggest-label{font-size:13px;font-weight:700;color:#4d5566}
+.fn-drop{display:flex;flex-direction:column;align-items:center;gap:4px;padding:28px 18px;border:2px dashed rgba(14,21,38,.2);border-radius:16px;background:#f8f9fc;text-align:center;transition:border-color .2s,background .2s}
+.fn-drop.is-over{border-color:#2f6bff;background:#eef3ff}
+.fn-drop>strong{font-size:16px;font-weight:800}
+.fn-drop>span{font-size:13px;color:#4d5566}
+.fn-gtin{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin-top:12px;font-size:13px;color:#4d5566}
+.fn-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.fn-fields.is-three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.fn-fields.is-four{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fn-fieldset{margin:0;padding:0;border:0;min-width:0}
+.fn-check{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.fn-check.is-card{padding:14px;border:1px solid rgba(14,21,38,.12);border-radius:14px}
+.fn-check input{width:20px;height:20px;margin-top:2px;flex:0 0 auto;accent-color:#2f6bff;cursor:pointer}
+.fn-check strong{display:block;font-size:14px;font-weight:700}
+.fn-check span span{display:block;margin-top:2px;font-size:13px;line-height:1.45;color:#4d5566}
+.fn-lotcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.fn-lotcard{border:1px solid rgba(14,21,38,.12);border-radius:14px;overflow:hidden;background:#fff}
+.fn-lotcard.is-on{border-color:#2f6bff;box-shadow:inset 0 0 0 1px #2f6bff}
+.fn-lotcard-media{aspect-ratio:16/10;background:#e9edf5}
+.fn-lotcard-media img{width:100%;height:100%;object-fit:cover;display:block}
+.fn-lotcard-body{display:flex;flex-direction:column;gap:2px;padding:12px 14px 14px}
+.fn-lotcard-body strong{font-size:14px;font-weight:800}
+.fn-lotcard-body b{font-size:15px;font-weight:800}
+.fn-notes{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.5}
+.fn-notes li{display:flex;gap:10px;align-items:flex-start}
+.fn-notes img{width:28px;height:28px;flex:0 0 auto;border-radius:50%;object-fit:cover}
+.fn-specadd{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fn-specadd .d-input{flex:1 1 220px;width:auto}
+.fn-checklist{display:flex;flex-direction:column}
+.fn-checklist>div{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid rgba(14,21,38,.08)}
+.fn-checklist>div:first-child{border-top:0}
+.fn-checklist>div>span:nth-child(2){flex:1 1 auto;min-width:0}
+.fn-checklist strong{display:block;font-size:14px;font-weight:700}
+.fn-checklist span span{display:block;font-size:13px;color:#4d5566;line-height:1.45}
+.fn-checklist .ok,.fn-checklist .warn,.fn-checklist .fail{display:flex;align-items:center;justify-content:center;width:24px;height:24px;flex:0 0 auto;border-radius:50%;font-size:13px;font-weight:800;color:#fff}
+.fn-checklist .ok{background:#1c9a63}
+.fn-checklist .warn{background:#b4690e}
+.fn-checklist .fail{background:#c0392b}
+.fn-channels{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:10px}
+.fn-channels>div{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:0 14px;border:1px dashed rgba(14,21,38,.22);border-radius:12px;font-size:14px;font-weight:700}
+.fn-nav{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:6px;padding-top:18px;border-top:1px solid rgba(14,21,38,.09)}
+.fn-preview{border:1px solid rgba(14,21,38,.09);border-radius:16px;overflow:hidden;background:#fff}
+.fn-preview-media{aspect-ratio:16/10;background:#e9edf5}
+.fn-preview-media img{width:100%;height:100%;object-fit:cover;display:block}
+.fn-preview-body{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px}
+.fn-preview-body strong{font-size:15px;font-weight:800;line-height:1.3}
+.fn-missing{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:#4d5566}
+.fn-missing li{line-height:1.4}
+.d-callout-ok{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;background:#e8f6ef;color:#0e1526}
+.d-callout-ok .mark{width:40px;height:40px;flex:0 0 auto;border-radius:50%;background:#1c9a63;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.d-callout-ok strong{display:block;font-size:15px}
+.d-callout-ok span:not(.mark){display:block;font-size:13px;color:#177249}
+.c.funnel .d-btn.is-on{background:#fbecea;border-color:#e9b6af;color:#a93226}
+.c.funnel .d-btn:disabled{opacity:.5;cursor:not-allowed}
+@media (max-width:980px){
+  .fn-grid{grid-template-columns:minmax(0,1fr)}
+  .fn-fields.is-three{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  .fn-options,.fn-options.is-two,.fn-fields,.fn-fields.is-three,.fn-fields.is-four{grid-template-columns:minmax(0,1fr)}
+  .fn-head{padding-bottom:46px}
+  .fn-nav .d-btn{flex:1 1 auto}
+}
 
 /* ---------- berichten: drie kolommen van november ---------- */
 .d-msg-layout{display:grid;grid-template-columns:280px minmax(0,1fr) 270px;gap:16px;align-items:start}

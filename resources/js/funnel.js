@@ -97,6 +97,11 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             return cents == null ? '' : (cents / 100).toString().replace('.', ',');
         },
 
+        /** Een bedrag om te tonen, met punten voor de duizendtallen. */
+        money(cents) {
+            return cents == null ? '' : '€ ' + (cents / 100).toLocaleString('nl-NL', { maximumFractionDigits: 2 });
+        },
+
         async flush() {
             if (Object.keys(this._pending).length === 0) return;
 

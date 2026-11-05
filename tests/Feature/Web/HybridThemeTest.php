@@ -16,7 +16,18 @@ it('geeft de publieke pagina\'s het thema van variant c', function (string $url)
         ->assertSee('class="no-js c"', escape: false)
         ->assertSee('footer-c', escape: false)
         ->assertSee('page-hero', escape: false);
-})->with(['/veilingen', '/faq', '/zekerheid', '/verkooproute', '/verkopen']);
+})->with(['/veilingen', '/faq', '/zekerheid', '/verkooproute']);
+
+it('geeft kavel plaatsen een eigen schil zonder sitemenu en voettekst', function () {
+    $this->get('/verkopen')
+        ->assertOk()
+        ->assertSee('class="no-js c funnel"', escape: false)
+        ->assertSee('fn-card', escape: false)
+        ->assertSee('Opslaan en sluiten')
+        ->assertSee('stap <span x-text="step + 1">1</span> van 8', escape: false)
+        ->assertDontSee('class="header', escape: false)
+        ->assertDontSee('footer-c');
+});
 
 it('zet de inlogomgeving op een eigen pagina zonder header en footer', function (string $url) {
     $this->get($url)
