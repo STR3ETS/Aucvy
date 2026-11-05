@@ -39,7 +39,7 @@
 
     {{--
         De tegels zijn tabs: één aanklikken toont alleen dat onderdeel. Zonder
-        keuze staan Beveiliging en Meldingen naast elkaar, zoals in het ontwerp.
+        keuze staan er geen velden, alleen de profielkaart en de tegels.
         De keuze staat in de hash (deelbaar, en redirects als #tweestaps werken)
         en blijft na het opslaan van een formulier bewaard.
     --}}
@@ -102,9 +102,9 @@
             @endforeach
         </nav>
 
-        <div class="d-cols">
+        <div class="d-cols" x-show="tab !== 'overzicht'" x-cloak>
             {{-- Wachtwoord en de tweede inlogstap --}}
-            <section id="beveiliging" class="d-card d-tabpanel" x-show="tab === 'overzicht' || tab === 'beveiliging'" aria-labelledby="wachtwoord">
+            <section id="beveiliging" class="d-card d-tabpanel" x-show="tab === 'beveiliging'" x-cloak aria-labelledby="wachtwoord">
                 <h2 id="wachtwoord" class="d-h3" style="font-size:17px">Wachtwoord en beveiliging</h2>
                 <form method="POST" action="{{ route('account.password') }}" class="d-stack-tight" style="margin-top:12px">
                     @csrf
@@ -209,7 +209,7 @@
             </section>
 
             {{-- Meldingen: de voorkeuren die je zelf aan of uit zet. --}}
-            <section id="meldingen" class="d-card d-tabpanel" x-show="tab === 'overzicht' || tab === 'meldingen'" aria-labelledby="meldingen-kop">
+            <section id="meldingen" class="d-card d-tabpanel" x-show="tab === 'meldingen'" x-cloak aria-labelledby="meldingen-kop">
                 <h2 id="meldingen-kop" class="d-h3" style="font-size:17px">Meldingen</h2>
                 <p class="d-sub">Berichten over je bestellingen, uitbetalingen en verificatie krijg je altijd.</p>
                 @unless ($hasPush)
