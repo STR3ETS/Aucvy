@@ -621,11 +621,19 @@ aside>.d-msg-skeleton{min-height:0;padding:0}
 .dash-main.is-loading .dash-crumbs,.dash-main.is-loading .dash-band .eyebrow,.dash-main.is-loading .dash-band .page-crumbs{opacity:.4}
 .dash-main.is-entering .dash-band-text,.dash-main.is-entering .dash-band .page-actions,.dash-main.is-entering .dash-tiles>*,.dash-main.is-entering .dash-body>*{animation:dash-enter .28s cubic-bezier(.16,1,.3,1) both}
 .dash-main.is-entering .dash-body>*{animation-delay:.04s}
+/* Dezelfde pagina, een andere weergave: alleen wat verandert maakt plaats. */
+.dash-main.is-refreshing .sk-gone{display:none !important}
+.dash-main.is-refreshing .dash-skeleton{margin-top:4px}
+.dash-main.is-refreshing .dash-body.is-dim{opacity:.45;pointer-events:none;transition:opacity .15s}
+.dash-main.is-switching .d-tile{border-radius:16px;background:linear-gradient(90deg,#eef1f6 25%,#f7f8fb 45%,#eef1f6 65%);background-size:200% 100%;animation:sk-shine 1.3s ease-in-out infinite;color:transparent;border-color:transparent;pointer-events:none}
+.dash-main.is-switching .d-tile>*{visibility:hidden}
+.dash-main.is-entering-part .d-seg~*{animation:dash-enter .28s cubic-bezier(.16,1,.3,1) both}
 /* Het menu links: de actieve staat schuift mee in plaats van te springen. */
 .c .dash-nav a{transition:background .25s cubic-bezier(.16,1,.3,1),color .2s}
 @media (prefers-reduced-motion:reduce){
   .sk,.dash-main.is-loading .d-tile,.dash-main.is-loading .dash-band h1,.dash-main.is-loading .dash-band .lead,.dash-main.is-loading .dash-band .page-actions>*{animation:none}
   .dash-main.is-entering .dash-band-text,.dash-main.is-entering .dash-band .page-actions,.dash-main.is-entering .dash-tiles>*,.dash-main.is-entering .dash-body>*{animation:none}
+  .dash-main.is-switching .d-tile,.dash-main.is-entering-part .d-seg~*{animation:none}
 }
 
 /* ---------- veilingen van de verkoper: het kaartenraster van november ---------- */

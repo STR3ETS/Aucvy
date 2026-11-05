@@ -9,6 +9,10 @@
  | pushState en Alpine initialiseert de verse inhoud vanzelf via zijn
  | MutationObserver.
  |
+ | Blijf je op dezelfde pagina (een schakelaar, een filter, bladeren), dan
+ | krijgt alleen wat verandert een skeleton: de kop blijft staan en de
+ | schakelaar waar je op klikte ook.
+ |
  | Valt iets buiten de schil (een download, een pagina met eigen scripts,
  | een fout, een redirect naar buiten het dashboard), dan volgt een gewone
  | navigatie: nooit een stille kapotte pagina.
@@ -19,6 +23,20 @@ const SHELL_PATHS = ['/dashboard', '/bestellingen', '/facturen', '/account'];
 
 // Zo lang blijft het skeleton minimaal staan: korter oogt als een flits.
 const MIN_SKELETON_MS = 220;
+
+const SKELETON_PART = `
+<div class="dash-skeleton" aria-hidden="true">
+    <div class="sk-cols">
+        <div class="sk-stack">
+            <div class="sk sk-card sk-tall"></div>
+            <div class="sk sk-row"></div>
+            <div class="sk sk-row"></div>
+        </div>
+        <div class="sk-stack sk-aside">
+            <div class="sk sk-card sk-tall"></div>
+        </div>
+    </div>
+</div>`;
 
 const SKELETON = `
 <div class="dash-skeleton" aria-hidden="true">
@@ -83,16 +101,59 @@ export default function initDashNav() {
         }
     };
 
+    /**
+     * Dezelfde pagina, een andere weergave: alleen wat onder de schakelaar
+     * staat wordt een skeleton. Zonder schakelaar (bladeren, een losse
+     * link) dimt de inhoud kort; de kop blijft in beide gevallen staan.
+     */
+    const showPartial = (anchor) => {
+        const current = main();
+        const body = current.querySelector('.dash-body');
+        const pivot = anchor && body?.contains(anchor) ? anchor.closest('.d-seg') : null;
+
+        current.classList.add('is-refreshing');
+        current.setAttribute('aria-busy', 'true');
+
+        if (! pivot) {
+            body?.classList.add('is-dim');
+
+            return;
+        }
+
+        // De gekozen stand meteen tonen, vóór de inhoud er is.
+        pivot.querySelectorAll('a').forEach((link) => {
+            link.classList.toggle('is-on', link === anchor);
+            link === anchor ? link.setAttribute('aria-current', 'page') : link.removeAttribute('aria-current');
+        });
+
+        // De schakelaar van de hele pagina verandert ook de tegels erboven.
+        if (pivot.classList.contains('dash-page-switch')) {
+            current.classList.add('is-switching');
+        }
+
+        // Alles wat na de schakelaar komt maakt plaats, tot aan de rand van de inhoud.
+        for (let node = pivot; node && node !== body; node = node.parentElement) {
+            for (let next = node.nextElementSibling; next; next = next.nextElementSibling) {
+                next.classList.add('sk-gone');
+            }
+        }
+
+        pivot.insertAdjacentHTML('afterend', SKELETON_PART);
+    };
+
     const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    const visit = async (url, { push = true } = {}) => {
+    const visit = async (url, { push = true, anchor = null } = {}) => {
         controller?.abort();
         controller = new AbortController();
 
         const started = performance.now();
 
+        // Zelfde pad, andere vraag (?rol=koper, een filter, een pagina verder): geen volledig skelet.
+        const partial = url.pathname === window.location.pathname;
+
         markActive(url);
-        showSkeleton();
+        partial ? showPartial(anchor) : showSkeleton();
 
         try {
             const response = await fetch(url, {
@@ -130,9 +191,9 @@ export default function initDashNav() {
             current.className = freshMain.className;
             current.replaceChildren(...freshMain.childNodes);
             current.removeAttribute('aria-busy');
-            current.classList.add('is-entering');
+            current.classList.add(partial ? 'is-entering-part' : 'is-entering');
             // Na de overgang weer weg, zodat een volgende wissel opnieuw kan spelen.
-            setTimeout(() => current.classList.remove('is-entering'), 450);
+            setTimeout(() => current.classList.remove('is-entering', 'is-entering-part'), 450);
             // Ivy kijkt mee: na de wissel weet ze op welke pagina je nu zit.
             setTimeout(() => document.dispatchEvent(new CustomEvent('dash-nav:swapped')), 0);
 
@@ -166,7 +227,8 @@ export default function initDashNav() {
 
             if (finalUrl.hash) {
                 document.getElementById(finalUrl.hash.slice(1))?.scrollIntoView();
-            } else {
+            } else if (! partial) {
+                // Bij een schakelaar blijf je staan waar je was.
                 window.scrollTo({ top: 0 });
             }
 
@@ -199,7 +261,7 @@ export default function initDashNav() {
         if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return;
 
         event.preventDefault();
-        visit(url);
+        visit(url, { anchor });
     });
 
     // De terugknop: dezelfde wissel, zonder een nieuwe stap in de geschiedenis.
@@ -217,8 +279,10 @@ export default function initDashNav() {
 
         const current = main();
 
-        current?.classList.remove('is-loading');
+        current?.classList.remove('is-loading', 'is-refreshing', 'is-switching');
         current?.removeAttribute('aria-busy');
         current?.querySelector('.dash-skeleton')?.remove();
+        current?.querySelector('.dash-body')?.classList.remove('is-dim');
+        current?.querySelectorAll('.sk-gone').forEach((node) => node.classList.remove('sk-gone'));
     });
 }
