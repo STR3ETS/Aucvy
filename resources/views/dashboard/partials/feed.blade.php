@@ -1,7 +1,7 @@
 {{--
     Taken, meldingen en tickets: één lijst met tabs. Elke regel is een link.
-    Het team erboven filtert de lijst op specialist; de chips in de
-    zijkolom doen hetzelfde (dezelfde Alpine-variabele agent).
+    De chips in de zijkolom filteren de lijst op specialist (de
+    Alpine-variabele agent).
 --}}
 <section class="feed" aria-labelledby="feed-title"
          x-data="{ tab: 'alles', counts: {{ Js::from(collect($feed['tabs'])->map(fn (array $tab): int => $tab[1])) }} }">
@@ -12,24 +12,6 @@
         </div>
         <a class="d-btn d-btn-secondary d-btn-sm" href="{{ route('notifications.index') }}">Alle meldingen</a>
     </header>
-
-    <div class="feed-team" aria-label="Jouw AI-team">
-        <h3 class="feed-team-title">Jouw AI-team</h3>
-        <p class="d-sub">Klik een specialist om alleen zijn taken te zien.</p>
-        <div class="team-row">
-            @foreach ($agents as $agent)
-                @php $did = collect($done)->firstWhere('agent', $agent->value); @endphp
-                <button type="button" class="team-member"
-                        title="{{ $agent->speciality() }}{{ $did ? ' · '.$did['text'] : '' }}"
-                        :class="{ 'is-on': agent === '{{ $agent->value }}', 'is-dim': agent !== null && agent !== '{{ $agent->value }}' }"
-                        :aria-pressed="agent === '{{ $agent->value }}'"
-                        @click="agent = agent === '{{ $agent->value }}' ? null : '{{ $agent->value }}'">
-                    <x-ui.agent-avatar :agent="$agent" class="team-photo" />
-                    <b>{{ $agent->label() }}</b>
-                </button>
-            @endforeach
-        </div>
-    </div>
 
     <nav class="feed-tabs" role="tablist" aria-label="Filter">
         @foreach ($feed['tabs'] as $key => [$label, $count])
