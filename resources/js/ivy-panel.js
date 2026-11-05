@@ -100,6 +100,7 @@ export function ivyPanel(config) {
         busy: false,
         enabled: true,
         wide: false,
+        dropping: false,
         draft: '',
         greeting: null,
         firstName: config.name ? String(config.name).trim().split(' ')[0] : null,
