@@ -111,7 +111,10 @@
 .ivy-pill:hover{background:#f1f5ff}
 .ivy-pill.is-primary{background:#2f6bff;color:#fff;font-weight:600}
 .ivy-pill.is-primary:hover{background:#1e56e0}
-.ivy-chips{padding:2px 14px 10px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+/* De kop, de vervolgvragen en de invoer houden hun hoogte; alleen het gesprek zelf scrolt. */
+.ivy-head,.ivy-chips,.ivy-foot{flex:0 0 auto}
+.ivy-chips{padding:2px 14px 10px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.ivy-chips::-webkit-scrollbar{display:none}
 .ivy-chips .ivy-pill{flex:0 0 auto}
 
 .ivy-error{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:12px;background:#fbecea;color:#a93226;font-size:13px;font-weight:600}
