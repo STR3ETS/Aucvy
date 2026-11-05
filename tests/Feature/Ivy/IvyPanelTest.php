@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Ivy\Chat\ContextBuilder;
 use App\Ivy\Chat\Pages;
 use App\Ivy\Chat\ToolRegistry;
+use App\Lots\LotSearch;
 use App\Models\Auction;
 use App\Models\IvyConversation;
 use App\Models\IvyMessage;
@@ -164,4 +165,34 @@ it('zet het paneel op het dashboard met nieuw gesprek en voorlezen', function ()
         ->assertSee('ivyPanel(', escape: false)
         ->assertSee('Nieuw gesprek')
         ->assertSee('Voorlezen');
+});
+
+it('vindt een kavel als de klant een hele zin typt, ook met een andere verbuiging', function () {
+    config(['aucvy.pricing.deposit_tiers' => []]);
+    $seller = User::factory()->verified()->business()->create();
+
+    foreach (['Zit-sta bureaus elektrisch, 12 stuks', 'Professionele gasfornuis Rational, 6 pits'] as $title) {
+        $lot = Lot::factory()->live()->create(['seller_id' => $seller->id, 'company_id' => $seller->company_id, 'title' => $title, 'description' => 'Uit een verbouwing.']);
+        Auction::factory()->create(['lot_id' => $lot->id, 'ends_at' => now()->addDays(2), 'start_price_cents' => 100_000, 'current_price_cents' => 100_000]);
+    }
+
+    $buyer = User::factory()->verified()->create();
+
+    $desk = $this->actingAs($buyer)->postJson(route('ivy.send', ['page' => 'dashboard']), ['text' => 'Ik zoek een zit-sta bureau'])->assertOk();
+    expect($desk->json('message.cards.0.title'))->toBe('Zit-sta bureaus elektrisch, 12 stuks')
+        ->and($desk->json('message.body'))->toContain('Ik vond 1 open kavels');
+
+    $stove = $this->actingAs($buyer)->postJson(route('ivy.send', ['page' => 'dashboard']), ['text' => 'Ik ben opzoek naar een professioneel gasfornuis'])->assertOk();
+    expect($stove->json('message.cards.0.title'))->toBe('Professionele gasfornuis Rational, 6 pits');
+
+    // Niet alles komt overeen: dan wat het dichtst in de buurt komt, en dat zegt ze erbij.
+    $closest = $this->actingAs($buyer)->postJson(route('ivy.send', ['page' => 'dashboard']), ['text' => 'Ik zoek een gasfornuis van Bosch'])->assertOk();
+    expect($closest->json('message.cards.0.title'))->toBe('Professionele gasfornuis Rational, 6 pits')
+        ->and($closest->json('message.body'))->toContain('dichtst in de buurt');
+
+    expect(LotSearch::stem('bureaus'))->toBe('bureau')
+        ->and(LotSearch::stem('stoelen'))->toBe('stoel')
+        ->and(LotSearch::stem('professioneel'))->toBe(LotSearch::stem('professionele'))
+        ->and(LotSearch::stem('RVS'))->toBe('rvs')
+        ->and(LotSearch::words('  zit-sta   bureau, "elektrisch"? '))->toBe(['zit-sta', 'bureau', 'elektrisch']);
 });

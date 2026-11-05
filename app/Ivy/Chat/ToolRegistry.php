@@ -71,6 +71,13 @@ final class ToolRegistry
         'open_page' => ['roles' => ['visitor', 'buyer', 'seller'], 'type' => self::READ, 'description' => 'Geef een knop naar een pagina uit de lijst "Pagina\'s" in je context, of naar een kavel. Met direct=true gaat de klant er meteen heen; gebruik dat alleen als hij daar zelf om vraagt ("ga naar", "open").', 'schema' => ['type' => 'object', 'properties' => ['page' => ['type' => 'string', 'description' => 'Sleutel uit de lijst, of "kavel" samen met lot_id.'], 'lot_id' => ['type' => 'integer'], 'direct' => ['type' => 'boolean']], 'required' => ['page']]],
     ];
 
+    /** Woorden uit een gesproken of getypte zin die niets zeggen over wat de klant zoekt. */
+    private const FILLER_WORDS = [
+        'ik', 'zoek', 'zoeken', 'zoekt', 'opzoek', 'ben', 'op', 'naar', 'een', 'de', 'het', 'wil', 'wilt', 'graag', 'heb', 'hebben', 'je', 'jij',
+        'jullie', 'voor', 'me', 'mij', 'iets', 'ook', 'nog', 'er', 'is', 'zijn', 'kun', 'kan', 'kunnen', 'vind', 'vinden', 'laat', 'zien', 'toon',
+        'tonen', 'alle', 'welke', 'wat', 'of', 'en', 'met', 'van', 'in', 'te', 'om', 'dat', 'die', 'dit', 'kavel', 'kavels', 'nodig', 'hallo', 'hoi',
+    ];
+
     /** Wat de klant ziet terwijl een tool loopt. */
     private const STEPS = [
         'search_lots' => 'Kavels zoeken',
@@ -115,7 +122,9 @@ final class ToolRegistry
     public function step(string $name, array $input): string
     {
         if ($name === 'search_lots' && trim((string) ($input['query'] ?? '')) !== '') {
-            return 'Zoeken naar "'.Str::limit(trim((string) $input['query']), 40).'"';
+            $words = array_filter(LotSearch::words((string) $input['query']), fn (string $word): bool => ! in_array(mb_strtolower($word), self::FILLER_WORDS, true));
+
+            return 'Zoeken naar "'.Str::limit($words === [] ? trim((string) $input['query']) : implode(' ', $words), 40).'"';
         }
 
         return self::STEPS[$name] ?? 'Even kijken';
@@ -219,8 +228,19 @@ final class ToolRegistry
         $max = isset($input['max_cents']) ? (int) $input['max_cents'] : (preg_match('/(?:max(?:imaal)?|tot|onder)\s*€?\s*([\d.]{3,})/iu', $query, $match) === 1 ? (int) str_replace('.', '', $match[1]) * 100 : null);
         $terms = trim((string) preg_replace('/(?:max(?:imaal)?|tot|onder)\s*€?\s*[\d.]{3,}(?:\s*euro)?|\b\d+\s*(?:stuks|x)\b|\brond\s+\w+\b|\bbinnen\s+\d+\s*km\b/iu', '', $query));
 
+        // Een klant typt een zin ("ik zoek een zit-sta bureau"); zoeken doen we op de woorden die ertoe doen.
+        $terms = implode(' ', array_filter(LotSearch::words($terms), fn (string $word): bool => ! in_array(mb_strtolower($word), self::FILLER_WORDS, true)));
+
         $filters = new LotFilters(query: $terms !== '' ? $terms : null, category: isset($input['category']) ? (string) $input['category'] : null, priceMaxCents: $max);
         $results = $this->search->results($filters);
+        $closest = false;
+
+        // Niets met alle woorden: dan wat het dichtst in de buurt komt, op het langste woord.
+        if ($results->total() === 0 && count($words = LotSearch::words($terms)) > 1) {
+            usort($words, fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
+            $results = $this->search->results(new LotFilters(query: $words[0], category: $filters->category, priceMaxCents: $max));
+            $closest = $results->total() > 0;
+        }
 
         $chips = array_values(array_filter([
             $terms !== '' ? $terms : null,
@@ -230,7 +250,8 @@ final class ToolRegistry
 
         return [
             'count' => $results->total(),
-            'interpretation' => $chips === [] ? '' : 'Ik lees: '.implode(', ', $chips).'.',
+            'interpretation' => ($chips === [] ? '' : 'Ik lees: '.implode(', ', $chips).'.').($closest ? ' Niet alles kwam overeen; dit komt het dichtst in de buurt.' : ''),
+            'closest_match_only' => $closest,
             'chips' => $chips,
             'lots' => collect($results->items())->take(5)->map(fn (Lot $lot) => $this->lotCard($lot))->values()->all(),
             'amounts' => collect($results->items())->take(5)->map(fn (Lot $lot) => $lot->currentPriceCents())->all(),

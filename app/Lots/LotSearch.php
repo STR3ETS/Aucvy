@@ -207,19 +207,67 @@ final class LotSearch
         }
 
         /*
-         | Simpel en eerlijk: LIKE over de velden die een mens zou intypen.
-         | Dit is precies het punt waar Meilisearch later verschil maakt -
-         | "graafmachiene" vindt hier niets.
+         | Simpel en eerlijk: LIKE over de velden die een mens zou intypen,
+         | per woord. Elk woord moet ergens voorkomen, in welke volgorde dan
+         | ook, en een verbuiging telt mee: "professioneel gasfornuis" vindt
+         | "Professionele gasfornuis". Dit is nog steeds het punt waar
+         | Meilisearch later verschil maakt - "graafmachiene" vindt hier niets.
          */
-        // De backslash eerst: die is zelf het ontsnappingsteken van LIKE.
-        $term = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $filters->query).'%';
+        foreach (self::words($filters->query) as $word) {
+            // De backslash eerst: die is zelf het ontsnappingsteken van LIKE.
+            $term = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], self::stem($word)).'%';
 
-        $query->where(function (Builder $query) use ($term): void {
-            $query->where('lots.title', 'like', $term)
-                ->orWhere('lots.brand', 'like', $term)
-                ->orWhere('lots.model', 'like', $term)
-                ->orWhere('lots.description', 'like', $term);
-        });
+            $query->where(function (Builder $query) use ($term): void {
+                $query->where('lots.title', 'like', $term)
+                    ->orWhere('lots.brand', 'like', $term)
+                    ->orWhere('lots.model', 'like', $term)
+                    ->orWhere('lots.description', 'like', $term);
+            });
+        }
+    }
+
+    /**
+     * De losse woorden van een zoekvraag, zonder leestekens aan de randen.
+     * Een koppelteken blijft: "zit-sta" is één woord.
+     *
+     * @return list<string>
+     */
+    public static function words(string $query): array
+    {
+        $words = preg_split('/\s+/u', trim($query)) ?: [];
+
+        return array_values(array_filter(array_map(
+            fn (string $word): string => trim($word, " \t\n\r\0\x0B.,;:!?\"'()"),
+            $words,
+        ), fn (string $word): bool => $word !== ''));
+    }
+
+    /**
+     * Het deel van een woord dat bij een verbuiging gelijk blijft:
+     * bureaus en bureau, stoelen en stoel, professioneel en professionele.
+     * Korte woorden en woorden met een cijfer blijven zoals ze zijn.
+     */
+    public static function stem(string $word): string
+    {
+        $lower = mb_strtolower($word);
+
+        if (mb_strlen($lower) <= 4 || preg_match('/\d/', $lower) === 1) {
+            return $lower;
+        }
+
+        foreach (['eel', 'ele'] as $ending) {
+            if (str_ends_with($lower, $ending)) {
+                return mb_substr($lower, 0, -2);
+            }
+        }
+
+        foreach (['en', 'e', 's'] as $ending) {
+            if (str_ends_with($lower, $ending) && mb_strlen($lower) - mb_strlen($ending) >= 4) {
+                return mb_substr($lower, 0, -mb_strlen($ending));
+            }
+        }
+
+        return $lower;
     }
 
     /**
