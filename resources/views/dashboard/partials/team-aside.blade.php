@@ -2,13 +2,15 @@
 
 {{--
     De zijkolom uit het ontwerp van november: bij de koper eerst de zwarte
-    betaalkaart, dan het team als letters (filter), "Wacht op jou" met de
+    betaalkaart, dan het team met hun foto (filter), "Wacht op jou" met de
     taken per specialist en daaronder wat het team al deed.
 --}}
 @php
     $tasks = collect($feed['items'])->where('kind', 'task')->values();
     $urgency = ['red' => ['Nu', 'tone-live'], 'orange' => ['Vandaag', 'tone-warn'], 'blue' => ['Deze week', 'tone-atlas'], 'green' => ['Klaar', 'tone-ok']];
     $displayTimezone = config('aucvy.display_timezone');
+    // Het aantal taken per specialist: de teller bij "Wacht op jou" volgt het filter.
+    $taskCounts = $tasks->countBy(fn (array $task): string => (string) ($task['agent'] ?? ''))->all();
 @endphp
 
 <aside class="d-col-aside" aria-label="Team">
@@ -30,18 +32,18 @@
         <div class="d-agent-row" role="group" aria-label="Filter op specialist">
             <button type="button" class="d-agent is-all" :class="agent === null && 'is-on'" :aria-pressed="agent === null" @click="agent = null" aria-label="Filter op Alles">Alles</button>
             @foreach ($agents as $agent)
-                <button type="button" class="d-agent tone-{{ $agent->value }}" title="{{ $agent->label() }} · {{ $agent->speciality() }}"
-                        :class="agent === '{{ $agent->value }}' && 'is-on'" :aria-pressed="agent === '{{ $agent->value }}'"
+                <button type="button" class="d-agent has-photo tone-{{ $agent->value }}" title="{{ $agent->label() }} · {{ $agent->speciality() }}"
+                        :class="{ 'is-on': agent === '{{ $agent->value }}', 'is-dim': agent !== null && agent !== '{{ $agent->value }}' }" :aria-pressed="agent === '{{ $agent->value }}'"
                         @click="agent = agent === '{{ $agent->value }}' ? null : '{{ $agent->value }}'"
-                        aria-label="Filter op {{ $agent->label() }}">{{ mb_substr($agent->label(), 0, 1) }}</button>
+                        aria-label="Filter op {{ $agent->label() }}"><img src="{{ asset('images/agents/'.$agent->value.'.jpg') }}" alt="" width="44" height="44" loading="lazy"></button>
             @endforeach
         </div>
     </div>
 
-    <div class="d-aside-block">
+    <div class="d-aside-block" x-data="{ counts: {{ Js::from($taskCounts) }}, total: {{ $tasks->count() }}, get shown() { return agent === null ? this.total : (this.counts[agent] ?? 0); } }">
         <div class="d-aside-head">
             <h2 class="d-h3">Wacht op jou</h2>
-            <span class="d-muted">{{ $tasks->count() }} {{ $tasks->count() === 1 ? 'punt' : 'punten' }}</span>
+            <span class="d-muted" x-text="shown + (shown === 1 ? ' punt' : ' punten')">{{ $tasks->count() }} {{ $tasks->count() === 1 ? 'punt' : 'punten' }}</span>
         </div>
         @if ($tasks->isEmpty())
             <p class="d-sub" style="margin-top:8px">Niets wacht op je. Zodra het team iets nodig heeft, staat het hier met een knop.</p>
@@ -61,6 +63,7 @@
                     </article>
                 @endforeach
             </div>
+            <p class="d-sub" style="margin-top:8px" x-show="shown === 0" x-cloak>Bij deze specialist wacht nu niets op je.</p>
         @endif
     </div>
 
@@ -72,7 +75,7 @@
         @if ($isSeller)
             @forelse ($done as $entry)
                 <div class="d-done" x-show="agent === null || agent === '{{ $entry['agent'] }}'">
-                    <span class="d-agent d-agent-sm tone-{{ $entry['agent'] }}" aria-hidden="true">{{ mb_strtoupper(mb_substr($entry['agent'], 0, 1)) }}</span>
+                    <span class="d-agent d-agent-sm has-photo" aria-hidden="true"><img src="{{ asset('images/agents/'.$entry['agent'].'.jpg') }}" alt="" width="28" height="28" loading="lazy"></span>
                     <span class="d-done-text">
                         <strong>{{ $entry['text'] }}</strong>
                         <span>{{ ucfirst($entry['agent']) }}</span>
@@ -84,7 +87,7 @@
         @else
             @forelse ($weekly as $insight)
                 <div class="d-done" x-show="agent === null || agent === '{{ $insight->agent->value }}'">
-                    <span class="d-agent d-agent-sm tone-{{ $insight->agent->value }}" aria-hidden="true">{{ mb_substr($insight->agent->label(), 0, 1) }}</span>
+                    <span class="d-agent d-agent-sm has-photo" aria-hidden="true"><img src="{{ asset('images/agents/'.$insight->agent->value.'.jpg') }}" alt="" width="28" height="28" loading="lazy"></span>
                     <span class="d-done-text">
                         <strong>{{ $insight->title }}</strong>
                         <span>{{ $insight->agent->label() }}{{ $insight->body ? ' · '.$insight->body : '' }}</span>

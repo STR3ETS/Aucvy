@@ -104,6 +104,10 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-agent.tone-finn{background:#e6f4ed;color:#177249}
 .d-agent.tone-flow{background:#e2f3f7;color:#0e7490}
 .d-agent.tone-lex{background:#eaeafb;color:#4338ca}
+.d-agent.has-photo{padding:2px;background:#fff;overflow:hidden;transition:transform .2s,border-color .2s,opacity .2s}
+.d-agent.has-photo img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover}
+.d-agent.has-photo.is-dim{opacity:.45}
+.d-agent-sm.has-photo{padding:0;border-radius:50%}
 .d-agent-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 
 /* Taakkaarten in de zijkolom. */
