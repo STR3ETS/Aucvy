@@ -79,5 +79,5 @@ it('laat alleen de eigenaar een geldig IBAN vastleggen en bewaart enkel de laats
         ->and($owner->fresh()->requiresSecondFactor())->toBeTrue();
 
     $this->actingAs($owner)->get(route('organisation.show'))->assertOk()->assertSee('eindigend op')->assertSee('4300');
-    $this->actingAs($owner)->get(route('dashboard'))->assertOk()->assertSee(route('organisation.show'));
+    $this->actingAs($owner)->get(route('account.settings'))->assertOk()->assertSee(route('organisation.show'));
 });

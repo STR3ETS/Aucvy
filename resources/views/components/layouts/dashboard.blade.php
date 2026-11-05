@@ -50,12 +50,11 @@
             $user->canSeeCompanyFinance() ? ['dashboard.finance', ['dashboard.finance', 'dashboard.finance.*'], 'Financiën', 'file-text'] : null,
             ['dashboard.disputes', ['dashboard.disputes'], 'Geschillen', 'shield-check'],
         ])),
-        'Account' => array_values(array_filter([
-            ['account.settings', ['account.settings', 'account.profile', 'account.two-factor.*'], 'Instellingen', 'settings'],
-            ['account.connections', ['account.connections', 'account.connections.*'], 'Koppelingen', 'send'],
-            $user->company_id !== null ? ['organisation.show', ['organisation.*'], 'Organisatie', 'building'] : null,
-            $user->company_id !== null ? ['team.index', ['team.*'], 'Team', 'users'] : null,
-        ])),
+        // Eén item, zoals in het ontwerp van november: koppelingen, organisatie
+        // en team zijn tegels op de instellingenpagina en houden dit item actief.
+        'Account' => [
+            ['account.settings', ['account.settings', 'account.profile', 'account.two-factor.*', 'account.connections', 'account.connections.*', 'organisation.*', 'team.*'], 'Instellingen', 'settings'],
+        ],
     ];
     $hasTiles = isset($tiles);
     $unreadCount = $user->unreadNotifications()->count();
