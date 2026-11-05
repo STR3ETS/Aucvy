@@ -13,6 +13,7 @@ import lotMedia from './lot-media';
 import initHome from './home';
 import initLotsIndex from './lots-index';
 import initLotNav from './lot-nav';
+import initDashNav from './dash-nav';
 import { v4Demo, v4Story, v4Engine, v4Dock, v4Nav, initV4Reveal } from './v4';
 
 /*
@@ -63,6 +64,9 @@ initLotsIndex();
 
 // Doomscrollen op de kavelpagina: pijltjestoetsen bladeren door de kavels.
 initLotNav();
+
+// Naadloze paginawissels in het dashboard: het menu blijft staan, de inhoud wisselt.
+initDashNav();
 
 // Scroll-reveals van het v4-ontwerp (variant B van de home).
 initV4Reveal();

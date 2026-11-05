@@ -29,14 +29,15 @@
     <li @class(['flex flex-col gap-1', 'items-end' => $tone === 'mine', 'items-start' => $tone !== 'mine']) data-message-id="{{ $message->id }}">
         <span class="text-xs text-aj-muted">{{ $mine ? 'Jij ('.$from.')' : $from }} · {{ $time }}</span>
         <div @class([
-            'max-w-[85%] whitespace-pre-line rounded-aj-s px-4 py-2.5 text-sm',
+            'max-w-[85%] rounded-aj-s px-4 py-2.5 text-sm',
             'bg-aj-blue text-white' => $tone === 'mine' && ! $message->isPending(),
             'border border-aj-border bg-aj-surface' => $tone === 'other',
             'border border-aj-blue/40 bg-aj-blue/5' => $tone === 'operator',
             'border border-aj-navy/30 bg-aj-navy/5' => $tone === 'ivy',
             'border border-aj-warn/50 bg-aj-warn/10 text-aj-text' => $message->isPending(),
         ])>
-            {{ $body ?? $message->body }}
+            {{-- Regeleinden uit het bericht blijven staan; de inspringing van dit sjabloon niet. --}}
+            <span class="whitespace-pre-line">{{ $body ?? $message->body }}</span>
             @if ($message->attachment_path)
                 <a href="{{ route('messages.attachment', [$conversation, $message]) }}" class="mt-1 block text-xs font-bold underline">{{ $message->attachment_name }}</a>
             @endif

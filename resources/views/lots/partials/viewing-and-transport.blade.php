@@ -1,3 +1,5 @@
+@use('App\Support\Money\Money')
+
 {{--
     Bezichtiging plannen en de transportindicatie (hfst. 7), als twee kaarten
     in de zijkolom van de kavelpagina. Uit lots/show gehaald bij het ontwerp

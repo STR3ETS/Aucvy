@@ -847,13 +847,14 @@
 .c .dash-nav a:hover{background:#f6f7fa;color:var(--ink)}
 .c .dash-nav a.is-on{background:#eef3ff;color:var(--blue-text);font-weight:700;box-shadow:none}
 .c .dash-nav a.is-on .ic{background:none;color:inherit;border-radius:0}
-.c .dash-nav a .count{min-width:22px;margin-left:auto;padding:2px 7px;border-radius:999px;background:var(--blue);color:#fff;font-size:13px;font-weight:800;text-align:center}
+.c .dash-nav a .count{display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:22px;height:22px;margin-left:auto;padding:0 6px;border-radius:999px;background:var(--blue);color:#fff;font-size:12px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
 .c .dash-nav-overview{margin-bottom:0}
 .c .dash-side-foot{padding:0;border-top:0}
 .c .dash-side-foot .btn{border-radius:12px;font-size:14px}
 .c .dash-main{border-radius:20px;overflow:hidden;background:#fff;min-height:calc(100vh - 2*clamp(8px,1.4vw,20px))}
 .c .dash-body{flex:1}
-.c .dash-hero{margin:0;border-radius:0;background:var(--navy)}
+.c .dash-hero{margin:0;border-radius:0;background-color:#0c1326;background-position:center;background-size:cover;background-repeat:no-repeat}
+.c .dash-hero::before{content:none}
 .c .dash-hero>.dash-bar{padding:18px 40px 0;border-bottom:0;flex-wrap:wrap}
 .c .dash-crumbs{margin-right:auto;min-width:0;font-size:14px;color:#d5dae7}
 .c .dash-crumbs a{color:#fff;font-weight:700}

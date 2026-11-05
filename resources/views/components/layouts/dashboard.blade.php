@@ -61,6 +61,11 @@
     $unreadCount = $user->unreadNotifications()->count();
     // De tellers achter Meldingen in het menu, zoals in het ontwerp van november.
     $counts = ['notifications.index' => $unreadCount];
+    // Zachte navigatie (dash-nav.js): een pagina met eigen scripts of head-inhoud
+    // wordt altijd volledig geladen, anders draaien die scripts niet.
+    $pageHead = $__env->yieldPushContent('head');
+    $pageScripts = $__env->yieldPushContent('scripts');
+    $softNav = trim($pageHead.$pageScripts) === '';
 @endphp
 
 <!DOCTYPE html>
@@ -82,9 +87,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @stack('head')
+    {!! $pageHead !!}
 </head>
-<body class="no-js c dash">
+<body class="no-js c dash" data-soft-nav="{{ $softNav ? 'on' : 'off' }}">
 
     <a href="#hoofdinhoud" class="skip-link">Naar de hoofdinhoud</a>
 
@@ -162,10 +167,8 @@
             </div>
 
             {{-- Het navy vlak: de bovenbalk ligt er doorzichtig op, de band eronder. --}}
-            <div class="dash-hero{{ $hasTiles ? '' : ' no-tiles' }}">
-            {{-- De gloedvlekken uit de hero van de home, onder het stippenveld. --}}
-            <span class="dash-flares" aria-hidden="true"><i class="f1"></i><i class="f2"></i><i class="f3"></i></span>
-            <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
+            <div class="dash-hero{{ $hasTiles ? '' : ' no-tiles' }}" style="background-image:url('{{ asset('images/design/dash-head.png') }}')">
+            {{-- De achtergrond is het verloop uit het ontwerp van november (images/design/dash-head.png): navy links, blauw rechts, zonder beweging. --}}
 
             <header class="dash-bar">
                 <nav class="dash-crumbs" aria-label="Kruimelpad"><a href="{{ route('dashboard') }}">Dashboard</a> / {{ $heading ?? $title }}</nav>
@@ -237,6 +240,6 @@
     <x-privacy.cookie-banner />
 
     <x-ivy.launcher :lot="$ivyLot ?? null" :page="$ivyPage ?? (request()->route()?->getName() ?? 'dashboard')" />
-    @stack('scripts')
+    {!! $pageScripts !!}
 </body>
 </html>

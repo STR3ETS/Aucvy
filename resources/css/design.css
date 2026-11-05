@@ -481,3 +481,39 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-hero-ivy .chips span{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.18);font-size:12px;font-weight:700}
 @media (max-width:1080px){.d-facts-grid{grid-template-columns:repeat(2,1fr)}.d-facts-band{padding:36px 28px}}
 @media (max-width:640px){.d-facts-grid{grid-template-columns:1fr}.d-facts-band{padding:28px 20px;border-radius:16px}}
+
+/* De prijs rechts in een biedkaart: label, het bod vet, je eigen bod eronder. */
+.d-bidprice{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.d-bidprice span{font-size:13px;color:#4d5566}
+.d-bidprice b{font-size:22px;font-weight:800;line-height:1.3;font-variant-numeric:tabular-nums;color:#0e1526}
+
+/* ---------- naadloze paginawissels en skeleton loaders (dash-nav.js) ----------
+   Tijdens het laden blijft de schil staan: de kop, de tegels en de inhoud
+   krijgen grijze vlakken met een zachte glans. De nieuwe inhoud komt binnen
+   met een korte schuif omhoog. Zonder beweging als de gebruiker dat vraagt. */
+@keyframes sk-shine{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@keyframes dash-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.sk,.dash-main.is-loading .d-tile,.dash-main.is-loading .dash-band h1,.dash-main.is-loading .dash-band .lead,.dash-main.is-loading .dash-band .page-actions>*{border-radius:12px;background:linear-gradient(90deg,#eef1f6 25%,#f7f8fb 45%,#eef1f6 65%);background-size:200% 100%;animation:sk-shine 1.3s ease-in-out infinite}
+.dash-skeleton{display:flex;flex-direction:column;gap:14px}
+.sk-title{height:26px;width:min(280px,60%)}
+.sk-cols{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.sk-stack{flex:999 1 440px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.sk-stack.sk-aside{flex:1 1 280px}
+.sk-card{height:150px;border-radius:16px}
+.sk-card.sk-tall{height:260px}
+.sk-row{height:78px;border-radius:16px}
+/* Wat er al stond verdwijnt; het skeleton neemt de plek in. */
+.dash-main.is-loading .dash-body>:not(.dash-skeleton){display:none}
+.dash-main.is-loading .d-tile{color:transparent;border-color:transparent;pointer-events:none}
+.dash-main.is-loading .d-tile>*{visibility:hidden}
+.dash-main.is-loading .dash-band h1,.dash-main.is-loading .dash-band .lead,.dash-main.is-loading .dash-band .page-actions>*{color:transparent !important;background:linear-gradient(90deg,rgba(255,255,255,.10) 25%,rgba(255,255,255,.2) 45%,rgba(255,255,255,.10) 65%);background-size:200% 100%;border-color:transparent;pointer-events:none;width:fit-content}
+.dash-main.is-loading .dash-band h1 *,.dash-main.is-loading .dash-band .lead *{visibility:hidden}
+.dash-main.is-loading .dash-crumbs,.dash-main.is-loading .dash-band .eyebrow,.dash-main.is-loading .dash-band .page-crumbs{opacity:.4}
+.dash-main.is-entering .dash-band-text,.dash-main.is-entering .dash-band .page-actions,.dash-main.is-entering .dash-tiles>*,.dash-main.is-entering .dash-body>*{animation:dash-enter .28s cubic-bezier(.16,1,.3,1) both}
+.dash-main.is-entering .dash-body>*{animation-delay:.04s}
+/* Het menu links: de actieve staat schuift mee in plaats van te springen. */
+.c .dash-nav a{transition:background .25s cubic-bezier(.16,1,.3,1),color .2s}
+@media (prefers-reduced-motion:reduce){
+  .sk,.dash-main.is-loading .d-tile,.dash-main.is-loading .dash-band h1,.dash-main.is-loading .dash-band .lead,.dash-main.is-loading .dash-band .page-actions>*{animation:none}
+  .dash-main.is-entering .dash-band-text,.dash-main.is-entering .dash-band .page-actions,.dash-main.is-entering .dash-tiles>*,.dash-main.is-entering .dash-body>*{animation:none}
+}

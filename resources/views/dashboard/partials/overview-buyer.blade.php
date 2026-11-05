@@ -9,6 +9,8 @@
 @php
     $displayTimezone = config('aucvy.display_timezone');
     $euro = fn (int $cents): string => '€ '.number_format(intdiv($cents, 100), 0, ',', '.');
+    // Zoals in het ontwerp: hele euro's zonder ",00"; centen alleen als ze er zijn.
+    $short = fn (int $cents): string => $cents % 100 === 0 ? $euro($cents) : Money::format($cents);
     // De waardebalk: de band van Atlas en het bod als streep, op een as tot 110% van de bovengrens.
     $range = function (int $price, int $min, int $max): array {
         $scale = max(1, (int) round(max($max, $price) * 1.1));
@@ -61,10 +63,10 @@
                                 <span title="keer gedeeld"><x-v4.icon name="share" :size="14" stroke="2" />{{ $row['interest']['shared'] }}</span>
                             </div>
                         </div>
-                        <div class="d-lot-price">
-                            <div style="font-size:13px;font-weight:400">Huidig bod</div>
-                            <div style="font-size:22px">{{ Money::format($row['current_cents']) }}</div>
-                            <div class="d-muted">Jouw bod {{ Money::format($bid->amount_cents) }}</div>
+                        <div class="d-bidprice">
+                            <span>Huidig bod</span>
+                            <b>{{ $short($row['current_cents']) }}</b>
+                            <span>Jouw bod {{ $short($bid->amount_cents) }}</span>
                         </div>
                     </div>
 
@@ -88,7 +90,7 @@
                                     Je staat bovenaan. Automatisch meebieden houdt je op kop tot je maximum.
                                 @endif
                             @else
-                                Een bod van {{ Money::format($row['minimum_cents']) }} of meer brengt je weer op kop.
+                                Een bod van {{ $short($row['minimum_cents']) }} of meer brengt je weer op kop.
                             @endif
                         </span>
                         <a class="d-btn {{ $row['winning'] ? 'd-btn-secondary' : '' }}" href="{{ route('lots.show', $lot) }}">{{ $row['winning'] ? 'Bekijk kavel' : 'Bied opnieuw' }}</a>
@@ -137,7 +139,7 @@
                             </div>
                         </div>
                         <div class="d-lot-price">
-                            <div style="font-size:18px;font-weight:800;color:inherit">{{ Money::format($lot->currentPriceCents()) }}</div>
+                            <div style="font-size:18px;font-weight:800;color:inherit">{{ $short($lot->currentPriceCents()) }}</div>
                             <div style="font-size:13px;font-weight:400;color:#4d5566">
                                 @if ($lot->sale_type === SaleType::Dutch)
                                     Afslag, daalt
