@@ -105,7 +105,7 @@
                             $metaParts[] = 'nog geen veiling gepland';
                         }
                         [$amountLabel, $amount] = match (true) {
-                            $lot->status === LotStatus::Draft => ['met je concept', 'Verder'],
+                            $lot->status === LotStatus::Draft => ['', ''],
                             $lot->status === LotStatus::Sold && $lot->order !== null => ['Verkocht voor', Money::format($lot->order->hammer_cents)],
                             $auction !== null && $lot->sale_type === SaleType::Dutch => ['Prijs nu', Money::format($lot->currentPriceCents())],
                             $auction !== null && $lot->sale_type === SaleType::BuyNow => ['Vaste prijs', Money::format($lot->currentPriceCents())],
@@ -143,8 +143,10 @@
                             </div>
                         </div>
                         <div class="d-listrow-right">
-                            <b>{{ $amount }}</b>
-                            <span>{{ $amountLabel }}</span>
+                            @if ($amount !== '')
+                                <b>{{ $amount }}</b>
+                                <span>{{ $amountLabel }}</span>
+                            @endif
                             @if ($lot->status === LotStatus::Draft)
                                 <a href="{{ $url }}" class="d-btn d-btn-sm">{{ __('dashboard.actions.continue_draft') }}</a>
                             @elseif (in_array($lot->status, [LotStatus::Unsold, LotStatus::Cancelled], true))
