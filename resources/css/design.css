@@ -517,3 +517,17 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
   .sk,.dash-main.is-loading .d-tile,.dash-main.is-loading .dash-band h1,.dash-main.is-loading .dash-band .lead,.dash-main.is-loading .dash-band .page-actions>*{animation:none}
   .dash-main.is-entering .dash-band-text,.dash-main.is-entering .dash-band .page-actions,.dash-main.is-entering .dash-tiles>*,.dash-main.is-entering .dash-body>*{animation:none}
 }
+
+/* ---------- veilingen van de verkoper: het kaartenraster van november ---------- */
+.d-salegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.d-salecard{display:flex;flex-direction:column;border:1px solid rgba(14,21,38,.09);border-radius:14px;overflow:hidden;background:#fff;transition:box-shadow .25s,transform .25s var(--ease,ease)}
+.d-salecard:hover{transform:translateY(-2px);box-shadow:0 18px 40px -22px rgba(14,21,38,.35)}
+.d-salecard-cover{display:block;height:170px;background:#e9edf5;color:#9aa3b5}
+.d-salecard-cover img{display:block;width:100%;height:100%;object-fit:cover}
+.d-salecard-cover span{display:flex;align-items:center;justify-content:center;height:100%}
+.d-salecard-body{flex:1;padding:14px;display:flex;flex-direction:column;gap:8px}
+.d-salecard h2{margin:0;font-size:15px;font-weight:700;line-height:1.35}
+.d-salecard h2 a{color:inherit}
+.d-salecard-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:auto;padding-top:6px}
+.d-salecard-foot b{display:block;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.d-salecard-foot span{display:block;margin-top:2px;font-size:13px;color:#4d5566}

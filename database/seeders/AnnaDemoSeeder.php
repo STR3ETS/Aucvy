@@ -125,6 +125,7 @@ final class AnnaDemoSeeder extends Seeder
         $this->interest($liveLots);
         $this->sellerExtras($liveLots);
         $this->salesHistory();
+        $this->extraSales();
 
         $this->buyerAuctions();
         $this->buyerOrders();
@@ -673,6 +674,103 @@ final class AnnaDemoSeeder extends Seeder
                     'published_at' => $moment->copy()->addDay(),
                 ]);
             }
+        }
+    }
+
+    /**
+     * Drie extra veilingen, zodat elk filter op de veilingenpagina iets
+     * toont: een geplande, een concept en een afgeronde met biedingen.
+     */
+    private function extraSales(): void
+    {
+        $sale = fn (string $publicId, string $title, array $attributes): Sale => Sale::updateOrCreate(
+            ['slug' => Str::slug($title).'-'.$publicId],
+            array_merge([
+                'public_id' => $publicId,
+                'seller_id' => $this->anna->id,
+                'company_id' => $this->company->id,
+                'title' => $title,
+                'description' => 'Demoveiling van Bakker Interieur.',
+                'closing_gap_seconds' => 120,
+            ], $attributes),
+        );
+
+        // Gepland: gepubliceerd, de biedronde is nog niet open.
+        $planned = $sale('7791', 'Complete inventaris koffiebar', [
+            'ends_at' => now()->addDays(9)->setTime(20, 0),
+            'viewing_at' => now()->addDays(7)->setTime(14, 0),
+            'viewing_note' => 'Op afspraak; het adres volgt per mail na bevestiging.',
+            'published_at' => now()->subDay(),
+        ]);
+
+        foreach ([['7741', 'Koffiebar-toonbank eiken met RVS werkblad, 4 meter'], ['7742', 'Bonenmolens Mazzer, set van 3'], ['7743', 'Barkrukken en statafels, 14-delig']] as $position => [$publicId, $title]) {
+            $lot = $this->lot($this->anna, $this->company, [
+                'public_id' => $publicId,
+                'title' => $title,
+                'description' => 'Uit de koffiebar in de showroom. Komt mee in de veiling van de complete inventaris.',
+                'category' => 'horeca-keuken',
+                'status' => LotStatus::Scheduled,
+                'condition' => LotCondition::Good,
+                'completeness_score' => 84,
+                'published_at' => null,
+                'sale_id' => $planned->id,
+                'sale_position' => $position,
+            ]);
+            $this->signals($lot, 40 + $position * 22, 9 + $position * 4, 2 + $position, 1);
+        }
+
+        // Concept: nog niet gepubliceerd.
+        $draft = $sale('7792', 'Heftruck en magazijninrichting', [
+            'ends_at' => now()->addDays(21)->setTime(20, 0),
+            'published_at' => null,
+        ]);
+
+        foreach ([['7744', 'Elektrische heftruck Linde E16, 2019'], ['7745', 'Magazijnstellingen 60 strekkende meter']] as $position => [$publicId, $title]) {
+            $this->lot($this->anna, $this->company, [
+                'public_id' => $publicId,
+                'title' => $title,
+                'description' => 'Concept: foto en documenten volgen.',
+                'category' => 'machines-techniek',
+                'status' => LotStatus::Draft,
+                'condition' => LotCondition::Used,
+                'completeness_score' => 58,
+                'published_at' => null,
+                'sale_id' => $draft->id,
+                'sale_position' => $position,
+            ]);
+        }
+
+        // Afgerond: drie verkochte kavels uit de historie, met een gesloten biedronde.
+        $closedAt = now()->subDays(45)->setTime(20, 0);
+        $closed = $sale('7793', 'Kantoorinrichting voorjaar', [
+            'ends_at' => $closedAt,
+            'published_at' => $closedAt->copy()->subDays(10),
+        ]);
+
+        foreach (['7729', '7730', '7731'] as $position => $publicId) {
+            $lot = Lot::query()->where('public_id', $publicId)->with('order')->first();
+
+            if ($lot === null) {
+                continue;
+            }
+
+            $lot->forceFill(['sale_id' => $closed->id, 'sale_position' => $position])->save();
+            $hammer = (int) ($lot->order?->hammer_cents ?? 300_000);
+
+            Auction::firstOrCreate(['lot_id' => $lot->id], [
+                'starts_at' => $closedAt->copy()->subDays(10),
+                'ends_at' => $closed->closingFor($position),
+                'original_ends_at' => $closed->closingFor($position),
+                'closed_at' => $closed->closingFor($position),
+                'start_price_cents' => (int) round($hammer * 0.4),
+                'current_price_cents' => $hammer,
+                'bid_count' => 38 + $position * 21,
+                'bidder_count' => 7 + $position * 2,
+                'increment_table' => config('aucvy.auction.increment_table'),
+                'anti_snipe_window_s' => config('aucvy.auction.anti_snipe_window_seconds'),
+                'anti_snipe_extend_s' => config('aucvy.auction.anti_snipe_extend_seconds'),
+            ]);
+            $this->signals($lot, 520 + $position * 140, 38 + $position * 12, 11 + $position * 5, 8);
         }
     }
 

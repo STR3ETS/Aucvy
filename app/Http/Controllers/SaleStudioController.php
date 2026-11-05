@@ -7,7 +7,9 @@ namespace App\Http\Controllers;
 use App\Lots\PublishLot;
 use App\Lots\Sales\SaleStudio;
 use App\Models\Lot;
+use App\Models\LotSignal;
 use App\Models\Sale;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,14 +25,56 @@ final class SaleStudioController extends Controller
 
     public function index(Request $request): View
     {
+        $sales = Sale::query()
+            ->whereIn('seller_id', $request->user()->lotSellerIds())
+            ->withCount(Sale::stateCounts())
+            ->with(['lots.auction', 'lots.media'])
+            ->latest('id')
+            ->limit(200)
+            ->get();
+
         return view('dashboard.sales', [
-            'sales' => Sale::query()
-                ->whereIn('seller_id', $request->user()->lotSellerIds())
-                ->withCount(Sale::stateCounts())
-                ->latest('id')
-                ->limit(200)
-                ->get(),
+            'sales' => $sales,
+            'summaries' => $this->summaries($sales),
         ]);
+    }
+
+    /**
+     * De cijfers op de veilingkaart (ontwerp van november): biedingen, het
+     * huidige totaal en de gemeten interesse over alle kavels van de veiling.
+     * Eén query voor de interesse van alle veilingen samen.
+     *
+     * @param  Collection<int, Sale>  $sales
+     * @return array<int, array{bids: int, total_cents: int, viewers: int, saved: int, shared: int, hot: bool, cover: string|null}>
+     */
+    private function summaries(Collection $sales): array
+    {
+        $signals = LotSignal::query()
+            ->whereIn('lot_id', $sales->flatMap(fn (Sale $sale) => $sale->lots->pluck('id')))
+            ->whereIn('kind', [LotSignal::VIEWER, LotSignal::SAVED, LotSignal::SHARED])
+            ->selectRaw('lot_id, kind, count(*) as aantal')
+            ->groupBy('lot_id', 'kind')
+            ->get()
+            ->groupBy('lot_id');
+
+        $summaries = [];
+
+        foreach ($sales as $sale) {
+            $count = fn (string $kind): int => (int) $sale->lots->sum(fn (Lot $lot): int => (int) ($signals->get($lot->id)?->firstWhere('kind', $kind)?->getAttribute('aantal') ?? 0));
+
+            $summaries[$sale->id] = [
+                'bids' => (int) $sale->lots->sum(fn (Lot $lot): int => (int) ($lot->auction?->bid_count ?? 0)),
+                // Alleen kavels waarop geboden is tellen mee: een startprijs is nog geen opbrengst.
+                'total_cents' => (int) $sale->lots->sum(fn (Lot $lot): int => ($lot->auction?->bid_count ?? 0) > 0 ? (int) $lot->auction->current_price_cents : 0),
+                'viewers' => $count(LotSignal::VIEWER),
+                'saved' => $count(LotSignal::SAVED),
+                'shared' => $count(LotSignal::SHARED),
+                'hot' => $sale->lots->contains(fn (Lot $lot): bool => (bool) $lot->is_hot),
+                'cover' => $sale->lots->map(fn (Lot $lot) => $lot->media->first()?->path)->filter()->first(),
+            ];
+        }
+
+        return $summaries;
     }
 
     public function create(): View

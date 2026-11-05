@@ -81,7 +81,7 @@ it('plant een veiling, zet kavels erin, publiceert en laat de kavels na elkaar s
 
     $this->get(route('sales.show', $sale))->assertOk()->assertSee('Koelwerkbank RVS')->assertSee('Frituur dubbel');
     $this->get(route('lots.show', $first))->assertOk()->assertSee('Onderdeel van de veiling')->assertSee('Faillissementsveiling Restaurant De Molen');
-    $this->actingAs($seller)->get(route('dashboard.sales'))->assertOk()->assertSee('Faillissementsveiling Restaurant De Molen')->assertSee('Loopt');
+    $this->actingAs($seller)->get(route('dashboard.sales'))->assertOk()->assertSee('Faillissementsveiling Restaurant De Molen')->assertSee('Lopend');
 });
 
 it('weigert publiceren zonder kavels of met een te vroege sluiting en houdt vreemden buiten', function () {
