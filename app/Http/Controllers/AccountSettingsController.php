@@ -27,7 +27,19 @@ final class AccountSettingsController extends Controller
     /** @var list<string> De voorkeuren die een gebruiker zelf kan zetten. */
     public const PREFERENCES = ['outbid_push', 'outbid_email', 'alerts_email', 'watchlist_push', 'watchlist_email'];
 
+    /** @var list<string> De onderdelen met een eigen pagina. */
+    public const SECTIONS = ['gegevens', 'beveiliging', 'meldingen', 'apparaten'];
+
+    /**
+     * Het overzicht: de profielkaart en de tegels, zonder velden (ontwerp
+     * van november). Elk onderdeel opent zijn eigen pagina.
+     */
     public function show(Request $request): View
+    {
+        return view('account.settings', ['user' => $request->user()]);
+    }
+
+    public function section(Request $request, string $section): View
     {
         $user = $request->user();
         $authenticator = app(Authenticator::class);
@@ -37,7 +49,8 @@ final class AccountSettingsController extends Controller
             ? Crypt::decryptString($request->session()->get('two_factor_setup'))
             : null;
 
-        return view('account.settings', [
+        return view('account.settings-section', [
+            'section' => $section,
             'user' => $user,
             'twoFactor' => [
                 'active' => $user->hasAuthenticatorApp(),

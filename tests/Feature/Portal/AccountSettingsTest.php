@@ -80,3 +80,21 @@ it('logt andere apparaten uit met het wachtwoord', function () {
 
     expect(AuditLog::query()->where('action', 'user.sessions_revoked')->where('subject_id', $user->id)->exists())->toBeTrue();
 });
+
+it('toont op het overzicht alleen de tegels en geeft elk onderdeel een eigen pagina', function () {
+    $user = User::factory()->verified()->create();
+
+    // Geen velden op het overzicht: elke tegel is een link naar zijn pagina.
+    $this->actingAs($user)->get(route('account.settings'))
+        ->assertOk()
+        ->assertSee(route('account.settings.section', 'beveiliging'))
+        ->assertSee(route('account.settings.section', 'gegevens'))
+        ->assertDontSee('name="current_password"', escape: false)
+        ->assertDontSee('name="display_name"', escape: false);
+
+    $this->actingAs($user)->get(route('account.settings.section', 'gegevens'))->assertOk()->assertSee('name="display_name"', escape: false);
+    $this->actingAs($user)->get(route('account.settings.section', 'beveiliging'))->assertOk()->assertSee('name="current_password"', escape: false)->assertSee('Tweede inlogstap');
+    $this->actingAs($user)->get(route('account.settings.section', 'meldingen'))->assertOk()->assertSee('Overboden: push')->assertSee('Mail van Aucvy');
+    $this->actingAs($user)->get(route('account.settings.section', 'apparaten'))->assertOk()->assertSee('Andere apparaten uitloggen');
+    $this->actingAs($user)->get('/account/bestaat-niet')->assertNotFound();
+});

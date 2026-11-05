@@ -382,6 +382,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard/meldingen/{id}', [NotificationCenterController::class, 'open'])->name('notifications.open');
 
     Route::get('/account', [AccountSettingsController::class, 'show'])->name('account.settings');
+    Route::get('/account/{section}', [AccountSettingsController::class, 'section'])->whereIn('section', AccountSettingsController::SECTIONS)->name('account.settings.section');
     Route::patch('/account/profiel', [AccountSettingsController::class, 'updateProfile'])->name('account.profile');
     Route::patch('/account/wachtwoord', [AccountSettingsController::class, 'updatePassword'])->middleware('throttle:5,10')->name('account.password');
     Route::patch('/account/meldingen', [AccountSettingsController::class, 'updateNotifications'])->name('account.notifications');

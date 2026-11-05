@@ -1,6 +1,9 @@
 @use('App\Models\ChannelConnection')
 
 <x-layouts.dashboard title="Koppelingen" eyebrow="Account" intro="Kanalen waarop Aucvy namens jou plaatst. Zonder koppeling werkt de deelkit altijd: tekst en beeld kopiëren, zelf plaatsen.">
+    <x-slot:crumbs>
+        <a href="{{ route('account.settings') }}">Instellingen</a> <span aria-hidden="true">/</span> <span>Koppelingen</span>
+    </x-slot:crumbs>
     @if (session('status'))
         <p class="mb-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">{{ session('status') }}</p>
     @endif

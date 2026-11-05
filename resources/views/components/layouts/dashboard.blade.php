@@ -53,7 +53,7 @@
         // Eén item, zoals in het ontwerp van november: koppelingen, organisatie
         // en team zijn tegels op de instellingenpagina en houden dit item actief.
         'Account' => [
-            ['account.settings', ['account.settings', 'account.profile', 'account.two-factor.*', 'account.connections', 'account.connections.*', 'organisation.*', 'team.*'], 'Instellingen', 'settings'],
+            ['account.settings', ['account.settings', 'account.settings.*', 'account.profile', 'account.two-factor.*', 'account.connections', 'account.connections.*', 'organisation.*', 'team.*'], 'Instellingen', 'settings'],
         ],
     ];
     $hasTiles = isset($tiles);
@@ -170,7 +170,8 @@
             {{-- De achtergrond is het verloop uit het ontwerp van november (images/design/dash-head.png): navy links, blauw rechts, zonder beweging. --}}
 
             <header class="dash-bar">
-                <nav class="dash-crumbs" aria-label="Kruimelpad"><a href="{{ route('dashboard') }}">Dashboard</a> / {{ $heading ?? $title }}</nav>
+                {{-- Eén kruimelpad, in de bovenbalk: Dashboard, dan het pad van de pagina (slot crumbs) of anders de titel. --}}
+                <nav class="dash-crumbs" aria-label="Kruimelpad"><a href="{{ route('dashboard') }}">Dashboard</a> <span aria-hidden="true">/</span> @isset($crumbs){{ $crumbs }}@else<span>{{ $heading ?? $title }}</span>@endisset</nav>
                 <form class="dash-search" method="GET" action="{{ route('lots.index') }}" role="search">
                     <x-v4.icon name="search" :size="16" stroke="2.2" />
                     <label class="sr-only" for="dash-q">Zoek kavels</label>
@@ -192,6 +193,7 @@
                 <div class="dash-band-row">
                     <div class="dash-band-text">
                         @isset($crumbs)
+                            {{-- Alleen op een smal scherm: daar is de bovenbalk met het kruimelpad verborgen. --}}
                             <nav class="page-crumbs" aria-label="Kruimelpad">{{ $crumbs }}</nav>
                         @endisset
                         @if ($eyebrow)

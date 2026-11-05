@@ -1,6 +1,6 @@
 <x-layouts.dashboard title="Organisatie" eyebrow="Account" :intro="'De gegevens van '.$company->name.' op Aucvy: bedrijf, pakket, verificatie en uitbetaling.'">
     <x-slot:crumbs>
-        <a href="{{ route('account.settings') }}">Account</a> <span aria-hidden="true">/</span> <span>Organisatie</span>
+        <a href="{{ route('account.settings') }}">Instellingen</a> <span aria-hidden="true">/</span> <span>Organisatie</span>
     </x-slot:crumbs>
 
     @if (session('status'))

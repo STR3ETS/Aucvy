@@ -20,7 +20,7 @@
                 <button type="submit" class="btn btn-white">Alles gelezen</button>
             </form>
         @endif
-        <a class="btn btn-outline-white" href="{{ route('account.settings') }}#meldingen">Voorkeuren</a>
+        <a class="btn btn-outline-white" href="{{ route('account.settings.section', 'meldingen') }}">Voorkeuren</a>
     </x-slot:actions>
 
     <x-slot:tiles>

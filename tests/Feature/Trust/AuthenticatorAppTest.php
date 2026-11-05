@@ -47,7 +47,7 @@ it('koppelt een app pas als de eerste code klopt, en geeft herstelcodes', functi
 
     $secret = Crypt::decryptString(session('two_factor_setup'));
 
-    $this->actingAs($user)->get(route('account.settings'))
+    $this->actingAs($user)->get(route('account.settings.section', 'beveiliging'))
         ->assertOk()
         ->assertSee('<svg', escape: false)
         ->assertSee(chunk_split($secret, 4, ' '));

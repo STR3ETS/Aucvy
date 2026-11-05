@@ -899,3 +899,8 @@
 .c .page-hero:has(+ .page-body [data-lot-nav]) h1{font-size:clamp(34px,4.4vw,56px)}
 /* In het ontwerp van november zegt het kruimelpad waar je bent; geen kicker boven de titel in het dashboard. */
 .c .dash-band .eyebrow{display:none}
+/* Eén kruimelpad: in de bovenbalk. Het pad in de band is er alleen op een smal scherm, waar de bovenbalk weg is. */
+.c .dash-crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.c .dash-crumbs a:hover{text-decoration:underline}
+.c .dash-band .page-crumbs{display:none}
+@media (max-width:1080px){.c .dash-band .page-crumbs{display:flex}}

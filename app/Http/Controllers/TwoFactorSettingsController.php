@@ -28,12 +28,12 @@ final class TwoFactorSettingsController extends Controller
         $request->validate(['password' => ['required', 'current_password']]);
 
         if ($request->user()->hasAuthenticatorApp()) {
-            return redirect()->route('account.settings');
+            return redirect()->route('account.settings.section', 'beveiliging');
         }
 
         $request->session()->put(self::SESSION_KEY, Crypt::encryptString($authenticator->newSecret()));
 
-        return redirect()->to(route('account.settings').'#tweestaps');
+        return redirect()->route('account.settings.section', 'beveiliging');
     }
 
     public function confirm(Request $request, Authenticator $authenticator): RedirectResponse
@@ -43,7 +43,7 @@ final class TwoFactorSettingsController extends Controller
         $encrypted = $request->session()->get(self::SESSION_KEY);
 
         if ($encrypted === null) {
-            return redirect()->route('account.settings');
+            return redirect()->route('account.settings.section', 'beveiliging');
         }
 
         $secret = Crypt::decryptString($encrypted);
@@ -64,7 +64,7 @@ final class TwoFactorSettingsController extends Controller
 
         Audit::record('user.two_factor_enabled', $user, $user, ip: $request->ip());
 
-        return redirect()->to(route('account.settings').'#tweestaps')
+        return redirect()->route('account.settings.section', 'beveiliging')
             ->with('status', __('two_factor.enabled'))
             ->with('recovery_codes', $codes);
     }
@@ -73,7 +73,7 @@ final class TwoFactorSettingsController extends Controller
     {
         $request->session()->forget(self::SESSION_KEY);
 
-        return redirect()->route('account.settings');
+        return redirect()->route('account.settings.section', 'beveiliging');
     }
 
     public function regenerateRecoveryCodes(Request $request, Authenticator $authenticator): RedirectResponse
@@ -83,14 +83,14 @@ final class TwoFactorSettingsController extends Controller
         $user = $request->user();
 
         if (! $user->hasAuthenticatorApp()) {
-            return redirect()->route('account.settings');
+            return redirect()->route('account.settings.section', 'beveiliging');
         }
 
         $codes = $authenticator->newRecoveryCodes($user);
 
         Audit::record('user.two_factor_recovery_regenerated', $user, $user, ip: $request->ip());
 
-        return redirect()->to(route('account.settings').'#tweestaps')
+        return redirect()->route('account.settings.section', 'beveiliging')
             ->with('status', __('two_factor.recovery_regenerated'))
             ->with('recovery_codes', $codes);
     }
@@ -109,6 +109,6 @@ final class TwoFactorSettingsController extends Controller
 
         Audit::record('user.two_factor_disabled', $user, $user, ip: $request->ip());
 
-        return redirect()->to(route('account.settings').'#tweestaps')->with('status', __('two_factor.disabled'));
+        return redirect()->route('account.settings.section', 'beveiliging')->with('status', __('two_factor.disabled'));
     }
 }

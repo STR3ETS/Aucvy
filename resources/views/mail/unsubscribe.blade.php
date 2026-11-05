@@ -11,6 +11,6 @@
             </form>
             <p class="mt-3 text-xs text-aj-muted">Servicemails over je account en aankopen blijven komen; die kun je niet uitzetten.</p>
         @endif
-        <a href="{{ route('account.settings') }}" class="mt-4 inline-block text-sm font-semibold underline">Naar je mailvoorkeuren</a>
+        <a href="{{ route('account.settings.section', 'meldingen') }}" class="mt-4 inline-block text-sm font-semibold underline">Naar je mailvoorkeuren</a>
     </div>
 </x-layouts.public>
