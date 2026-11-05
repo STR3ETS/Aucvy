@@ -653,17 +653,17 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-pref span span{display:block;margin-top:2px;font-size:13px;color:#4d5566;line-height:1.45}
 .d-pref input[type=checkbox]{width:22px;height:22px;flex:0 0 auto;accent-color:#2f6bff;cursor:pointer}
 
-/* ---------- financien: lijsten links, tarief en maanden rechts ---------- */
-.d-fin{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
-.d-fin-main{min-width:0;display:flex;flex-direction:column;gap:14px}
-.d-fin-aside{display:flex;flex-direction:column;gap:14px;min-width:0}
+/* ---------- financien: afrekeningen over de volle breedte, tarief en maanden eronder ---------- */
+.d-fin-extra{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.d-datatable tfoot th,.d-datatable tfoot td{padding:12px 14px;border-top:1px solid rgba(14,21,38,.08);background:#f6f7fa;text-align:left;font-size:13px;font-weight:800;color:#0e1526}
+.d-datatable tfoot td.num{text-align:right}
 .d-datatable{border:1px solid rgba(14,21,38,.09);border-radius:16px;background:#fff;overflow-x:auto}
 .d-datatable table{width:100%;border-collapse:collapse;font-size:13px}
 .d-datatable th{padding:12px 14px;background:#f6f7fa;text-align:left;font-size:13px;font-weight:600;color:#47505f;white-space:nowrap}
 .d-datatable td{padding:12px 14px;border-top:1px solid rgba(14,21,38,.08);vertical-align:top}
 .d-datatable th.num,.d-datatable td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .d-datatable td.nowrap{white-space:nowrap}
-.d-datatable td.clip{max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-datatable td.clip{max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .d-datatable td.is-soft{color:#4d5566}
 .d-datatable td small{display:block;margin-top:2px;font-size:12px;color:#4d5566}
 .d-datatable tbody tr:hover{background:#fafbfd}
@@ -672,7 +672,7 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-tiers li strong{font-variant-numeric:tabular-nums;color:#0e1526}
 .d-tiers li.is-on{background:#eef3ff;color:#0e1526;font-weight:700}
 .d-tiers li.is-on strong{color:#1e56e0}
-@media (max-width:1180px){.d-fin{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:1080px){.d-fin-extra{grid-template-columns:minmax(0,1fr)}}
 
 /* ---------- meldingen: één lijst met filterchips ---------- */
 .d-notifs{margin:0;padding:0;list-style:none;border:1px solid rgba(14,21,38,.09);border-radius:16px;background:#fff;overflow:hidden}
