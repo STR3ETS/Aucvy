@@ -14,13 +14,13 @@
     </x-slot:crumbs>
 
     @if (session('status'))
-        <p class="d-soft is-ok" style="margin:0 0 14px;max-width:820px">{{ session('status') }}</p>
+        <p class="d-soft is-ok" style="margin:0 0 14px">{{ session('status') }}</p>
     @endif
     @if ($errors->any())
-        <div role="alert" class="d-soft is-err" style="margin:0 0 14px;max-width:820px">{{ $errors->first() }}</div>
+        <div role="alert" class="d-soft is-err" style="margin:0 0 14px">{{ $errors->first() }}</div>
     @endif
 
-    <div class="d-stack" style="gap:14px;max-width:820px">
+    <div class="d-stack" style="gap:14px">
         @include('account.partials.'.$section)
     </div>
 </x-layouts.dashboard>
