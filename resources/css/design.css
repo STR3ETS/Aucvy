@@ -550,3 +550,8 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-pref strong{display:block;font-size:14px;font-weight:700}
 .d-pref span span{display:block;margin-top:2px;font-size:13px;color:#4d5566;line-height:1.45}
 .d-pref input[type=checkbox]{width:22px;height:22px;flex:0 0 auto;accent-color:#2f6bff;cursor:pointer}
+
+/* Tegels als tabs op de instellingenpagina: de gekozen tegel blauw omlijnd, één paneel tegelijk. */
+button.d-navtile{font:inherit;text-align:left;cursor:pointer;width:100%}
+.d-navtile.is-on{border-color:#2f6bff;background:#f5f8ff;box-shadow:0 0 0 1px #2f6bff inset}
+.d-tabpanel{flex:1 1 380px;min-width:0}

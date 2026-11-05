@@ -8,16 +8,23 @@
     // De tegels onder de profielkaart (ontwerp van november). Organisatie, team
     // en koppelingen staan hier in plaats van als losse items in het menu.
     $tiles = array_values(array_filter([
-        ['user', 'Persoonlijke gegevens', 'Naam, e-mail, telefoon', '#gegevens'],
-        ['shield-check', 'Beveiliging', 'Wachtwoord, tweede stap', '#beveiliging'],
-        ['bell', 'Meldingen', 'E-mail, push, voorkeuren', '#meldingen'],
-        ['monitor', 'Apparaten', 'Actieve sessies', '#apparaten'],
+        ['user', 'Persoonlijke gegevens', 'Naam, e-mail, telefoon', 'tab:gegevens'],
+        ['shield-check', 'Beveiliging', 'Wachtwoord, tweede stap', 'tab:beveiliging'],
+        ['bell', 'Meldingen', 'E-mail, push, voorkeuren', 'tab:meldingen'],
+        ['monitor', 'Apparaten', 'Actieve sessies', 'tab:apparaten'],
         $isBusiness && $user->canSeeCompanyFinance() ? ['banknote', 'Uitbetalingsgegevens', 'Bankrekening, verificatie', route('organisation.show').'#rekening'] : null,
         $isBusiness ? ['building', 'Bedrijfsgegevens', 'KVK, btw, bevoegde personen', route('organisation.show')] : null,
         $isBusiness ? ['users', 'Team', 'Collega\'s en rollen', route('team.index')] : null,
         ['send', 'Koppelingen', 'Kanalen om kavels te delen', route('account.connections')],
         $isBusiness ? null : ['building', 'Wil je ook verkopen?', 'Daarvoor heb je een zakelijk account nodig', route('business')],
     ]));
+
+    // Na een fout in een formulier opent het tabblad van dat formulier.
+    $errorTab = match (true) {
+        $errors->hasAny(['name', 'display_name', 'phone']) => 'gegevens',
+        $errors->hasAny(['current_password', 'password', 'code']) => 'beveiliging',
+        default => null,
+    };
 @endphp
 
 <x-layouts.dashboard title="Instellingen" eyebrow="Account"
@@ -30,7 +37,31 @@
         <div role="alert" class="d-soft is-err" style="margin:0 0 14px">{{ $errors->first() }}</div>
     @endif
 
-    <div class="d-stack" style="gap:18px">
+    {{--
+        De tegels zijn tabs: één aanklikken toont alleen dat onderdeel. Zonder
+        keuze staan Beveiliging en Meldingen naast elkaar, zoals in het ontwerp.
+        De keuze staat in de hash (deelbaar, en redirects als #tweestaps werken)
+        en blijft na het opslaan van een formulier bewaard.
+    --}}
+    <div class="d-stack" style="gap:18px"
+         x-data="{
+            tab: 'overzicht',
+            init() {
+                const fromHash = { gegevens: 'gegevens', profiel: 'gegevens', beveiliging: 'beveiliging', tweestaps: 'beveiliging', wachtwoord: 'beveiliging', meldingen: 'meldingen', apparaten: 'apparaten', sessies: 'apparaten' }[window.location.hash.slice(1)];
+                let remembered = null;
+                try { remembered = sessionStorage.getItem('instellingen-tab'); sessionStorage.removeItem('instellingen-tab'); } catch (error) {}
+                this.tab = @js($errorTab) ?? fromHash ?? remembered ?? 'overzicht';
+            },
+            select(name) {
+                // Nog een keer op dezelfde tegel: terug naar het overzicht.
+                this.tab = this.tab === name ? 'overzicht' : name;
+                history.replaceState(history.state, '', this.tab === 'overzicht' ? window.location.pathname : '#' + this.tab);
+            },
+            remember() {
+                try { sessionStorage.setItem('instellingen-tab', this.tab); } catch (error) {}
+            },
+         }"
+         @submit="remember()">
 
         {{-- Wie je bent, en of je geverifieerd bent. --}}
         <section class="d-profilecard" aria-label="Account">
@@ -50,22 +81,30 @@
                 @unless ($isVerified)
                     <a class="d-btn d-btn-sq" href="{{ route('verification.overview') }}">Verificatie afronden</a>
                 @endunless
-                <a class="d-btn d-btn-secondary d-btn-sq" href="#gegevens">Gegevens bewerken</a>
+                <button type="button" class="d-btn d-btn-secondary d-btn-sq" @click="tab = 'gegevens'; history.replaceState(history.state, '', '#gegevens'); $nextTick(() => document.getElementById('gegevens')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))">Gegevens bewerken</button>
             </div>
         </section>
 
         <nav class="d-navtiles" aria-label="Onderdelen van je instellingen">
             @foreach ($tiles as [$icon, $label, $hint, $href])
-                <a class="d-navtile" href="{{ $href }}">
-                    <span class="d-navtile-icon" aria-hidden="true"><x-v4.icon :name="$icon" :size="18" stroke="2" /></span>
-                    <span><strong>{{ $label }}</strong><span>{{ $hint }}</span></span>
-                </a>
+                @if (str_starts_with($href, 'tab:'))
+                    @php $name = substr($href, 4); @endphp
+                    <button type="button" class="d-navtile" :class="tab === '{{ $name }}' && 'is-on'" :aria-pressed="tab === '{{ $name }}'" @click="select('{{ $name }}')">
+                        <span class="d-navtile-icon" aria-hidden="true"><x-v4.icon :name="$icon" :size="18" stroke="2" /></span>
+                        <span><strong>{{ $label }}</strong><span>{{ $hint }}</span></span>
+                    </button>
+                @else
+                    <a class="d-navtile" href="{{ $href }}">
+                        <span class="d-navtile-icon" aria-hidden="true"><x-v4.icon :name="$icon" :size="18" stroke="2" /></span>
+                        <span><strong>{{ $label }}</strong><span>{{ $hint }}</span></span>
+                    </a>
+                @endif
             @endforeach
         </nav>
 
         <div class="d-cols">
             {{-- Wachtwoord en de tweede inlogstap --}}
-            <section id="beveiliging" class="d-card" style="flex:1 1 380px;min-width:0" aria-labelledby="wachtwoord">
+            <section id="beveiliging" class="d-card d-tabpanel" x-show="tab === 'overzicht' || tab === 'beveiliging'" aria-labelledby="wachtwoord">
                 <h2 id="wachtwoord" class="d-h3" style="font-size:17px">Wachtwoord en beveiliging</h2>
                 <form method="POST" action="{{ route('account.password') }}" class="d-stack-tight" style="margin-top:12px">
                     @csrf
@@ -170,7 +209,7 @@
             </section>
 
             {{-- Meldingen: de voorkeuren die je zelf aan of uit zet. --}}
-            <section id="meldingen" class="d-card" style="flex:1 1 380px;min-width:0" aria-labelledby="meldingen-kop">
+            <section id="meldingen" class="d-card d-tabpanel" x-show="tab === 'overzicht' || tab === 'meldingen'" aria-labelledby="meldingen-kop">
                 <h2 id="meldingen-kop" class="d-h3" style="font-size:17px">Meldingen</h2>
                 <p class="d-sub">Berichten over je bestellingen, uitbetalingen en verificatie krijg je altijd.</p>
                 @unless ($hasPush)
@@ -214,11 +253,8 @@
                     <button type="submit" class="d-btn d-btn-secondary d-btn-sq" style="margin-top:10px">Mailvoorkeuren opslaan</button>
                 </form>
             </section>
-        </div>
-
-        <div class="d-cols">
             {{-- Persoonlijke gegevens --}}
-            <section id="gegevens" class="d-card" style="flex:1 1 380px;min-width:0" aria-labelledby="profiel">
+            <section id="gegevens" class="d-card d-tabpanel" x-show="tab === 'gegevens'" x-cloak aria-labelledby="profiel">
                 <h2 id="profiel" class="d-h3" style="font-size:17px">Persoonlijke gegevens</h2>
                 <p class="d-sub">Je e-mailadres is {{ $user->email }}. Dat wijzigen gaat via de klantenservice, omdat het je inlognaam en je bevestiging is.</p>
                 <form method="POST" action="{{ route('account.profile') }}" class="d-stack-tight" style="margin-top:12px">
@@ -240,7 +276,7 @@
             </section>
 
             {{-- Apparaten: waar je nu bent ingelogd. --}}
-            <section id="apparaten" class="d-card" style="flex:1 1 380px;min-width:0" aria-labelledby="sessies">
+            <section id="apparaten" class="d-card d-tabpanel" x-show="tab === 'apparaten'" x-cloak aria-labelledby="sessies">
                 <h2 id="sessies" class="d-h3" style="font-size:17px">Apparaten</h2>
                 <p class="d-sub">Waar je nu bent ingelogd.</p>
                 <div class="d-prefs" style="margin-top:8px">
