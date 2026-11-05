@@ -1,5 +1,25 @@
 @use('App\Support\Money\Money')
 
+@php
+    $percent = fn (float|int|string $value): string => rtrim(rtrim(number_format((float) $value, 1, ',', '.'), '0'), ',').'%';
+    $whole = fn (int $cents): string => '€ '.number_format($cents / 100, 0, ',', '.');
+    $displayTimezone = config('aucvy.display_timezone');
+
+    // Hoe ver de omzet binnen de huidige trede zit, voor de balk naar het volgende tarief.
+    $tierProgress = null;
+    if (isset($tier) && $tier['next']) {
+        $lower = 0;
+        foreach ($tier['tiers'] as $step) {
+            if ((float) $step['percent'] === (float) $feePercentage) {
+                $span = max(1, (int) $step['up_to_cents'] - $lower);
+                $tierProgress = (int) max(2, min(100, round(($tier['revenue_cents'] - $lower) / $span * 100)));
+                break;
+            }
+            $lower = (int) $step['up_to_cents'];
+        }
+    }
+@endphp
+
 <x-layouts.dashboard title="Financiën" eyebrow="Dashboard" intro="Per verkoop het hamerbedrag, de succesfee met btw en wat er wordt uitbetaald. Te downloaden voor je boekhouding.">
     <x-slot:actions>
         @if ($lines->isNotEmpty())
@@ -22,75 +42,99 @@
             </x-slot:action>
         </x-ui.empty-state>
     @else
-        <div class="grid gap-5 lg:grid-cols-[1fr_300px] lg:items-start">
-            {{-- De staffel (besluit Raph en Don, 2 november 2026): omzet op Aucvy in de laatste twaalf maanden bepaalt de fee. --}}
-            @if (isset($tier))
-                <section class="d-card" aria-labelledby="staffel">
-                    <h2 id="staffel" class="text-sm font-extrabold">Je succesfee: {{ rtrim(rtrim(number_format($feePercentage, 1, ',', '.'), '0'), ',') }}%</h2>
-                    <p class="mt-1 text-xs text-aj-muted">
-                        Op basis van {{ Money::format($tier['revenue_cents']) }} omzet op Aucvy in de laatste twaalf maanden.
-                        @if ($tier['next'])
-                            Nog {{ Money::format($tier['next']['remaining_cents']) }} tot {{ rtrim(rtrim(number_format($tier['next']['percent'], 1, ',', '.'), '0'), ',') }}%.
-                        @else
-                            Dit is de laagste trede.
+        {{-- Links de lijsten waar je in zoekt (verkopen en facturen), rechts wat je in één blik leest (tarief en maanden). --}}
+        <div class="d-fin" x-data="{ tab: 'verkopen' }">
+            <div class="d-fin-main">
+                <div class="d-card-head" style="align-items:center">
+                    <div class="d-chips" role="tablist" aria-label="Wat wil je zien">
+                        <button type="button" role="tab" class="d-chip" :class="tab === 'verkopen' && 'is-on'" :aria-selected="tab === 'verkopen'" @click="tab = 'verkopen'">Verkopen <span style="font-weight:700;opacity:.7">{{ $lines->count() }}</span></button>
+                        @if ($invoices->isNotEmpty())
+                            <button type="button" role="tab" class="d-chip" :class="tab === 'facturen' && 'is-on'" :aria-selected="tab === 'facturen'" @click="tab = 'facturen'">Facturen <span style="font-weight:700;opacity:.7">{{ $invoices->count() }}</span></button>
                         @endif
-                        Het tarief ligt vast op het moment van verkoop en wordt nooit achteraf verrekend.
-                    </p>
-                    <ul class="mt-3 flex flex-wrap gap-1.5 text-xs">
-                        @foreach ($tier['tiers'] as $step)
-                            <li @class(['rounded-full px-2.5 py-1 font-bold', 'bg-aj-navy text-white' => (float) $step['percent'] === (float) $feePercentage, 'border border-aj-border' => (float) $step['percent'] !== (float) $feePercentage])>
-                                {{ $step['up_to_cents'] === null ? 'daarboven' : 'tot '.Money::format($step['up_to_cents']) }}: {{ rtrim(rtrim(number_format($step['percent'], 1, ',', '.'), '0'), ',') }}%
-                            </li>
-                        @endforeach
-                    </ul>
+                    </div>
+                </div>
+
+                <section class="d-datatable" aria-label="Verkopen" x-show="tab === 'verkopen'">
+                    <table>
+                        <thead><tr><th>Bestelling</th><th>Kavel</th><th class="num">Hamer</th><th class="num">Fee</th><th class="num">Netto</th><th>Uitbetaling</th></tr></thead>
+                        <tbody>
+                            @foreach ($lines as $line)
+                                <tr>
+                                    <td class="nowrap"><a href="{{ route('orders.show', $line['order']) }}" class="d-link">{{ $line['order']->order_number }}</a><small>{{ $line['order']->created_at->timezone($displayTimezone)->isoFormat('D MMM YYYY') }}</small></td>
+                                    <td class="clip">{{ $line['order']->lot?->title }}</td>
+                                    <td class="num">{{ Money::format($line['hammer_cents']) }}</td>
+                                    <td class="num">{{ Money::format($line['fee_cents']) }}<small>btw {{ Money::format($line['fee_vat_cents']) }}</small></td>
+                                    <td class="num"><strong>{{ Money::format($line['payout_cents']) }}</strong></td>
+                                    <td class="nowrap">{{ $line['payout_status'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </section>
-            @endif
 
-            @if ($invoices->isNotEmpty())
-                <section class="d-card" aria-labelledby="facturen">
-                    <h2 id="facturen" class="text-sm font-extrabold">Facturen</h2>
-                    <p class="text-xs text-aj-muted">Kavelfacturen namens jou aan de koper, en de facturen van Aucvy voor de succesfee. Opslaan als pdf via Afdrukken.</p>
-                    <ul class="mt-3 divide-y divide-aj-border text-sm">
-                        @foreach ($invoices as $invoice)
-                            <li class="flex flex-wrap items-center justify-between gap-2 py-2">
-                                <span><span class="font-bold">{{ $invoice->number }}</span> · {{ __('invoices.for.'.$invoice->kind) }}<span class="block text-xs text-aj-muted">{{ $invoice->issued_at->isoFormat('D MMM YYYY') }} · bestelling {{ $invoice->order->order_number }}</span></span>
-                                <span class="flex items-center gap-3"><span class="tabular font-bold">{{ Money::format($invoice->total_cents) }}</span><a href="{{ route('invoices.show', $invoice) }}" class="font-semibold underline">Bekijken</a></span>
-                            </li>
+                @if ($invoices->isNotEmpty())
+                    <div x-show="tab === 'facturen'" x-cloak>
+                        <p class="d-sub" style="margin:0 0 10px">Kavelfacturen namens jou aan de koper, en de facturen van Aucvy voor de succesfee. Opslaan als pdf via Afdrukken.</p>
+                        <section class="d-datatable" aria-labelledby="facturen">
+                            <h2 id="facturen" class="sr-only">Facturen</h2>
+                            <table>
+                                <thead><tr><th>Factuur</th><th>Soort</th><th>Bestelling</th><th class="num">Bedrag</th><th><span class="sr-only">Openen</span></th></tr></thead>
+                                <tbody>
+                                    @foreach ($invoices as $invoice)
+                                        <tr>
+                                            <td class="nowrap"><strong>{{ $invoice->number }}</strong><small>{{ $invoice->issued_at->isoFormat('D MMM YYYY') }}</small></td>
+                                            <td>{{ __('invoices.for.'.$invoice->kind) }}</td>
+                                            <td class="nowrap">{{ $invoice->order->order_number }}</td>
+                                            <td class="num"><strong>{{ Money::format($invoice->total_cents) }}</strong></td>
+                                            <td class="num"><a href="{{ route('invoices.show', $invoice) }}" class="d-link">Bekijken</a></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </section>
+                    </div>
+                @endif
+            </div>
+
+            <aside class="d-fin-aside">
+                {{-- De staffel (besluit Raph en Don, 2 november 2026): omzet op Aucvy in de laatste twaalf maanden bepaalt de fee. --}}
+                @if (isset($tier))
+                    <section class="d-card" aria-labelledby="staffel">
+                        <h2 id="staffel" class="d-h3">Je succesfee</h2>
+                        <div class="d-big" style="margin-top:6px">{{ $percent($feePercentage) }}</div>
+                        <p class="d-sub">Op basis van {{ $whole($tier['revenue_cents']) }} omzet op Aucvy in de laatste twaalf maanden.</p>
+                        @if ($tier['next'])
+                            <div class="d-depth-bar" style="height:8px;border-radius:4px" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $tierProgress ?? 0 }}" aria-label="Voortgang naar het volgende tarief">
+                                <i style="width:{{ $tierProgress ?? 0 }}%;border-radius:4px"></i>
+                            </div>
+                            <p class="d-sub">Nog {{ $whole($tier['next']['remaining_cents']) }} tot {{ $percent($tier['next']['percent']) }}.</p>
+                        @else
+                            <p class="d-sub">Dit is de laagste trede.</p>
+                        @endif
+                        <ul class="d-tiers" aria-label="De staffel">
+                            @foreach ($tier['tiers'] as $step)
+                                <li @class(['is-on' => (float) $step['percent'] === (float) $feePercentage])>
+                                    <span>{{ $step['up_to_cents'] === null ? 'Daarboven' : 'Tot '.$whole($step['up_to_cents']) }}</span>
+                                    <strong>{{ $percent($step['percent']) }}</strong>
+                                </li>
+                            @endforeach
+                        </ul>
+                        <p class="d-hint">Het tarief ligt vast op het moment van verkoop en wordt nooit achteraf verrekend.</p>
+                    </section>
+                @endif
+
+                <section class="d-card" aria-label="Per maand">
+                    <h2 class="d-h3">Per maand</h2>
+                    <div class="d-rows" style="margin-top:8px">
+                        @foreach ($perMonth as $month => $sum)
+                            <div class="d-row">
+                                <span>{{ ucfirst(\Carbon\Carbon::createFromFormat('Y-m', $month)->isoFormat('MMMM YYYY')) }}<small class="d-hint" style="margin-top:2px">{{ $sum['sales'] }} {{ $sum['sales'] === 1 ? 'verkoop' : 'verkopen' }}</small></span>
+                                <strong>{{ Money::format($sum['hammer_cents']) }}<small class="d-hint" style="margin-top:2px;font-weight:500">fee {{ Money::format($sum['fee_cents']) }}</small></strong>
+                            </div>
                         @endforeach
-                    </ul>
+                    </div>
+                    <p class="d-hint" style="margin-top:12px">De succesfee is {{ $percent($feePercentage) }} over het hamerbedrag, plus {{ (int) Money::vatRatePercent() }}% btw. Een factuur voor de fee volgt zodra de facturatie is vastgesteld.</p>
                 </section>
-            @endif
-
-            <section class="overflow-x-auto rounded-aj-s border border-aj-border bg-aj-surface" aria-label="Verkopen">
-                <table class="admin-table">
-                    <thead><tr><th>Bestelling</th><th>Kavel</th><th class="text-right">Hamer</th><th class="text-right">Fee</th><th class="text-right">Btw</th><th class="text-right">Netto</th><th>Uitbetaling</th></tr></thead>
-                    <tbody>
-                        @foreach ($lines as $line)
-                            <tr>
-                                <td class="whitespace-nowrap"><a href="{{ route('orders.show', $line['order']) }}" class="font-bold underline">{{ $line['order']->order_number }}</a><br><span class="text-xs text-aj-muted">{{ $line['order']->created_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM YYYY') }}</span></td>
-                                <td class="max-w-[28ch] truncate">{{ $line['order']->lot?->title }}</td>
-                                <td class="tabular text-right">{{ Money::format($line['hammer_cents']) }}</td>
-                                <td class="tabular text-right">{{ Money::format($line['fee_cents']) }}</td>
-                                <td class="tabular text-right text-aj-muted">{{ Money::format($line['fee_vat_cents']) }}</td>
-                                <td class="tabular text-right font-bold">{{ Money::format($line['payout_cents']) }}</td>
-                                <td class="whitespace-nowrap text-xs">{{ $line['payout_status'] }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </section>
-
-            <aside class="d-card" aria-label="Per maand">
-                <h2 class="text-sm font-extrabold">Per maand</h2>
-                <ul class="mt-3 space-y-2 text-sm">
-                    @foreach ($perMonth as $month => $sum)
-                        <li class="flex items-baseline justify-between gap-3 border-b border-aj-border pb-2">
-                            <span>{{ \Carbon\Carbon::createFromFormat('Y-m', $month)->isoFormat('MMMM YYYY') }}<br><span class="text-xs text-aj-muted">{{ $sum['sales'] }} {{ $sum['sales'] === 1 ? 'verkoop' : 'verkopen' }}</span></span>
-                            <span class="text-right"><b class="tabular">{{ Money::format($sum['hammer_cents']) }}</b><br><span class="tabular text-xs text-aj-muted">fee {{ Money::format($sum['fee_cents']) }}</span></span>
-                        </li>
-                    @endforeach
-                </ul>
-                <p class="mt-4 text-xs text-aj-muted">De succesfee is {{ rtrim(rtrim(number_format($feePercentage, 1, ',', '.'), '0'), ',') }}% over het hamerbedrag, plus {{ (int) \App\Support\Money\Money::vatRatePercent() }}% btw. Een factuur voor de fee volgt zodra de facturatie is vastgesteld.</p>
             </aside>
         </div>
     @endif
