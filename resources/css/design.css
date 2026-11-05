@@ -538,7 +538,10 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-profilecard-text{flex:1 1 240px;min-width:0}
 .d-profilecard-text strong{font-size:20px;font-weight:800;letter-spacing:-.01em}
 .d-profilecard-text>span{display:block;margin-top:4px;font-size:13px;color:#4d5566}
-.d-navtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+/* Vier naast elkaar, zodat acht tegels twee volle rijen vormen; smaller wordt het twee en dan één. */
+.d-navtiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:1180px){.d-navtiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.d-navtiles{grid-template-columns:1fr}}
 .d-navtile{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid rgba(14,21,38,.09);border-radius:14px;background:#fff;color:#0e1526;transition:border-color .2s,box-shadow .2s,transform .2s}
 .d-navtile:hover{border-color:#2f6bff;box-shadow:0 14px 34px -24px rgba(47,107,255,.6);transform:translateY(-1px)}
 .d-navtile-icon{width:40px;height:40px;flex:0 0 auto;border-radius:10px;background:#eef3ff;color:#2f6bff;display:flex;align-items:center;justify-content:center}
