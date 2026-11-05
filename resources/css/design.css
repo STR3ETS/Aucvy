@@ -354,9 +354,12 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-listrow-body strong a{color:inherit}
 .d-listrow-meta{font-size:13px;color:#4d5566}
 .d-listrow-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
-.d-listrow-right{flex:0 0 auto;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.d-listrow-right b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
-.d-listrow-right span{font-size:13px;color:#4d5566}
+/* Het label hoort bij het bedrag: strak eronder, met de knop op afstand. */
+.d-listrow-right{flex:0 0 auto;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:0}
+.d-listrow-right b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+.d-listrow-right span{margin-top:2px;font-size:13px;line-height:1.3;color:#4d5566}
+.d-listrow-right .d-btn{margin-top:12px}
+.d-listrow-right .d-btn:first-child{margin-top:0}
 .d-listrow .pick{display:flex;align-items:center;flex:0 0 auto}
 .d-listrow .pick input{width:18px;height:18px;accent-color:#2f6bff;cursor:pointer}
 .d-callout-warn{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;background:#fdf3e3;color:#0e1526}
