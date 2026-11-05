@@ -6,6 +6,7 @@ use App\Models\Auction;
 use App\Models\Conversation;
 use App\Models\Lot;
 use App\Models\User;
+use Illuminate\Support\Facades\Blade;
 
 /*
 | Naadloze paginawissels in het dashboard (dash-nav.js): de layout zegt per
@@ -21,7 +22,7 @@ it('markeert gewone dashboardpagina\'s als geschikt voor een zachte wissel', fun
         ->assertSee('dash-main', escape: false);
 })->with(['/dashboard', '/dashboard/kavels', '/dashboard/biedingen', '/bestellingen', '/dashboard/berichten']);
 
-it('laadt een pagina met eigen scripts altijd volledig', function () {
+it('wisselt een gesprek zonder herladen: de pagina brengt geen eigen script meer mee', function () {
     $lot = Lot::factory()->live()->create();
     $buyer = User::factory()->verified()->create();
     $conversation = Conversation::create([
@@ -35,7 +36,17 @@ it('laadt een pagina met eigen scripts altijd volledig', function () {
     $this->actingAs($buyer)
         ->get(route('messages.show', $conversation))
         ->assertOk()
-        ->assertSee('data-soft-nav="off"', escape: false);
+        ->assertSee('data-soft-nav="on"', escape: false)
+        ->assertSee('conversationThread(', escape: false)
+        ->assertDontSee('alpine:init', escape: false);
+});
+
+it('laadt een pagina met eigen scripts altijd volledig', function () {
+    $this->actingAs(User::factory()->verified()->create());
+
+    $html = Blade::render('<x-layouts.dashboard title="Proef">@push("scripts")<script>window.proef = 1;</script>@endpush Inhoud</x-layouts.dashboard>');
+
+    expect($html)->toContain('data-soft-nav="off"');
 });
 
 it('toont de transportindicatie op een kavel met een vanaf-tarief', function () {

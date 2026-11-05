@@ -4,7 +4,6 @@
 @php
     $lot = $conversation->lot;
     $displayTimezone = config('aucvy.display_timezone');
-    $list = collect([$conversation])->concat($others);
     $dossierIcons = ['message' => 'message-circle', 'mail' => 'send', 'document' => 'eye', 'bid' => 'gavel', 'order' => 'banknote', 'payment' => 'banknote'];
 @endphp
 
@@ -21,7 +20,7 @@
     @endif
 
     <div class="d-msg-layout">
-        @include('dashboard.messages.partials.list', ['items' => $list, 'current' => $conversation, 'user' => $user])
+        @include('dashboard.messages.partials.list', ['items' => $conversations, 'current' => $conversation, 'user' => $user])
 
         <section class="d-thread" aria-label="Gesprek"
                  x-data="conversationThread({{ $conversation->id }}, {{ $messages->last()?->id ?? 0 }}, @js(route('messages.poll', $conversation)))">
@@ -129,36 +128,4 @@
             </section>
         </aside>
     </div>
-
-    @push('scripts')
-        <script>
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('conversationThread', (id, lastId, pollUrl) => ({
-                    lastId,
-                    timer: null,
-                    init() {
-                        // Realtime via Reverb als die er is; anders elke tien seconden ophalen.
-                        if (window.Echo) {
-                            window.Echo.private(`conversation.${id}`).listen('.message.posted', () => this.fetch());
-                        }
-                        this.timer = setInterval(() => this.fetch(), 10000);
-                        this.$nextTick(() => this.$refs.list.lastElementChild?.scrollIntoView({ block: 'nearest' }));
-                    },
-                    async fetch() {
-                        try {
-                            const response = await fetch(`${pollUrl}?after=${this.lastId}`, { headers: { Accept: 'application/json' } });
-                            if (!response.ok) return;
-                            const data = await response.json();
-                            for (const message of data.messages) {
-                                if (this.$refs.list.querySelector(`[data-message-id="${message.id}"]`)) continue;
-                                this.$refs.list.insertAdjacentHTML('beforeend', message.html);
-                                this.lastId = Math.max(this.lastId, message.id);
-                            }
-                        } catch (error) {}
-                    },
-                    destroy() { clearInterval(this.timer); window.Echo?.leave(`conversation.${id}`); },
-                }));
-            });
-        </script>
-    @endpush
 </x-layouts.dashboard>

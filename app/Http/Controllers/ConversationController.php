@@ -55,11 +55,30 @@ final class ConversationController extends Controller
             'messages' => $this->visibleMessages($conversation, $user),
             'user' => $user,
             'isBuyer' => $conversation->isBuyer($user),
-            'others' => Conversation::query()->forParticipant($user)->whereKeyNot($conversation->id)
-                ->with(['lot.media', 'buyer', 'company', 'seller', 'order'])->latest('last_message_at')->limit(8)->get(),
+            'conversations' => $this->listFor($user, $conversation),
             // "Alles over deze kavel" naast het gesprek (ontwerp van november): het dossier, alleen wat deze lezer mag zien.
             'dossier' => Dossier::timeline($conversation->lot, $conversation->isBuyer($user) ? 'buyer' : 'seller', $user, orderId: $conversation->order_id, limit: 8),
         ]);
+    }
+
+    /**
+     * De lijst naast een geopend gesprek, in dezelfde volgorde als op de
+     * overzichtspagina: het gesprek met het laatste bericht bovenaan. Het
+     * geopende gesprek blijft op zijn eigen plek staan.
+     *
+     * @return Collection<int, Conversation>
+     */
+    private function listFor(User $user, Conversation $current): Collection
+    {
+        $list = Conversation::query()
+            ->forParticipant($user)
+            ->with(['lot.media', 'buyer', 'seller', 'company', 'order'])
+            ->orderByRaw('last_message_at is null, last_message_at desc')
+            ->limit(25)
+            ->get();
+
+        // Een oud gesprek dat buiten de eerste vijfentwintig valt, staat onderaan.
+        return $list->contains($current) ? $list : $list->push($current);
     }
 
     public function store(Request $request, Conversation $conversation, SendMessage $send): RedirectResponse

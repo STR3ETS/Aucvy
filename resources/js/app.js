@@ -4,6 +4,8 @@ import auction from './auction';
 import funnel from './funnel';
 import { ivyAdvice, searchInterpret } from './ivy-tasks';
 import { ivyPanel } from './ivy-panel';
+import conversationThread from './conversation-thread';
+import initMessagesNav from './messages-nav';
 import slideConfirm from './slide-confirm';
 import dotField from './dot-field';
 import sellingDemo from './selling-demo';
@@ -43,6 +45,9 @@ Alpine.data('lotMedia', lotMedia);
 // Het zwevende paneel van Ivy, rechtsonder op elke pagina.
 Alpine.data('ivyPanel', ivyPanel);
 
+// Een geopend gesprek op de berichtenpagina.
+Alpine.data('conversationThread', conversationThread);
+
 /*
  | Variant B van de A/B-test op de home (preview v4): de productdemo, de
  | verhalen, de Ivy-tabs, de Ivy-dock en het menu. Zie v4.js.
@@ -70,6 +75,9 @@ initLotsIndex();
 initLotNav();
 
 // Naadloze paginawissels in het dashboard: het menu blijft staan, de inhoud wisselt.
+
+// Eerst de wissel tussen gesprekken: die vangt zijn eigen klikken af.
+initMessagesNav();
 initDashNav();
 
 // Scroll-reveals van het v4-ontwerp (variant B van de home).
