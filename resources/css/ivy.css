@@ -112,8 +112,8 @@
 .ivy-pill.is-primary{background:#2f6bff;color:#fff;font-weight:600}
 .ivy-pill.is-primary:hover{background:#1e56e0}
 /* De kop, de vervolgvragen en de invoer houden hun hoogte; alleen het gesprek zelf scrolt. */
-.ivy-head,.ivy-chips,.ivy-foot{flex:0 0 auto}
-.ivy-chips{padding:2px 14px 10px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.ivy-head,.ivy-foot{flex:0 0 auto}
+.ivy-chips{margin:0 -12px 12px;padding:0 12px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
 .ivy-chips::-webkit-scrollbar{display:none}
 .ivy-chips .ivy-pill{flex:0 0 auto}
 

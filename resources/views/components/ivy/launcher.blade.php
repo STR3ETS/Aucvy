@@ -163,12 +163,11 @@
             </template>
         </div>
 
-        {{-- Vervolgvragen als pilknoppen, zoals in het ontwerp. --}}
-        <div class="ivy-chips" x-show="enabled && messages.length && chips.length && ! busy" x-cloak>
-            <template x-for="chip in chips" :key="chip"><button type="button" class="ivy-pill" @click="send(chip)" x-text="chip"></button></template>
-        </div>
-
         <div class="ivy-foot">
+            {{-- Vervolgvragen als pilknoppen, zoals in het ontwerp: onder de lijn, met evenveel lucht boven als onder. --}}
+            <div class="ivy-chips" x-show="enabled && messages.length && chips.length && ! busy" x-cloak>
+                <template x-for="chip in chips" :key="chip"><button type="button" class="ivy-pill" @click="send(chip)" x-text="chip"></button></template>
+            </div>
             <form class="ivy-form" @submit.prevent="busy ? stop() : send(draft)">
                 <label class="ivy-icon-btn" title="Stuur een foto">
                     <input type="file" accept="image/*" class="sr-only" :disabled="busy || ! enabled" @change="upload($event.target.files[0]); $event.target.value = ''">
