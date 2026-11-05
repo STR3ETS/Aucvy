@@ -93,6 +93,34 @@ const forSpeech = (text) => String(text ?? '')
     .replace(/^\s*[-•]\s+/gm, '')
     .trim();
 
+/*
+ | De stem van Ivy bij voorlezen. De browser levert de stemmen; welke er
+ | zijn verschilt per apparaat. Ivy is een vrouw, dus een Nederlandse
+ | vrouwenstem gaat voor: eerst de bekende namen, dan een stem die we niet
+ | kennen, en pas als er niets anders is een mannenstem.
+ */
+const FEMALE_VOICES = ['colette', 'fenna', 'dena', 'google nederlands', 'claire', 'ellen', 'lotte', 'saskia', 'flo', 'sandy', 'shelley', 'female', 'vrouw'];
+const MALE_VOICES = ['frank', 'maarten', 'xander', 'arnaud', 'bart', 'ruben', 'eddy', 'reed', 'rocko', 'grandpa', 'male', 'man'];
+
+export function ivyVoice(voices) {
+    const score = (voice) => {
+        const name = (voice.name ?? '').toLowerCase();
+        const lang = (voice.lang ?? '').toLowerCase().replace('_', '-');
+        // "female" bevat "male": eerst op de vrouwennamen toetsen.
+        const female = FEMALE_VOICES.some((part) => name.includes(part));
+        const male = ! female && MALE_VOICES.some((part) => new RegExp('\\b' + part + '\\b').test(name));
+
+        return (female ? 100 : male ? 0 : 50)
+            + (lang === 'nl-nl' ? 10 : 0)
+            // De online stemmen van Edge klinken het natuurlijkst.
+            + (name.includes('natural') || name.includes('online') ? 5 : 0);
+    };
+
+    return [...voices]
+        .filter((voice) => (voice.lang ?? '').toLowerCase().startsWith('nl'))
+        .sort((a, b) => score(b) - score(a))[0] ?? null;
+}
+
 export function ivyPanel(config) {
     return {
         opened: false,
@@ -119,10 +147,18 @@ export function ivyPanel(config) {
         initialPath: window.location.pathname,
         abort: null,
         recognition: null,
+        voice: null,
         shortcut: /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘I' : 'Ctrl+I',
 
         async init() {
             this.readPage();
+
+            // De stemmen komen vaak pas na het laden binnen; kies opnieuw zodra ze er zijn.
+            if (this.canSpeak) {
+                const choose = () => { this.voice = ivyVoice(window.speechSynthesis.getVoices()); };
+                choose();
+                window.speechSynthesis.addEventListener?.('voiceschanged', choose);
+            }
 
             window.addEventListener('keydown', (event) => this.onKey(event));
             window.addEventListener('popstate', () => this.readPage());
@@ -523,7 +559,7 @@ export function ivyPanel(config) {
 
             const utterance = new SpeechSynthesisUtterance(forSpeech(message.body));
             utterance.lang = 'nl-NL';
-            utterance.voice = window.speechSynthesis.getVoices().find((voice) => voice.lang?.toLowerCase().startsWith('nl')) ?? null;
+            utterance.voice = this.voice ?? ivyVoice(window.speechSynthesis.getVoices());
             utterance.onend = () => { if (this.speaking === message.id) this.speaking = null; };
             utterance.onerror = utterance.onend;
 
