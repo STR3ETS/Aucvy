@@ -25,6 +25,7 @@ use App\Support\Money\Money;
 use App\Support\PlatformFacts;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use stdClass;
 use Throwable;
 
 /**
@@ -67,6 +68,35 @@ final class ToolRegistry
         'propose_publish' => ['roles' => ['seller'], 'type' => self::PROPOSAL, 'flag' => 'ivy.proposals', 'description' => 'Publiceren na voorbeeld en geslaagde toets.', 'schema' => ['type' => 'object', 'properties' => ['lot_id' => ['type' => 'integer']], 'required' => ['lot_id']]],
         'capture_lead' => ['roles' => ['visitor'], 'type' => self::WRITE, 'description' => 'Naam en e-mail, alleen als de bezoeker die geeft, met toestemmingstekst.', 'schema' => ['type' => 'object', 'properties' => ['name' => ['type' => 'string'], 'email' => ['type' => 'string'], 'phone' => ['type' => 'string'], 'intent' => ['type' => 'string'], 'temperature' => ['type' => 'string', 'enum' => ['warm', 'groot', 'lauw']]], 'required' => ['email']]],
         'create_handoff' => ['roles' => ['visitor', 'buyer', 'seller'], 'type' => self::WRITE, 'description' => 'Dossier met samenvatting naar het team: geschil, echtheid, verboden waar, betaalprobleem, juridisch of op verzoek.', 'schema' => ['type' => 'object', 'properties' => ['reason' => ['type' => 'string'], 'summary' => ['type' => 'string']], 'required' => ['reason', 'summary']]],
+        'open_page' => ['roles' => ['visitor', 'buyer', 'seller'], 'type' => self::READ, 'description' => 'Geef een knop naar een pagina uit de lijst "Pagina\'s" in je context, of naar een kavel. Met direct=true gaat de klant er meteen heen; gebruik dat alleen als hij daar zelf om vraagt ("ga naar", "open").', 'schema' => ['type' => 'object', 'properties' => ['page' => ['type' => 'string', 'description' => 'Sleutel uit de lijst, of "kavel" samen met lot_id.'], 'lot_id' => ['type' => 'integer'], 'direct' => ['type' => 'boolean']], 'required' => ['page']]],
+    ];
+
+    /** Wat de klant ziet terwijl een tool loopt. */
+    private const STEPS = [
+        'search_lots' => 'Kavels zoeken',
+        'get_lot' => 'Kavel bekijken',
+        'compare_lots' => 'Kavels vergelijken',
+        'calc_buyer_total' => 'Kosten uitrekenen',
+        'calc_seller_net' => 'Opbrengst uitrekenen',
+        'get_value_estimate' => 'Waarde-indicatie opzoeken',
+        'kb_search' => 'Kennisbank raadplegen',
+        'get_my_activity' => 'Je biedingen en bestellingen bekijken',
+        'get_lot_stats' => 'Interesse in je kavel bekijken',
+        'get_next_steps' => 'Nagaan wat nog moet',
+        'run_listing_check' => 'Je concept toetsen',
+        'save_search' => 'Zoekvraag bewaren',
+        'follow_lot' => 'Volglijst bijwerken',
+        'set_lot_mode' => 'Meldniveau instellen',
+        'ask_seller' => 'Vraag bij de kavel zetten',
+        'propose_bid' => 'Bod klaarzetten',
+        'propose_auto_bid' => 'Automatisch bieden klaarzetten',
+        'propose_dutch_accept' => 'Afmijnen klaarzetten',
+        'propose_buy_now' => 'Koop direct klaarzetten',
+        'propose_reserve_change' => 'Reservewijziging klaarzetten',
+        'propose_publish' => 'Publicatie klaarzetten',
+        'capture_lead' => 'Gegevens noteren',
+        'create_handoff' => 'Doorgeven aan het team',
+        'open_page' => 'Pagina opzoeken',
     ];
 
     public function __construct(
@@ -74,7 +104,22 @@ final class ToolRegistry
         private readonly Proposals $proposals,
         private readonly LotSearch $search,
         private readonly BidGuards $guards,
+        private readonly Pages $pages,
     ) {}
+
+    /**
+     * De regel die in het paneel verschijnt terwijl deze tool loopt.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    public function step(string $name, array $input): string
+    {
+        if ($name === 'search_lots' && trim((string) ($input['query'] ?? '')) !== '') {
+            return 'Zoeken naar "'.Str::limit(trim((string) $input['query']), 40).'"';
+        }
+
+        return self::STEPS[$name] ?? 'Even kijken';
+    }
 
     /**
      * De tools voor deze rol, in het formaat van de API.
@@ -87,7 +132,14 @@ final class ToolRegistry
 
         foreach (self::TOOLS as $name => $tool) {
             if ($this->allowed($name, $role)) {
-                $tools[] = ['name' => $name, 'description' => $tool['description'], 'input_schema' => $tool['schema']];
+                $schema = $tool['schema'];
+
+                // Een tool zonder invoer: PHP maakt van een lege array een lijst, de API wil een object.
+                if (($schema['properties'] ?? null) === []) {
+                    $schema['properties'] = new stdClass;
+                }
+
+                $tools[] = ['name' => $name, 'description' => $tool['description'], 'input_schema' => $schema];
             }
         }
 
@@ -145,6 +197,7 @@ final class ToolRegistry
                 'propose_publish' => $this->propose(IvyActionProposal::PUBLISH, $input, $context),
                 'capture_lead' => $this->captureLead($input, $context),
                 'create_handoff' => $this->createHandoff($input, $context),
+                'open_page' => $this->openPage($input, $context),
                 default => ['error' => 'Onbekende tool.'],
             };
         } catch (Throwable $exception) {
@@ -414,7 +467,7 @@ final class ToolRegistry
 
         $saved = SavedSearch::create(['user_id' => $context->user->id, 'name' => Str::limit($query, 80, ''), 'query' => $filters->toQuery(), 'interpreted' => null]);
 
-        return ['saved_search_id' => $saved->id, 'text' => 'Zoekvraag "'.$saved->name.'" bewaard.'];
+        return ['saved_search_id' => $saved->id, 'text' => 'Zoekvraag "'.$saved->name.'" bewaard.', 'done' => ['text' => 'Zoekvraag "'.$saved->name.'" bewaard als alert', 'url' => route('dashboard.alerts', [], false)]];
     }
 
     /**
@@ -432,12 +485,12 @@ final class ToolRegistry
         if (($input['follow'] ?? true) === false) {
             WatchlistItem::query()->where('user_id', $context->user->id)->where('lot_id', $lot->id)->delete();
 
-            return ['text' => 'Je volgt "'.$lot->title.'" niet meer.'];
+            return ['text' => 'Je volgt "'.$lot->title.'" niet meer.', 'done' => ['text' => '"'.$lot->title.'" van je volglijst gehaald', 'url' => route('dashboard.watchlist', [], false)]];
         }
 
         WatchlistItem::firstOrCreate(['user_id' => $context->user->id, 'lot_id' => $lot->id]);
 
-        return ['text' => 'Je volgt "'.$lot->title.'" nu.'];
+        return ['text' => 'Je volgt "'.$lot->title.'" nu.', 'done' => ['text' => '"'.$lot->title.'" staat op je volglijst', 'url' => route('dashboard.watchlist', [], false)]];
     }
 
     /**
@@ -455,7 +508,7 @@ final class ToolRegistry
 
         app(LotModes::class)->set($context->user, $lot, $mode);
 
-        return ['text' => 'Voor "'.$lot->title.'" '.($mode === IvyLotMode::ASK ? 'zet ik bij elk moment een voorstel klaar en vraag ik om een ja.' : 'meld ik alleen wat er speelt; jij doet de rest.')];
+        return ['text' => 'Voor "'.$lot->title.'" '.($mode === IvyLotMode::ASK ? 'zet ik bij elk moment een voorstel klaar en vraag ik om een ja.' : 'meld ik alleen wat er speelt; jij doet de rest.'), 'done' => ['text' => 'Meldniveau voor "'.$lot->title.'" aangepast', 'url' => route('ivy.inbox', [], false)]];
     }
 
     /**
@@ -472,7 +525,7 @@ final class ToolRegistry
 
         $conversation = app(StartConversation::class)->asBuyer($lot, $context->user, Conversation::KIND_QUESTION, (string) ($input['question'] ?? ''), null, $context->ip);
 
-        return ['text' => 'Je vraag staat bij de kavel; de verkoper krijgt bericht.', 'conversation_id' => $conversation->id];
+        return ['text' => 'Je vraag staat bij de kavel; de verkoper krijgt bericht.', 'conversation_id' => $conversation->id, 'done' => ['text' => 'Vraag gesteld bij "'.$lot->title.'"', 'url' => route('messages.show', $conversation, false)]];
     }
 
     /**
@@ -544,7 +597,40 @@ final class ToolRegistry
 
         $context->conversation->forceFill(['status' => 'handed_off', 'handoff_at' => now()])->save();
 
-        return ['handoff_id' => $handoff->id, 'text' => 'Doorgegeven aan het team.'];
+        return ['handoff_id' => $handoff->id, 'text' => 'Doorgegeven aan het team.', 'done' => ['text' => 'Doorgegeven aan het team, met een samenvatting', 'url' => null]];
+    }
+
+    /**
+     * Een knop naar een pagina uit de vaste lijst, of naar een kavel die
+     * de klant mag zien. Nooit een adres dat het model zelf opgeeft.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    private function openPage(array $input, ToolContext $context): array
+    {
+        $key = Str::lower(trim((string) ($input['page'] ?? '')));
+        $direct = ($input['direct'] ?? false) === true;
+
+        if ($key === 'kavel' || isset($input['lot_id'])) {
+            $lot = $this->publicLot((int) ($input['lot_id'] ?? 0), $context);
+
+            if ($lot === null) {
+                return ['error' => 'Die kavel kan ik niet openen.'];
+            }
+
+            $url = $lot->status->isPublic() ? route('lots.show', $lot, false) : route('dashboard.lots.show', $lot, false);
+
+            return ['ok' => true, 'url' => $url, 'label' => $lot->title, 'text' => 'Knop naar "'.$lot->title.'" staat in het gesprek. Houd je antwoord kort.', 'link' => ['url' => $url, 'label' => Str::limit($lot->title, 60), 'direct' => $direct]];
+        }
+
+        $page = $this->pages->for($context->user)[$key] ?? null;
+
+        if ($page === null) {
+            return ['error' => 'Die pagina ken ik niet of is niet voor deze klant. Kies een sleutel uit de lijst in je context.'];
+        }
+
+        return ['ok' => true, 'url' => $page['url'], 'label' => $page['label'], 'text' => 'Knop naar "'.$page['label'].'" staat in het gesprek. Houd je antwoord kort.', 'link' => ['url' => $page['url'], 'label' => $page['label'], 'direct' => $direct]];
     }
 
     // Hulp ------------------------------------------------------------------

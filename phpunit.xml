@@ -45,6 +45,7 @@
             staat: geen AI-tegoed en geen Mollie-betalingen vanuit de suite.
         -->
         <env name="AUCVY_AI_PROVIDER" value="fake"/>
+        <env name="AUCVY_IVY_CHAT_PROVIDER" value="fake"/>
         <env name="AUCVY_PAYMENT_PROVIDER" value="fake"/>
         <env name="ANTHROPIC_API_KEY" value=""/>
         <env name="MOLLIE_API_KEY" value=""/>

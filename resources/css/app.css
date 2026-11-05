@@ -31,6 +31,11 @@
  */
 @import './design.css' layer(components);
 
+/*
+ | Het zwevende paneel van Ivy: knop, gesprek, stappen en kaarten. Zie ivy.css.
+ */
+@import './ivy.css' layer(components);
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../views/**/*.blade.php';

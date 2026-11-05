@@ -133,6 +133,8 @@ export default function initDashNav() {
             current.classList.add('is-entering');
             // Na de overgang weer weg, zodat een volgende wissel opnieuw kan spelen.
             setTimeout(() => current.classList.remove('is-entering'), 450);
+            // Ivy kijkt mee: na de wissel weet ze op welke pagina je nu zit.
+            setTimeout(() => document.dispatchEvent(new CustomEvent('dash-nav:swapped')), 0);
 
             // Het menu van de server: de actieve staat en de tellers kloppen weer.
             const freshNav = fresh.querySelector('.dash-side .dash-nav');

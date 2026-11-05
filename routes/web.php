@@ -110,6 +110,7 @@ Route::get('/veilingen/{category}', [LotIndexController::class, 'index'])->middl
 
 // Ivy als gesprekspartner (Ivy-briefing): het paneel werkt ook zonder account (bezoeker), met een gasttoken.
 Route::prefix('ivy')->name('ivy.')->middleware('throttle:60,1')->group(function (): void {
+    Route::post('/gesprek/nieuw', [IvyChatController::class, 'reset'])->name('reset');
     Route::get('/gesprek', [IvyChatController::class, 'show'])->name('show');
     Route::post('/berichten', [IvyChatController::class, 'store'])->middleware('throttle:20,1')->name('send');
     Route::post('/upload', [IvyChatController::class, 'upload'])->middleware('throttle:10,10')->name('upload');

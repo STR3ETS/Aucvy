@@ -3,6 +3,7 @@ import focus from '@alpinejs/focus';
 import auction from './auction';
 import funnel from './funnel';
 import { ivyAdvice, searchInterpret } from './ivy-tasks';
+import { ivyPanel } from './ivy-panel';
 import slideConfirm from './slide-confirm';
 import dotField from './dot-field';
 import sellingDemo from './selling-demo';
@@ -38,6 +39,9 @@ Alpine.data('bidForm', bidForm);
 Alpine.data('pushToggle', pushToggle);
 Alpine.data('adminLive', adminLive);
 Alpine.data('lotMedia', lotMedia);
+
+// Het zwevende paneel van Ivy, rechtsonder op elke pagina.
+Alpine.data('ivyPanel', ivyPanel);
 
 /*
  | Variant B van de A/B-test op de home (preview v4): de productdemo, de

@@ -14,20 +14,26 @@ use App\Models\IvyMessage;
 use App\Models\KbGap;
 use App\Models\Lot;
 use App\Models\User;
+use Closure;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
 /**
  * Eén beurt: bericht van de klant opslaan, context bouwen, het model met
- * tools laten werken (maximaal vier rondes), het antwoord toetsen, en het
+ * tools laten werken (maximaal zes rondes), het antwoord toetsen, en het
  * antwoord met kaarten opslaan. Elke beurt is een AiRun met kosten. Bij
  * een uitgeschakelde of uitgeputte Ivy antwoordt ze alleen uit de
  * kennisbank.
+ *
+ * Met een $emit-functie meldt de beurt onderweg wat Ivy doet ("Kavels
+ * zoeken"), zodat het paneel dat live kan tonen. De tekst zelf gaat pas
+ * naar buiten na de toets: een bedrag dat niet klopt mag de klant nooit
+ * te zien krijgen, ook niet even.
  */
 final class RunIvyTurn
 {
-    private const int MAX_ROUNDS = 4;
+    private const int MAX_ROUNDS = 6;
 
     public function __construct(
         private readonly ChatProvider $provider,
@@ -38,8 +44,13 @@ final class RunIvyTurn
         private readonly KnowledgeBase $kb,
     ) {}
 
-    public function handle(IvyConversation $conversation, string $text, ?User $user, ?Lot $lot, ?string $ip = null): IvyMessage
+    /**
+     * @param  array{path?: string|null, title?: string|null}  $page
+     * @param  (Closure(string, array<string, mixed>): void)|null  $emit
+     */
+    public function handle(IvyConversation $conversation, string $text, ?User $user, ?Lot $lot, ?string $ip = null, array $page = [], ?Closure $emit = null): IvyMessage
     {
+        $emit ??= static function (string $type, array $data): void {};
         $text = trim($text);
 
         IvyMessage::create(['conversation_id' => $conversation->id, 'sender' => IvyMessage::USER, 'body' => Str::limit($text, 2000, ''), 'created_at' => now()]);
@@ -70,9 +81,10 @@ final class RunIvyTurn
 
         $started = hrtime(true);
         $context = new ToolContext($conversation, $user, $conversation->role, $lot, $ip);
-        $system = $this->context->build($conversation, $lot);
+        $system = $this->context->build($conversation, $lot, $user, $page);
         $messages = $this->history($conversation);
-        $allowedAmounts = [];
+        // Bedragen die het platform zelf in de context zet (feiten, taken) mag Ivy noemen.
+        $allowedAmounts = $this->context->amounts($system);
         $cards = [];
         $toolLog = [];
         $executedProposal = false;
@@ -98,8 +110,10 @@ final class RunIvyTurn
                 $resultContent = [];
 
                 foreach ($response->toolCalls as $call) {
+                    $emit('stap', ['id' => $call['id'], 'tekst' => $this->tools->step($call['name'], $call['input'])]);
                     $result = $this->tools->call($call['name'], $call['input'], $context);
                     $toolLog[] = ['name' => $call['name'], 'input' => $call['input'], 'ok' => ! isset($result['error'])];
+                    $emit('stap_klaar', ['id' => $call['id'], 'ok' => ! isset($result['error'])]);
 
                     foreach ((array) ($result['amounts'] ?? []) as $amount) {
                         $allowedAmounts[] = (string) $amount;
@@ -107,6 +121,15 @@ final class RunIvyTurn
 
                     if (isset($result['card'])) {
                         $cards[] = $result['card'];
+                    }
+
+                    // Wat Ivy zelf deed, en een knop naar een pagina: als kaart, zodat het in het gesprek blijft staan.
+                    if (isset($result['done'])) {
+                        $cards[] = ['type' => 'done', 'text' => (string) $result['done']['text'], 'url' => $result['done']['url'] ?? null];
+                    }
+
+                    if (isset($result['link'])) {
+                        $cards[] = ['type' => 'link', 'url' => (string) $result['link']['url'], 'label' => (string) $result['link']['label'], 'direct' => (bool) $result['link']['direct']];
                     }
 
                     foreach ((array) ($result['lots'] ?? []) as $lotCard) {
@@ -127,6 +150,14 @@ final class RunIvyTurn
 
                 $messages[] = ['role' => 'assistant', 'content' => $assistantContent];
                 $messages[] = ['role' => 'user', 'content' => $resultContent];
+            }
+
+            // Alle rondes op aan tools: nog één keer zonder tools, zodat er altijd een antwoord komt.
+            if ($answer === '') {
+                $closing = $this->provider->respond($system, $messages, [], 'fast');
+                $tokensIn += $closing->tokensIn;
+                $tokensOut += $closing->tokensOut;
+                $answer = $closing->text;
             }
 
             $answer = $this->validated($answer, $allowedAmounts, $executedProposal, $system, $messages, $conversation->role);
@@ -225,7 +256,7 @@ final class RunIvyTurn
      */
     private function withoutCards(array $result): array
     {
-        unset($result['card'], $result['amounts']);
+        unset($result['card'], $result['amounts'], $result['done'], $result['link']);
 
         if (isset($result['lots'])) {
             $result['lots'] = array_map(fn ($lot) => array_intersect_key($lot, array_flip(['id', 'title', 'meta', 'price', 'price_label', 'ends', 'badge'])), $result['lots']);

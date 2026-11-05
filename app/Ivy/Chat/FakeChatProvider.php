@@ -28,6 +28,11 @@ final class FakeChatProvider implements ChatProvider
 
         $call = fn (string $name, array $input) => new ChatResponse('', [['id' => 'call-'.Str::random(6), 'name' => $name, 'input' => $input]]);
 
+        // "Ga naar financiën": een knop naar de pagina, of er meteen heen.
+        if (preg_match('/\b(?:ga naar|breng me naar|open)\b/u', $text) === 1 && in_array('open_page', $available, true) && ($page = $this->pageFrom($text)) !== null) {
+            return $call('open_page', ['page' => $page, 'direct' => true]);
+        }
+
         if (preg_match('/\b(?:bied|bod van|zet in op)\s*€?\s*([\d.]+)/u', $text, $match) === 1 && in_array('propose_bid', $available, true)) {
             return $call('propose_bid', ['lot_id' => $lotId, 'amount_cents' => (int) str_replace('.', '', $match[1]) * 100]);
         }
@@ -128,6 +133,7 @@ final class FakeChatProvider implements ChatProvider
                 'propose_bid', 'propose_auto_bid', 'propose_buy_now', 'propose_publish', 'propose_dutch_accept', 'propose_reserve_change' => (string) ($result['text'] ?? 'Ik heb het klaargezet; bevestig het even.'),
                 'capture_lead' => 'Dank je. Ik heb je gegevens doorgegeven; je hoort snel van het team.',
                 'create_handoff' => 'Ik geef dit met een samenvatting door aan een medewerker. Je hoort het zodra iemand het oppakt.',
+                'open_page' => 'Je gaat naar '.($result['label'] ?? 'de pagina').'.',
                 default => '',
             };
         }
@@ -170,6 +176,26 @@ final class FakeChatProvider implements ChatProvider
         }
 
         return $results;
+    }
+
+    /**
+     * De sleutel van de pagina die de klant noemt, zoals in Pages.
+     */
+    private function pageFrom(string $text): ?string
+    {
+        return match (true) {
+            str_contains($text, 'financi') => 'financien',
+            str_contains($text, 'uitbetaling') => 'uitbetalingen',
+            str_contains($text, 'bieding') => 'biedingen',
+            str_contains($text, 'bestelling') => 'bestellingen',
+            str_contains($text, 'melding') => 'meldingen',
+            str_contains($text, 'instelling') => 'instellingen',
+            str_contains($text, 'volglijst') => 'volglijst',
+            str_contains($text, 'mijn kavels') => 'mijn_kavels',
+            str_contains($text, 'veiling') => 'veilingen',
+            str_contains($text, 'dashboard') => 'dashboard',
+            default => null,
+        };
     }
 
     private function lotIdFrom(string $system): ?int

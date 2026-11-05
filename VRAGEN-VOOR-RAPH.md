@@ -184,6 +184,16 @@ Ivy gebruikt een goedkoper model voor eenvoudige vragen en het sterkere voor adv
 Standaard: zoals nu in de instellingen.
 Antwoord:
 
+**N24. Ivy in gesprek met stem, zoals Izzy**
+Het zwevende paneel van Ivy werkt sinds 5 november zoals Izzy bij Eazyonline: antwoord als stroom met de stappen die ze zet, opmaak, stoppen, opnieuw, kopiëren, nieuw gesprek en doorsturen naar een pagina. Voorlezen en inspreken gebruiken nu de spraak van de browser (gratis, geen extra partij, kwaliteit wisselt per browser). Izzy heeft daarnaast een handsfree gesprek met een eigen stem via OpenAI (spraak naar tekst en tekst naar spraak). Wil je dat ook voor Ivy? Dat vraagt een OpenAI-sleutel, kosten per minuut en een extra verwerker in de privacyverklaring.
+Standaard: de spraak van de browser, geen OpenAI.
+Antwoord:
+
+**N25. Ivy op de echte koppeling in productie**
+Het gesprek met Ivy heeft een eigen schakelaar (AUCVY_IVY_CHAT_PROVIDER). Op `fake` geeft ze vaste antwoorden op trefwoorden; op `anthropic` werkt Claude met de tools. Lokaal staat hij nu op `anthropic`. Een beurt kost ongeveer 3 tot 8 cent met het huidige model; het dagbudget per account (nu € 5) is de rem. Mag productie ook op `anthropic`?
+Standaard: productie blijft op `fake` tot je ja zegt.
+Antwoord:
+
 ---
 
 ## Nieuwe vragen voor Don (na de bouw van 4 november)
