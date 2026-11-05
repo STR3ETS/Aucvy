@@ -853,7 +853,8 @@
 .c .dash-side-foot .btn{border-radius:12px;font-size:14px}
 .c .dash-main{border-radius:20px;overflow:hidden;background:#fff;min-height:calc(100vh - 2*clamp(8px,1.4vw,20px))}
 .c .dash-body{flex:1}
-.c .dash-hero{margin:0;border-radius:0;background-color:#0c1326;background-position:center;background-size:cover;background-repeat:no-repeat}
+/* Niet afknippen: het profielmenu valt over de rand van de kop heen, boven de tegels. */
+.c .dash-hero{margin:0;border-radius:0;overflow:visible;background-color:#0c1326;background-position:center;background-size:cover;background-repeat:no-repeat}
 .c .dash-hero::before{content:none}
 .c .dash-hero>.dash-bar{padding:18px 40px 0;border-bottom:0;flex-wrap:wrap}
 .c .dash-crumbs{margin-right:auto;min-width:0;font-size:14px;color:#d5dae7}
