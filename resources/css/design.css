@@ -673,3 +673,30 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-tiers li.is-on{background:#eef3ff;color:#0e1526;font-weight:700}
 .d-tiers li.is-on strong{color:#1e56e0}
 @media (max-width:1180px){.d-fin{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- meldingen: één lijst met filterchips ---------- */
+.d-notifs{margin:0;padding:0;list-style:none;border:1px solid rgba(14,21,38,.09);border-radius:16px;background:#fff;overflow:hidden}
+.d-notif{display:flex;align-items:center;gap:14px;padding:14px 16px;border-top:1px solid rgba(14,21,38,.08);transition:background .2s}
+.d-notif:first-child{border-top:0}
+.d-notif.is-unread{background:#f6f8fc}
+.d-notif:hover{background:#f1f4fa}
+.d-notif-icon{display:flex;align-items:center;justify-content:center;width:38px;height:38px;flex:0 0 auto;border-radius:50%;background:#eef0f4;color:#4d5566}
+.d-notif.tone-blue .d-notif-icon{background:#eef3ff;color:#1e56e0}
+.d-notif.tone-green .d-notif-icon{background:#e8f6ef;color:#177249}
+.d-notif.tone-orange .d-notif-icon{background:#fdf3e3;color:#8f5209}
+.d-notif.tone-red .d-notif-icon{background:#fbecea;color:#a93226}
+.d-notif.tone-purple .d-notif-icon{background:#f1ebfe;color:#6d28d9}
+.d-notif-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;color:#0e1526}
+.d-notif-body strong{font-size:14px;font-weight:600}
+.d-notif.is-unread .d-notif-body strong{font-weight:800}
+.d-notif-body span{font-size:13px;line-height:1.45;color:#4d5566}
+.d-notif-time{flex:0 0 auto;font-size:13px;color:#4d5566;white-space:nowrap}
+.d-notif-dismiss{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 auto;border:0;border-radius:50%;background:none;color:#4d5566;cursor:pointer}
+.d-notif-dismiss:hover{background:#e6e9f0;color:#0e1526}
+.d-notif-empty{padding:18px 16px;font-size:13px;color:#4d5566}
+@media (max-width:560px){
+  .d-notif{flex-wrap:wrap;align-items:flex-start}
+  .d-notif-body{flex-basis:calc(100% - 60px)}
+  .d-notif-time{margin-left:52px}
+}
+.d-notifs:has(.d-notif-dismiss) .d-notif-time:last-child{margin-right:46px}

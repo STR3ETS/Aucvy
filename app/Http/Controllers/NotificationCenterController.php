@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Dashboard\ActivityFeed;
+use App\Models\AiInsight;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,12 +17,23 @@ use Illuminate\View\View;
  */
 final class NotificationCenterController extends Controller
 {
-    public function index(Request $request): View
+    /**
+     * Dezelfde lijst als op het dashboard (taken, meldingen en tickets), maar
+     * dan de laatste honderd in plaats van een greep.
+     */
+    public function index(Request $request, ActivityFeed $feed): View
     {
         $user = $request->user();
 
+        $tasks = AiInsight::query()
+            ->where('user_id', $user->id)
+            ->current()
+            ->orderByRaw("field(severity, 'urgent', 'attention', 'info')")
+            ->get()
+            ->filter(fn (AiInsight $insight): bool => $insight->hasAction());
+
         return view('dashboard.notifications', [
-            'notifications' => $user->notifications()->latest()->paginate(30),
+            'feed' => $feed->for($user, $tasks, 100),
             'unread' => $user->unreadNotifications()->count(),
         ]);
     }
