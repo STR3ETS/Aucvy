@@ -29,12 +29,19 @@ it('toont het categorie-overzicht met subcategorieën en het aantal zichtbare ka
 it('legt uit hoe het werkt, met termijnen en tarieven uit dezelfde bron als de code', function () {
     $this->get('/hoe-het-werkt')
         ->assertOk()
-        ->assertSee('Van zoeken tot ophalen')
+        ->assertSee('Het verhaal van één heftruck')
+        ->assertSee('Deel 1 · Het bedrijf dat verkoopt')
+        ->assertSee('Deel 2 · Het bedrijf dat koopt')
         ->assertSee('binnen '.config('aucvy.orders.payment_deadline_hours').' uur')
-        ->assertSee('Van foto tot uitbetaling in zes stappen')
-        ->assertSee('7,5%')
-        ->assertSee('3,5%')
-        ->assertSee('2,5%');
+        ->assertSee('Je meldt binnen '.config('aucvy.orders.dispute_window_hours').' uur')
+        ->assertSee('Verkoper reageert binnen '.config('aucvy.orders.seller_response_hours').' uur')
+        // De oude ankers blijven werken: de voettekst en andere pagina's linken ernaar.
+        ->assertSee('id="kopen"', escape: false)
+        ->assertSee('id="reis"', escape: false)
+        ->assertSee('id="vormen"', escape: false)
+        // Geen losse percentages: de tarieven staan op de prijzenpagina, uit de staffel.
+        ->assertSee(route('pricing'), escape: false)
+        ->assertDontSee('7,5%');
 });
 
 it('toont de zakelijke pagina met het team en de tarieven', function () {

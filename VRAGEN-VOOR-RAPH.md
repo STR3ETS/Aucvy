@@ -194,6 +194,11 @@ Het gesprek met Ivy heeft een eigen schakelaar (AUCVY_IVY_CHAT_PROVIDER). Op `fa
 Standaard: productie blijft op `fake` tot je ja zegt.
 Antwoord:
 
+**N26. De films op "Hoe het werkt"**
+De pagina volgt sinds 9 november het ontwerp: het verhaal van één heftruck, met een korte clip per stap. Twee films uit het prototype staan er bewust niet op: de hele film van 34 seconden en de clip bij "Jij kiest hoe je verkoopt". Die tonen 7,5%, 3,5% en 2,5% per verkoopvorm, terwijl de echte succesfee de staffel op omzet is. Ook rekent de clip "Eerst weten, dan bieden" zonder de administratiekosten voor de koper. Komen er nieuwe versies van deze films?
+Standaard: de twee films met de oude percentages blijven weg; de overige negen clips staan erop.
+Antwoord:
+
 ---
 
 ## Nieuwe vragen voor Don (na de bouw van 4 november)

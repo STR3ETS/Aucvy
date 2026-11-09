@@ -1,171 +1,119 @@
-@use('App\Enums\CompanyPlan')
+@use('App\Support\Money\Money')
+@use('App\Support\PlatformFacts')
 
 @php
-    // Dezelfde bronnen als de code die het afdwingt: verandert een termijn of
-    // een tarief, dan verandert deze pagina automatisch mee.
-    $melden = (int) config('aucvy.orders.dispute_window_hours');
+    // De termijnen komen uit dezelfde instellingen als de code die ze afdwingt.
     $betalen = (int) config('aucvy.orders.payment_deadline_hours');
-    $fee = fn (CompanyPlan $plan): string => rtrim(rtrim(number_format($plan->defaultFeePercentage(), 1, ',', '.'), '0'), ',').'%';
+    $melden = (int) config('aucvy.orders.dispute_window_hours');
+    $reageren = (int) config('aucvy.orders.seller_response_hours');
+    $adminFee = (int) PlatformFacts::all()['admin_fee_cents'];
+
+    // Deel 1: het bedrijf dat verkoopt. [clip, label, titel, tekst, jij doet, Aucvy doet]
+    $selling = [
+        ['verkoop-1', 'Stap 1 · Upload', 'Het begint met een foto', 'Iemand loopt op weg naar de koffie langs de heftruck, pakt zijn telefoon en maakt drie foto\'s. Geen formulier, geen specificatielijst opzoeken. Documenten kunnen later.', 'Een paar foto\'s maken vanaf je telefoon.', 'Bewaart alles als concept.'],
+        ['verkoop-2', 'Stap 2 · Ivy herkent', 'Ivy ziet meteen wat het is', 'Elektrische heftruck, 2,5 ton, 3.800 draaiuren, gebruikt en in goede staat. Ivy is voor 82% zeker en zegt er eerlijk bij wat ze niet zeker weet: het bouwjaar. Je hoeft dus niet alles na te lopen, alleen dat ene punt.', 'Nakijken wat Ivy aanwijst.', 'Herkent type, capaciteit en conditie, met een zekerheidsscore.'],
+        ['verkoop-3', 'Stap 3 · Advertentie', 'Nova schrijft het op, ook de minder mooie kant', 'Titel, omschrijving en specificaties staan klaar. Nova noemt de accu en de lader, en vermeldt ook de slijtage op de vorken. Eerlijk verkoopt beter en voorkomt gedoe achteraf. Zonder jouw akkoord gaat er niets live.', 'Lezen, aanpassen en goedkeuren.', 'Schrijft de advertentie en de specificaties.'],
+        ['verkoop-4', 'Stap 4 · Waarde-indicatie', 'Atlas onderbouwt wat hij waard is', 'Niet één mooi getal, maar een range: € 9.500 tot € 12.000, op basis van 14 vergelijkbare verkopen, met zekerheid midden. Een range, geen belofte. De markt bepaalt straks de prijs, maar jij weet nu waar je staat.', 'De bron bekijken en je prijs bepalen.', 'Zoekt vergelijkbare verkopen en toont de bron.'],
+        [null, 'Stap 5 · Verkoopvorm', 'Jij kiest hoe je verkoopt', 'Veiling als de markt de prijs mag bepalen. Afslag als het snel moet: de prijs daalt in stappen en wie afmijnt, koopt. Koop direct bij een vaste prijs. Dit bedrijf wil de hal leeg en kiest afslag.', 'De vorm kiezen en je bodemprijs instellen.', 'Laat zien wat elke vorm betekent; de keuze blijft bij jou.'],
+        ['verkoop-6', 'Stap 6 · Verkocht', 'Afgemijnd, en dan pas betaald krijgen', 'De prijs start op € 10.500 en daalt. Bij € 9.750 slaat iemand toe. De koper betaalt aan het platform en het transport wordt ingepland. Het geld komt vrij na de houdtermijn, als de koper heeft kunnen controleren of alles klopt.', 'De overdracht afstemmen met de koper.', 'Regelt de betaling en de uitbetaling na de houdtermijn.'],
+    ];
+
+    // Deel 2: het bedrijf dat koopt.
+    $buying = [
+        ['koop-1', 'Stap 1 · Zoeken', 'Gewoon zeggen wat je zoekt', '"Elektrische heftruck van 2 à 3 ton, in de buurt van Nijmegen." Ivy zet die zin om in filters die je zelf kunt corrigeren. Een paar tellen later staat hij op het scherm.', 'Zoeken in je eigen woorden.', 'Maakt er filters van en toont passende kavels.'],
+        ['koop-2', 'Stap 2 · Bekijken', 'Eerst weten, dan bieden', 'Foto\'s, specificaties en de waarde-indicatie staan bij elkaar. En de volledige kostenopbouw: geen opgeld, wel de btw-regeling'.($adminFee > 0 ? ', '.Money::format($adminFee).' administratiekosten per bestelling' : '').' en het transport als je dat wilt. Het bedrag dat je daar ziet, is het bedrag dat je straks betaalt. Twijfel je? Waar het kan, plan je een kijkmoment.', 'Vergelijken en eventueel komen kijken.', 'Zet alle kosten klaar vóórdat je biedt.'],
+        ['koop-3', 'Stap 3 · Afmijnen', 'De prijs daalt, jij beslist', '€ 10.500. € 10.250. € 10.000. Wachten kan een mooiere prijs opleveren, maar iemand anders kan je voor zijn. Bij € 9.750 sleep je de knop opzij. Slepen in plaats van klikken, zodat je nooit per ongeluk koopt. Bij een veiling bied je tot je maximum en biedt het platform automatisch voor je mee.', 'Bewust bevestigen; een bod is bindend.', 'Legt elk bod vast met een volgnummer.'],
+        ['koop-4', 'Stap 4 · Betalen en ophalen', 'Pas als het klopt, krijgt de verkoper zijn geld', 'Je betaalt binnen '.$betalen.' uur, aan het platform. Daarna regel je transport of haal je zelf op. Na levering heb je '.$melden.' uur om te controleren en iets te melden. Geen melding? Dan komt de uitbetaling vrij. En de heftruck rijdt weer.', 'Betalen, ophalen en controleren.', 'Houdt de uitbetaling vast tijdens de meldtermijn.'],
+    ];
 @endphp
 
-<x-layouts.public title="Hoe het werkt" eyebrow="Uitleg"
-    intro="Kopen en verkopen op Aucvy, stap voor stap. Jij levert de foto's en het akkoord; Ivy en haar team doen het werk ertussen.">
-    <x-slot:actions>
-        <a class="btn btn-primary" href="{{ route('sell') }}">Kavel plaatsen</a>
-        <a class="btn btn-ghost" href="{{ route('lots.index') }}">Naar de veilingen</a>
-    </x-slot:actions>
+{{--
+    Hoe het werkt (ontwerp van november): het verhaal van één heftruck, eerst
+    van de kant van het bedrijf dat verkoopt en dan van het bedrijf dat koopt.
+    Elke stap heeft een korte clip, wat jij doet en wat Aucvy doet. De
+    termijnen komen uit de instellingen; de heftruck en de bedragen zijn een
+    voorbeeld.
+--}}
+<x-layouts.public title="Hoe het werkt" eyebrow="Hoe het werkt" heading="Het verhaal van één heftruck"
+    intro="Hij staat stil in een hal in Nijmegen. Een ander bedrijf kan hem net goed gebruiken. Zo komen ze op Aucvy bij elkaar.">
 
-    {{-- Kopen: vier stappen. --}}
-    <section class="how-section" id="kopen" aria-labelledby="how-buy">
-        <div class="sec-head">
-            <div>
-                <span class="eyebrow">Kopen</span>
-                <h2 id="how-buy">Van zoeken tot ophalen</h2>
-                <p>Geen opgeld, geen verrassingen: wat je ziet vóór je biedt, is wat je betaalt.</p>
-            </div>
-        </div>
-        <ol class="how-steps">
-            <li>
-                <span class="n">1</span>
-                <h3>Zoek, of vraag het Ivy</h3>
-                <p>Filter op categorie, conditie en plaats, of beschrijf in je eigen woorden wat je zoekt. Ivy leest de vraag en zet hem om in filters die je kunt corrigeren.</p>
-            </li>
-            <li>
-                <span class="n">2</span>
-                <h3>Bekijk de kavel</h3>
-                <p>Foto's, specificaties, de waarde-indicatie van Ivy en de volledige kostenopbouw. Kijkdagen plan je bij de kavel.</p>
-            </li>
-            <li>
-                <span class="n">3</span>
-                <h3>Bied, mijn af of koop direct</h3>
-                <p>Bij een veiling bied je automatisch mee tot je maximum en verlengt een bod in de slotfase de veiling. Bij afslag koop je zodra je afmijnt.</p>
-            </li>
-            <li>
-                <span class="n">4</span>
-                <h3>Betaal en haal op</h3>
-                <p>Je betaalt binnen {{ $betalen }} uur. Transport regel je bij de kavel, of je haalt zelf op. Niet zoals beschreven? Meld het binnen {{ $melden }} uur na levering.</p>
-            </li>
-        </ol>
-        <div class="sec-cta">
-            <p>Klaar om te kijken? Het aanbod staat live, met de waarde-indicatie van Ivy erbij.</p>
-            <a class="btn btn-primary" href="{{ route('lots.index') }}">Bekijk de veilingen</a>
-            <a class="btn btn-ghost" href="{{ route('categories.index') }}">Alle categorieën</a>
-        </div>
-    </section>
+    <div class="d-story">
+        <nav class="d-chips" aria-label="Ga naar">
+            <a class="d-chip" href="#reis">Ik wil verkopen</a>
+            <a class="d-chip" href="#kopen">Ik wil kopen</a>
+            <a class="d-chip" href="#zekerheid">Als het misgaat</a>
+            <a class="d-chip" href="#kosten">Wat het kost</a>
+        </nav>
+        <p class="d-hint" style="margin-top:12px">Een voorbeeld: de heftruck, de plaats en de bedragen zijn ter illustratie.</p>
 
-    {{-- Verkopen: de zes stappen, gedeeld met de home. home.js haakt aan op #reis. --}}
-    <section class="how-section reis-page" id="reis" aria-labelledby="how-sell">
-        <div class="sec-head">
-            <div>
-                <span class="eyebrow">Verkopen</span>
-                <h2 id="how-sell">Van foto tot uitbetaling in zes stappen</h2>
-                <p>Jij levert de foto en het akkoord. Ivy en haar team doen het werk ertussen.</p>
-            </div>
-        </div>
-        <x-marketing.seller-journey />
-        <div class="sec-cta">
-            <p>Geen account nodig om te beginnen: je ziet eerst wat Ivy voor je maakt.</p>
-            <a class="btn btn-primary" href="{{ route('sell') }}">Kavel plaatsen</a>
-            <a class="btn btn-ghost" href="{{ route('selling.guide') }}">Bekijk de verkooproute</a>
-        </div>
-    </section>
+        @foreach ([['reis', 'Deel 1 · Het bedrijf dat verkoopt', 'Een heftruck die niets meer doet', 'Sinds de nieuwe machine er is, staat hij achter in de hal. Hij werkt nog prima en is geld waard, maar verkopen blijft liggen. Want wie gaat dat allemaal uitzoeken?', $selling], ['kopen', 'Deel 2 · Het bedrijf dat koopt', 'Ondertussen zoekt iemand precies deze heftruck', 'Een ander bedrijf heeft er eentje nodig, maar geen nieuwprijs in het budget en geen zin om tien sites af te lopen. Dit is hetzelfde verhaal, van de andere kant.', $buying]] as [$anchor, $part, $title, $lead, $steps])
+            <section class="d-story-part" id="{{ $anchor }}" aria-labelledby="{{ $anchor }}-title">
+                <span class="d-story-label">{{ $part }}</span>
+                <h2 id="{{ $anchor }}-title">{{ $title }}</h2>
+                <p class="d-story-lead">{{ $lead }}</p>
 
-    {{-- De drie verkoopvormen. --}}
-    <section class="how-section" id="vormen" aria-labelledby="how-forms">
-        <div class="sec-head">
-            <div>
-                <span class="eyebrow">Verkoopvormen</span>
-                <h2 id="how-forms">Drie manieren om te verkopen</h2>
-                <p>Elke kavel krijgt de vorm die bij het doel past. Jij kiest de vorm; Atlas geeft de waarde-indicatie mee.</p>
-            </div>
-        </div>
-        <div class="forms">
-            <article class="form">
-                <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18h16M6 18V9l6-4 6 4v9"/><path d="M12 5v13"/></svg></div>
-                <h3>Veiling</h3>
-                <p>Oplopend bieden met proxy-bieden en een verlengregel in de slotfase. De markt bepaalt de prijs.</p>
-                <ul><li>Automatisch meebieden tot je maximum</li><li>Verlenging bij een bod in de laatste minuten</li><li>Geen opgeld voor de koper</li></ul>
-            </article>
-            <article class="form">
-                <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6l7 7 4-4 5 5"/><path d="M20 10v4h-4"/></svg></div>
-                <h3>Afslag</h3>
-                <p>De prijs start hoog en daalt in vaste stappen. Wie als eerste afmijnt, koopt. Snel en transparant.</p>
-                <ul><li>Daalt in vaste stappen</li><li>Bodemprijs stel jij in</li><li>Ideaal bij een deadline</li></ul>
-            </article>
-            <article class="form">
-                <div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14l-1.5 9h-11z"/><path d="M9 7V5a3 3 0 016 0v2"/></svg></div>
-                <h3>Koop direct</h3>
-                <p>Een vaste prijs, meteen te kopen. Voor kavels waar geen veiling nodig is.</p>
-                <ul><li>Vaste prijs, geen wachttijd</li><li>Betalen via het platform</li><li>Transportindicatie vooraf</li></ul>
-            </article>
-        </div>
-        <div class="sec-cta">
-            <p>Twijfel je welke vorm past? Bij het plaatsen zie je de waarde-indicatie van Atlas; jij kiest de vorm.</p>
-            <a class="btn btn-primary" href="{{ route('sell') }}">Kavel plaatsen</a>
-            <a class="btn btn-ghost" href="{{ route('faq') }}">Veelgestelde vragen</a>
-        </div>
-    </section>
+                @foreach ($steps as [$clip, $label, $stepTitle, $text, $you, $we])
+                    <article class="d-story-step"@if ($label === 'Stap 5 · Verkoopvorm') id="vormen"@endif>
+                        @if ($clip)
+                            <video controls loop muted playsinline preload="none" poster="{{ asset('videos/verhaal/'.$clip.'.jpg') }}" aria-label="{{ $stepTitle }}">
+                                <source src="{{ asset('videos/verhaal/'.$clip.'.mp4') }}" type="video/mp4">
+                            </video>
+                        @endif
+                        <span class="d-story-label">{{ $label }}</span>
+                        <h3>{{ $stepTitle }}</h3>
+                        <p>{{ $text }}</p>
+                        <div class="d-story-pair">
+                            <div><strong>Jij doet</strong>{{ $you }}</div>
+                            <div><strong>Aucvy doet</strong>{{ $we }}</div>
+                        </div>
+                    </article>
+                @endforeach
 
-    {{-- Kosten: de succesfee per plan, uit CompanyPlan. --}}
-    <section class="how-section" id="kosten" aria-labelledby="how-costs">
-        <div class="sec-head">
-            <div>
-                <span class="eyebrow">Kosten</span>
-                <h2 id="how-costs">Gratis plaatsen, betalen bij resultaat</h2>
-                <p>Kopers betalen geen opgeld. Verkopers betalen alleen een succesfee over een geslaagde verkoop, afhankelijk van het plan.</p>
-            </div>
-        </div>
-        <div class="fee-grid">
-            @foreach (CompanyPlan::cases() as $plan)
-                <div class="fee-tile">
-                    <b>{{ $fee($plan) }}</b>
-                    <span>{{ ucfirst($plan->value) }}</span>
-                    <small>bij verkoop</small>
-                </div>
-            @endforeach
-        </div>
-        <p class="fee-note">Het tarief staat vooraf per kavel in de kostenopbouw en wordt alleen ingehouden op een geslaagde verkoop.</p>
-        <div class="sec-cta">
-            <p>Grotere volumes of een doorlopende stroom? Dan is het zakelijke plan interessant.</p>
-            <a class="btn btn-primary" href="{{ route('business') }}#tarieven">Zakelijke tarieven</a>
-            <a class="btn btn-ghost" href="{{ route('sell') }}">Kavel plaatsen</a>
-        </div>
-    </section>
+                @if ($anchor === 'reis')
+                    <div class="d-callout-info">
+                        <span class="mark" aria-hidden="true">i</span>
+                        <div>
+                            <strong>Verkopen op Aucvy is alleen voor bedrijven</strong>
+                            Een concept maken kan zonder account. Om te publiceren heb je een geverifieerd zakelijk account nodig.
+                            <div class="d-chips" style="margin-top:12px">
+                                <a class="d-btn d-btn-sq" href="{{ route('sell') }}">Kavel plaatsen</a>
+                                <a class="d-btn d-btn-secondary d-btn-sq" href="{{ route('business') }}">Zakelijk verkopen</a>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="d-chips">
+                        <a class="d-btn d-btn-sq" href="{{ route('lots.index') }}">Bekijk de veilingen</a>
+                        <a class="d-btn d-btn-secondary d-btn-sq" href="{{ route('categories.index') }}">Alle categorieën</a>
+                    </div>
+                @endif
+            </section>
+        @endforeach
 
-    {{-- Zekerheid, kort. --}}
-    <section class="how-section" id="zekerheid" aria-labelledby="how-trust">
-        <div class="sec-head">
-            <div>
-                <span class="eyebrow">Zekerheid</span>
-                <h2 id="how-trust">Wat er geregeld is</h2>
-                <p>Handel tussen bedrijven vraagt om duidelijke afspraken. Dit regelt Aucvy bij elke transactie.</p>
-            </div>
-        </div>
-        <div class="checks">
-            <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Geverifieerde verkopers</h3><p>KVK-controle en identiteitscheck voordat een kavel live kan.</p></div>
-            <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Kosten vooraf zichtbaar</h3><p>Bod, transport en btw-regeling staan bij elkaar vóórdat je biedt.</p></div>
-            <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Houdtermijn op uitbetaling</h3><p>De verkoper ontvangt het geld nadat de koper heeft kunnen controleren.</p></div>
-            <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Geschilroute met bemiddeling</h3><p>Niet zoals beschreven? Dan bemiddelt Aucvy tussen koper en verkoper.</p></div>
-            <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Biedhistorie vastgelegd</h3><p>Elk bod krijgt een volgnummer en blijft controleerbaar bewaard.</p></div>
-            <div><h3><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5l4 4 8-8"/></svg>Reviews en de Trust Index</h3><p>Koper en verkoper beoordelen elkaar. Samen met levering en documenten bouwt dat de Trust Index op het verkopersprofiel.</p></div>
-        </div>
-        <div class="sec-cta">
-            <p>De zekerheidspagina legt de geschilroute uit, met de termijnen erbij.</p>
-            <a class="btn btn-primary" href="{{ route('assurance') }}">Lees hoe zekerheid werkt</a>
-            <a class="btn btn-ghost" href="{{ route('faq') }}">Veelgestelde vragen</a>
-        </div>
-    </section>
+        <section class="d-story-part" id="zekerheid" aria-labelledby="zekerheid-title">
+            <span class="d-story-label">Zekerheid</span>
+            <h2 id="zekerheid-title">En als het toch misgaat?</h2>
+            <p class="d-story-lead">Soms klopt een kavel niet met de beschrijving. Daarom staan de termijnen vast, en kijkt er aan het eind een mens naar.</p>
+            <ol class="d-story-steps">
+                <li><b>1</b><div><strong>Je meldt binnen {{ $melden }} uur</strong><span>Na levering. Vanaf dat moment wordt de uitbetaling aangehouden.</span></div></li>
+                <li><b>2</b><div><strong>Verkoper reageert binnen {{ $reageren }} uur</strong><span>Met eigen bewijs.</span></div></li>
+                <li><b>3</b><div><strong>Een medewerker beoordeelt</strong><span>Geen algoritme.</span></div></li>
+                <li><b>4</b><div><strong>Uitkomst met motivering</strong><span>Alsnog leveren, een prijscorrectie of terugdraaien.</span></div></li>
+            </ol>
+            {{-- Eerlijk over wat er nog niet is - geen escrow-claim (hfst. 9/18). --}}
+            <p class="d-soft is-warn" style="margin:0;padding:14px 18px;font-weight:500;color:#5c3a0c"><strong style="color:#8f5209">Waar we nog aan werken.</strong> Derdengelden-afwikkeling, technische keuring en verzekerd transport. Dat staat hier pas als het er echt is, niet eerder.</p>
+            <div><a class="d-btn d-btn-secondary d-btn-sq" href="{{ route('assurance') }}">Lees hoe zekerheid werkt</a></div>
+        </section>
 
-    {{-- Verder lezen. --}}
-    <section class="cta-band" aria-labelledby="how-more">
-        <canvas class="dots" x-data="dotField({ strength: 0.6 })" aria-hidden="true"></canvas>
-        <div class="cta-band-text">
-            <h2 id="how-more">Nog vragen?</h2>
-            <p>De veelgestelde vragen gaan dieper in op bieden, betalen en btw. De verkooproute laat het hele systeem in het klein zien.</p>
-        </div>
-        <div class="cta-band-actions">
-            <a class="btn btn-white" href="{{ route('faq') }}">Veelgestelde vragen</a>
-            <a class="btn btn-outline-white" href="{{ route('selling.guide') }}">Bekijk de verkooproute</a>
-        </div>
-    </section>
+        <section class="d-story-part" id="kosten" aria-labelledby="kosten-title">
+            <span class="d-story-label">Wat het kost</span>
+            <h2 id="kosten-title">Gratis plaatsen, betalen bij resultaat</h2>
+            <p class="d-story-lead">Kopers betalen geen opgeld. Verkopende bedrijven betalen alleen een succesfee over een geslaagde verkoop, en het tarief staat vooraf per kavel in de kostenopbouw. Niet verkocht betekent geen kosten.</p>
+            <div><a class="d-btn d-btn-sq" href="{{ route('pricing') }}">Bekijk de prijzen</a></div>
+        </section>
+    </div>
+
+    <x-marketing.cta text="Of je nu iets zoekt of iets kwijt wilt: begin met één foto of één zin."
+        primary="Bekijk de veilingen" :primary-url="route('lots.index')"
+        secondary="Kavel plaatsen" :secondary-url="route('sell')" />
 </x-layouts.public>
