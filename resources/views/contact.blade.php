@@ -1,86 +1,82 @@
-<x-layouts.public title="Contact" eyebrow="Hulp" heading="Stel je vraag" align="center"
-    intro="Een mens leest mee en antwoordt per mail, meestal binnen één werkdag.">
-    <div class="mx-auto max-w-3xl">
+<x-layouts.public title="Contact" eyebrow="Hulp"
+    intro="Je krijgt per mail antwoord, meestal binnen één werkdag.">
+    <x-slot:headline>Stel je vraag. <span class="g">Een mens leest mee.</span></x-slot:headline>
+    <x-slot:actions>
+        <x-marketing.hero-ivy
+            question="Hoe snel krijg ik antwoord?"
+            answer="Meestal binnen één werkdag, van een mens. Gaat het over een levering? Meld dat dan bij de bestelling, dan lopen de termijnen meteen."
+            :chips="['Veelgestelde vragen', 'Geschilroute']" />
+    </x-slot:actions>
 
-        @if (session('status'))
-            <p class="mb-5 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-4 text-sm text-aj-success-text">{{ session('status') }}</p>
-        @endif
+    @if (session('status'))
+        <p class="d-soft is-ok" style="margin:0 0 18px">{{ session('status') }}</p>
+    @endif
 
-        <div class="grid gap-6 md:grid-cols-[1fr_260px] md:items-start">
-            <form method="POST" action="{{ route('contact.store') }}" class="space-y-4 d-card">
-                @csrf
+    <div class="d-site-two">
+        <form method="POST" action="{{ route('contact.store') }}" class="d-site-form">
+            @csrf
 
-                @if ($errors->any())
-                    <div role="alert" class="rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">{{ $errors->first() }}</div>
-                @endif
+            @if ($errors->any())
+                <div role="alert" class="d-soft is-err" style="margin:0">{{ $errors->first() }}</div>
+            @endif
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <label class="block">
-                        <span class="text-sm font-bold">Naam</span>
-                        <input type="text" name="name" value="{{ old('name', $user?->name) }}" required maxlength="120" autocomplete="name"
-                               class="mt-1 w-full d-input" style="min-height:var(--cta-h)">
-                    </label>
-                    <label class="block">
-                        <span class="text-sm font-bold">E-mailadres</span>
-                        <input type="email" name="email" value="{{ old('email', $user?->email) }}" required maxlength="190" autocomplete="email"
-                               class="mt-1 w-full d-input" style="min-height:var(--cta-h)">
-                    </label>
-                </div>
+            <label class="d-field">Naam
+                <input type="text" name="name" value="{{ old('name', $user?->name) }}" required maxlength="120" autocomplete="name" class="d-input">
+            </label>
+            <label class="d-field">E-mailadres
+                <input type="email" name="email" value="{{ old('email', $user?->email) }}" required maxlength="190" autocomplete="email" class="d-input">
+            </label>
+            <label class="d-field">Onderwerp
+                <input type="text" name="subject" value="{{ old('subject') }}" required minlength="3" maxlength="150" class="d-input">
+            </label>
 
-                <label class="block">
-                    <span class="text-sm font-bold">Onderwerp</span>
-                    <input type="text" name="subject" value="{{ old('subject') }}" required minlength="3" maxlength="150"
-                           class="mt-1 w-full d-input" style="min-height:var(--cta-h)">
+            @if ($orders->isNotEmpty())
+                <label class="d-field">Gaat het om een bestelling?
+                    <select name="order_number" class="d-input">
+                        <option value="">Nee, iets anders</option>
+                        @foreach ($orders as $order)
+                            <option value="{{ $order->order_number }}" @selected(old('order_number') === $order->order_number)>{{ $order->order_number }} · {{ $order->lot?->title }}</option>
+                        @endforeach
+                    </select>
+                    <span class="d-hint">Een probleem met een levering meld je bij de bestelling zelf; daar lopen de termijnen.</span>
                 </label>
-
-                @if ($orders->isNotEmpty())
-                    <label class="block">
-                        <span class="text-sm font-bold">Gaat het om een bestelling?</span>
-                        <select name="order_number" class="mt-1 w-full d-input" style="min-height:var(--cta-h)">
-                            <option value="">Nee, iets anders</option>
-                            @foreach ($orders as $order)
-                                <option value="{{ $order->order_number }}" @selected(old('order_number') === $order->order_number)>{{ $order->order_number }} · {{ $order->lot?->title }}</option>
-                            @endforeach
-                        </select>
-                        <span class="block text-xs text-aj-muted">Een probleem met een levering meld je bij de bestelling zelf; daar lopen de termijnen.</span>
-                    </label>
-                @else
-                    <label class="block">
-                        <span class="text-sm font-bold">Bestelnummer (optioneel)</span>
-                        <input type="text" name="order_number" value="{{ old('order_number') }}" maxlength="32" placeholder="AUC-000123"
-                               class="tabular mt-1 w-full d-input" style="min-height:var(--cta-h)">
-                    </label>
-                @endif
-
-                <label class="block">
-                    <span class="text-sm font-bold">Je bericht</span>
-                    <textarea name="message" rows="6" required minlength="20" maxlength="5000"
-                              class="mt-1 w-full d-textarea">{{ old('message') }}</textarea>
+            @else
+                <label class="d-field">Bestelnummer (optioneel)
+                    <input type="text" name="order_number" value="{{ old('order_number') }}" maxlength="32" placeholder="AUC-000123" class="d-input tabular">
                 </label>
+            @endif
 
-                {{-- Honingpot tegen bots: onzichtbaar voor mensen. --}}
-                <div class="hidden" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+            <label class="d-field">Je bericht
+                <textarea name="message" rows="5" required minlength="20" maxlength="5000" class="d-textarea" style="margin-top:6px">{{ old('message') }}</textarea>
+            </label>
 
-                <button type="submit" class="btn btn-primary">Versturen</button>
-            </form>
+            {{-- Honingpot tegen bots: onzichtbaar voor mensen. --}}
+            <div class="hidden" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 
-            <aside class="space-y-4">
-                <div class="d-card">
-                    <h2 class="text-sm font-extrabold">Eerst even kijken?</h2>
-                    <ul class="mt-2 space-y-1.5 text-sm">
-                        <li><a href="{{ route('faq') }}" class="font-bold text-aj-blue-text underline">Veelgestelde vragen</a></li>
-                        <li><a href="{{ route('assurance') }}" class="font-bold text-aj-blue-text underline">Zekerheid en de geschilroute</a></li>
-                        <li><a href="{{ route('how-it-works') }}" class="font-bold text-aj-blue-text underline">Hoe het werkt</a></li>
-                    </ul>
+            <button type="submit" class="d-btn d-btn-wide d-btn-sq" style="min-height:52px">Versturen</button>
+        </form>
+
+        <aside class="d-stack">
+            <div class="d-callout-warn">
+                <span class="mark" aria-hidden="true">!</span>
+                <div class="text">
+                    <strong>Probleem met een levering?</strong>
+                    <span>Meld dat bij de bestelling via Probleem melden. Dan staat de uitbetaling stil en lopen de termijnen; een mail doet dat niet.</span>
                 </div>
-                <div class="d-card text-sm">
-                    <h2 class="text-sm font-extrabold">Probleem met een levering?</h2>
-                    <p class="mt-1 text-aj-muted">Meld dat bij de bestelling via "Probleem melden". Dan staat de uitbetaling stil en lopen de termijnen; een mail doet dat niet.</p>
-                    @auth
-                        <a href="{{ route('orders.index') }}" class="mt-2 inline-block font-bold text-aj-blue-text underline">Naar je bestellingen</a>
-                    @endauth
-                </div>
-            </aside>
-        </div>
+            </div>
+            @auth
+                <div><a class="d-btn d-btn-secondary d-btn-sq" href="{{ route('orders.index') }}">Naar je bestellingen</a></div>
+            @endauth
+
+            <div>
+                <h2 class="d-site-h2">Eerst even kijken?</h2>
+                <p class="d-sub" style="font-size:15px">Misschien staat het antwoord er al.</p>
+            </div>
+            <nav class="d-linklist" aria-label="Meer hulp">
+                <a href="{{ route('faq') }}"><span>Veelgestelde vragen</span><x-v4.icon name="arrow-right" :size="16" stroke="2.2" /></a>
+                <a href="{{ route('assurance') }}"><span>Zekerheid en de geschilroute</span><x-v4.icon name="arrow-right" :size="16" stroke="2.2" /></a>
+                <a href="{{ route('how-it-works') }}"><span>Hoe het werkt</span><x-v4.icon name="arrow-right" :size="16" stroke="2.2" /></a>
+            </nav>
+        </aside>
     </div>
 </x-layouts.public>

@@ -771,3 +771,71 @@ aside>.d-msg-skeleton{min-height:0;padding:0}
   .d-notif-time{margin-left:52px}
 }
 .d-notifs:has(.d-notif-dismiss) .d-notif-time:last-child{margin-right:46px}
+
+/* ---------- de site: kop, paginakop en voettekst van november ----------
+   De gedeelde schil van elke publieke pagina: het menu staat links naast
+   het merk, de paginakop heeft een pil als kicker en rechts een venster
+   met een voorbeeldgesprek, en de voettekst is vijf rustige kolommen. */
+.c .header .wrap{justify-content:flex-start}
+.c .header .nav{margin-left:4px;margin-right:auto}
+.c .page-hero{padding:132px 0 80px}
+.c .page-hero .eyebrow{display:inline-flex;align-items:center;min-height:34px;padding:0 14px;border:1px solid rgba(255,255,255,.2);border-radius:99px;background:rgba(255,255,255,.04);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#d5dae7;margin-bottom:22px}
+.c .page-hero h1{font-size:clamp(34px,4.6vw,60px);line-height:1.04;max-width:16ch}
+.c .page-hero h1 .g{background:linear-gradient(100deg,#8fb0ff 0%,#b79bff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.c .page-hero .lead{font-size:18px;color:#d5dae7}
+.c .page-hero-row:has(.d-hero-ivy){align-items:center;flex-wrap:nowrap;gap:48px}
+.c .page-hero-row:has(.d-hero-ivy) .page-actions{flex:0 1 528px;min-width:0}
+.d-hero-ivy{max-width:528px;padding:0;border-radius:22px;background:rgba(12,19,38,.55);overflow:hidden;transition:border-color .2s,transform .2s}
+button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-2px)}
+.d-hero-ivy .top{gap:8px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.1);font-size:13px}
+.d-hero-ivy .top b{margin-right:auto;color:#fff;font-weight:800}
+.d-hero-ivy .lights{display:inline-flex;gap:5px}
+.d-hero-ivy .lights i{width:9px;height:9px;border-radius:50%;background:#ff5f57}
+.d-hero-ivy .lights i:nth-child(2){background:#febc2e}
+.d-hero-ivy .lights i:nth-child(3){background:#28c840}
+.d-hero-ivy .q{display:block;margin:18px 18px 0 auto;font-size:14px}
+.d-hero-ivy .a{margin:12px 18px 0;font-size:14px}
+.d-hero-ivy .a img{width:32px;height:32px}
+.d-hero-ivy .a span{padding:12px 14px;border-radius:14px}
+.d-hero-ivy .chips{margin:14px 18px 18px;padding-left:0}
+.d-hero-ivy .chips span{padding:11px 14px;font-size:13px}
+.d-hero-ivy>.a:last-child{margin-bottom:18px}
+
+/* Inhoud van een sitepagina: twee kolommen, een formulierkaart en een lijst met links. */
+.c .page-body{padding-top:72px;padding-bottom:104px}
+.d-site-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:56px;align-items:start}
+.d-site-form{display:flex;flex-direction:column;gap:16px;padding:32px;border:1px solid rgba(14,21,38,.09);border-radius:20px;background:#fff;box-shadow:0 30px 60px -40px rgba(14,21,38,.35)}
+.d-site-h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.d-linklist{display:flex;flex-direction:column;gap:12px}
+.d-linklist a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;padding:0 18px;border:1px solid rgba(14,21,38,.09);border-radius:14px;background:#fff;color:#0e1526;font-size:15px;font-weight:700;transition:border-color .2s,box-shadow .2s}
+.d-linklist a:hover{border-color:#2f6bff;box-shadow:0 14px 30px -22px rgba(47,107,255,.6)}
+.d-linklist a svg{flex:0 0 auto;color:#2f6bff}
+
+/* De voettekst. */
+.c .footer-c{padding:48px 0 22px;background:#0c1326;color:#b9c2d8}
+.c .footer-c-cols{grid-template-columns:1.7fr repeat(4,1fr);gap:28px}
+.c .footer-c .brand{display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;font-size:22px;font-weight:800;color:#fff}
+.c .footer-c-brand-col p{margin:0;max-width:38ch;font-size:13.5px;line-height:1.55;color:#b9c2d8}
+.c .footer-c h4{font-size:14px;letter-spacing:0;text-transform:none;font-weight:800;margin:0 0 14px}
+.c .footer-c ul{gap:12px}
+.c .footer-c ul a{font-size:13.5px;color:#d5dae7}
+.c .footer-c ul a::before{content:none}
+.c .footer-c-bottom{margin-top:28px;padding-top:18px;padding-right:0;justify-content:space-between;font-size:13px}
+.c .footer-c-bottom nav{flex-wrap:wrap;gap:8px 16px;align-items:center}
+.c .footer-c-bottom nav a,.c .footer-c-bottom .by{color:#d5dae7}
+.c .footer-c .by a{font-weight:500}
+
+@media (max-width:1080px){
+  .c .page-hero-row:has(.d-hero-ivy){flex-wrap:wrap;gap:28px}
+  .c .page-hero-row:has(.d-hero-ivy) .page-actions{flex-basis:100%}
+  .d-site-two{grid-template-columns:minmax(0,1fr);gap:32px}
+  .c .footer-c-cols{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .c .footer-c-brand-col{grid-column:1/-1}
+}
+@media (max-width:760px){
+  .c .page-hero{padding:104px 0 44px}
+  .c .page-body{padding-top:36px;padding-bottom:64px}
+  .d-site-form{padding:20px}
+  .c .footer-c-bottom{flex-direction:column;align-items:flex-start;gap:10px}
+}
+.c .page-hero>canvas.dots{opacity:.28}

@@ -1,80 +1,59 @@
 {{--
-    De uitgebreide footer van variant C (hybride stijlgids): het merk met de
-    vier beloftes, vier linkkolommen, rechts het donkere paneel met de
-    hamerfoto uit ontwerp B, en onderaan de juridische regel. Links zonder
-    eigen pagina wijzen naar de dichtstbijzijnde bestaande route of sectie.
+    De voettekst van de site (ontwerp van november): het merk met één zin,
+    vier linkkolommen en onderaan de juridische regel. Links zonder eigen
+    pagina wijzen naar de dichtstbijzijnde bestaande route of sectie.
 --}}
 @php
     $columns = [
         'Ontdek' => [
             ['Live veilingen', route('lots.index')],
-            ['Nieuwe kavels', route('lots.index', ['toon' => 'nieuw'])],
-            ['Laatste kans', route('lots.index', ['toon' => 'laatste-kans'])],
-            ['Onder marktwaarde', route('lots.index', ['toon' => 'onder-marktwaarde'])],
+            ['Direct kopen', route('lots.buy-now')],
             ['Categorieën', route('categories.index')],
             ['Hoe bieden werkt', route('how-it-works').'#kopen'],
         ],
         'Verkopen' => [
+            ['Zakelijk verkopen', route('business')],
             ['Kavel plaatsen', route('sell')],
             ['Verkooproute', route('selling.guide')],
-            ['Verkoopvormen', route('how-it-works').'#vormen'],
-            ['Tarieven', route('faq')],
-            ['Zakelijk verkopen', route('business')],
+            ['Prijzen', route('pricing')],
             ['Verificatie', route('verification.overview')],
         ],
-        'Ivy' => [
-            ['Hoe Ivy werkt', route('how-it-works').'#reis'],
-            ['Zoeken met Ivy', route('lots.index')],
-            ['Waarde-indicatie', route('faq')],
-            ['Het team', route('business').'#team'],
+        'Hulp' => [
             ['Zekerheid en geschillen', route('assurance')],
-        ],
-        'Aucvy' => [
-            ['Zekerheid', route('assurance')],
             ['Veelgestelde vragen', route('faq')],
             ['Blog', route('blog.index')],
-            ['Over ons', route('home')],
             ['Contact', route('contact')],
-            ['Inloggen', route('login')],
-            ['Registreren', route('register')],
         ],
+        'Account' => auth()->check()
+            ? [
+                ['Dashboard', auth()->user()->is_staff ? url('/admin') : route('dashboard')],
+                ['Instellingen', route('account.settings')],
+            ]
+            : [
+                ['Inloggen', route('login')],
+                ['Registreren', route('register')],
+            ],
     ];
 @endphp
 
 <footer class="footer-c">
     <div class="wrap">
-        <div class="footer-c-main">
-            <div class="footer-c-cols">
-                <div class="footer-c-brand-col">
-                    <div class="brand"><svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg> Aucvy</div>
-                    <p>Het AI-commerceplatform voor zakelijke goederen. Upload een foto en Ivy en haar team regelen de rest: van advertentie en waarde-indicatie tot biedingen en uitbetaling.</p>
-                    <ul class="footer-c-trust">
-                        <li>Gratis plaatsen</li>
-                        <li>Geen opgeld voor kopers</li>
-                        <li>Alleen betalen bij resultaat</li>
-                        <li>Geverifieerde verkopers</li>
-                    </ul>
-                </div>
-                @foreach ($columns as $heading => $links)
-                    <div>
-                        <h4>{{ $heading }}</h4>
-                        <ul>
-                            @foreach ($links as [$text, $url])
-                                <li><a href="{{ $url }}">{{ $text }}</a></li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endforeach
+        <div class="footer-c-cols">
+            <div class="footer-c-brand-col">
+                <a class="brand" href="{{ route('home') }}" aria-label="Aucvy - home"><svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg>Aucvy</a>
+                <p>Het AI-commerceplatform voor zakelijke goederen. Upload een foto en Ivy en haar team regelen de rest: van advertentie en waarde-indicatie tot biedingen en uitbetaling.</p>
             </div>
 
-            <aside class="footer-c-panel" aria-labelledby="footer-c-panel-title">
-                <div class="photo" aria-hidden="true" style="background-image:url('{{ asset('images/v4/footer-gavel.jpg') }}')"></div>
-                <div class="shade" aria-hidden="true"></div>
-                <h2 id="footer-c-panel-title">Slim bieden.<br><span class="g">Weten waar je aan toe bent.</span></h2>
-                <p>Waarde-indicaties, biedadvies en live biedingen van Ivy en haar team geven je het overzicht dat je zoekt.</p>
-                <a class="btn btn-primary" href="{{ route('lots.index') }}">Ontdek de veilingen
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-            </aside>
+            @foreach ($columns as $heading => $links)
+                <div>
+                    <h4>{{ $heading }}</h4>
+                    <ul>
+                        @foreach ($links as [$text, $url])
+                            <li><a href="{{ $url }}">{{ $text }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
         </div>
 
         <div class="footer-c-bottom">
@@ -83,8 +62,8 @@
                 <a href="{{ route('legal.terms') }}">Voorwaarden</a>
                 <a href="{{ route('legal.privacy') }}">Privacy</a>
                 <a href="{{ route('legal.cookies') }}">Cookies</a>
+                <span class="by">Gebouwd door <a href="https://eazyonline.nl" target="_blank" rel="noopener noreferrer">Eazyonline</a></span>
             </nav>
-            <span class="by">Gebouwd door <a href="https://eazyonline.nl" target="_blank" rel="noopener noreferrer">Eazyonline</a></span>
         </div>
     </div>
 </footer>

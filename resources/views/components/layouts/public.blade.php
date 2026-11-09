@@ -46,6 +46,7 @@
         [route('how-it-works'), 'Hoe het werkt', ['how-it-works', 'selling.guide', 'faq']],
         [route('business'), 'Zakelijk', ['business']],
         [route('pricing'), 'Prijzen', ['pricing']],
+        [route('assurance'), 'Zekerheid', ['assurance']],
     ];
 @endphp
 
@@ -141,7 +142,6 @@
                 @php $isOn = request()->routeIs(...$patterns); @endphp
                 <a href="{{ $url }}"{!! $isOn ? ' class="is-on" aria-current="page"' : '' !!}>{{ $label }}</a>
             @endforeach
-            <a href="{{ route('assurance') }}">Zekerheid</a>
             @auth
                 <a href="{{ auth()->user()->is_staff ? url('/admin') : route('dashboard') }}">Dashboard</a>
                 <a href="{{ route('dashboard.lots') }}">Mijn kavels</a>
@@ -229,11 +229,6 @@
         </div>
     </footer>
     @endif
-
-    {{-- Ivy-launcher uit het ontwerp. Het paneel erachter komt in stap 9;
-         tot die tijd opent hij het zoekveld op de veilingenpagina. --}}
-    <a class="ivy-launch" href="{{ route('lots.index') }}" aria-label="Open Ivy"><img
-        src="{{ asset('images/agents/ivy.jpg') }}" alt="">Vraag Ivy</a>
 
     <x-privacy.cookie-banner />
 
