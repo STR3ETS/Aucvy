@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\NotificationChannel;
 use App\Lots\LotFilters;
+use App\Lots\LotSearch;
 use App\Models\SavedSearch;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,13 +20,23 @@ use Illuminate\View\View;
  */
 final class SavedSearchController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, LotSearch $search): View
     {
+        $searches = SavedSearch::query()
+            ->where('user_id', $request->user()->id)
+            ->latest('id')
+            ->get();
+
+        // Per alert: hoeveel kavels er nu passen, en hoeveel daarvan in de laatste zeven dagen zijn gepubliceerd.
+        $since = now()->subDays(7);
+        $matches = $searches->mapWithKeys(fn (SavedSearch $saved): array => [$saved->id => [
+            'total' => $search->count($saved->filters()),
+            'new' => $saved->paused_at === null ? $search->newSince($saved->filters(), $since, 50)->count() : 0,
+        ]])->all();
+
         return view('dashboard.alerts', [
-            'searches' => SavedSearch::query()
-                ->where('user_id', $request->user()->id)
-                ->latest('id')
-                ->get(),
+            'searches' => $searches,
+            'matches' => $matches,
         ]);
     }
 
