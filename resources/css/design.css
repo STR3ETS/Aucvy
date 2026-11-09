@@ -693,6 +693,17 @@ aside>.d-msg-skeleton{min-height:0;padding:0}
 @media (max-width:980px){.d-payout-top{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:560px){.d-hsteps{grid-template-columns:1fr;gap:14px}.d-hsteps li{flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px 10px;padding:0}.d-hsteps li::before{display:none}.d-hsteps .dot{margin:0}.d-hsteps span:not(.dot){flex-basis:100%;padding-left:38px}}
 
+/* ---------- importeren: de stappen en het uploadvlak ---------- */
+.d-import-steps{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+.d-import-steps li{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid rgba(14,21,38,.12);border-radius:10px;background:#fff;font-size:14px;font-weight:700;color:#0e1526}
+.d-import-steps li.is-on{border-color:#2f6bff;background:#2f6bff;color:#fff}
+.d-import-steps li.is-done{border-color:#cdeedc;background:#e8f6ef;color:#177249}
+.d-import-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:220px;padding:24px;border:1px dashed rgba(47,107,255,.5);border-radius:16px;background:#f5f8ff;text-align:center;cursor:pointer;transition:background .2s,border-color .2s}
+.d-import-drop:hover,.d-import-drop.is-over,.d-import-drop:focus-within{border-color:#2f6bff;background:#eef3ff}
+.d-import-drop .icon{display:flex;align-items:center;justify-content:center;width:52px;height:52px;margin-bottom:8px;border-radius:14px;background:#e3ebff;color:#1e56e0}
+.d-import-drop strong{font-size:15px;font-weight:700;overflow-wrap:anywhere}
+.d-import-drop>span:not(.icon){font-size:13px;color:#4d5566}
+
 /* ---------- geschillen: wat er gezegd is ---------- */
 .d-dispute-msg{padding:14px 16px;border-radius:14px;background:#f3f5f9;font-size:14px;line-height:1.5}
 .d-dispute-msg>div{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px}

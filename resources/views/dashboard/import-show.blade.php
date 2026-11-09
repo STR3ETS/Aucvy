@@ -14,6 +14,13 @@
         <div role="alert" class="mb-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">Het bestand is niet meer te lezen: {{ $readError }} <a class="underline" href="{{ route('dashboard.import') }}">Upload het opnieuw</a>.</div>
     @endif
 
+    {{-- Dezelfde drie stappen als op de uploadpagina. --}}
+    <ol class="d-import-steps" aria-label="Stappen" style="margin-bottom:18px">
+        <li class="is-done">1. Uploaden</li>
+        <li class="{{ $import->isDone() ? 'is-done' : 'is-on' }}" @unless ($import->isDone()) aria-current="step" @endunless>2. Kolommen koppelen</li>
+        <li class="{{ $import->isDone() ? 'is-on' : '' }}" @if ($import->isDone()) aria-current="step" @endif>3. Controleren</li>
+    </ol>
+
     @if ($import->isDone())
         {{-- Het rapport: wat erin kwam en wat niet, met de reden per rij. --}}
         <div class="grid gap-5 lg:grid-cols-[1fr_300px] lg:items-start">

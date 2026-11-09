@@ -1,57 +1,84 @@
-<x-layouts.dashboard title="Importeren" eyebrow="Mijn kavels" intro="Zet een hele lijst uit csv of Excel in één keer klaar als concepten. Daarna loop je per kavel de wizard langs voor foto's en publicatie.">
+<x-layouts.dashboard title="Importeren" eyebrow="Mijn kavels" intro="Zet een hele lijst kavels in één keer klaar als concept, vanuit csv of Excel.">
     <x-slot:crumbs>
         <a href="{{ route('dashboard.lots') }}">Mijn kavels</a> <span aria-hidden="true">/</span> <span>Importeren</span>
     </x-slot:crumbs>
 
     @if ($errors->any())
-        <div role="alert" class="mb-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">{{ $errors->first() }}</div>
+        <div role="alert" class="d-soft is-err" style="margin:0 0 14px">{{ $errors->first() }}</div>
     @endif
 
-    <div class="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
-        <section class="d-card" aria-labelledby="upload">
-            <h2 id="upload" class="text-lg font-extrabold">Csv of Excel uploaden</h2>
-            <p class="mt-1 text-sm text-aj-muted">Eén rij per kavel, met een kopregel. Csv (puntkomma of komma) of xlsx (het eerste werkblad); bedragen in euro's. Maximaal 500 rijen en 4 MB per bestand. In de volgende stap koppel je de kolommen.</p>
-            <form method="POST" action="{{ route('dashboard.import.store') }}" enctype="multipart/form-data" class="mt-5 space-y-4">
-                @csrf
-                <label class="dropzone dropzone-sm" style="cursor:pointer">
-                    <x-v4.icon name="upload" :size="18" stroke="2.2" />
-                    <span class="text-sm"><b>Kies een csv- of xlsx-bestand</b></span>
-                    <input type="file" name="file" accept=".csv,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required class="sr-only" onchange="this.form.querySelector('[data-name]').textContent = this.files[0]?.name ?? ''">
-                    <span class="text-xs text-aj-muted" data-name></span>
-                </label>
-                <button type="submit" class="btn btn-primary">Verder naar kolommen koppelen</button>
-            </form>
-        </section>
+    {{-- De drie stappen van het ontwerp; hier sta je op de eerste. --}}
+    <ol class="d-import-steps" aria-label="Stappen">
+        <li class="is-on" aria-current="step">1. Uploaden</li>
+        <li>2. Kolommen koppelen</li>
+        <li>3. Controleren</li>
+    </ol>
 
-        <aside class="d-card" aria-labelledby="kolommen">
-            <h2 id="kolommen" class="text-sm font-extrabold">Kolommen die we herkennen</h2>
-            <p class="mt-1 text-xs text-aj-muted">Koptekst in het Nederlands of Engels; alleen de titel is verplicht.</p>
-            <ul class="mt-3 grid gap-1 text-sm">
+    <div class="d-cols" style="margin-top:18px">
+        <form method="POST" action="{{ route('dashboard.import.store') }}" enctype="multipart/form-data" class="d-col-main" x-data="{ name: '', over: false }">
+            @csrf
+            <label class="d-import-drop" :class="over && 'is-over'"
+                   @dragover.prevent="over = true" @dragleave.prevent="over = false"
+                   @drop.prevent="over = false; $refs.file.files = $event.dataTransfer.files; name = $refs.file.files[0]?.name ?? ''">
+                <span class="icon" aria-hidden="true"><x-v4.icon name="upload" :size="22" stroke="2" /></span>
+                <strong x-text="name || 'Kies een csv- of xlsx-bestand'">Kies een csv- of xlsx-bestand</strong>
+                <span x-text="name ? 'Klik om een ander bestand te kiezen' : 'Maximaal 500 rijen en 4 MB per bestand'">Maximaal 500 rijen en 4 MB per bestand</span>
+                <input type="file" name="file" x-ref="file" accept=".csv,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required class="sr-only"
+                       @change="name = $event.target.files[0]?.name ?? ''">
+            </label>
+
+            <div class="d-callout-info" style="flex-direction:column;gap:10px">
+                <div style="display:flex;gap:12px;align-items:center">
+                    <span class="mark" aria-hidden="true">i</span>
+                    <strong style="margin:0">Wat moet er in je bestand staan?</strong>
+                </div>
+                <ol class="d-numsteps">
+                    <li><span>1</span>Eén rij per kavel, met een kopregel.</li>
+                    <li><span>2</span>Csv met puntkomma of komma, of xlsx (het eerste werkblad).</li>
+                    <li><span>3</span>Bedragen in euro's. In de volgende stap koppel je de kolommen.</li>
+                </ol>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end">
+                <button type="submit" class="d-btn d-btn-sq">Verder naar kolommen koppelen</button>
+            </div>
+        </form>
+
+        <aside class="d-col-aside" style="padding:16px" aria-labelledby="kolommen">
+            <h2 id="kolommen" class="d-h3" style="font-size:15px">Kolommen die we herkennen</h2>
+            <p class="d-sub">Koptekst in het Nederlands of Engels; alleen de titel is verplicht.</p>
+            <div class="d-rows" style="margin-top:8px">
                 @foreach ($fields as $key => $label)
-                    <li class="flex justify-between gap-3 border-b border-aj-border py-1"><span>{{ $label }}</span><code class="text-xs">{{ $key }}</code></li>
+                    <div class="d-row" style="align-items:center"><span style="font-weight:600">{{ $label }}</span><code style="font-size:12px;color:#4d5566">{{ $key }}</code></div>
                 @endforeach
-            </ul>
+            </div>
         </aside>
     </div>
 
     @if ($imports->isNotEmpty())
-        <section class="mt-6 d-card" aria-labelledby="eerder">
-            <h2 id="eerder" class="text-sm font-extrabold">Eerdere imports</h2>
-            <ul class="mt-3 space-y-2 text-sm">
-                @foreach ($imports as $import)
-                    <li class="flex flex-wrap items-center gap-3 border-b border-aj-border pb-2">
-                        <a href="{{ route('dashboard.import.show', $import) }}" class="font-bold underline">{{ $import->filename }}</a>
-                        <span class="text-aj-muted">{{ $import->created_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') }}</span>
-                        <span class="ml-auto text-xs">
-                            @if ($import->isDone())
-                                {{ $import->rows_created }} van {{ $import->rows_total }} rijen als concept{{ $import->errors ? ' · '.count($import->errors).' met fouten' : '' }}
-                            @else
-                                Nog niet geïmporteerd
-                            @endif
-                        </span>
-                    </li>
-                @endforeach
-            </ul>
+        <section style="margin-top:22px" aria-labelledby="eerder">
+            <h2 id="eerder" class="d-h3" style="margin-bottom:10px">Eerdere imports</h2>
+            <div class="d-datatable">
+                <table>
+                    <thead><tr><th>Bestand</th><th>Geüpload</th><th>Resultaat</th><th><span class="sr-only">Openen</span></th></tr></thead>
+                    <tbody>
+                        @foreach ($imports as $import)
+                            <tr>
+                                <td><a href="{{ route('dashboard.import.show', $import) }}" class="d-link" style="font-size:14px">{{ $import->filename }}</a></td>
+                                <td class="nowrap">{{ $import->created_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') }}</td>
+                                <td>
+                                    @if ($import->isDone())
+                                        {{ $import->rows_created }} van {{ $import->rows_total }} rijen als concept{{ $import->errors ? ' · '.count($import->errors).' met fouten' : '' }}
+                                    @else
+                                        <span class="d-tag tone-warn">Nog niet geïmporteerd</span>
+                                    @endif
+                                </td>
+                                <td class="num"><a href="{{ route('dashboard.import.show', $import) }}" class="d-link">{{ $import->isDone() ? 'Bekijk' : 'Verder' }}</a></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </section>
     @endif
 </x-layouts.dashboard>
