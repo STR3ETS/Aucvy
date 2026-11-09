@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Lots\CategoryCounts;
+use App\Lots\FeaturedLots;
 use App\Models\Category;
 use App\Models\Lot;
 use Illuminate\Support\Facades\Cache;
@@ -12,11 +13,12 @@ use Illuminate\View\View;
 
 /**
  * Het categorie-overzicht: de hoofdcategorieën met hun subcategorieën, het
- * aantal zichtbare kavels per categorie en een foto uit het aanbod.
+ * aantal zichtbare kavels per categorie, een foto uit het aanbod en wat er
+ * nu onder de hamer gaat.
  */
 final class CategoryIndexController extends Controller
 {
-    public function __invoke(CategoryCounts $categoryCounts): View
+    public function __invoke(CategoryCounts $categoryCounts, FeaturedLots $featured): View
     {
         $roots = Category::roots()->with('children')->get();
 
@@ -56,6 +58,7 @@ final class CategoryIndexController extends Controller
             'counts' => $counts,
             'totals' => $totals,
             'covers' => $covers,
+            'featured' => $featured->get(),
         ]);
     }
 }

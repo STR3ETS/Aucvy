@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\LotStatus;
 use App\Models\Category;
 use App\Models\Lot;
 
@@ -24,6 +25,38 @@ it('toont het categorie-overzicht met subcategorieën en het aantal zichtbare ka
         ->assertSee('Koeling &amp; vriescellen', escape: false)
         ->assertSee('2 kavels')
         ->assertSee(route('lots.category', $child), escape: false);
+});
+
+it('telt op het overzicht alleen kavels die nu te koop staan, net als de lijst erachter', function () {
+    $root = Category::factory()->create(['name' => 'Bouw & materieel']);
+    Lot::factory()->live()->create(['category_id' => $root->id]);
+    Lot::factory()->create(['category_id' => $root->id, 'status' => LotStatus::Sold]);
+
+    $this->get('/categorieen')
+        ->assertOk()
+        ->assertSee('1 kavel')
+        ->assertDontSee('2 kavels');
+});
+
+it('geeft een categorie een eigen kop met het kruimelpad en de subcategorieën als chips', function () {
+    $root = Category::factory()->create(['name' => 'Horeca & keuken']);
+    $child = Category::factory()->create(['name' => 'Complete keukens', 'parent_id' => $root->id]);
+    Lot::factory()->live()->create(['category_id' => $child->id]);
+
+    $this->get(route('lots.category', $root))
+        ->assertOk()
+        ->assertSee('<span class="g">keuken.</span>', escape: false)
+        ->assertSee('Complete keukens van geverifieerde verkopers.')
+        ->assertSee(route('categories.index'), escape: false)
+        ->assertSee(route('lots.category', $child), escape: false)
+        ->assertSee('Slim bieden.')
+        // In het menu hoort de pagina bij Categorieën.
+        ->assertSee('<a href="'.route('categories.index').'" class="is-on" aria-current="page">Categorieën</a>', escape: false);
+
+    // Een subcategorie wijst in het kruimelpad terug naar de hoofdcategorie.
+    $this->get(route('lots.category', $child))
+        ->assertOk()
+        ->assertSee('<a href="'.route('lots.category', $root).'">Horeca &amp; keuken</a>', escape: false);
 });
 
 it('legt uit hoe het werkt, met termijnen en tarieven uit dezelfde bron als de code', function () {

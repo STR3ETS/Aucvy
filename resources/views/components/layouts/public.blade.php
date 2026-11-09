@@ -42,7 +42,8 @@
     // Het hoofdmenu, met de routes waarop elk item de actieve staat krijgt.
     $navItems = [
         [route('lots.index'), 'Veilingen', ['lots.*']],
-        [route('categories.index'), 'Categorieën', ['categories.*']],
+        // Een categoriepagina hoort bij Categorieën, niet bij Veilingen.
+        [route('categories.index'), 'Categorieën', ['categories.*', 'lots.category']],
         [route('how-it-works'), 'Hoe het werkt', ['how-it-works', 'selling.guide', 'faq']],
         [route('business'), 'Zakelijk', ['business']],
         [route('pricing'), 'Prijzen', ['pricing']],
@@ -114,7 +115,7 @@
             <a class="brand" href="{{ route('home') }}" aria-label="Aucvy - home">@if ($theme === 'c')<svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg>@else<i></i>@endif Aucvy</a>
             <nav class="nav" aria-label="Hoofdnavigatie">
                 @foreach ($navItems as [$url, $label, $patterns])
-                    @php $isOn = request()->routeIs(...$patterns); @endphp
+                    @php $isOn = request()->routeIs(...$patterns) && ! ($label === 'Veilingen' && request()->routeIs('lots.category')); @endphp
                     <a href="{{ $url }}"{!! $isOn ? ' class="is-on" aria-current="page"' : '' !!}>{{ $label }}</a>
                 @endforeach
             </nav>
@@ -139,7 +140,7 @@
         {{-- TOEVOEGING: het mobiele menu achter de burger. --}}
         <nav class="mobile-menu" x-show="menu" x-cloak aria-label="Menu" @click.outside="menu = false">
             @foreach ($navItems as [$url, $label, $patterns])
-                @php $isOn = request()->routeIs(...$patterns); @endphp
+                @php $isOn = request()->routeIs(...$patterns) && ! ($label === 'Veilingen' && request()->routeIs('lots.category')); @endphp
                 <a href="{{ $url }}"{!! $isOn ? ' class="is-on" aria-current="page"' : '' !!}>{{ $label }}</a>
             @endforeach
             @auth

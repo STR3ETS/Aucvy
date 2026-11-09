@@ -1,9 +1,48 @@
 @use('App\Lots\LotFilters')
 
-<x-layouts.public :title="$pageTitle ?? 'Veilingen'" eyebrow="Ontdek" :noindex="$noindex ?? false"
+@php
+    // Een categoriepagina heeft een eigen kop; de lijst eronder is dezelfde.
+    $categoryPage ??= null;
+@endphp
+
+<x-layouts.public :title="$pageTitle ?? ($categoryPage?->name ?? 'Veilingen')" :eyebrow="$categoryPage ? 'Categorie' : 'Ontdek'" :noindex="$noindex ?? false"
     :intro="$pageIntro ?? 'Kavels van geverifieerde verkopers, met de waarde-indicatie van Ivy erbij. Zoek, filter of vraag het gewoon in je eigen woorden.'">
 
-    @unless (isset($pageTitle))
+    @if ($categoryPage)
+        @php
+            // Het laatste woord van de naam krijgt het verloop, zoals in het ontwerp.
+            $nameWords = explode(' ', $categoryPage->name);
+            $lastWord = array_pop($nameWords);
+            $leadNames = ($categoryPage->is($categoryRoot) ? $categoryRoot->children : collect())
+                ->pluck('name')->map(fn (string $name): string => mb_strtolower($name));
+        @endphp
+        <x-slot:crumbs>
+            <a href="{{ route('categories.index') }}">Categorieën</a> <span aria-hidden="true">/</span>
+            @unless ($categoryPage->is($categoryRoot))
+                <a href="{{ route('lots.category', $categoryRoot) }}">{{ $categoryRoot->name }}</a> <span aria-hidden="true">/</span>
+            @endunless
+            <span>{{ $categoryPage->name }}</span>
+        </x-slot:crumbs>
+        <x-slot:headline>{{ implode(' ', $nameWords) }} <span class="g">{{ $lastWord }}.</span></x-slot:headline>
+        <x-slot:lead>
+            <p style="margin:0">{{ $leadNames->isNotEmpty() ? ucfirst($leadNames->join(', ', ' en ')).' van geverifieerde verkopers.' : 'Kavels van geverifieerde verkopers, met de waarde-indicatie van Atlas erbij.' }}</p>
+            <div class="page-actions" style="margin-top:18px">
+                <a class="btn btn-primary" href="{{ route('dashboard.alerts') }}">Alert instellen <x-v4.icon name="arrow-right" :size="15" stroke="2.4" /></a>
+                <a class="btn btn-outline-white" href="{{ route('categories.index') }}">Alle categorieën</a>
+            </div>
+            <div class="d-hero-trust">
+                <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Geen opgeld</b>&nbsp;voor kopers</span>
+                <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Waarde-indicatie</b>&nbsp;bij de kavels</span>
+                <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Bezichtigen</b>&nbsp;waar het kan</span>
+            </div>
+        </x-slot:lead>
+        <x-slot:actions>
+            <x-marketing.hero-ivy
+                :question="'Wat staat er nu in '.$categoryPage->name.'?'"
+                answer="Ik laat zien wat er live staat, met de waarde-indicatie van Atlas erbij. Is de zekerheid daarvan laag? Dan raden we een bezichtiging aan."
+                :chips="['Toon alles', 'Plan een kijkdag', 'Wat kost transport?']" />
+        </x-slot:actions>
+    @elseif (! isset($pageTitle))
         {{-- De kop van november: één gradientwoord, twee knoppen, drie beloftes en Ivy als voorbeeldgesprek. --}}
         <x-slot:headline>Veilingen van <span class="g">geverifieerde verkopers.</span></x-slot:headline>
         <x-slot:lead>
@@ -28,7 +67,17 @@
                 </button>
             </x-slot:actions>
         @endif
-    @endunless
+    @endif
+
+    @if ($categoryPage)
+        {{-- De subcategorieën als chips, met het aantal zichtbare kavels. --}}
+        <nav class="d-chips d-catchips" aria-label="Subcategorieën">
+            <a @class(['d-chip', 'is-blue' => $categoryPage->is($categoryRoot)]) href="{{ route('lots.category', $categoryRoot) }}">Alles <span>{{ $categoryTotal }}</span></a>
+            @foreach ($categoryRoot->children as $child)
+                <a @class(['d-chip', 'is-blue' => $categoryPage->is($child)]) href="{{ route('lots.category', $child) }}">{{ $child->name }}@if ($categoryCounts->get($child->id)) <span>{{ $categoryCounts->get($child->id) }}</span>@endif</a>
+            @endforeach
+        </nav>
+    @endif
 
     {{--
         Alles hierbinnen wisselt zonder harde reload (lots-index.js): links en
@@ -239,7 +288,21 @@
 
     </div>
 
-    @unless (isset($pageTitle))
+    @if ($categoryPage)
+        <div class="d-callout-info" style="margin-top:24px">
+            <span class="mark" aria-hidden="true">i</span>
+            <div>
+                <strong>Goed om te weten</strong>
+                Kijk naar de conditie en naar de zekerheid van de waarde-indicatie. Is die laag, dan raden we een bezichtiging aan. De kostenopbouw zie je vóórdat je biedt.
+            </div>
+        </div>
+
+        <x-marketing.cta text="Waarde-indicaties, de kosten vooraf en zien wat er hot is. Rondkijken en volgen kan zonder verificatie."
+            primary="Ontdek de veilingen" :primary-url="route('lots.index')"
+            secondary="Hoe bieden werkt" :secondary-url="route('how-it-works').'#kopen'">
+            Slim bieden. <span class="g">Weten waar je aan toe bent.</span>
+        </x-marketing.cta>
+    @elseif (! isset($pageTitle))
         @php $facts = \App\Support\PlatformFacts::all(); @endphp
         {{-- De twee banden onder de lijst (ontwerp van november): de afspraken met een getal, en de weg naar verkopen. --}}
         <section class="d-facts-band" aria-label="Afspraken">
@@ -263,5 +326,5 @@
                 <a class="btn btn-outline-white" href="{{ route('how-it-works') }}">Hoe het werkt</a>
             </div>
         </section>
-    @endunless
+    @endif
 </x-layouts.public>

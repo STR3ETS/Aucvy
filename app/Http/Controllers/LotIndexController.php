@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Lots\CategoryCounts;
 use App\Lots\LotFilters;
 use App\Lots\LotSearch;
 use App\Models\Category;
@@ -13,7 +14,10 @@ use Illuminate\View\View;
 
 final class LotIndexController extends Controller
 {
-    public function __construct(private readonly LotSearch $search) {}
+    public function __construct(
+        private readonly LotSearch $search,
+        private readonly CategoryCounts $categoryCounts,
+    ) {}
 
     /**
      * Ontdekken en zoeken.
@@ -44,7 +48,27 @@ final class LotIndexController extends Controller
             );
         }
 
-        return $this->render($filters);
+        return $this->render($filters, $category !== null ? $this->categoryContext($category) : []);
+    }
+
+    /**
+     * De eigen kop van een categoriepagina: de categorie zelf, de
+     * hoofdcategorie met haar subcategorieën en de aantallen voor de chips.
+     *
+     * @return array<string, mixed>
+     */
+    private function categoryContext(Category $category): array
+    {
+        $root = $category->parent ?? $category;
+        $root->loadMissing('children');
+        $counts = $this->categoryCounts->perCategory();
+
+        return [
+            'categoryPage' => $category,
+            'categoryRoot' => $root,
+            'categoryCounts' => $counts,
+            'categoryTotal' => (int) $this->categoryCounts->perRoot(collect([$root]), $counts)->get($root->id, 0),
+        ];
     }
 
     /**

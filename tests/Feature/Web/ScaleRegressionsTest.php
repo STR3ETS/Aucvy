@@ -46,7 +46,8 @@ describe('publieke pagina\'s', function () {
         $queries = queriesDuring(fn () => $this->get('/categorieen')->assertOk()->assertSee('/storage/lots/foto-12.jpg'));
 
         // Onafhankelijk van het aantal kavels: vooraf laadde dit alle kavels mét al hun foto's.
-        expect($queries)->toBeLessThan(25);
+        // Het blok "Nu live" toont hooguit vier kaarten en kost daarmee een vast aantal query's.
+        expect($queries)->toBeLessThan(40);
     });
 
     it('cachet de facetten per filtercombinatie', function () {

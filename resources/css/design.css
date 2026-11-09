@@ -1113,7 +1113,33 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-home-body>.d-stepsband{align-items:start}
 .d-home-body>.d-stepsband .d-numlist{margin-top:8px}
 
+/* Het categorie-overzicht: fotovlakken, de eerste groot. */
+.d-catgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:230px;gap:12px;margin-top:32px}
+.d-catgrid article,.d-catgrid .more{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:flex-end;padding:14px 16px;border-radius:18px;overflow:hidden;background:linear-gradient(160deg,#2b2f8f 0%,#3b2f9c 45%,#141a3c 100%);color:#fff}
+.d-catgrid article.is-big{grid-column:span 2;grid-row:span 2}
+.d-catgrid img{position:absolute;inset:0;z-index:-1;width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.d-catgrid article:hover img{transform:scale(1.04)}
+.d-catgrid article::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(12,19,38,0) 38%,rgba(12,19,38,.88) 100%)}
+.d-catgrid .count{position:absolute;top:14px;left:14px;padding:4px 10px;border-radius:99px;background:#fff;color:#0e1526;font-size:12px;font-weight:700}
+.d-catgrid h3{margin:0;font-size:19px;line-height:1.2;letter-spacing:-.02em;font-weight:800}
+.d-catgrid .is-big h3{font-size:28px}
+.d-catgrid h3 a{color:#fff}
+.d-catgrid h3 a::after{content:"";position:absolute;inset:0}
+.d-catgrid p{margin:4px 0 0;font-size:13.5px;line-height:1.35;color:rgba(255,255,255,.88)}
+.d-catgrid p a{position:relative;z-index:1;color:inherit}
+.d-catgrid p a:hover{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.d-catgrid .more{background:#0c1326;padding:18px;transition:background .2s}
+.d-catgrid .more:hover{background:#18223f}
+.d-catgrid .more strong{font-size:21px;line-height:1.15;letter-spacing:-.02em;font-weight:800}
+.d-catgrid .more span{margin-top:10px;font-size:13px;line-height:1.45;color:#d5dae7}
+.d-catgrid .more svg{display:inline-block;vertical-align:-2px}
+.d-catlots{margin-top:32px;gap:16px}
+.d-catchips{margin:-24px 0 28px}
+.d-catchips .d-chip span{font-weight:600;color:#4d5566}
+
 @media (max-width:1080px){
+  .d-catgrid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:200px}
+  .d-catgrid article.is-big{grid-row:span 1}
   .c .d-home-hero .wrap{grid-template-columns:minmax(0,1fr)}
   .d-home-hero-photo{display:none}
   .d-home-try-grid,.d-home-forms,.d-home-buyers{grid-template-columns:minmax(0,1fr);gap:32px}

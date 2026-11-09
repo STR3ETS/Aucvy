@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Lots;
 
+use App\Enums\LotStatus;
 use App\Models\Category;
 use App\Models\Lot;
 use Illuminate\Support\Collection;
 
 /**
- * Het aantal zichtbare kavels per categorie, voor het categorie-overzicht en
- * de categoriekaarten op de home. Een hoofdcategorie telt zijn subcategorieën
- * mee in het totaal.
+ * Het aantal kavels per categorie dat nu te koop staat of is aangekondigd:
+ * dezelfde statussen als de lijst op de veilingenpagina, zodat het getal op
+ * een kaart klopt met wat je na de klik ziet. Een hoofdcategorie telt zijn
+ * subcategorieën mee in het totaal.
  */
 final class CategoryCounts
 {
@@ -23,7 +25,7 @@ final class CategoryCounts
     public function perCategory(): Collection
     {
         return Lot::query()
-            ->public()
+            ->whereIn('status', [LotStatus::Scheduled, LotStatus::Live, LotStatus::Closing])
             ->selectRaw('category_id, count(*) as aantal')
             ->groupBy('category_id')
             ->pluck('aantal', 'category_id')
