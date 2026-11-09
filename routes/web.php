@@ -278,6 +278,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard/kavels', [DashboardListController::class, 'lots'])->name('dashboard.lots');
     Route::get('/dashboard/biedingen', [DashboardListController::class, 'bids'])->name('dashboard.bids');
     Route::get('/dashboard/uitbetalingen', [DashboardListController::class, 'payouts'])->name('dashboard.payouts');
+    Route::get('/dashboard/uitbetalingen/{payout}', [DashboardListController::class, 'payout'])->name('dashboard.payouts.show');
     Route::get('/dashboard/geschillen', [DashboardListController::class, 'disputes'])->name('dashboard.disputes');
     Route::get('/dashboard/financien', [DashboardListController::class, 'finance'])->name('dashboard.finance');
     Route::get('/dashboard/financien/export', [DashboardListController::class, 'financeExport'])->name('dashboard.finance.export');

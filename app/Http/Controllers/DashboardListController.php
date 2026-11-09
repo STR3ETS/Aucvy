@@ -73,6 +73,27 @@ final class DashboardListController extends Controller
                 ->with(['order.lot'])
                 ->latest('id')
                 ->get(),
+            'company' => $request->user()->company,
+        ]);
+    }
+
+    /**
+     * Eén uitbetaling (ontwerp van november): de stand, het bedrag, de
+     * verkoop waar hij bij hoort en de stappen met hun tijdstip.
+     */
+    public function payout(Request $request, Payout $payout): View
+    {
+        $user = $request->user();
+
+        abort_unless($user->canSeeCompanyFinance() && in_array($payout->seller_id, $user->financeSellerIds(), true), 403);
+
+        $payout->load(['order.lot.media']);
+
+        return view('dashboard.payout', [
+            'payout' => $payout,
+            // De factuur van Aucvy voor de succesfee; anders de kavelfactuur.
+            'invoice' => Invoice::query()->where('order_id', $payout->order_id)->whereIn('kind', [Invoice::FEE, Invoice::LOT])
+                ->orderByRaw('kind = ? desc', [Invoice::FEE])->first(),
         ]);
     }
 

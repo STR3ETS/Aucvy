@@ -84,3 +84,38 @@ it('toont een eerlijke lege staat', function () {
         ->assertOk()
         ->assertSee('Nog geen kavels');
 });
+
+it('toont één uitbetaling met de stand en de stappen, alleen aan wie hem mag zien', function () {
+    $seller = User::factory()->verified()->create();
+    $lot = Lot::factory()->live()->create(['seller_id' => $seller->id, 'title' => 'Bakoven Unox 4 niveaus']);
+    $order = Order::factory()->completed()->create(['seller_id' => $seller->id, 'lot_id' => $lot->id, 'hammer_cents' => 100_000]);
+
+    $payout = Payout::forceCreate([
+        'order_id' => $order->id,
+        'seller_id' => $seller->id,
+        'amount_cents' => 92_500,
+        'fee_cents' => 7_500,
+        'status' => PayoutStatus::Held,
+        'hold_until' => now()->addHours(48),
+    ]);
+
+    $this->actingAs($seller)
+        ->get(route('dashboard.payouts'))
+        ->assertOk()
+        ->assertSee('Uitbetalingsproces')
+        ->assertSee(route('dashboard.payouts.show', $payout), escape: false);
+
+    $this->actingAs($seller)
+        ->get(route('dashboard.payouts.show', $payout))
+        ->assertOk()
+        ->assertSee('Uitbetaling in de houdtermijn')
+        ->assertSee('Bakoven Unox 4 niveaus')
+        ->assertSee('925,00')
+        ->assertSee('Succesfee (7,5%)')
+        // Tijdens de houdtermijn beloven we nog niet dat het bedrag is verzonden.
+        ->assertDontSee('Uitbetaling is verzonden');
+
+    $this->actingAs(User::factory()->verified()->create())
+        ->get(route('dashboard.payouts.show', $payout))
+        ->assertForbidden();
+});
