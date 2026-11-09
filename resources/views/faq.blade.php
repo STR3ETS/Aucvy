@@ -11,6 +11,12 @@
     $verlenging = (int) config('aucvy.auction.anti_snipe_extend_seconds');
     $vrijBieden = Money::format((int) \App\Support\PlatformFacts::all()['bid_free_limit_cents']);
     $startFee = rtrim(rtrim(number_format(CompanyPlan::Start->defaultFeePercentage(), 1, ',', '.'), '0'), ',');
+    // De staffel van de afrekening als die aan staat; anders het begintarief per plan.
+    $feeTiers = collect(\App\Support\PlatformFacts::feeTiers())->pluck('percent');
+    $feeNumber = fn (float $value): string => rtrim(rtrim(number_format($value, 1, ',', '.'), '0'), ',');
+    $feeRange = \App\Support\PlatformFacts::usesFeeTiers()
+        ? 'tussen '.$feeNumber((float) $feeTiers->min()).'% en '.$feeNumber((float) $feeTiers->max()).'%, afhankelijk van je omzet op Aucvy in de laatste twaalf maanden'
+        : 'vanaf '.$startFee.'%, afhankelijk van je plan';
 @endphp
 
 {{--
@@ -62,7 +68,7 @@
             ],
             'Verkopen' => [
                 ['Wie mag er verkopen?', 'Alleen bedrijven met een geverifieerd zakelijk account: KVK-inschrijving en identiteit van de bevoegde persoon. Particulieren kunnen kopen, niet verkopen.'],
-                ['Wat kost verkopen?', 'Plaatsen is gratis. Alleen bij een geslaagde verkoop wordt een succesfee ingehouden, vanaf '.$startFee.'% afhankelijk van je plan. Het exacte bedrag zie je vóór publicatie in de kostenopbouw.'],
+                ['Wat kost verkopen?', 'Plaatsen is gratis. Alleen bij een geslaagde verkoop wordt een succesfee ingehouden: '.$feeRange.'. Het exacte bedrag zie je vóór publicatie in de kostenopbouw.'],
                 ['Moet ik alles zelf invullen?', 'Nee. Ivy herkent je object uit de foto\'s, Nova schrijft de advertentie en Atlas geeft een waarde-indicatie. Jij controleert, past aan en keurt goed - zonder jouw akkoord gaat er niets live.'],
                 ['Welke verkoopvorm kies ik?', 'Veiling als de markt de prijs mag bepalen, afslag (dalende prijs) als het snel moet, koop direct bij een vaste prijs. Jij kiest; Atlas geeft de waarde-indicatie mee.'],
                 ['Wanneer krijg ik mijn geld?', 'Na levering geldt een korte houdtermijn waarin de koper kan controleren of alles klopt. Daarna wordt de uitbetaling vrijgegeven, minus de succesfee.'],
