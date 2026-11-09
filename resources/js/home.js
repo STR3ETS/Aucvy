@@ -102,13 +102,15 @@ export default function initHome() {
   const q = document.getElementById('q');
   const examples = ['Een complete horecakeuken', '40 bureaustoelen uit een kantoorpand', 'Een Volvo FH uit 2019', 'De inventaris van een failliete bakkerij', 'Een CNC-freesbank Haas VF-2'];
   if (q && !reduce) {
+    // De rusttekst komt van het veld zelf: elke home heeft zijn eigen vraag.
+    const rest = q.getAttribute('placeholder') || '';
     let ei = 0, ci = 0, del = false, timer;
     function type() {
       if (document.activeElement === q || q.value) { timer = setTimeout(type, 1200); return; }
       const s = examples[ei];
       if (!del) { ci++; if (ci > s.length) { del = true; timer = setTimeout(type, 1700); q.placeholder = s; return; } }
       else { ci--; if (ci < 0) { del = false; ci = 0; ei = (ei + 1) % examples.length; } }
-      q.placeholder = ci === 0 && !del ? 'Wat wil je vandaag verhandelen?' : s.slice(0, ci);
+      q.placeholder = ci === 0 && !del ? rest : s.slice(0, ci);
       timer = setTimeout(type, del ? 28 : 55);
     }
     setTimeout(type, 2600);

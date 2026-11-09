@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\LotStatus;
 use App\Enums\SaleType;
+use App\Lots\CategoryCounts;
 use App\Models\Category;
 use App\Models\Lot;
 use App\Support\Experiments\HomeExperiment;
@@ -30,18 +31,21 @@ final class HomeController extends Controller
      * 'home-v4' (preview v4). Beide krijgen dezelfde data; alleen de
      * presentatie verschilt, want dat is wat de test vergelijkt.
      */
-    public function __invoke(Request $request, HomeExperiment $experiment): View
+    public function __invoke(Request $request, HomeExperiment $experiment, CategoryCounts $categoryCounts): View
     {
         $variant = $experiment->resolve($request);
+        $categories = Category::roots()->with('children')->get();
 
         return view($variant->view(), [
             'variant' => $variant,
             // In de vergelijkingspagina (iframe) blijft de wisselknop weg.
             'demo' => $request->boolean(HomeExperiment::DEMO),
             'featured' => $this->featured(),
-            // Acht rijen uit één query. Cachen levert hier niets op en zou een
-            // nieuwe categorie tien minuten onzichtbaar maken.
-            'categories' => Category::roots()->get(),
+            // Acht rijen plus hun subcategorieën. Cachen levert hier niets op en
+            // zou een nieuwe categorie tien minuten onzichtbaar maken.
+            'categories' => $categories,
+            // Het aantal zichtbare kavels per hoofdcategorie, voor de kaarten.
+            'categoryTotals' => $categoryCounts->perRoot($categories),
         ]);
     }
 

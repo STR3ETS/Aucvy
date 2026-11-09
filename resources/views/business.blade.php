@@ -12,12 +12,6 @@
         ['zakelijk-sluiting.jpg', 'Verhuizing of sluiting', 'Een complete inventaris in één keer. Ivy herkent per object, Nova schrijft, Atlas waardeert. Jij keurt goed.'],
         ['zakelijk-liquidatie.jpg', 'Liquidatie', 'Snel en controleerbaar: afslag of veiling met een duidelijke bodem, de biedhistorie vastgelegd, uitbetaling na de houdtermijn.'],
     ];
-    // Eerlijk vergeleken: wat elke route goed doet en wat niet.
-    $routes = [
-        ['Opkoper', 'Morgen leeg', [[true, 'Snel, alles in één keer'], [true, 'Weinig werk'], [false, 'Eén bod, van één partij'], [false, 'Je weet niet wat het waard is']], false],
-        ['Zelf adverteren', 'Eén of twee items', [[true, 'Jij bepaalt de vraagprijs'], [false, 'Per item foto, tekst en contact'], [false, 'Betaling en kopers zelf regelen']], false],
-        ['Veilen via Aucvy', 'Meerdere items of de hele zaak', [[true, 'De markt, of jouw vaste prijs'], [true, 'Waarde-indicatie met bron'], [true, 'Bieders doorlopen een verificatie'], [false, 'Reken op een looptijd']], true],
-    ];
     $checks = [
         ['KVK-controle en verificatie', 'Identiteit en de KVK-inschrijving, vóór een kavel live kan.'],
         ['Kostenopbouw vooraf', 'Bod, transport en btw-regeling staan bij elkaar vóórdat een koper biedt.'],
@@ -103,21 +97,7 @@
     <section class="d-sec" aria-labelledby="biz-compare">
         <span class="d-pill">Eerlijk vergeleken</span>
         <h2 id="biz-compare" style="max-width:none">Opkoper, zelf adverteren of veilen?</h2>
-        <div class="d-compare">
-            @foreach ($routes as [$name, $when, $points, $ours])
-                <article @class(['is-dark' => $ours])>
-                    @if ($ours)<span class="badge">Aucvy</span>@endif
-                    <h3>{{ $name }}</h3>
-                    <span class="when">{{ $when }}</span>
-                    <ul>
-                        @foreach ($points as [$plus, $point])
-                            <li @class(['is-min' => ! $plus])><i aria-hidden="true">{{ $plus ? '+' : '−' }}</i><span class="sr-only">{{ $plus ? 'Voordeel:' : 'Nadeel:' }}</span>{{ $point }}</li>
-                        @endforeach
-                    </ul>
-                </article>
-            @endforeach
-        </div>
-        <p class="d-sec-lead" style="font-size:15px">Heb je morgen de sleutel nodig? Dan is een opkoper vaak het snelst. Vraag wel eerst een waarde-indicatie, dan weet je wat zijn bod betekent.</p>
+        <x-marketing.compare />
     </section>
 
     {{-- Tarieven. --}}

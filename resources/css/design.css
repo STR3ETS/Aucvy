@@ -1008,3 +1008,127 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .c .page-hero>canvas.dots{opacity:.28}
 .c .page-hero .lead a.btn{text-decoration:none}
 .c .page-hero-row:not(:has(.page-actions)) h1{max-width:24ch}
+
+/* De home (ontwerp van november). */
+.c .d-home-hero{padding:116px 0 92px}
+.c .d-home-hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:48px;align-items:center}
+.d-home-hero-text{min-width:0}
+.d-home-kicker{margin:0 0 14px;font-size:15px;font-weight:700;color:#9db9ff}
+.c .d-home-hero h1{font-size:clamp(40px,5.4vw,76px);line-height:1;max-width:none}
+.c .d-home-hero .lead{margin-top:20px;max-width:58ch}
+.c .d-home-hero .ask{margin-top:30px;max-width:636px;height:60px;border-radius:16px;box-shadow:0 30px 60px -30px rgba(0,0,20,.7)}
+.c .d-home-hero .ask label img{width:32px !important;height:32px !important;box-shadow:none}
+.c .d-home-hero .ask input{font-size:15px}
+.c .d-home-hero .ask .btn{border-radius:12px;background:#2f6bff;box-shadow:none}
+.c .d-home-hero .ask .btn:hover{background:#1e56e0;filter:none}
+.d-home-hero .d-hero-trust{margin-top:22px;gap:8px 20px}
+.d-home-hero .d-hero-trust b{font-weight:700}
+.d-home-hero-photo{display:block;width:100%;aspect-ratio:4/5;border-radius:24px;object-fit:cover;box-shadow:0 40px 80px -40px rgba(0,0,20,.8)}
+.d-home-top{background:#eef1f9}
+.d-home-sheet{position:relative;z-index:2;max-width:calc(var(--wrap) + 16px);margin:-36px auto 0;padding:40px 40px 56px;border-radius:24px 24px 0 0;background:#fff}
+.d-home-sheet h2{margin:0;font-size:24px;line-height:1.2;letter-spacing:-.02em;font-weight:800}
+.d-home-cats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:18px}
+.d-home-cats a{display:flex;flex-direction:column;border:1px solid rgba(14,21,38,.09);border-radius:14px;background:#fff;overflow:hidden;transition:border-color .2s,transform .2s}
+.d-home-cats a:hover{border-color:#2f6bff;transform:translateY(-2px)}
+.d-home-cats img,.d-home-cats .empty{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#e9edf7}
+.d-home-cats .empty{display:flex;align-items:center;justify-content:center;color:#1e56e0}
+.d-home-cats .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px}
+.d-home-cats strong{font-size:14.5px;font-weight:700}
+.d-home-cats .row span{flex:0 0 auto;font-size:13px;color:#4d5566}
+.d-home-live{margin-top:48px}
+.d-home-label{display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:#1e56e0}
+.d-home-live>p{margin:8px 0 0;font-size:15px;color:#4d5566}
+.d-home-live .lots{margin:22px 0 20px;gap:16px}
+.d-home-none{grid-column:1/-1;margin:0;color:#4d5566}
+.c .page-body.d-home-body{padding-top:0;background:#fff;box-shadow:0 0 0 100vmax #fff;clip-path:inset(0 -100vmax)}
+.d-home-body>.d-sec+.d-sec{padding-top:0}
+
+.d-home-try{padding-block:88px;background:#0d1740;color:#fff}
+.d-home-try h2,.d-home-forms h2,.d-home-facts h2{margin:18px 0 0;font-size:clamp(30px,4vw,52px);line-height:1.06;letter-spacing:-.035em;font-weight:800;text-wrap:balance}
+.d-home-try h2 .g,.d-home-facts h2 .g{background:linear-gradient(100deg,#8fb0ff 0%,#b79bff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.d-home-try-lead{margin:16px 0 0;max-width:52ch;font-size:18px;line-height:1.55;color:#d5dae7}
+.d-home-try-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,424px);gap:58px;align-items:start;margin-top:30px}
+.d-home-try-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.d-home-try-items button{position:relative;display:flex;flex-direction:column;padding:0;border:2px solid transparent;border-radius:16px;background:#fff;color:#0e1526;font:inherit;text-align:left;overflow:hidden;cursor:pointer;transition:border-color .2s}
+.d-home-try-items button.is-on{border-color:#7fb0ff}
+.d-home-try-items img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;opacity:.55;transition:opacity .2s}
+.d-home-try-items button.is-on img{opacity:1}
+.d-home-try-items i{position:absolute;top:10px;right:10px;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:rgba(12,19,38,.72);color:#fff}
+.d-home-try-items button.is-on i{background:#1c8a5b}
+.d-home-try-items .yes,.d-home-try-items button.is-on .no{display:none}
+.d-home-try-items button.is-on .yes{display:block}
+.d-home-try-items .text{display:block;padding:12px 12px 14px}
+.d-home-try-items strong{display:block;font-size:14px;font-weight:700;line-height:1.25}
+.d-home-try-items .text span{display:block;margin-top:4px;font-size:12.5px;color:#4d5566;font-variant-numeric:tabular-nums}
+.d-home-try-sum{padding:26px;border-radius:22px;background:#fff;color:#0e1526;box-shadow:0 30px 70px rgba(0,0,20,.45)}
+.d-home-try-sum>span{display:block;font-size:14px;font-weight:700;color:#4d5566}
+.d-home-try-sum>strong{display:block;margin-top:6px;font-size:clamp(30px,3.4vw,44px);line-height:1.05;letter-spacing:-.03em;font-weight:800;font-variant-numeric:tabular-nums}
+.d-home-try-sum p{margin:10px 0 0;font-size:13px;line-height:1.5;color:#4d5566}
+.d-home-try-sum .d-btn{width:100%;min-height:52px;margin-top:16px;font-size:15px;font-weight:800}
+
+.d-home-forms{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:56px;align-items:center;padding-block:88px}
+.d-home-forms h2{max-width:14ch}
+.d-home-forms .d-sec-lead{min-height:4.7em}
+.d-home-forms .d-hint a{color:#1e56e0;font-weight:700}
+.d-home-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.d-home-tabs button{min-height:48px;padding:0 20px;border:1px solid rgba(14,21,38,.16);border-radius:99px;background:#fff;color:#0e1526;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.d-home-tabs button.is-on{border-color:#0c1326;background:#0c1326;color:#fff}
+.d-home-demo{border:1px solid rgba(14,21,38,.08);border-radius:22px;background:#fff;overflow:hidden;box-shadow:0 40px 80px -40px rgba(14,21,38,.45)}
+.d-home-demo .pic{position:relative}
+.d-home-demo img{display:block;width:100%;aspect-ratio:2/1;object-fit:cover}
+.d-home-demo .badge{position:absolute;top:14px;left:14px;padding:6px 12px;border-radius:8px;background:#fff;font-size:13px;font-weight:800;color:#1e3fae}
+.d-home-demo .stamp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(12,19,38,.55);color:#fff;font-size:30px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.d-home-demo .body{padding:22px}
+.d-home-demo .what{display:block;font-size:13px;color:#4d5566}
+.d-home-demo .price{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:6px}
+.d-home-demo .price span{padding-bottom:8px;font-size:14px;font-weight:700}
+.d-home-demo .price strong{font-size:clamp(40px,5vw,60px);line-height:1;letter-spacing:-.03em;font-weight:800;color:#1e3fae;font-variant-numeric:tabular-nums}
+.d-home-demo .bar{height:6px;margin-top:12px;border-radius:99px;background:#e9edf5;overflow:hidden}
+.d-home-demo .bar i{display:block;height:100%;border-radius:99px;background:#2f6bff;transition:width .5s ease}
+.d-home-demo .note{display:block;margin-top:10px;font-size:13px;color:#4d5566}
+.d-home-demo .d-btn{width:100%;min-height:52px;margin-top:16px;font-size:15px;font-weight:800}
+
+.d-home-clip{display:block;width:100%;aspect-ratio:16/9;margin-top:26px;border-radius:20px;background:#0c1326;object-fit:cover}
+.d-home-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.d-home-facts{padding-block:76px;background:#0c1326 radial-gradient(760px 420px at 92% 100%,rgba(47,107,255,.42),transparent 64%);color:#fff}
+.d-home-facts h2{margin:0;max-width:14ch}
+.d-sec h2 .soft{color:#47505f}
+.d-home-wip{display:flex;align-items:center;justify-content:space-between;gap:16px 28px;margin-top:16px;padding:18px 22px;border-radius:16px;background:#fdf3e3;color:#5c3a0c}
+.d-home-wip p{margin:0;font-size:15px;line-height:1.5}
+.d-home-wip strong{color:#5c3a0c}
+.d-home-wip a{flex:0 0 auto;font-size:14px;font-weight:800;color:#5c3a0c;text-decoration:underline;text-underline-offset:3px}
+.d-home-buyers{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:58px;align-items:center}
+.d-home-buyers h2{margin:18px 0 0;font-size:clamp(30px,4vw,52px);line-height:1.06;letter-spacing:-.035em;font-weight:800;text-wrap:balance}
+.d-home-buyers .pic{position:relative;padding-bottom:34px}
+.d-home-buyers .pic img{display:block;width:100%;aspect-ratio:1/1;border-radius:24px;object-fit:cover}
+.d-home-buyers .card{position:absolute;left:18px;bottom:0;min-width:min(346px,calc(100% - 36px));padding:18px;border-radius:16px;background:#fff;box-shadow:0 24px 50px -24px rgba(14,21,38,.5)}
+.d-home-buyers .card span{display:block;font-size:13px;color:#4d5566}
+.d-home-buyers .card strong{display:block;margin-top:4px;font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
+.d-home-buyers .card em{display:block;margin-top:4px;font-size:13px;font-style:normal;font-weight:700;color:#177249}
+.d-home-points{margin:22px 0 0;padding:0;list-style:none}
+.d-home-points li{padding:18px 0;border-top:1px solid rgba(14,21,38,.1)}
+.d-home-points strong{display:block;font-size:17px;font-weight:800}
+.d-home-points span{display:block;margin-top:4px;font-size:15px;line-height:1.5;color:#47505f}
+.d-home-faq{display:flex;flex-direction:column;gap:28px;margin-top:28px}
+.d-home-body>.d-stepsband{align-items:start}
+.d-home-body>.d-stepsband .d-numlist{margin-top:8px}
+
+@media (max-width:1080px){
+  .c .d-home-hero .wrap{grid-template-columns:minmax(0,1fr)}
+  .d-home-hero-photo{display:none}
+  .d-home-try-grid,.d-home-forms,.d-home-buyers{grid-template-columns:minmax(0,1fr);gap:32px}
+  .d-home-forms .d-sec-lead{min-height:0}
+  .d-home-cats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .d-home-buyers .pic img{aspect-ratio:16/10}
+}
+@media (max-width:760px){
+  .c .d-home-hero{padding:104px 0 76px}
+  .c .d-home-hero .ask{height:auto;margin-top:22px}
+  .d-home-sheet{margin-top:-24px;padding:24px 16px 40px;border-radius:20px 20px 0 0}
+  .d-home-cats{gap:10px}
+  .d-home-cats .row{flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px}
+  .d-home-try,.d-home-forms{padding-block:56px}
+  .d-home-try-items{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .d-home-facts{padding-block:56px}
+  .d-home-wip{flex-direction:column;align-items:flex-start}
+}

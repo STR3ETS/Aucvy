@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Lots\CategoryCounts;
 use App\Models\Category;
 use App\Models\Lot;
 use Illuminate\Support\Facades\Cache;
@@ -15,26 +16,11 @@ use Illuminate\View\View;
  */
 final class CategoryIndexController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(CategoryCounts $categoryCounts): View
     {
         $roots = Category::roots()->with('children')->get();
 
-        // Eén telling voor alle categorieën; een hoofdcategorie telt zijn
-        // subcategorieën mee in het totaal.
-        $counts = Lot::query()
-            ->public()
-            ->selectRaw('category_id, count(*) as aantal')
-            ->groupBy('category_id')
-            ->pluck('aantal', 'category_id')
-            ->map(fn (int|string $aantal): int => (int) $aantal);
-
-        $rootOf = [];
-        foreach ($roots as $root) {
-            $rootOf[$root->id] = $root->id;
-            foreach ($root->children as $child) {
-                $rootOf[$child->id] = $root->id;
-            }
-        }
+        $counts = $categoryCounts->perCategory();
 
         // Per hoofdcategorie de nieuwste foto uit het aanbod, als die er is.
         // Dit laadt alle publieke kavels met hun foto's; tien minuten cache
@@ -63,10 +49,7 @@ final class CategoryIndexController extends Controller
             return $covers;
         });
 
-        $totals = $roots->mapWithKeys(fn (Category $root): array => [
-            $root->id => $counts->get($root->id, 0)
-                + $root->children->sum(fn (Category $child): int => $counts->get($child->id, 0)),
-        ]);
+        $totals = $categoryCounts->perRoot($roots, $counts);
 
         return view('categories.index', [
             'roots' => $roots,

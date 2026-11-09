@@ -182,20 +182,39 @@ describe('het nieuwe ontwerp', function () {
 });
 
 describe('de hybride variant', function () {
-    it('is de opbouw van A in de stijl van de stijlgids', function () {
-        homeLot('Complete designkeuken met Siemens-apparatuur');
+    it('volgt het ontwerp van november, met de kavels en de categorieën uit het aanbod', function () {
+        $lot = homeLot('Complete designkeuken met Siemens-apparatuur');
 
         $this->get('/?variant=c')
             ->assertOk()
             ->assertSee('class="no-js c"', escape: false)
-            // De kop van A, met Ivy als gradientwoord.
-            ->assertSee('<span class="g">Ivy</span>', escape: false)
-            ->assertSee('Van foto tot uitbetaling in zes stappen')
+            ->assertSee('Ivy regelt de rest.')
+            ->assertSee('Waar ben je naar op zoek?')
+            // De categoriekaart telt de zichtbare kavels en linkt naar het aanbod.
+            ->assertSee(route('lots.category', $lot->category), escape: false)
+            ->assertSee('1 kavel')
             ->assertSee('Complete designkeuken met Siemens-apparatuur')
-            // Het team zweeft rechts in de hero.
-            ->assertSee('hero-team')
+            ->assertSee('Wat kan jouw voorraad')
+            ->assertSee('Drie manieren om te verkopen.')
+            ->assertSee('Een verkoopteam dat nooit slaapt.')
+            ->assertSee('Opkoper, zelf adverteren of veilen?')
             // Geen A/B-schakelaar op C; wisselen kan via /ab-test.
             ->assertDontSee('A/B-test: ontwerp wisselen');
+    });
+
+    it('haalt termijnen en drempels uit dezelfde bron als de code', function () {
+        config()->set('aucvy.orders.payment_deadline_hours', 36);
+        config()->set('aucvy.orders.seller_response_hours', 96);
+
+        $this->get('/?variant=c')
+            ->assertOk()
+            ->assertSee('36 u')
+            ->assertSee('96 u')
+            ->assertSee('Je betaalt binnen 36 uur na de hamerslag.')
+            // De tarieven staan op de prijzenpagina, uit de staffel: geen losse percentages.
+            ->assertSee(route('pricing'), escape: false)
+            ->assertDontSee('7,5%')
+            ->assertDontSee('3,5%');
     });
 
     it('claimt nergens escrow of garantie', function () {
