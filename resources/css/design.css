@@ -1137,6 +1137,63 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-catchips{margin:-24px 0 28px}
 .d-catchips .d-chip span{font-weight:600;color:#4d5566}
 
+/* Het verkopersprofiel: tegels, dan het aanbod met rechts de controles. */
+.d-profile-tiles{margin-top:-36px}
+.d-profile-tiles .d-tile{background:#fff}
+.d-profile{display:grid;grid-template-columns:minmax(0,1fr) 302px;gap:40px;align-items:start;margin-top:40px;padding-bottom:88px}
+.d-profile-main{display:flex;flex-direction:column;gap:56px;min-width:0}
+.d-profile-h2{margin:0;font-size:clamp(28px,3.4vw,44px);line-height:1.06;letter-spacing:-.035em;font-weight:800}
+.d-profile-note{margin:12px 0 0;font-size:15px;line-height:1.55;color:#47505f}
+.d-profile-lots{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-top:20px}
+.d-profile-about .cover{display:block;width:100%;height:176px;margin-bottom:18px;border-radius:12px;object-fit:cover}
+.d-profile-about .row{display:flex;gap:18px;align-items:flex-start}
+.d-profile-about .logo{width:64px;height:64px;flex:0 0 auto;border-radius:12px;object-fit:cover}
+.d-profile-about h2{margin:0;font-size:19px;font-weight:800}
+.d-profile-about p{margin:6px 0 0;font-size:15px;line-height:1.55}
+.d-profile-about p.is-muted{color:#4d5566}
+.d-profile-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:96px}
+.d-sidecard{padding:18px;border:1px solid rgba(14,21,38,.09);border-radius:16px;background:#fff}
+.d-sidecard h2{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;font-size:16px;font-weight:800}
+.d-sidecard h2 .score{font-size:26px;letter-spacing:-.02em;color:#177249;font-variant-numeric:tabular-nums}
+.d-sidecard>p{margin:8px 0 0;font-size:13.5px;line-height:1.55;color:#47505f}
+.d-sidecard>p.d-hint{margin-top:12px;font-size:12px}
+.d-checklist{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;font-size:14px;color:#2b3345}
+.d-checklist li{display:flex;align-items:center;gap:9px}
+.d-checklist svg{flex:0 0 auto;color:#177249}
+.d-factors{margin:14px 0 0;display:flex;flex-direction:column;gap:12px}
+.d-factors>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;font-size:13.5px}
+.d-factors dt{font-weight:700}
+.d-factors dt span{font-size:12px;font-weight:500;color:#4d5566}
+.d-factors dd{margin:0;font-weight:800;font-variant-numeric:tabular-nums}
+.d-factors .bar,.d-starbars .bar{display:block;height:6px;border-radius:99px;background:#e9edf5;overflow:hidden}
+.d-factors .bar{grid-column:1/-1}
+.d-factors .bar i{display:block;height:100%;border-radius:99px;background:#1c8a5b}
+.d-factors p{grid-column:1/-1;margin:0;font-size:12px;line-height:1.45;color:#4d5566}
+.d-starbars{margin:10px 0 0;max-width:360px;display:flex;flex-direction:column;gap:5px;font-variant-numeric:tabular-nums}
+.d-starbars>div{display:grid;grid-template-columns:30px minmax(0,1fr) 28px;align-items:center;gap:8px;font-size:13px}
+.d-starbars dt{font-weight:700}
+.d-starbars dd{margin:0;text-align:right;color:#4d5566}
+.d-starbars .bar i{display:block;height:100%;border-radius:99px;background:#2f6bff}
+.d-reviews{margin:16px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+.d-reviews li{padding:16px 18px;border:1px solid rgba(14,21,38,.09);border-radius:14px;background:#fff;font-size:15px;line-height:1.55}
+.d-reviews p{margin:6px 0 0}
+.d-reviews .head{margin:0;font-size:14px}
+.d-reviews .head span{color:#4d5566}
+.d-reviews .reply{padding-left:12px;border-left:2px solid rgba(14,21,38,.16);font-size:14px;color:#47505f}
+.d-reviews details{margin-top:8px;font-size:13px}
+.d-reviews summary{cursor:pointer;color:#4d5566;text-decoration:underline;text-underline-offset:3px}
+.d-reviews form{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.d-reviews form .d-input{flex:1 1 180px;min-width:0;min-height:44px}
+.d-soldgrid{margin:16px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.d-soldgrid a{display:block;border:1px solid rgba(14,21,38,.09);border-radius:14px;background:#fff;color:#0e1526;overflow:hidden}
+.d-soldgrid a:hover{border-color:#2f6bff}
+.d-soldgrid .cover{position:relative;display:block;aspect-ratio:4/3;background:#0c1326;overflow:hidden}
+.d-soldgrid .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.d-soldgrid .text{display:block;padding:14px}
+.d-soldgrid .text>span{display:block;font-size:12.5px;color:#4d5566}
+.d-soldgrid .text .cat{font-weight:700}
+.d-soldgrid strong{display:block;margin:2px 0;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 /* De blog: het uitgelichte bericht in de kop, de rest als kaarten. */
 .c .page-hero-row:has(.d-blog-feature),.c .page-hero-row:has(.d-article-cover){align-items:center;flex-wrap:nowrap;gap:48px}
 .c .page-hero-row:has(.d-blog-feature) .page-actions,.c .page-hero-row:has(.d-article-cover) .page-actions{flex:0 1 528px;min-width:0}
@@ -1195,6 +1252,8 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
   .c .page-hero-row:has(.d-blog-feature),.c .page-hero-row:has(.d-article-cover){flex-wrap:wrap;gap:28px}
   .c .page-hero-row:has(.d-blog-feature) .page-actions,.c .page-hero-row:has(.d-article-cover) .page-actions{flex-basis:100%}
   .d-bloggrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .d-profile{grid-template-columns:minmax(0,1fr);gap:32px;padding-bottom:56px}
+  .d-profile-side{position:static}
   .d-article{grid-template-columns:minmax(0,1fr);gap:28px;padding-bottom:56px}
   .d-article>aside{position:static}
   .d-catgrid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:200px}
