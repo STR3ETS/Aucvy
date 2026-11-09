@@ -49,7 +49,18 @@ it('geeft het dashboard en de bestellingen de dashboardschil met zijbalk', funct
         ->assertSee('d-tile', escape: false)
         ->assertSee('Anna de Vries')
         ->assertDontSee('footer-c');
-})->with(['/dashboard', '/dashboard/kavels', '/dashboard/biedingen', '/dashboard/uitbetalingen', '/dashboard/geschillen', '/bestellingen']);
+})->with(['/dashboard', '/dashboard/kavels', '/dashboard/biedingen', '/dashboard/uitbetalingen', '/bestellingen']);
+
+it('geeft pagina's zonder tegels dezelfde dashboardschil', function (string $url) {
+    // Geschillen, alerts en meldingen hebben in het ontwerp geen tegels boven de inhoud.
+    $this->actingAs(User::factory()->verified()->create(['name' => 'Anna de Vries']))
+        ->get($url)
+        ->assertOk()
+        ->assertSee('class="no-js c dash"', escape: false)
+        ->assertSee('dash-side', escape: false)
+        ->assertSee('dash-band', escape: false)
+        ->assertDontSee('footer-c');
+})->with(['/dashboard/geschillen', '/dashboard/alerts', '/dashboard/meldingen']);
 
 it('markeert de huidige pagina in het hoofdmenu', function () {
     $this->get('/veilingen')
