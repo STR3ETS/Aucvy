@@ -811,6 +811,18 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-linklist a:hover{border-color:#2f6bff;box-shadow:0 14px 30px -22px rgba(47,107,255,.6)}
 .d-linklist a svg{flex:0 0 auto;color:#2f6bff}
 
+/* Veelgestelde vragen: een label per groep en een kaart per vraag. */
+.d-faq{display:flex;flex-direction:column;gap:26px;margin-top:-28px}
+.d-faq-label{margin:0 0 12px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6d28d9}
+.d-faq-item{margin-top:14px;border:1px solid rgba(14,21,38,.06);border-radius:14px;background:#fff;box-shadow:0 12px 30px -24px rgba(14,21,38,.4)}
+.d-faq-label+.d-faq-item{margin-top:0}
+.d-faq-item summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:66px;padding:14px 22px;font-size:16px;font-weight:700;cursor:pointer;list-style:none}
+.d-faq-item summary::-webkit-details-marker{display:none}
+.d-faq-item summary i{display:flex;align-items:center;justify-content:center;width:26px;height:26px;flex:0 0 auto;border-radius:50%;background:#eef3ff;color:#1e56e0;transition:transform .2s,background .2s}
+.d-faq-item[open] summary i{transform:rotate(45deg);background:#2f6bff;color:#fff}
+.d-faq-item p{margin:0;padding:0 22px 20px;max-width:78ch;font-size:15px;line-height:1.6;color:#47505f}
+.d-hero-trust i svg{display:block}
+
 /* De voettekst. */
 .c .footer-c{padding:48px 0 22px;background:#0c1326;color:#b9c2d8}
 .c .footer-c-cols{grid-template-columns:1.7fr repeat(4,1fr);gap:28px}
@@ -839,3 +851,4 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
   .c .footer-c-bottom{flex-direction:column;align-items:flex-start;gap:10px}
 }
 .c .page-hero>canvas.dots{opacity:.28}
+.c .page-hero .lead a.btn{text-decoration:none}
