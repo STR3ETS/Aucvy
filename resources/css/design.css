@@ -1194,6 +1194,13 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-soldgrid .text .cat{font-weight:700}
 .d-soldgrid strong{display:block;margin:2px 0;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* De verificatie: twee groepen stappen, met rechts de uitleg. */
+.d-verify{margin-top:0}
+.d-verify .d-profile-main{gap:36px}
+.d-verify-h2{margin:0;font-size:clamp(22px,2.4vw,28px);line-height:1.15;letter-spacing:-.025em;font-weight:800}
+.d-vsteps{margin:16px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.d-vstep{padding:16px 18px;border:1px solid rgba(14,21,38,.09);border-radius:14px;background:#fff}
+
 /* De blog: het uitgelichte bericht in de kop, de rest als kaarten. */
 .c .page-hero-row:has(.d-blog-feature),.c .page-hero-row:has(.d-article-cover){align-items:center;flex-wrap:nowrap;gap:48px}
 .c .page-hero-row:has(.d-blog-feature) .page-actions,.c .page-hero-row:has(.d-article-cover) .page-actions{flex:0 1 528px;min-width:0}
@@ -1245,6 +1252,15 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-article-body blockquote p{margin:0;background:linear-gradient(100deg,#8fb0ff 0%,#b79bff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .d-article-body table{width:100%;border-collapse:collapse;font-size:15px}
 .d-article-body th,.d-article-body td{padding:10px 12px;border:1px solid rgba(14,21,38,.1);text-align:left}
+.d-article-body.is-plain{font-size:17px}
+.d-article-body.is-plain>p:first-child{font-size:inherit;line-height:inherit;letter-spacing:0;font-weight:inherit;color:inherit}
+.d-article-body.is-plain h2{margin-top:36px;font-size:clamp(24px,2.6vw,32px);scroll-margin-top:96px}
+.d-article-body.is-plain h2:first-child{margin-top:0}
+.d-article-body code{padding:2px 6px;border-radius:6px;background:#eef1f7;font-size:13px}
+.d-cookie-choice{display:flex;flex-direction:column;gap:10px}
+.d-cookie-choice label{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1px solid rgba(14,21,38,.09);border-radius:14px;background:#fff;font-size:14px;line-height:1.45;color:#47505f}
+.d-cookie-choice input{width:18px;height:18px;margin-top:2px;flex:0 0 auto;accent-color:#2f6bff}
+.d-cookie-choice strong{display:block;font-size:15px;color:#0e1526}
 .d-article-tip{margin-top:36px;padding:22px;border-radius:16px;background:#f3f0ff;font-size:15px;line-height:1.55;color:#2b3345}
 .d-article-tip strong{display:block;margin-bottom:4px;font-size:17px;font-weight:800;color:#0e1526}
 

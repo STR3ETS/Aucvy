@@ -199,6 +199,16 @@ De pagina volgt sinds 9 november het ontwerp: het verhaal van één heftruck, me
 Standaard: de twee films met de oude percentages blijven weg; de overige negen clips staan erop.
 Antwoord:
 
+**N27. De concepttekst van de voorwaarden en de privacyverklaring**
+Het ontwerp bevat een concepttekst voor beide pagina's, met de melding "nog niet juridisch getoetst" en lege plekken tussen haken (KVK-nummer, adres, tarief, aansprakelijkheid, bewaartermijnen). Die tekst staat niet op de site. De pagina's hebben wel de opmaak van het ontwerp en tonen de regels die het platform nu al toepast (bindend bod, verlenging, borg, termijnen, kosten), uit dezelfde bron als de code, met erbij dat de volledige tekst volgt. Mag de concepttekst er als tussenstap op, of wachten we op de getoetste versie?
+Standaard: geen concepttekst; de regels uit de code blijven staan en de pagina's worden niet geïndexeerd.
+Antwoord:
+
+**N28. Categoriefoto's en de voorbeelden op de home**
+De home toont per hoofdcategorie een vaste foto uit het ontwerp (Boten en recreatie heeft er geen en krijgt een pictogram). De blokken "Wat kan jouw voorraad opleveren?" en "Drie manieren om te verkopen" werken met voorbeeldbedragen uit het ontwerp en staan er zo bij. Komen er eigen foto's, en kloppen de voorbeeldbedragen?
+Standaard: de foto's en bedragen uit het ontwerp, duidelijk als voorbeeld.
+Antwoord:
+
 ---
 
 ## Nieuwe vragen voor Don (na de bouw van 4 november)

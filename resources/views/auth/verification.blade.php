@@ -1,24 +1,56 @@
-<x-layouts.public title="Verificatie" heading="Verificatie" eyebrow="Account" align="center"
-    intro="Nodig vóór je eerste bod, niet vóór het rondkijken.">
-    {{--
-        De checklist uit hfst. 13.6: e-mail → telefoon → identiteit → KVK
-        (alleen zakelijk). Nodig vóór je eerste bod, niet vóór het rondkijken.
-    --}}
-    <div class="auth-card mx-auto max-w-md">
+{{--
+    De verificatie (ontwerp van november), met de checklist uit hfst. 13.6:
+    e-mail, telefoon en identiteit om te bieden; de UBO-verklaring en de KVK
+    om te verkopen (alleen zakelijk). Nodig vóór je eerste bod, niet vóór het
+    rondkijken.
+--}}
+<x-layouts.public title="Verificatie" eyebrow="Account">
+    <x-slot:headline>Eén keer controleren. <span class="g">Daarna bied je gewoon.</span></x-slot:headline>
+    <x-slot:lead>
+        <p style="margin:0">Nodig vóór je eerste bod, niet vóór het rondkijken. Verkopen vraagt om een extra zakelijke controle.</p>
+        <div class="page-actions" style="margin-top:18px">
+            <a class="btn btn-primary" href="{{ route('lots.index') }}">Naar de veilingen <x-v4.icon name="arrow-right" :size="15" stroke="2.4" /></a>
+            <a class="btn btn-outline-white" href="{{ route('business') }}">Zakelijk verkopen</a>
+        </div>
+        <div class="d-hero-trust">
+            <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Een paar minuten</b>&nbsp;werk</span>
+            <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Rondkijken</b>&nbsp;kan zonder</span>
+            <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Geen documentbeeld</b>&nbsp;bewaard</span>
+        </div>
+    </x-slot:lead>
+    <x-slot:actions>
+        <div class="d-hero-table" aria-label="Wat je nodig hebt">
+            <span class="title">Wat je nodig hebt</span>
+            <div><span>Om te bieden</span><b>E-mail, telefoon, identiteit</b></div>
+            <div><span>Om te verkopen</span><b>KVK en UBO-verklaring</b></div>
+            <div><span>Wat we bewaren</span><b>Resultaat en datum</b></div>
+        </div>
+    </x-slot:actions>
+
+    <div class="d-profile d-verify">
+    <div class="d-profile-main">
 
         @if (session('status'))
-            <p class="mt-4 rounded-aj-sm border border-aj-border bg-aj-surface p-3 text-sm">{{ session('status') }}</p>
+            <p class="d-soft is-ok" style="margin:0">{{ session('status') }}</p>
         @endif
 
         @if ($errors->any())
-            <div role="alert" class="mt-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">
-                {{ $errors->first() }}
-            </div>
+            <div role="alert" class="d-soft is-err" style="margin:0">{{ $errors->first() }}</div>
         @endif
 
-        <ol class="mt-6 space-y-3">
+        @if ($user->can_bid)
+            <p class="d-soft is-ok" style="margin:0;padding:14px 18px">
+                Je bent geverifieerd: bieden staat open.
+                <a href="{{ route('lots.index') }}" style="text-decoration:underline">Naar de veilingen</a>
+            </p>
+        @endif
+
+        <section aria-labelledby="verify-buy">
+        <h2 id="verify-buy" class="d-verify-h2">Om te bieden en kopen</h2>
+        <p class="d-profile-note" style="margin-top:6px">Drie stappen, een paar minuten werk.</p>
+        <ol class="d-vsteps">
             {{-- 1 · E-mail --}}
-            <li class="rounded-aj-sm border border-aj-border bg-aj-surface p-4">
+            <li class="d-vstep">
                 <div class="flex items-center justify-between gap-3">
                     <p class="text-sm font-bold">
                         <x-ui.step-icon :done="$user->hasVerifiedEmail()" />
@@ -39,7 +71,7 @@
             </li>
 
             {{-- 2 · Telefoon --}}
-            <li class="rounded-aj-sm border border-aj-border bg-aj-surface p-4">
+            <li class="d-vstep">
                 <p class="text-sm font-bold">
                     <x-ui.step-icon :done="$user->phone_verified_at !== null" />
                     Telefoonnummer
@@ -91,11 +123,11 @@
 
             {{-- 3 · Identiteit --}}
             @php $identityPending = $user->kyc_status === \App\Enums\KycStatus::Pending; @endphp
-            <li class="rounded-aj-sm border border-aj-border bg-aj-surface p-4">
+            <li class="d-vstep">
                 <div class="flex items-center justify-between gap-3">
                     <p class="text-sm font-bold">
                         <x-ui.step-icon :done="$user->kyc_status->allowsBidding()" :open="$identityPending" />
-                        Identiteit{{ $identityPending ? ' - in behandeling' : ' - invullen duurt een paar minuten' }}
+                        Identiteit{{ $identityPending ? ' - in behandeling' : ($user->kyc_status->allowsBidding() ? '' : ' - invullen duurt een paar minuten') }}
                     </p>
                     @unless ($user->kyc_status->allowsBidding() || $identityPending)
                         <form method="POST" action="{{ route('verification.identity') }}">
@@ -114,13 +146,20 @@
                     </p>
                 @endif
                 <p class="mt-1 text-xs text-aj-muted">
-                    We bewaren alleen het resultaat en de datum - nooit je documentbeeld of selfie.
+                    We bewaren alleen het resultaat en de datum, nooit je documentbeeld of selfie.
                 </p>
             </li>
+        </ol>
+        </section>
 
+        @if ($isBusiness)
+        <section aria-labelledby="verify-sell">
+        <h2 id="verify-sell" class="d-verify-h2">Om te verkopen, alleen voor bedrijven</h2>
+        <p class="d-profile-note" style="margin-top:6px">Vereist vóór je eerste kavel live kan.</p>
+        <ol class="d-vsteps">
             {{-- 4 · UBO-verklaring, alleen zakelijk (briefing sectie 2: KYB met KvK, UBO en IBAN) --}}
-            @if ($isBusiness && $company)
-                <li class="rounded-aj-sm border border-aj-border bg-aj-surface p-4"
+            @if ($company)
+                <li class="d-vstep"
                     x-data="{ open: {{ $company->ubo_declared_at ? 'false' : 'true' }}, rows: {{ Js::from($company->ubo_declaration ?: [['name' => '', 'birth_year' => '', 'role' => 'ubo', 'share' => '']]) }} }">
                     <div class="flex items-center justify-between gap-3">
                         <p class="text-sm font-bold">
@@ -166,8 +205,7 @@
             @endif
 
             {{-- 5 · KVK, alleen zakelijk --}}
-            @if ($isBusiness)
-                <li class="rounded-aj-sm border border-aj-border bg-aj-surface p-4">
+                <li class="d-vstep">
                     <div class="flex items-center justify-between gap-3">
                         <p class="text-sm font-bold">
                             <x-ui.step-icon :done="$company?->verified_at !== null" :open="$company?->verified_at === null" />
@@ -188,14 +226,20 @@
                         <p class="mt-1 text-xs text-aj-error">{{ __('verification.kvk.rejected', ['reason' => rtrim($company->kyb_note, '.').'.']) }}</p>
                     @endif
                 </li>
-            @endif
         </ol>
-
-        @if ($user->can_bid)
-            <p class="mt-6 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">
-                Je bent geverifieerd - bieden staat open.
-                <a href="{{ route('lots.index') }}" class="font-bold underline">Naar de veilingen</a>
-            </p>
+        </section>
         @endif
+    </div>
+
+    <aside class="d-profile-side">
+        <section class="d-sidecard" aria-labelledby="keep-title">
+            <h2 id="keep-title">Wat we bewaren</h2>
+            <p>We bewaren alleen het resultaat en de datum, nooit je documentbeeld of selfie.</p>
+        </section>
+        <section class="d-sidecard" aria-labelledby="why-title">
+            <h2 id="why-title">Waarom dit nodig is</h2>
+            <p>Geen nepbiedingen en geen wanbetaling: iedereen die biedt is echt en aanspreekbaar.</p>
+        </section>
+    </aside>
     </div>
 </x-layouts.public>
