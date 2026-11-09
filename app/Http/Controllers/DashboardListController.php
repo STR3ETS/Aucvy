@@ -146,7 +146,7 @@ final class DashboardListController extends Controller
                 ->whereHas('order', fn ($query) => $query
                     ->where('buyer_id', $request->user()->id)
                     ->orWhere('seller_id', $request->user()->id))
-                ->with(['order.lot'])
+                ->with(['order.lot.media'])
                 ->latest('id')
                 ->get(),
         ]);
