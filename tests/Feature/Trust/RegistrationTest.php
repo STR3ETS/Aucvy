@@ -19,6 +19,7 @@ it('registreert een particulier en stuurt de bevestigingsmail', function () {
     Notification::fake();
 
     $this->post('/registreren', [
+        'terms' => '1',
         'name' => 'Pieter Jansen',
         'email' => 'pieter@example.nl',
         'password' => 'geheim-wachtwoord',
@@ -40,6 +41,7 @@ it('registreert zakelijk mét bedrijf en kvk-nummer', function () {
     Notification::fake();
 
     $this->post('/registreren', [
+        'terms' => '1',
         'name' => 'Willem de Boer',
         'email' => 'willem@keukenhuis.nl',
         'password' => 'geheim-wachtwoord',
@@ -58,6 +60,7 @@ it('registreert zakelijk mét bedrijf en kvk-nummer', function () {
 
 it('eist bedrijfsgegevens bij een zakelijk account', function () {
     $this->post('/registreren', [
+        'terms' => '1',
         'name' => 'Zonder Bedrijf',
         'email' => 'zonder@example.nl',
         'password' => 'geheim-wachtwoord',
@@ -75,6 +78,7 @@ it('zet een funnelconcept op naam bij registratie', function () {
 
     $this->withCookie(DraftAccess::COOKIE, $lot->draft_token)
         ->post('/registreren', [
+            'terms' => '1',
             'name' => 'Funnel Verkoper',
             'email' => 'funnel@example.nl',
             'password' => 'geheim-wachtwoord',
@@ -90,10 +94,41 @@ it('weigert een e-mailadres dat al bestaat', function () {
     User::factory()->create(['email' => 'bezet@example.nl']);
 
     $this->post('/registreren', [
+        'terms' => '1',
         'name' => 'Dubbel',
         'email' => 'bezet@example.nl',
         'password' => 'geheim-wachtwoord',
         'password_confirmation' => 'geheim-wachtwoord',
         'type' => 'private',
     ])->assertSessionHasErrors('email');
+});
+
+it('vraagt akkoord op de voorwaarden en één keer het wachtwoord', function () {
+    Notification::fake();
+
+    $this->get('/registreren')
+        ->assertOk()
+        ->assertSee('Ik wil kopen')
+        ->assertSee('Ik wil verkopen')
+        ->assertSee('Alleen voor bedrijven')
+        ->assertDontSee('nog een keer');
+
+    // Zonder akkoord komt er geen account.
+    $this->post('/registreren', [
+        'name' => 'Sanne Visser',
+        'email' => 'sanne@example.nl',
+        'password' => 'geheim-wachtwoord',
+        'type' => 'private',
+    ])->assertSessionHasErrors('terms');
+
+    expect(User::where('email', 'sanne@example.nl')->exists())->toBeFalse();
+
+    // Met akkoord volstaat één wachtwoordveld, zoals het formulier het vraagt.
+    $this->post('/registreren', [
+        'terms' => '1',
+        'name' => 'Sanne Visser',
+        'email' => 'sanne@example.nl',
+        'password' => 'geheim-wachtwoord',
+        'type' => 'private',
+    ])->assertRedirect(route('verification.overview'));
 });

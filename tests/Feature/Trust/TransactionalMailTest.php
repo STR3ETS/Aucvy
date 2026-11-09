@@ -27,6 +27,7 @@ beforeEach(fn () => Notification::fake());
 
 it('stuurt een welkomstmail na registratie', function () {
     $this->post('/registreren', [
+        'terms' => '1',
         'name' => 'Sanne de Boer',
         'email' => 'sanne@example.test',
         'password' => 'wachtwoord-1234',

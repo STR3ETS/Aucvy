@@ -41,7 +41,9 @@ final class RegisterController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255', Rule::unique(User::class, 'email')],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            // Eén wachtwoordveld, zoals in het ontwerp; het akkoord op de voorwaarden is verplicht.
+            'password' => ['required', Password::defaults()],
+            'terms' => ['accepted'],
             'type' => ['required', Rule::enum(UserType::class)],
             'company_name' => ['required_if:type,business', 'nullable', 'string', 'max:120'],
             'kvk_number' => ['required_if:type,business', 'nullable', 'string', 'max:20'],

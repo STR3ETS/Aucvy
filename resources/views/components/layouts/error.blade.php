@@ -22,8 +22,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="no-js c auth">
-    <div class="auth-shell">
-        <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
+    <div class="auth-shell" style="background-image:url('{{ asset('images/design/dash-head.png') }}')">
 
         <a class="auth-brand" href="{{ url('/') }}" aria-label="Aucvy - home">
             <svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg>

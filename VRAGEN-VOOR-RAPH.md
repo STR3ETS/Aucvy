@@ -207,3 +207,4 @@ Antwoord:
 | D7 | Privacyverklaring aanvullen voor chat, foto's en AI-verwerking; AI-melding in het eerste bericht (artikel 50 AI Act) | Melding staat erin; tekst van de verklaring wacht |
 | D8 | Bewaartermijnen: gesprekken 12 maanden, gastgesprekken 30 dagen, gastfoto's 24 uur, voorstellen zo lang als order en audit | Zoals voorgesteld |
 | D9 | Mag een koper de aankoopfactuur van de verkoper inzien (besluit 9 hoofdbriefing)? | Kavelfactuur zichtbaar voor beide partijen; aankoopfactuur (document) na gunning |
+| D10 | Registreren vraagt sinds 9 november een verplicht akkoord op de voorwaarden en de privacyverklaring (zoals in het ontwerp). Moet het moment en de versie van dat akkoord per account worden bewaard? | Het vinkje is verplicht; het akkoord wordt nog niet apart vastgelegd |

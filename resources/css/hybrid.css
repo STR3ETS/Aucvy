@@ -321,10 +321,9 @@
 /* ---------- de inlogomgeving: één kaart op het navy vlak, zonder header en footer ---------- */
 .c.auth{background:var(--navy)}
 .c .auth-shell{position:relative;overflow:hidden;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:48px 20px;color:#fff}
-.c .auth-shell::before{content:"";position:absolute;inset:0;background:
-  radial-gradient(900px 560px at 80% 0%,rgba(47,107,255,.34),transparent 62%),
-  radial-gradient(700px 480px at 5% 100%,rgba(124,58,237,.26),transparent 60%),
-  linear-gradient(180deg,#10182f 0%,#0c1326 100%)}
+/* De achtergrond is het beeld van de dashboardkop (ontwerp van november); de layout zet het als inline stijl. */
+.c .auth-shell{background-color:#0c1326;background-position:center;background-size:cover;background-repeat:no-repeat}
+.c.auth .fn-option{color:#0e1526}
 .c .auth-shell>canvas.dots{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.7}
 .c .auth-shell>*:not(canvas){position:relative;z-index:1}
 .c .auth-brand{display:inline-flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:22px;letter-spacing:-.02em}
