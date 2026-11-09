@@ -8,13 +8,20 @@ declare(strict_types=1);
 | bewijzen die koppeling - en dat er nergens een escrow-claim staat.
 */
 
-it('toont de verkooproute met de tarieven uit CompanyPlan', function () {
+it('toont de verkooproute met de tarieven uit de staffel', function () {
+    config()->set('aucvy.pricing.use_fee_tiers', true);
+    config()->set('aucvy.pricing.fee_tiers', [
+        ['up_to_cents' => 2_500_000, 'percent' => 15],
+        ['up_to_cents' => null, 'percent' => 6],
+    ]);
+
     $this->get('/verkooproute')
         ->assertOk()
-        ->assertSee('Van foto tot uitbetaling')
-        ->assertSee('7,5%')
-        ->assertSee('3,5%')
-        ->assertSee('2,5%')
+        ->assertSee('Van foto')
+        ->assertSee('tot uitbetaling.')
+        ->assertSee('tussen 6% en 15%')
+        ->assertSee('Zes stappen')
+        ->assertSee('Verkopen is alleen voor bedrijven.')
         ->assertSee('Kavel plaatsen');
 });
 

@@ -885,6 +885,24 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 }
 @media (max-width:560px){.d-cards3.is-four{grid-template-columns:minmax(0,1fr)}}
 
+/* De verkooproute: zes stappen links, het toneel rechts, in een donkere band. */
+.d-routeband{margin-top:-72px;padding-block:80px 88px;background:#0c1326 radial-gradient(900px 520px at 50% 0%,rgba(47,107,255,.42),transparent 62%);color:#fff}
+.d-routeband>h2{margin:18px 0 0;max-width:16ch;font-size:clamp(30px,4vw,52px);line-height:1.06;letter-spacing:-.035em;font-weight:800}
+.d-routeband>h2 .g{background:linear-gradient(100deg,#8fb0ff 0%,#b79bff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.d-route{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:56px;align-items:start;margin-top:32px}
+.d-route-steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.d-route-step{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:0 16px;border:2px solid transparent;border-radius:14px;background:#fff;color:#0e1526;font:inherit;font-size:15px;font-weight:700;text-align:left;overflow:hidden;cursor:pointer;transition:border-color .2s,background .2s}
+.d-route-step .num{display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex:0 0 auto;border-radius:50%;background:#8b93a7;color:#fff;font-size:13px;font-weight:800}
+.d-route-step.is-on{border-color:#2f6bff;background:#f1f5ff}
+.d-route-step.is-on .num{background:#2f6bff}
+.d-route-hint{margin:0;font-size:13px;color:#b9c2d8}
+.d-route-stage{position:relative;display:flex;align-items:center;min-height:300px;padding:32px;border-radius:24px;background:#fff;color:#0e1526;overflow:hidden}
+@media (max-width:980px){
+  .d-routeband{margin-top:-36px;padding-block:56px}
+  .d-route{grid-template-columns:minmax(0,1fr);gap:24px}
+  .d-route-stage{padding:20px}
+}
+
 /* De afsluitende band over de volle breedte, met de hamer rechts. */
 .d-cta{position:relative;overflow:hidden;background:#0c1326;color:#fff;padding-block:104px}
 .d-cta-photo{position:absolute;right:0;top:0;bottom:0;width:min(58%,820px);background-size:cover;background-position:center;-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 46%);mask-image:linear-gradient(90deg,transparent 0%,#000 46%);opacity:.9}

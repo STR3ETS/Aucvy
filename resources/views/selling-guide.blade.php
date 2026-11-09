@@ -1,4 +1,13 @@
 @use('App\Enums\CompanyPlan')
+@use('App\Support\PlatformFacts')
+
+@php
+    $feeNumber = fn (float $value): string => rtrim(rtrim(number_format($value, 1, ',', '.'), '0'), ',');
+    $feeTiers = collect(PlatformFacts::feeTiers())->pluck('percent');
+    $feeRange = PlatformFacts::usesFeeTiers()
+        ? 'tussen '.$feeNumber((float) $feeTiers->min()).'% en '.$feeNumber((float) $feeTiers->max()).'%, afhankelijk van je omzet op Aucvy'
+        : 'op '.$feeNumber(CompanyPlan::Start->defaultFeePercentage()).'%, '.$feeNumber(CompanyPlan::Pro->defaultFeePercentage()).'% of '.$feeNumber(CompanyPlan::Enterprise->defaultFeePercentage()).'%, afhankelijk van je plan';
+@endphp
 
 {{--
     De verkooproute als systeemdemo (hfst. 2b): geen scrollpagina maar één
@@ -8,30 +17,49 @@
 --}}
 {{-- Geen over-hero: de pagina heeft geen donkere hero, dus de header hoort
      hier de vaste witte variant te zijn. De layout levert de inhoudskolom. --}}
-<x-layouts.public title="Verkooproute" heading="Van foto tot uitbetaling" eyebrow="Verkopen op Aucvy"
-    intro="Dit is het echte systeem in het klein. Jij levert de foto's en het akkoord; Ivy en haar team doen het werk ertussen.">
-    <div>
-        <div x-data="sellingDemo"
-             class="grid gap-8 lg:min-h-[600px] lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-stretch">
+<x-layouts.public title="Verkooproute" eyebrow="Verkopen op Aucvy"
+    intro="Dit is het echte systeem in het klein. Jij levert de foto's en het akkoord; Ivy en haar team doen de rest.">
+    <x-slot:headline>Van foto <span class="g">tot uitbetaling.</span></x-slot:headline>
+    <x-slot:lead>
+        <p style="margin:0">Dit is het echte systeem in het klein. Jij levert de foto's en het akkoord; Ivy en haar team doen de rest.</p>
+        <div class="page-actions" style="margin-top:18px">
+            <a class="btn btn-primary" href="{{ route('sell') }}">Kavel plaatsen <x-v4.icon name="arrow-right" :size="15" stroke="2.4" /></a>
+            <a class="btn btn-outline-white" href="{{ route('faq') }}">Veelgestelde vragen</a>
+        </div>
+        <div class="d-hero-trust">
+            <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Gratis</b>&nbsp;plaatsen</span>
+            <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Zonder akkoord</b>&nbsp;gaat niets live</span>
+            <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Alleen</b>&nbsp;voor bedrijven</span>
+        </div>
+    </x-slot:lead>
+    <x-slot:actions>
+        <x-marketing.hero-ivy
+            question="Hoe begin ik met verkopen?"
+            answer="Met een paar foto's. Ik herken het object, Nova schrijft de advertentie en Atlas geeft de waarde-indicatie. Jij kiest de vorm en keurt goed."
+            :chips="['Wat kost het?', 'Wie mag verkopen?']" />
+    </x-slot:actions>
+
+    <section class="d-routeband d-bleed" aria-labelledby="route">
+        <span class="d-pill is-dark">Klik door de route</span>
+        <h2 id="route">Zes stappen, <span class="g">één akkoord van jou.</span></h2>
+        <div x-data="sellingDemo" class="d-route">
 
             {{-- Links: uitleg, stappen en de actie. ----------------------- --}}
             <div class="flex flex-col">
-                <ol class="space-y-1" aria-label="De zes stappen">
+                <ol class="d-route-steps" aria-label="De zes stappen">
                     @foreach ([
                         [null, 'Upload je foto\'s'],
                         ['ivy', 'Ivy herkent je object'],
                         ['nova', 'Nova schrijft de advertentie'],
                         ['atlas', 'Atlas geeft de waarde-indicatie'],
-                        ['finn', 'Live verkopen - jij kiest de vorm'],
+                        ['finn', 'Live verkopen, jij kiest de vorm'],
                         ['flow', 'Flow handelt betaling en uitbetaling af'],
                     ] as $index => [$agent, $title])
                         <li>
                             <button type="button" @click="go({{ $index }})"
-                                    class="relative flex w-full items-center gap-2.5 overflow-hidden rounded-aj-sm px-3 py-2 text-left text-sm"
-                                    :class="scene === {{ $index }} ? 'bg-aj-surface font-extrabold shadow-sm' : 'text-aj-soft'"
+                                    class="d-route-step" :class="scene === {{ $index }} && 'is-on'"
                                     :aria-current="scene === {{ $index }} && 'step'">
-                                <span class="tabular flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
-                                      :class="scene === {{ $index }} ? 'bg-aj-blue text-white' : 'bg-aj-bg text-aj-muted'">{{ $index + 1 }}</span>
+                                <span class="num tabular">{{ $index + 1 }}</span>
                                 @if ($agent)
                                     <x-ui.agent-avatar :agent="$agent" class="size-6 shrink-0" />
                                 @endif
@@ -46,33 +74,19 @@
                 </ol>
 
                 <div class="mt-4 flex items-center gap-3">
-                    <button type="button" class="btn btn-ghost" style="height:40px;font-size:13px"
+                    <button type="button" class="btn btn-outline-white" style="height:40px;font-size:13px"
                             @click="toggle()" :aria-pressed="! playing" x-show="! reduce">
                         <span x-show="playing">Pauze</span>
                         <span x-show="! playing" x-cloak>Afspelen</span>
                     </button>
-                    <p class="text-xs text-aj-muted" x-show="! reduce">Speelt vanzelf af - klik een stap om te springen.</p>
-                    <p class="text-xs text-aj-muted" x-show="reduce" x-cloak>Klik een stap om die te bekijken.</p>
+                    <p class="d-route-hint" x-show="! reduce">Speelt vanzelf af; klik een stap om te springen.</p>
+                    <p class="d-route-hint" x-show="reduce" x-cloak>Klik een stap om die te bekijken.</p>
                 </div>
 
-                <div class="mt-auto pt-6">
-                    <p class="text-xs text-aj-muted">
-                        Gratis plaatsen · succesfee alleen bij verkoop:
-                        {{ number_format(CompanyPlan::Start->defaultFeePercentage(), 1, ',', '.') }}%,
-                        {{ number_format(CompanyPlan::Pro->defaultFeePercentage(), 1, ',', '.') }}% of
-                        {{ number_format(CompanyPlan::Enterprise->defaultFeePercentage(), 1, ',', '.') }}%
-                        afhankelijk van je plan.
-                    </p>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        <a href="{{ route('sell') }}" class="btn btn-primary">Kavel plaatsen</a>
-                        <a href="{{ route('faq') }}" class="btn btn-ghost">Veelgestelde vragen</a>
-                    </div>
-                </div>
             </div>
 
             {{-- Rechts: het toneel waarop het systeem zichzelf laat zien. --}}
-            <div class="relative flex items-center overflow-hidden rounded-aj-s border border-aj-border-strong bg-aj-bg p-5 sm:p-8"
-                 aria-hidden="true">
+            <div class="d-route-stage" aria-hidden="true">
 
                 {{-- Scene 1 · Funnel: uploaden ----------------------------- --}}
                 <template x-if="scene === 0">
@@ -266,5 +280,17 @@
                 </template>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="d-sec" style="padding-top:88px" aria-labelledby="weten">
+        <span class="d-pill">Goed om te weten</span>
+        <h2 id="weten">Verkopen is alleen voor bedrijven.</h2>
+        <p class="d-sec-lead">Een concept maken kan zonder account. Om te publiceren heb je een geverifieerd zakelijk account nodig. Plaatsen is gratis; de succesfee geldt alleen bij verkoop en ligt {{ $feeRange }}.</p>
+        <div class="page-actions" style="margin-top:22px">
+            <a class="btn btn-primary" href="{{ route('register', ['soort' => 'zakelijk']) }}">Zakelijk account aanmaken <x-v4.icon name="arrow-right" :size="15" stroke="2.4" /></a>
+            <a class="btn btn-ghost" href="{{ route('business') }}">Zakelijk verkopen</a>
+        </div>
+    </section>
+
+    <x-marketing.cta />
 </x-layouts.public>
