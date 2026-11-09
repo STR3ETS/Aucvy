@@ -903,6 +903,35 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
   .d-route-stage{padding:20px}
 }
 
+/* Zakelijk: fotokaarten, het team en de eerlijke vergelijking. */
+.d-photocards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:32px}
+.d-photocards article{border:1px solid rgba(14,21,38,.08);border-radius:18px;background:#fff;overflow:hidden}
+.d-photocards img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#e9edf5}
+.d-photocards div{padding:22px}
+.d-photocards h3{margin:0;font-size:19px;font-weight:800}
+.d-photocards p{margin:8px 0 0;font-size:14px;line-height:1.6;color:#47505f}
+.d-teamcards{margin:32px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.d-teamcards li{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid rgba(14,21,38,.07);border-radius:16px;background:#fff;box-shadow:0 14px 34px -28px rgba(14,21,38,.4)}
+.d-teamcards img{width:48px;height:48px;flex:0 0 auto;border-radius:12px;object-fit:cover}
+.d-teamcards strong{display:block;font-size:16px;font-weight:800}
+.d-teamcards span{display:block;margin-top:2px;font-size:13px;color:#47505f}
+.d-compare{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:32px;align-items:start}
+.d-compare article{position:relative;padding:24px;border:1px solid rgba(14,21,38,.08);border-radius:18px;background:#fff}
+.d-compare h3{margin:0;font-size:20px;font-weight:800}
+.d-compare .when{display:block;margin-top:4px;font-size:13px;font-weight:700;color:#1e56e0}
+.d-compare ul{margin:16px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#47505f}
+.d-compare li{display:flex;gap:10px;align-items:baseline}
+.d-compare li i{flex:0 0 auto;width:12px;font-style:normal;font-weight:800;color:#177249}
+.d-compare li.is-min i{color:#8f5209}
+.d-compare article.is-dark{border-color:#0c1326;background:#0c1326;color:#fff;box-shadow:0 30px 60px -30px rgba(12,19,38,.7)}
+.d-compare article.is-dark .when{color:#9db8ff}
+.d-compare article.is-dark ul{color:#d5dae7}
+.d-compare article.is-dark li i{color:#6ee7a8}
+.d-compare article.is-dark li.is-min i{color:#f5c26b}
+.d-compare .badge{position:absolute;top:18px;right:18px;padding:3px 10px;border-radius:99px;background:#2f6bff;color:#fff;font-size:11px;font-weight:800}
+.d-stepsband .d-hero-table{justify-self:stretch}
+@media (max-width:980px){.d-photocards,.d-teamcards,.d-compare{grid-template-columns:minmax(0,1fr)}}
+
 /* De afsluitende band over de volle breedte, met de hamer rechts. */
 .d-cta{position:relative;overflow:hidden;background:#0c1326;color:#fff;padding-block:104px}
 .d-cta-photo{position:absolute;right:0;top:0;bottom:0;width:min(58%,820px);background-size:cover;background-position:center;-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 46%);mask-image:linear-gradient(90deg,transparent 0%,#000 46%);opacity:.9}

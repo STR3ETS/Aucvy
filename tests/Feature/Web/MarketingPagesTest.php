@@ -40,11 +40,15 @@ it('legt uit hoe het werkt, met termijnen en tarieven uit dezelfde bron als de c
 it('toont de zakelijke pagina met het team en de tarieven', function () {
     $this->get('/zakelijk')
         ->assertOk()
-        ->assertSee('Een verkoopteam dat nooit slaapt.')
+        ->assertSee('Een verkoopteam dat')
+        ->assertSee('nooit slaapt.')
         ->assertSee('Lex')
         ->assertSee('Liquidatie')
-        ->assertSee('7,5%')
-        ->assertSee(route('register'), escape: false);
+        // Geen losse percentages meer: de tarieven staan op de prijzenpagina, uit de staffel.
+        ->assertSee('Alleen betalen')
+        ->assertSee(route('pricing'), escape: false)
+        ->assertSee('Opkoper, zelf adverteren of veilen?')
+        ->assertSee(route('register', ['soort' => 'zakelijk']), escape: false);
 });
 
 it('claimt nergens escrow of garantie', function (string $url) {
