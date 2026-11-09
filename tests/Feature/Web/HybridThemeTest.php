@@ -51,7 +51,7 @@ it('geeft het dashboard en de bestellingen de dashboardschil met zijbalk', funct
         ->assertDontSee('footer-c');
 })->with(['/dashboard', '/dashboard/kavels', '/dashboard/biedingen', '/dashboard/uitbetalingen', '/bestellingen']);
 
-it('geeft pagina's zonder tegels dezelfde dashboardschil', function (string $url) {
+it('geeft een pagina zonder tegels dezelfde dashboardschil', function (string $url) {
     // Geschillen, alerts en meldingen hebben in het ontwerp geen tegels boven de inhoud.
     $this->actingAs(User::factory()->verified()->create(['name' => 'Anna de Vries']))
         ->get($url)
