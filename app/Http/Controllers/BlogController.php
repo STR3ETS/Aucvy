@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\Blog\ArticleOutline;
 use App\Support\Blog\BlogClient;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -30,6 +31,6 @@ final class BlogController extends Controller
 
         abort_if($post === null, 404);
 
-        return view('blog.show', ['post' => $post]);
+        return view('blog.show', ['post' => $post, 'outline' => ArticleOutline::of($post['content'])]);
     }
 }

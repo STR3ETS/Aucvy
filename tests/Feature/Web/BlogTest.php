@@ -66,6 +66,40 @@ it('toont een bericht met veilige HTML, metadata en gestructureerde data', funct
         ->assertSee('rel="noopener nofollow"', escape: false);
 });
 
+it('zet het nieuwste bericht uitgelicht in de kop en de rest in het raster', function () {
+    Http::fake(['eazyonline.test/*' => Http::response(['data' => [
+        blogItem(),
+        blogItem(['id' => 8, 'slug' => 'afslag-of-veiling', 'title' => 'Afslag of veiling?']),
+    ], 'meta' => ['current_page' => 1, 'last_page' => 1]])]);
+
+    $html = $this->get(route('blog.index'))
+        ->assertOk()
+        ->assertSee('Slimmer verkopen,')
+        ->assertSee('Uitgelicht')
+        ->assertSee('Afslag of veiling?')
+        ->assertSee('Staat jouw vraag er niet bij?')
+        ->getContent();
+
+    // Het uitgelichte bericht staat één keer op de pagina, niet ook nog in het raster.
+    expect(substr_count($html, route('blog.show', 'waarde-heftruck')))->toBe(1);
+});
+
+it('maakt van de tussenkoppen een inhoudsopgave', function () {
+    Http::fake(['eazyonline.test/*' => Http::response(['data' => blogItem([
+        'title' => 'Heftruck verkopen: zo bepaal je de waarde',
+        'content' => '<p>Inleiding.</p><h2>Uren</h2><p>Tel ze.</p><h2>Onderhoud &amp; papieren</h2><p>Bewaar ze.</p>',
+    ])])]);
+
+    $this->get(route('blog.show', 'waarde-heftruck'))
+        ->assertOk()
+        ->assertSee('In dit artikel')
+        ->assertSee('<a href="#deel-1"><b>1</b>Uren</a>', escape: false)
+        ->assertSee('<a href="#deel-2"><b>2</b>Onderhoud &amp; papieren</a>', escape: false)
+        ->assertSee('<span class="d-anchor" id="deel-2"></span><h2>Onderhoud &amp; papieren</h2>', escape: false)
+        // Het deel na de dubbele punt krijgt het verloop.
+        ->assertSee('Heftruck verkopen: <span class="g">zo bepaal je de waarde</span>', escape: false);
+});
+
 it('geeft een 404 voor een onbekend bericht', function () {
     Http::fake(['eazyonline.test/*' => Http::response(['message' => 'Not found'], 404)]);
 

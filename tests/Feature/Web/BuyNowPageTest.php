@@ -26,6 +26,19 @@ it('toont alleen kavels met koop direct', function () {
         ->assertDontSee('Heftruck op veiling');
 });
 
+it('heeft een eigen kop met de betaaltermijn uit de instellingen', function () {
+    config()->set('aucvy.orders.payment_deadline_hours', 36);
+
+    $this->get('/direct-kopen')
+        ->assertOk()
+        ->assertSee('Geen biedstrijd.')
+        ->assertSee('Zo werkt koop direct')
+        ->assertSee('Binnen 36 u')
+        ->assertSee('Slim bieden.')
+        // De banden van de veilingenpagina horen hier niet.
+        ->assertDontSee('een getal erachter.');
+});
+
 it('staat in de sitemap', function () {
     $this->get('/sitemap.xml')->assertOk()->assertSee(route('lots.buy-now'), escape: false);
 });

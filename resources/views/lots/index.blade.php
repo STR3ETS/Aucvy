@@ -67,6 +67,30 @@
                 </button>
             </x-slot:actions>
         @endif
+    @else
+        {{-- Direct kopen: dezelfde lijst, de verkoopvorm staat vast. --}}
+        <x-slot:headline>Direct kopen. <span class="g">Geen biedstrijd.</span></x-slot:headline>
+        <x-slot:lead>
+            <p style="margin:0">{{ $pageIntro }}</p>
+            <div class="page-actions" style="margin-top:18px">
+                <a class="btn btn-primary" href="{{ route('lots.index') }}">Naar de veilingen <x-v4.icon name="arrow-right" :size="15" stroke="2.4" /></a>
+                <a class="btn btn-outline-white" href="{{ route('dashboard.alerts') }}">Alert instellen</a>
+            </div>
+            <div class="d-hero-trust">
+                <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Vaste prijs</b>&nbsp;vooraf bekend</span>
+                <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Betalen</b>&nbsp;via het platform</span>
+                <span><i aria-hidden="true"><x-v4.icon name="check" :size="10" stroke="3.4" /></i><b>Geen opgeld</b>&nbsp;voor kopers</span>
+            </div>
+        </x-slot:lead>
+        <x-slot:actions>
+            <div class="d-hero-table" aria-label="Zo werkt koop direct">
+                <span class="title">Zo werkt koop direct</span>
+                <div><span>Prijs</span><b>Vast</b></div>
+                <div><span>Wachttijd</span><b>Geen</b></div>
+                <div><span>Opgeld</span><b>€ 0</b></div>
+                <div><span>Betalen</span><b>Binnen {{ (int) config('aucvy.orders.payment_deadline_hours') }} u</b></div>
+            </div>
+        </x-slot:actions>
     @endif
 
     @if ($categoryPage)
@@ -288,14 +312,16 @@
 
     </div>
 
-    @if ($categoryPage)
-        <div class="d-callout-info" style="margin-top:24px">
-            <span class="mark" aria-hidden="true">i</span>
-            <div>
-                <strong>Goed om te weten</strong>
-                Kijk naar de conditie en naar de zekerheid van de waarde-indicatie. Is die laag, dan raden we een bezichtiging aan. De kostenopbouw zie je vóórdat je biedt.
+    @if ($categoryPage || isset($pageTitle))
+        @if ($categoryPage)
+            <div class="d-callout-info" style="margin-top:24px">
+                <span class="mark" aria-hidden="true">i</span>
+                <div>
+                    <strong>Goed om te weten</strong>
+                    Kijk naar de conditie en naar de zekerheid van de waarde-indicatie. Is die laag, dan raden we een bezichtiging aan. De kostenopbouw zie je vóórdat je biedt.
+                </div>
             </div>
-        </div>
+        @endif
 
         <x-marketing.cta text="Waarde-indicaties, de kosten vooraf en zien wat er hot is. Rondkijken en volgen kan zonder verificatie."
             primary="Ontdek de veilingen" :primary-url="route('lots.index')"
