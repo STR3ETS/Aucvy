@@ -19,11 +19,11 @@
 .ivy-panel.is-wide{width:min(760px,calc(100vw - 32px));height:calc(100vh - 104px)}
 .ivy-panel.is-drop{outline:2px dashed #2f6bff;outline-offset:-6px}
 
-.ivy-head{display:flex;align-items:center;gap:10px;padding:12px 10px 12px 14px;border-bottom:1px solid #dde1ea;background:#fff}
+.ivy-head{display:flex;align-items:center;gap:8px;padding:12px 10px 12px 14px;border-bottom:1px solid #dde1ea;background:#fff}
 .ivy-head>img{width:36px;height:36px;flex:0 0 auto;border-radius:50%;object-fit:cover}
 .ivy-head-text{flex:1 1 auto;min-width:0}
-.ivy-head-text strong{display:block;font-size:15px;font-weight:800;line-height:1.25}
-.ivy-head-text strong span{margin-left:6px;padding:2px 7px;border-radius:999px;background:#f1ebfe;color:#6d28d9;font-size:11px;font-weight:700;vertical-align:1px}
+.ivy-head-text strong{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:800;line-height:1.25;white-space:nowrap}
+.ivy-head-text strong span{flex:0 0 auto;padding:2px 7px;line-height:1.3;border-radius:999px;background:#f1ebfe;color:#6d28d9;font-size:11px;font-weight:700;}
 .ivy-head-text p{display:flex;align-items:center;gap:6px;margin:2px 0 0;font-size:12px;color:#4d5566;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ivy-head-text p span{overflow:hidden;text-overflow:ellipsis}
 .ivy-dot{width:7px;height:7px;flex:0 0 auto;border-radius:50%;background:#1c9a63}
@@ -31,7 +31,7 @@
 .ivy-head-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:0 0 auto;border:0;border-radius:10px;background:transparent;color:#47505f;cursor:pointer;transition:background .2s,color .2s}
 .ivy-head-btn:hover{background:#eef1f7;color:#0e1526}
 .ivy-head-btn:disabled{opacity:.4;cursor:not-allowed}
-.ivy-head-link{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1.5px solid #2f6bff;border-radius:16px;color:#1e56e0;font-size:12px;font-weight:700}
+.ivy-head-link{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;height:30px;padding:0 8px;border:1.5px solid #2f6bff;border-radius:16px;color:#1e56e0;font-size:12px;font-weight:700}
 .ivy-head-link b{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#2f6bff;color:#fff;font-size:11px;line-height:18px;text-align:center}
 
 .ivy-log{flex:1 1 auto;min-height:0;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#fff;overscroll-behavior:contain}
