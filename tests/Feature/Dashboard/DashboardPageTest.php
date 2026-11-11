@@ -139,3 +139,20 @@ it('tekent de opbrengst als een vloeiende lijn zodra er verkopen zijn', function
     expect($content)->toMatch('/<path d="M[\d.]+,[\d.]+ C[^"]+" fill="none" stroke="#2f6bff"/')
         ->and($content)->not->toContain('<polyline');
 });
+
+it('toont de interesse per kavel als één tabel met de koppen één keer', function () {
+    $seller = User::factory()->verified()->create();
+    Lot::factory()->live()->count(2)->create(['seller_id' => $seller->id]);
+
+    $content = $this->actingAs($seller)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSeeInOrder(['Interesse per kavel', 'Kijkers', 'Opgeslagen', 'Documenten', 'Bieders'])
+        // Weergaven en gedeeld staan in de details van de regel.
+        ->assertSee('weergaven')
+        ->assertSee('keer gedeeld')
+        ->getContent();
+
+    expect(substr_count($content, 'class="d-intable-head"'))->toBe(1)
+        ->and(substr_count($content, 'class="d-intable-item"'))->toBe(2);
+});

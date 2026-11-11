@@ -1,3 +1,4 @@
+@use('App\Enums\SaleType')
 @use('App\Support\Charts\SmoothLine')
 @use('App\Support\Money\Money')
 
@@ -133,70 +134,99 @@
     @if ($interest === [])
         <p class="feed-empty" style="margin-top:12px">Zodra een kavel live staat, zie je hier per kavel de kijkers, weergaven, opgeslagen, gedeeld, documenten en bieders.</p>
     @else
-        <div class="d-stack-tight" style="margin-top:12px">
+        {{--
+            Eén tabel: de kolomkoppen staan er één keer boven, elke kavel is één
+            regel met de vier stappen van kijken naar bieden. Een klik op de
+            regel klapt de details open, met de weergaven en hoe vaak hij is
+            gedeeld. Op een smal scherm staan de getallen in een raster onder de
+            titel, elk met zijn eigen label.
+        --}}
+        @php $columns = [['Kijkers', 'eye', 'viewers'], ['Opgeslagen', 'heart', 'saved'], ['Documenten', 'file', 'documents'], ['Bieders', 'gavel', 'bidders']]; @endphp
+        <div class="d-intable" style="margin-top:14px">
+            <div class="d-intable-head" aria-hidden="true">
+                <span>Kavel</span>
+                @foreach ($columns as [$label, $icon])
+                    <span class="num">{{ $label }}</span>
+                @endforeach
+                <span></span>
+            </div>
             @foreach ($interest as $row)
                 @php
                     $lot = $row['lot'];
                     $stats = $row['stats'];
+                    $auction = $lot->auction;
                     $totalSources = max(1, array_sum($stats['sources']));
                     $funnelMax = max(1, $stats['viewers'], $stats['saved'], $stats['documents'], $stats['bidders']);
+                    $priceLabel = match ($lot->sale_type) {
+                        SaleType::Dutch => 'Prijs nu',
+                        SaleType::BuyNow => 'Vaste prijs',
+                        default => 'Huidig bod',
+                    };
+                    $closing = $auction !== null && ! $auction->isClosed() ? 'sluit '.$auction->ends_at->timezone($displayTimezone)->diffForHumans() : null;
                 @endphp
-                <article class="d-task" x-data="{ open: false }">
-                    <div class="d-lot-row" style="gap:10px">
-                        @if ($lot->media->first())
-                            <img class="d-lot-thumb d-lot-thumb-sm" src="{{ $lot->media->first()->path }}" alt="">
-                        @else
-                            <span class="d-lot-thumb d-lot-thumb-sm" aria-hidden="true"></span>
-                        @endif
-                        <div class="d-lot-body" style="flex-basis:200px">
-                            <strong style="display:block;font-size:14px;line-height:1.35"><a href="{{ route('dashboard.lots.show', $lot) }}" style="color:inherit">{{ $lot->title }}</a></strong>
-                            <span class="d-muted" style="display:block;margin-top:1px">Score {{ $stats['score'] }} in de laatste {{ $stats['window_hours'] }} uur</span>
+                <article class="d-intable-item" x-data="{ open: false }" :class="open && 'is-open'">
+                    <div class="d-intable-row" @click="if (! $event.target.closest('a')) open = ! open">
+                        <div class="d-intable-lot">
+                            @if ($lot->media->first())
+                                <img class="d-lot-thumb d-lot-thumb-sm" src="{{ $lot->media->first()->path }}" alt="">
+                            @else
+                                <span class="d-lot-thumb d-lot-thumb-sm" aria-hidden="true"></span>
+                            @endif
+                            <div class="text">
+                                <strong>
+                                    <a href="{{ route('dashboard.lots.show', $lot) }}">{{ $lot->title }}</a>
+                                    @if ($stats['hot'])
+                                        <span class="d-tag tone-hot"><x-v4.icon name="flame" :size="12" stroke="2.4" /> Hot</span>
+                                    @elseif ($stats['bidders'] > 0)
+                                        <span class="d-tag tone-atlas">Loopt op</span>
+                                    @endif
+                                </strong>
+                                <span class="d-muted">{{ $priceLabel }} {{ Money::format($lot->currentPriceCents()) }}@if ($closing) · {{ $closing }}@endif</span>
+                            </div>
                         </div>
-                        @if ($stats['hot'])
-                            <span class="d-tag tone-hot"><x-v4.icon name="flame" :size="12" stroke="2.4" /> Hot</span>
-                        @elseif ($stats['bidders'] > 0)
-                            <span class="d-tag tone-atlas">Loopt op</span>
-                        @endif
-                    </div>
-                    <div class="d-stats">
-                        @foreach ([['Kijkers', 'eye', $stats['viewers']], ['Weergaven', 'eye', $stats['views']], ['Opgeslagen', 'heart', $stats['saved']], ['Gedeeld', 'share', $stats['shared']], ['Documenten', 'file', $stats['documents']], ['Bieders', 'gavel', $stats['bidders']]] as [$label, $icon, $value])
-                            <div class="d-stat">
-                                <div class="d-stat-label"><x-v4.icon :name="$icon" :size="13" stroke="2" />{{ $label }}</div>
-                                <div class="d-stat-value">{{ number_format($value, 0, ',', '.') }}</div>
+                        @foreach ($columns as [$label, $icon, $key])
+                            <div class="d-intable-num{{ $key === 'bidders' ? ' is-key' : '' }}">
+                                <span class="label">{{ $label }}</span>
+                                <b class="tabular">{{ number_format($stats[$key], 0, ',', '.') }}</b>
                             </div>
                         @endforeach
+                        <button type="button" class="d-intable-toggle" :aria-expanded="open" aria-label="Details van {{ $lot->title }}" @click.stop="open = ! open">
+                            <x-v4.icon name="chevron-down" :size="18" stroke="2.2" />
+                        </button>
                     </div>
-                    <button type="button" class="d-link" style="min-height:44px;margin-top:4px" :aria-expanded="open" @click="open = ! open" x-text="open ? 'Verberg details' : 'Bekijk details'">Bekijk details</button>
-                    <div class="d-detail" x-show="open" x-cloak>
-                        <div>
-                            <h3>Van kijken naar bieden</h3>
-                            @foreach ([['Kijkers', $stats['viewers']], ['Opgeslagen', $stats['saved']], ['Documenten geopend', $stats['documents']], ['Bieders', $stats['bidders']]] as [$label, $value])
-                                <div class="d-funnel-row">
-                                    <div><span>{{ $label }}</span><strong>{{ $value }}</strong></div>
-                                    <div class="d-bar" aria-hidden="true" style="width:{{ round($value / $funnelMax * 100, 1) }}%"></div>
-                                </div>
-                            @endforeach
+                    <div class="d-intable-detail" x-show="open" x-cloak>
+                        <div class="d-detail">
+                            <div>
+                                <h3>Van kijken naar bieden</h3>
+                                @foreach ([['Kijkers', $stats['viewers']], ['Opgeslagen', $stats['saved']], ['Documenten geopend', $stats['documents']], ['Bieders', $stats['bidders']]] as [$label, $value])
+                                    <div class="d-funnel-row">
+                                        <div><span>{{ $label }}</span><strong>{{ $value }}</strong></div>
+                                        <div class="d-bar" aria-hidden="true" style="width:{{ round($value / $funnelMax * 100, 1) }}%"></div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div>
+                                <h3>Waar kijkers vandaan komen</h3>
+                                @forelse (collect($stats['sources'])->sortDesc() as $source => $count)
+                                    @php $share = (int) round($count / $totalSources * 100); @endphp
+                                    <div class="d-source">
+                                        <span>{{ $sourceLabels[$source] ?? ucfirst($source) }}</span>
+                                        <span class="d-bar" aria-hidden="true" style="width:{{ $share }}%"></span>
+                                        <strong>{{ $share }}%</strong>
+                                    </div>
+                                @empty
+                                    <p class="d-muted">Nog geen herkomst gemeten.</p>
+                                @endforelse
+                            </div>
                         </div>
-                        <div>
-                            <h3>Waar kijkers vandaan komen</h3>
-                            @forelse (collect($stats['sources'])->sortDesc() as $source => $count)
-                                @php $share = (int) round($count / $totalSources * 100); @endphp
-                                <div class="d-source">
-                                    <span>{{ $sourceLabels[$source] ?? ucfirst($source) }}</span>
-                                    <span class="d-bar" aria-hidden="true" style="width:{{ $share }}%"></span>
-                                    <strong>{{ $share }}%</strong>
-                                </div>
-                            @empty
-                                <p class="d-muted">Nog geen herkomst gemeten.</p>
-                            @endforelse
-                        </div>
+                        <p class="d-intable-extra"><b class="tabular">{{ number_format($stats['views'], 0, ',', '.') }}</b> weergaven · <b class="tabular">{{ number_format($stats['shared'], 0, ',', '.') }}</b> keer gedeeld</p>
+                        @if ($row['tip'])
+                            <div class="d-ivy-note">
+                                <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">
+                                <span>{{ $row['tip'] }}</span>
+                            </div>
+                        @endif
                     </div>
-                    @if ($row['tip'])
-                        <div class="d-ivy-note" x-show="open" x-cloak>
-                            <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">
-                            <span>{{ $row['tip'] }}</span>
-                        </div>
-                    @endif
                 </article>
             @endforeach
         </div>

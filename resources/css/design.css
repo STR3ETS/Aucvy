@@ -1366,3 +1366,44 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 /* Een zacht vlak dat los op de vloer ligt is wit; binnen een kaart blijft het een gevuld vlak. */
 .c.dash :is(.d-soft:not(.is-ok,.is-warn,.is-err),.d-total,.feed-empty){background:#fff}
 .c.dash :is(.d-card,.feed,.d-col-aside,.d-listrow,.d-side-card,.d-sheet) :is(.d-soft:not(.is-ok,.is-warn,.is-err),.d-total,.feed-empty){background:var(--d-inset)}
+
+/* ---------- interesse per kavel: één tabel, de koppen één keer ---------- */
+.d-intable{--cols:minmax(0,1fr) repeat(4,80px) 36px;container-type:inline-size}
+.d-intable-head,.d-intable-row{display:grid;grid-template-columns:var(--cols);align-items:center;column-gap:8px}
+.d-intable-head{padding:0 10px 8px;border-bottom:1px solid rgba(14,21,38,.08);font-size:12px;font-weight:700;color:#5c6577}
+.d-intable-head .num{display:flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap}
+.d-intable-item{border-bottom:1px solid rgba(14,21,38,.07)}
+.d-intable-item:last-child{border-bottom:0}
+.d-intable-row{padding:12px 10px;border-radius:12px;cursor:pointer;transition:background .15s}
+.d-intable-row:hover,.d-intable-item.is-open .d-intable-row{background:var(--d-inset,#f3f5fa)}
+.d-intable-lot{display:flex;align-items:center;gap:12px;min-width:0}
+.d-intable-lot .text{min-width:0;display:grid;gap:2px}
+.d-intable-lot strong{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:14px;line-height:1.35}
+.d-intable-lot strong a{color:inherit}
+.d-intable-lot strong a:hover{color:#1e56e0}
+.d-intable-lot .d-muted{font-size:13px}
+.d-intable-num{text-align:right}
+.d-intable-num .label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.d-intable-num b{font-size:15px;font-weight:700}
+.d-intable-num.is-key b{color:#1e56e0;font-weight:800}
+.d-intable-toggle{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:0;border-radius:10px;background:transparent;color:#5c6577;cursor:pointer;transition:transform .2s,background .15s}
+.d-intable-toggle:hover{background:#e6eaf3;color:#0e1526}
+.d-intable-item.is-open .d-intable-toggle{transform:rotate(180deg)}
+.d-intable-detail{margin:2px 10px 14px;padding:14px 16px;border-radius:14px;background:var(--d-inset,#f3f5fa)}
+.d-intable-detail .d-detail{padding-top:0;border-top:0}
+.d-intable-detail .d-ivy-note{background:#fff}
+.d-intable-extra{margin:12px 0 0;font-size:13px;color:#4d5566}
+.d-intable-extra b{color:#0e1526}
+@container (max-width:419px){
+  .d-intable-row{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
+@container (max-width:619px){
+  .d-intable-head{display:none}
+  .d-intable-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px;padding:14px 4px}
+  .d-intable-lot{grid-column:1/-1;padding-right:44px}
+  .d-intable-toggle{position:absolute;top:14px;right:0}
+  .d-intable-row{position:relative}
+  .d-intable-num{text-align:left}
+  .d-intable-num .label{position:static;width:auto;height:auto;overflow:visible;clip:auto;display:block;font-size:12px;color:#5c6577}
+  .d-intable-detail{margin-inline:0}
+}
