@@ -52,6 +52,32 @@ it('toont per veiling je laatste bod met je positie', function () {
         ->assertSee('Hoogste bieder');
 });
 
+it('zet biedingen per stand in een eigen tabel en filtert via de tegels', function () {
+    $bidder = User::factory()->verified()->create();
+    $lot = Lot::factory()->live()->create();
+    $auction = Auction::factory()->create([
+        'lot_id' => $lot->id,
+        'start_price_cents' => 100_000,
+        'current_price_cents' => 100_000,
+    ]);
+
+    app(PlaceBid::class)->handle($auction, $bidder, 100_000, 'test:'.$auction->id);
+
+    // Zonder filter: de tabel van de stand, met de koppen één keer en de actie als pictogram.
+    $this->actingAs($bidder)
+        ->get('/dashboard/biedingen')
+        ->assertOk()
+        ->assertSeeInOrder(['id="biedingen-bovenaan"', 'class="d-lottable-head"', 'Jouw bod', 'Waarde volgens Atlas', 'Uitkomst', $lot->title, 'data-tip="Bekijk kavel"'], false)
+        ->assertDontSee('id="biedingen-overboden"', false);
+
+    // De tegel Overboden filtert: daar staat deze kavel niet.
+    $this->actingAs($bidder)
+        ->get('/dashboard/biedingen?toon=overboden')
+        ->assertOk()
+        ->assertSee('Je bent nergens overboden.')
+        ->assertDontSee('id="biedingen-bovenaan"', false);
+});
+
 it('toont uitbetalingen met status en vrijgavemoment', function () {
     $seller = User::factory()->verified()->create();
     $lot = Lot::factory()->live()->create(['seller_id' => $seller->id]);
