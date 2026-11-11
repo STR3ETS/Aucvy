@@ -52,7 +52,7 @@
             </x-ui.empty-state>
         </div>
     @else
-        <div class="d-stack" style="gap:18px">
+        <div class="d-stack d-sections">
             <div class="d-payout-top">
                 {{-- Waar de uitbetaling die nu loopt in het proces staat. --}}
                 <section class="d-card" aria-labelledby="proces">

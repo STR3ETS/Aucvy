@@ -32,7 +32,7 @@
             </x-slot:action>
         </x-ui.empty-state>
     @else
-        <div x-data="{ filter: 'alles' }" class="d-stack" style="gap:18px">
+        <div x-data="{ filter: 'alles' }" class="d-stack d-sections">
             {{-- Alleen de groepen die je hebt, en geen filter als er niets te kiezen valt. --}}
             @if ($counts->count() > 1)
                 <div class="d-chips" role="tablist" aria-label="Filter veilingen">

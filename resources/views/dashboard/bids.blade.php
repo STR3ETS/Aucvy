@@ -50,7 +50,7 @@
             </x-slot:action>
         </x-ui.empty-state>
     @else
-        <div class="d-stack" style="gap:18px">
+        <div class="d-stack d-sections">
                     {{-- De eerste tien staan open, de rest achter "Meer tonen". --}}
                     <section aria-label="{{ $heading }}" x-data="{ all: false }">
                         <div class="d-listbar">

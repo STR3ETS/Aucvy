@@ -47,7 +47,7 @@
             </x-slot:action>
         </x-ui.empty-state>
     @else
-        <div class="d-stack" style="gap:18px" x-data="{ tab: 'afrekeningen' }">
+        <div class="d-stack d-sections" x-data="{ tab: 'afrekeningen' }">
 
             {{-- De afrekening per verkoop over de volle breedte, zoals in het ontwerp; alle facturen als tweede tabblad. --}}
             <div class="d-card-head" style="align-items:center">

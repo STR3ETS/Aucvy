@@ -34,7 +34,7 @@
         oude link met een anker (#meldingen, #tweestaps) gaat door naar de
         pagina van dat onderdeel.
     --}}
-    <div class="d-stack" style="gap:18px"
+    <div class="d-stack d-sections"
          x-data
          x-init="(() => {
             const sections = { gegevens: 'gegevens', profiel: 'gegevens', beveiliging: 'beveiliging', tweestaps: 'beveiliging', wachtwoord: 'beveiliging', meldingen: 'meldingen', apparaten: 'apparaten', sessies: 'apparaten' };
