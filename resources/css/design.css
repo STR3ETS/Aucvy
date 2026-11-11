@@ -1651,3 +1651,46 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 }
 .d-listrow-right .d-iconbtn{margin-left:4px}
 .d-bid-action.d-iconbtn{width:42px;height:42px}
+
+/* ---------- mijn kavels: één tabel in één kaart ---------- */
+.d-lottable{--cols:minmax(0,1fr) 132px 152px 124px 172px 86px;container-type:inline-size}
+.d-lottable-head,.d-lotrow{display:grid;grid-template-columns:var(--cols);align-items:center;column-gap:20px}
+.d-lottable-head{padding:0 10px 8px;border-bottom:1px solid rgba(14,21,38,.08);font-size:12px;font-weight:700;color:#5c6577}
+.d-lottable-head .num{text-align:right}
+.d-lotrow{padding:12px 10px;border-bottom:1px solid rgba(14,21,38,.07)}
+.d-lotrow:last-child{border-bottom:0}
+.d-lotrow-lot{display:flex;align-items:center;gap:12px;min-width:0}
+.d-lotrow-lot .pick{display:flex;align-items:center;flex:0 0 auto}
+.d-lotrow-lot .pick input{width:18px;height:18px;accent-color:#2f6bff;cursor:pointer}
+.d-lotrow-lot .thumb{display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:0 0 auto;border-radius:12px;overflow:hidden;background:#e9edf5;color:#9aa3b5}
+.d-lotrow-lot .thumb img{width:100%;height:100%;object-fit:cover}
+.d-lotrow-lot .text{min-width:0;display:grid;gap:2px}
+.d-lotrow-lot strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;font-size:14.5px;font-weight:700;line-height:1.35}
+.d-lotrow-lot strong a{color:inherit}
+.d-lotrow-lot strong a:hover{color:#1e56e0}
+.d-lotrow-lot .text>span{font-size:12.5px;color:#5c6577;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-lotrow-facts{display:contents}
+.d-lotrow-facts .cell{min-width:0;font-size:13px;color:#2a3242}
+.d-lotrow-facts .is-status{display:flex;flex-wrap:wrap;gap:6px}
+.d-lotrow-facts .is-interest{display:flex;align-items:center;gap:10px}
+.d-lotrow-facts .is-interest b{font-weight:800;color:#0e1526}
+.d-lotrow-facts .is-amount{display:grid;justify-items:end;gap:1px;text-align:right}
+.d-lotrow-facts .is-amount b{font-size:15px;font-weight:800;color:#0e1526;white-space:nowrap}
+.d-lotrow-facts .is-amount small{font-size:12px;color:#5c6577}
+.d-lotrow-facts .is-moment{color:#5c6577}
+.d-lotrow-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.c.dash .d-card>.d-listbar{margin-bottom:16px}
+/* Smal: titel met de acties rechts, daaronder de feiten als een rij die doorloopt. */
+@container (max-width:919px){
+  .d-lottable-head{display:none}
+  .d-lotrow{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lot actions" "facts facts";gap:10px 12px;padding:14px 4px}
+  .d-lotrow-lot{grid-area:lot}
+  .d-lotrow-lot strong{white-space:normal}
+  .d-lotrow-actions{grid-area:actions}
+  .d-lotrow-facts{grid-area:facts;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-left:68px}
+  .d-lotrow-facts .is-amount{display:flex;align-items:baseline;gap:6px;justify-items:start;text-align:left}
+  .d-lotrow-facts .cell:empty{display:none}
+}
+@container (max-width:479px){
+  .d-lotrow-facts{padding-left:0}
+}
