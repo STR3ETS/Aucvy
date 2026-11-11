@@ -1409,7 +1409,7 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 }
 
 /* Meer lucht tussen de secties van een dashboardscherm: één maat voor de ruimte tussen kaarten. */
-.c.dash{--d-gap:48px}
+.c.dash{--d-gap:36px}
 .c.dash .dash-body{padding-top:var(--d-gap)}
 .c.dash .dash-hero.no-tiles+.dash-body{padding-top:var(--d-gap)}
 .c.dash .d-cols,.c.dash .d-col-main,.c.dash .d-sections,.c.dash .d-fin-extra{gap:var(--d-gap)}
@@ -1417,7 +1417,7 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .c.dash .dash-page-switch{margin-bottom:var(--d-gap)}
 .c.dash .dash-tiles,.c.dash .dash-tiles:has(.action-stack){gap:16px}
 @media (max-width:1080px){
-  .c.dash{--d-gap:36px}
+  .c.dash{--d-gap:28px}
   .c.dash .dash-tiles,.c.dash .dash-tiles:has(.action-stack){gap:12px}
 }
 .c.dash .feed{padding:22px}
