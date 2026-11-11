@@ -44,6 +44,7 @@
             staat, een ring die zegt waar het bod zit ten opzichte van de
             waarde-indicatie van Atlas, de bedragen op een rij en één knop.
         --}}
+        <div class="d-bids-wrap">
         <div class="d-bids">
             @foreach ($openBids as $row)
                 @php
@@ -125,6 +126,7 @@
                     </div>
                 </article>
             @endforeach
+        </div>
         </div>
     @endif
 </section>
