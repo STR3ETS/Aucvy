@@ -92,25 +92,37 @@ it('meldt een probleem via het formulier', function () {
         ->and($order->fresh()->disputes()->count())->toBe(1);
 });
 
-it('toont één lijst tegelijk: gekocht eerst, verkocht achter de tegel', function () {
+it('zet bestellingen per stand in een eigen tabel en filtert via de tegels', function () {
     $user = User::factory()->verified()->create();
     $bought = Order::factory()->create(['buyer_id' => $user->id]);
     $sold = Order::factory()->create(['seller_id' => $user->id]);
 
+    // Zonder filter: wat je kocht en wat je verkocht elk in een eigen tabel, met de koppen één keer.
     $this->actingAs($user)
         ->get(route('orders.index'))
         ->assertOk()
         ->assertSee($bought->order_number)
-        ->assertDontSee($sold->order_number)
+        ->assertSee($sold->order_number)
+        ->assertSee('class="d-lottable-head"', false)
+        ->assertSee('Waarde volgens Atlas')
+        ->assertSee('data-tip="Bekijk bestelling"', false)
         ->assertSee(route('orders.index', ['toon' => 'verkocht']), escape: false);
 
     $this->actingAs($user)
         ->get(route('orders.index', ['toon' => 'verkocht']))
         ->assertOk()
         ->assertSee($sold->order_number)
+        ->assertSee('Hamerprijs')
         ->assertDontSee($bought->order_number);
 
-    // Lopend toont beide kanten in één lijst.
+    $this->actingAs($user)
+        ->get(route('orders.index', ['toon' => 'gekocht']))
+        ->assertOk()
+        ->assertSee($bought->order_number)
+        ->assertSee('Je bod')
+        ->assertDontSee($sold->order_number);
+
+    // Lopend toont beide kanten, elk in de eigen tabel.
     $this->actingAs($user)
         ->get(route('orders.index', ['toon' => 'lopend']))
         ->assertOk()
