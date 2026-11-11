@@ -1421,3 +1421,6 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
   .c.dash .dash-tiles,.c.dash .dash-tiles:has(.action-stack){gap:12px}
 }
 .c.dash .feed{padding:22px}
+/* Zonder biedingen blijft de grafiek staan, leeg: per uur een zachte baan, zodat je ziet wat hier komt. */
+.d-hours.is-empty>div{border-radius:4px 4px 0 0;background:var(--d-inset,#f3f5fa)}
+.d-hours.is-empty i{min-height:0}

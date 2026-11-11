@@ -104,8 +104,7 @@
             @endif
         </div>
     </div>
-    @if ($hours['total'] > 0)
-    <div class="d-hours" role="img" aria-label="Biedingen per uur, {{ $hours['total'] }} in 24 uur{{ $hours['peak_count'] > 0 ? ', drukste moment '.$hours['peak_label'].' met '.$hours['peak_count'] : '' }}">
+    <div class="d-hours{{ $hours['total'] === 0 ? ' is-empty' : '' }}" role="img" aria-label="Biedingen per uur, {{ $hours['total'] }} in 24 uur{{ $hours['peak_count'] > 0 ? ', drukste moment '.$hours['peak_label'].' met '.$hours['peak_count'] : '' }}">
         @foreach ($hours['hours'] as $index => $hour)
             <div><i class="{{ $index === $hours['peak_index'] && $hour['count'] > 0 ? 'is-peak' : '' }}" style="height:{{ $hours['peak_count'] > 0 ? round($hour['count'] / $hours['peak_count'] * 100, 1) : 0 }}%"></i></div>
         @endforeach
@@ -117,7 +116,6 @@
         <span>{{ $hours['hours'][18]['label'] }}</span>
         <span>nu</span>
     </div>
-    @endif
 </section>
 
 <section class="d-card" aria-labelledby="interesse-title">
