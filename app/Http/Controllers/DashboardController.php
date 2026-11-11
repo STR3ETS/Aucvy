@@ -102,10 +102,8 @@ final class DashboardController extends Controller
             'hours' => $isSeller ? $charts->bidsPerHour($user) : null,
             'interest' => $isSeller ? $interest->forSeller($user, $weekly) : [],
             'openBids' => $isSeller ? [] : $buyer->openBids($user),
-            'watching' => $isSeller ? collect() : $buyer->watching($user),
             'purchases' => $isSeller ? collect() : $buyer->purchases($user),
             'toPay' => $isSeller ? null : $buyer->toPay($user),
-            'alerts' => $isSeller ? 0 : $buyer->activeAlerts($user),
             'isNew' => ! $user->lots()->exists()
                 && ! $user->purchases()->exists()
                 && ! $user->bids()->exists(),

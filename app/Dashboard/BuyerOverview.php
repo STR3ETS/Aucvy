@@ -10,9 +10,7 @@ use App\Enums\OrderStatus;
 use App\Lots\Interest\Interest;
 use App\Models\Bid;
 use App\Models\Order;
-use App\Models\SavedSearch;
 use App\Models\User;
-use App\Models\WatchlistItem;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
@@ -64,25 +62,6 @@ final class BuyerOverview
     }
 
     /**
-     * Wat je volgt: hot en bijna sluitend eerst.
-     *
-     * @return Collection<int, WatchlistItem>
-     */
-    public function watching(User $user, int $limit = 3): Collection
-    {
-        return WatchlistItem::query()
-            ->where('user_id', $user->id)
-            ->with(['lot.auction', 'lot.media'])
-            ->latest('id')
-            ->limit(100)
-            ->get()
-            ->filter(fn (WatchlistItem $item): bool => $item->lot !== null && $item->lot->auction !== null && ! $item->lot->auction->isClosed())
-            ->sortBy(fn (WatchlistItem $item): string => ($item->lot->is_hot ? '0' : '1').$item->lot->auction->ends_at->format('YmdHis'))
-            ->take($limit)
-            ->values();
-    }
-
-    /**
      * @return Collection<int, Order>
      */
     public function purchases(User $user, int $limit = 5): Collection
@@ -113,10 +92,5 @@ final class BuyerOverview
             'deadline' => $orders->first()?->payment_deadline_at,
             'order' => $orders->first(),
         ];
-    }
-
-    public function activeAlerts(User $user): int
-    {
-        return SavedSearch::query()->where('user_id', $user->id)->active()->count();
     }
 }

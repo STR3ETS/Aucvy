@@ -1590,3 +1590,55 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
   .d-bid-action{grid-area:action;align-self:end;width:100%}
 }
 .d-bid-stats dd span{white-space:nowrap}
+
+/* ---------- hoe je kocht: één tabel met een kleine ring als uitkomst en de weg naar factuur en bestelling ---------- */
+.d-bought{--cols:minmax(0,1fr) 96px 180px 250px auto;container-type:inline-size;margin-top:6px}
+.d-bought-head,.d-bought-row{display:grid;grid-template-columns:var(--cols);align-items:center;column-gap:20px}
+.d-bought-head{padding:0 10px 8px;border-bottom:1px solid rgba(14,21,38,.08);font-size:12px;font-weight:700;color:#5c6577}
+.d-bought-head .num{text-align:right}
+.d-bought-head span:last-child{width:86px}
+.d-bought-row{padding:12px 10px;border-bottom:1px solid rgba(14,21,38,.07)}
+.d-bought-row:last-child{border-bottom:0}
+.d-bought-lot{display:flex;align-items:center;gap:12px;min-width:0}
+.d-bought-lot img,.d-bought-lot .thumb{width:44px;height:44px;flex:0 0 auto;border-radius:10px;object-fit:cover;background:#e1e6f0}
+.d-bought-lot .text{min-width:0;display:grid;gap:4px;justify-items:start}
+.d-bought-lot strong{max-width:100%;font-size:14px;font-weight:700;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-bought-lot strong a{color:inherit}
+.d-bought-lot strong a:hover{color:#1e56e0}
+.d-bought-num{text-align:right;white-space:nowrap}
+.d-bought-num .label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.d-bought-num b{font-size:14.5px;font-weight:700}
+.d-bought-num .d-muted{font-size:13px}
+.d-bought-verdict{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;line-height:1.35;color:#1e56e0}
+.d-bought-verdict.is-below{color:#0b7a3b}
+.d-bought-verdict.is-above{color:#8f5209}
+.d-bought-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:86px}
+.d-ring.is-sm{width:34px;height:34px}
+.d-ring.is-sm circle{stroke-width:15}
+/* Middelbreed: titel met de knoppen rechts, daaronder de twee bedragen en de uitkomst. Smal: alles onder elkaar. */
+@container (max-width:899px){
+  .d-bought-head{display:none}
+  .d-bought-row{grid-template-columns:132px minmax(0,1fr) auto;grid-template-areas:"lot lot actions" "bid value verdict";gap:10px 16px;padding:14px 6px}
+  .d-bought-lot{grid-area:lot}
+  .d-bought-actions{grid-area:actions;width:auto}
+  .d-bought-num.is-bid{grid-area:bid;padding-left:56px}
+  .d-bought-num.is-value{grid-area:value}
+  .d-bought-verdict{grid-area:verdict;max-width:220px}
+  .d-bought-num{text-align:left;white-space:normal}
+  .d-bought-num .label{position:static;width:auto;height:auto;overflow:visible;clip:auto;display:block;font-size:12px;color:#5c6577}
+}
+@container (max-width:479px){
+  .d-bought-row{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"lot lot" "bid value" "verdict verdict" "actions actions";gap:10px 14px}
+  .d-bought-lot strong{white-space:normal}
+  .d-bought-verdict{max-width:none}
+  .d-bought-num.is-bid{padding-left:0}
+  .d-bought-actions{justify-content:flex-start}
+}
+
+/* ---------- een actie als pictogram: rond, met de naam bij aanwijzen en bij focus ---------- */
+.d-iconbtn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex:0 0 auto;padding:0;border:1px solid rgba(14,21,38,.14);border-radius:50%;background:#fff;color:#2a3242;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.d-iconbtn:hover,.d-iconbtn:focus-visible{border-color:#2f6bff;background:#f1f5ff;color:#1e56e0}
+.d-iconbtn.is-dark{border-color:#0c1326;background:#0c1326;color:#fff}
+.d-iconbtn.is-dark:hover,.d-iconbtn.is-dark:focus-visible{border-color:#18223f;background:#18223f;color:#fff}
+.d-iconbtn[data-tip]::after{content:attr(data-tip);position:absolute;z-index:30;bottom:calc(100% + 8px);left:50%;padding:6px 10px;border-radius:8px;background:#0c1326;color:#fff;font-size:12px;font-weight:600;line-height:1.3;white-space:nowrap;opacity:0;visibility:hidden;transform:translate(-50%,3px);transition:opacity .12s,transform .12s,visibility .12s;pointer-events:none}
+.d-iconbtn[data-tip]:hover::after,.d-iconbtn[data-tip]:focus-visible::after{opacity:1;visibility:visible;transform:translate(-50%,0)}
