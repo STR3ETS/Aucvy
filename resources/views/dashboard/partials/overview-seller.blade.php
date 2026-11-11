@@ -231,20 +231,41 @@
     @endif
 </section>
 
-{{-- Verdieping: drie tabs, zonder knoppen om te doen. --}}
-<div x-data="{ depth: 'kijkers' }">
-    <div class="d-chips" style="align-items:center;margin-bottom:10px">
-        <span class="d-aside-label" style="margin-right:4px">Verdieping</span>
-        <button type="button" class="d-chip" :class="depth === 'kijkers' && 'is-on'" :aria-pressed="depth === 'kijkers'" @click="depth = 'kijkers'">Wie kijkt er écht?</button>
-        <button type="button" class="d-chip" :class="depth === 'vraag' && 'is-on'" :aria-pressed="depth === 'vraag'" @click="depth = 'vraag'">Wat doet de vraag?</button>
-        <button type="button" class="d-chip" :class="depth === 'ivy' && 'is-on'" :aria-pressed="depth === 'ivy'" @click="depth = 'ivy'">Wat Ivy deze week zag</button>
+{{--
+    Inzichten: één kaart met drie tabbladen in de kaart zelf. Elk tabblad
+    heet naar wat erin staat en begint met één zin die het antwoord geeft,
+    daarna pas de cijfers. Om te weten, niet om te doen.
+--}}
+@php
+    $insightTabs = [
+        'kijkers' => ['users', 'Interesse van kopers'],
+        'vraag' => ['trending-up', 'Omzetverwachting'],
+        'ivy' => ['sparkles', 'Opgevallen deze week'],
+    ];
+    $intentTotal = $intent['watchers'] + $intent['viewings'] + $intent['bidders'];
+@endphp
+<section class="d-card" aria-labelledby="inzichten-title" x-data="{ depth: 'kijkers' }">
+    <div class="d-titleline">
+        <h2 id="inzichten-title" class="d-h2">Inzichten</h2>
+        <x-dashboard.help text="Drie blikken op je verkoop: wie er interesse heeft, wat je de komende weken kunt verwachten en wat Ivy deze week opviel." />
     </div>
 
-    <section class="d-card" x-show="depth === 'kijkers'" aria-label="{{ __('dashboard.intent.title') }}">
-        <div class="d-titleline">
-            <h2 class="d-h2">Wie kijkt er écht?</h2>
-            <x-dashboard.help text="Bezoekersaantallen zeggen weinig. Dit zijn gedragssignalen van de laatste 30 dagen: wie volgt, wie een bezichtiging vroeg, wie bood. {{ __('dashboard.intent.privacy') }}" />
-        </div>
+    <div class="d-tabs" role="tablist" aria-label="Inzichten">
+        @foreach ($insightTabs as $key => [$icon, $label])
+            <button type="button" role="tab" id="inzicht-tab-{{ $key }}" aria-controls="inzicht-{{ $key }}"
+                    :aria-selected="depth === '{{ $key }}'" :class="depth === '{{ $key }}' && 'is-on'" class="{{ $loop->first ? 'is-on' : '' }}"
+                    @click="depth = '{{ $key }}'"><x-v4.icon :name="$icon" :size="16" stroke="2.1" /> {{ $label }}</button>
+        @endforeach
+    </div>
+
+    <div id="inzicht-kijkers" role="tabpanel" aria-labelledby="inzicht-tab-kijkers" x-show="depth === 'kijkers'">
+        <p class="d-lead">
+            @if ($intentTotal === 0)
+                Nog geen signalen van kopers in de laatste 30 dagen. Zodra iemand je kavel volgt, een bezichtiging vraagt of biedt, zie je het hier.
+            @else
+                In de laatste 30 dagen: <b>{{ $intent['bidders'] }} {{ $intent['bidders'] === 1 ? 'bieder' : 'bieders' }}</b>, <b>{{ $intent['viewings'] }} {{ $intent['viewings'] === 1 ? 'bezichtiging' : 'bezichtigingen' }}</b> en <b>{{ $intent['watchers'] }} {{ $intent['watchers'] === 1 ? 'volger' : 'volgers' }}</b>. Dat zegt meer dan het aantal bezoekers.
+            @endif
+        </p>
         @php $intentMax = max(1, $intent['watchers'], $intent['viewings'], $intent['bidders'], $intent['business']); @endphp
         <div class="d-depth">
             @foreach ([['watchers', 'Volgers'], ['viewings', 'Bezichtigingen'], ['bidders', 'Bieders'], ['business', 'Zakelijk']] as [$key, $label])
@@ -262,12 +283,12 @@
                 <a class="d-btn d-btn-secondary d-btn-sm d-btn-sq" href="{{ route('messages.index') }}">Persoonlijk benaderen</a>
             </div>
         @endif
-    </section>
+        <p class="d-footnote">{{ __('dashboard.intent.privacy') }}</p>
+    </div>
 
-    <section class="d-card" x-show="depth === 'vraag'" x-cloak aria-label="{{ __('dashboard.forecast.title') }}">
-        <h2 class="d-h2">{{ __('dashboard.forecast.title') }}</h2>
+    <div id="inzicht-vraag" role="tabpanel" aria-labelledby="inzicht-tab-vraag" x-show="depth === 'vraag'" x-cloak>
         @if (! $forecast['has_history'])
-            <p class="d-sub">{{ __('dashboard.forecast.empty') }}</p>
+            <p class="d-lead">{{ __('dashboard.forecast.empty') }}</p>
             <div class="forecast-empty">
                 <div class="forecast-ghost" aria-hidden="true">
                     @foreach ($forecast['weeks'] as $week)
@@ -288,7 +309,7 @@
             </div>
         @else
             @php $weekPeak = max(1, max(array_column($forecast['weeks'], 'high_cents'))); @endphp
-            <p class="d-sub">{{ __('dashboard.forecast.disclaimer') }}</p>
+            <p class="d-lead">Je omzet per week, met rechts van de streep wat je de komende weken kunt verwachten. {{ __('dashboard.forecast.disclaimer') }}</p>
             <div class="mt-4 flex h-32 items-end gap-1" role="img"
                  aria-label="Weekomzet, {{ __('dashboard.forecast.measured') }} en {{ __('dashboard.forecast.predicted') }}">
                 @foreach ($forecast['weeks'] as $week)
@@ -308,16 +329,13 @@
                 · {{ count(array_filter($forecast['weeks'], fn ($week) => ! $week['measured'])) }} {{ __('dashboard.forecast.predicted') }}
             </p>
         @endif
-    </section>
+    </div>
 
-    <section class="d-card" x-show="depth === 'ivy'" x-cloak aria-label="Wat Ivy deze week zag">
-        <div class="d-titleline">
-            <h2 class="d-h2">Wat Ivy deze week zag</h2>
-            <x-dashboard.help text="Observaties uit je kavels en biedingen. Dit is om te weten, niet om te doen." />
-        </div>
+    <div id="inzicht-ivy" role="tabpanel" aria-labelledby="inzicht-tab-ivy" x-show="depth === 'ivy'" x-cloak>
         @if ($weekly->isEmpty())
-            <p class="feed-empty" style="margin-top:12px">Nog niets deze week. Zodra er iets opvalt in je kavels of biedingen, staat het hier.</p>
+            <p class="d-lead">Nog niets deze week. Zodra er iets opvalt in je kavels of biedingen, staat het hier.</p>
         @else
+            <p class="d-lead">{{ $weekly->count() === 1 ? 'Eén ding viel' : $weekly->count().' dingen vielen' }} Ivy en het team deze week op in je kavels en biedingen. Om te weten, niet om te doen.</p>
             <ul class="mt-3 grid gap-3 sm:grid-cols-2" style="list-style:none;padding:0;margin-top:12px">
                 @foreach ($weekly as $insight)
                     <li class="d-task">
@@ -330,5 +348,5 @@
                 @endforeach
             </ul>
         @endif
-    </section>
-</div>
+    </div>
+</section>

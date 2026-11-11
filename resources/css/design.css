@@ -1523,3 +1523,12 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 @media (min-width:1081px){
   .c.dash .dash-shell{gap:var(--d-gap);padding-right:var(--d-gap)}
 }
+
+/* ---------- tabbladen in een kaart: tekst met een streep eronder ---------- */
+.d-tabs{display:flex;gap:4px;margin:14px 0 18px;border-bottom:1px solid rgba(14,21,38,.09);overflow-x:auto;scrollbar-width:none}
+.d-tabs::-webkit-scrollbar{display:none}
+.d-tabs button{display:inline-flex;align-items:center;gap:7px;flex:none;min-height:44px;margin-bottom:-1px;padding:0 14px;border:0;border-bottom:2px solid transparent;background:none;color:#5c6577;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:color .15s,border-color .15s}
+.d-tabs button:hover{color:#0e1526}
+.d-tabs button.is-on{color:#1e56e0;border-bottom-color:#2f6bff}
+.d-lead{margin:0 0 16px;font-size:15px;line-height:1.55;color:#0e1526;max-width:72ch}
+.d-lead b{font-weight:800}
