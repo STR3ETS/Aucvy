@@ -164,3 +164,20 @@ it('toont de interesse per kavel als één tabel met de koppen één keer', func
     expect(substr_count($content, 'class="d-intable-head"'))->toBe(1)
         ->and(substr_count($content, 'class="d-intable-item"'))->toBe(2);
 });
+
+it('toont boven het team een profielkaart met rol, bedrijf en verificatie', function () {
+    $owner = User::factory()->verified()->business()->create(['name' => 'Anna Bakker']);
+
+    $this->actingAs($owner)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSeeInOrder(['Anna Bakker', 'Eigenaar bij '.$owner->company->name, 'Geverifieerd', 'Zakelijk', 'Lid sinds', 'Instellingen', 'Je team']);
+
+    $buyer = User::factory()->create(['name' => 'Bram de Vries']);
+
+    $this->actingAs($buyer)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSeeInOrder(['Bram de Vries', 'Particulier account', 'Nog niet geverifieerd', 'Je team'])
+        ->assertSee(route('verification.overview'), escape: false);
+});

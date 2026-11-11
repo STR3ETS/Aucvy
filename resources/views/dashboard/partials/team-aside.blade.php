@@ -17,9 +17,42 @@
     $handled = collect($done)->keyBy('agent');
     // Eén blauwe knop per scherm: staat de betaalkaart er, dan is dat de hoofdhandeling.
     $hasPayCard = ! $isSeller && $toPay !== null && $toPay['count'] > 0;
+    // De profielkaart: initialen als er geen beeldmerk is, en een link naar het publieke profiel als dat bestaat.
+    $meInitials = collect(explode(' ', trim((string) $user->name)))->filter()->map(fn (string $part): string => mb_strtoupper(mb_substr($part, 0, 1)))->take(2)->implode('');
+    $hasProfile = $user->hasSellerProfile();
 @endphp
 
-<aside class="d-col-aside" aria-label="Je team">
+<aside class="d-col-aside is-stack" aria-label="Jij en je team">
+    {{-- Wie je bent: naam, rol en bedrijf, of je geverifieerd bent en de weg naar je instellingen. --}}
+    <section class="d-me" aria-label="Je profiel">
+        <div class="d-me-top">
+            @if ($user->company?->logo_path)
+                <img class="d-me-avatar" src="{{ $user->company->logo_path }}" alt="">
+            @else
+                <span class="d-me-avatar" aria-hidden="true">{{ $meInitials !== '' ? $meInitials : 'A' }}</span>
+            @endif
+            <div class="d-me-text">
+                <strong>{{ $user->name }}</strong>
+                <span>{{ $user->company !== null ? $user->companyRole()->label().' bij '.$user->company->name : 'Particulier account' }}</span>
+            </div>
+        </div>
+        <div class="d-me-tags">
+            @if ($user->kyc_status->allowsBidding())
+                <span class="d-tag tone-ok"><x-v4.icon name="badge-check" :size="13" stroke="2.2" /> Geverifieerd</span>
+            @else
+                <a class="d-tag tone-warn" href="{{ route('verification.overview') }}">Nog niet geverifieerd</a>
+            @endif
+            <span class="d-tag tone-grey">{{ $user->company !== null ? 'Zakelijk' : 'Particulier' }}</span>
+            <span class="d-tag tone-grey">Lid sinds {{ str_replace('.', '', $user->created_at->timezone($displayTimezone)->isoFormat('MMM YYYY')) }}</span>
+        </div>
+        <div class="d-me-actions">
+            <a class="d-btn d-btn-secondary d-btn-sm" href="{{ route('account.settings') }}">Instellingen</a>
+            @if ($hasProfile)
+                <a class="d-btn d-btn-secondary d-btn-sm" href="{{ route('sellers.show', $user) }}">Mijn profiel</a>
+            @endif
+        </div>
+    </section>
+
     @if ($hasPayCard)
         <div class="d-pay">
             <div class="d-pay-head">
@@ -33,7 +66,7 @@
         </div>
     @endif
 
-    <div class="d-aside-block">
+    <div class="d-aside-block d-side-team">
         <div class="d-aside-head">
             <div class="d-titleline">
                 <h2 class="d-h3">Je team</h2>

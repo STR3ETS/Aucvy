@@ -1441,3 +1441,19 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-member-count.is-urgent{background:#d92d20}
 .d-member-go{flex:0 0 auto;display:inline-flex;width:26px;justify-content:center;color:#9aa3b5;transition:transform .15s,color .15s}
 .d-member:hover .d-member-go{color:#1e56e0;transform:translateX(2px)}
+
+/* ---------- de zijkolom als losse kaarten: profiel, betalen, team ---------- */
+.c.dash .d-col-aside.is-stack{display:flex;flex-direction:column;gap:var(--d-gap,18px);border:0;border-radius:0;background:transparent;box-shadow:none}
+.c.dash .d-col-aside.is-stack>*{border-radius:16px;box-shadow:var(--d-lift)}
+.c.dash .d-col-aside.is-stack>.d-aside-block{padding:18px;border:0;background:#fff}
+.c.dash .d-col-aside.is-stack>.d-pay{border-radius:16px}
+.d-me{display:flex;flex-direction:column;gap:14px;padding:18px;background:#fff}
+.d-me-top{display:flex;align-items:center;gap:12px;min-width:0}
+.d-me-avatar{width:52px;height:52px;flex:0 0 auto;border-radius:50%;background:#2f6bff;color:#fff;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center;object-fit:cover}
+.d-me-text{min-width:0;display:grid;gap:2px}
+.d-me-text strong{font-size:17px;font-weight:800;letter-spacing:-.01em;line-height:1.25;overflow-wrap:anywhere}
+.d-me-text span{font-size:13px;line-height:1.4;color:#5c6577}
+.d-me-tags{display:flex;flex-wrap:wrap;gap:6px}
+.d-me-tags .d-tag{display:inline-flex;align-items:center;gap:5px}
+.d-me-actions{display:flex;flex-wrap:wrap;gap:8px}
+.d-me-actions .d-btn{flex:1 1 auto;min-height:40px}
