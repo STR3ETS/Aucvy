@@ -139,3 +139,22 @@ it('pauzeert, hernoemt en verwijdert alleen eigen alerts', function () {
     $this->actingAs($user)->delete(route('dashboard.alerts.destroy', $mine))->assertRedirect();
     expect(SavedSearch::query()->whereKey($mine->id)->exists())->toBeFalse();
 });
+
+it('zet alerts per stand in een eigen tabel met de acties als pictogram', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->create(['slug' => 'heftrucks', 'name' => 'Heftrucks']);
+    liveLotIn($category, 'Linde E16 heftruck');
+
+    SavedSearch::query()->forceCreate(['user_id' => $user->id, 'name' => 'Heftrucks van Linde', 'query' => ['q' => 'linde'], 'last_run_at' => now()]);
+    SavedSearch::query()->forceCreate(['user_id' => $user->id, 'name' => 'Koelcellen', 'query' => ['q' => 'koelcel'], 'last_run_at' => now()]);
+    SavedSearch::query()->forceCreate(['user_id' => $user->id, 'name' => 'Steigers', 'query' => ['q' => 'steiger'], 'last_run_at' => now(), 'paused_at' => now()]);
+
+    $this->actingAs($user)->get(route('dashboard.alerts'))
+        ->assertOk()
+        ->assertSeeInOrder([
+            'id="alerts-nieuw"', 'class="d-lottable-head"', 'Heftrucks van Linde', '1 nieuwe match', 'data-tip="Bekijk match"', 'data-tip="Pauzeren"',
+            'id="alerts-aan"', 'Koelcellen', 'data-tip="Zoekvraag verfijnen"',
+            'id="alerts-gepauzeerd"', 'Steigers', 'data-tip="Hervatten"', 'data-tip="Verwijderen"',
+        ], false)
+        ->assertSee('Meldingen instellen');
+});

@@ -1776,3 +1776,10 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
   .d-thread-actions{flex:1 1 100%;justify-content:flex-end}
   .d-thread-report{flex-wrap:wrap}
 }
+
+/* ---------- alerts: een regel per zoekopdracht, met de naam wijzigen eronder ---------- */
+.d-alertrow .thumb{background:var(--d-inset,#f3f5fa);color:#5c6577}
+.d-alertrow .thumb.is-new{background:#eaf0ff;color:#1e56e0}
+.d-alertrow .d-lotrow-facts .is-value .d-muted{font-size:12.5px}
+.d-alertrow-rename{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:10px}
+.d-alertrow-rename .d-input{flex:1 1 auto;max-width:420px}
