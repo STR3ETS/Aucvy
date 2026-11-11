@@ -119,3 +119,38 @@ it('toont één uitbetaling met de stand en de stappen, alleen aan wie hem mag z
         ->get(route('dashboard.payouts.show', $payout))
         ->assertForbidden();
 });
+
+it('zet live, ingepland en concept elk in een eigen tabel, met de waarde volgens Atlas', function () {
+    $seller = User::factory()->verified()->create();
+    $live = Lot::factory()->live()->create([
+        'seller_id' => $seller->id,
+        'title' => 'Combisteamer Rational',
+        'value_min_cents' => 200_000,
+        'value_max_cents' => 300_000,
+        'value_confidence' => 'high',
+    ]);
+    Auction::factory()->create(['lot_id' => $live->id, 'start_price_cents' => 100_000, 'current_price_cents' => 350_000]);
+    Lot::factory()->create(['seller_id' => $seller->id, 'status' => 'scheduled', 'title' => 'Koffiebar-toonbank']);
+    Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id, 'title' => 'Designfauteuil']);
+
+    $content = $this->actingAs($seller)
+        ->get(route('dashboard.lots'))
+        ->assertOk()
+        // Drie tabellen onder elkaar, elk met zijn eigen kavel.
+        ->assertSeeInOrder(['id="kavels-live"', 'Combisteamer Rational', 'id="kavels-gepland"', 'Koffiebar-toonbank', 'id="kavels-concept"', 'Designfauteuil'], escape: false)
+        // Bij de live kavel staat de waarde en de uitkomst: het bod zit erboven.
+        ->assertSee('Waarde volgens Atlas')
+        ->assertSee('€ 2.000 – € 3.000')
+        ->assertSee('Boven de waarde-indicatie')
+        ->getContent();
+
+    expect(substr_count($content, 'class="d-lottable-head"'))->toBe(3);
+
+    // Een tegel als filter laat alleen die tabel over.
+    $this->actingAs($seller)
+        ->get(route('dashboard.lots', ['status' => 'concept']))
+        ->assertOk()
+        ->assertSee('id="kavels-concept"', escape: false)
+        ->assertDontSee('id="kavels-live"', escape: false)
+        ->assertDontSee('Combisteamer Rational');
+});

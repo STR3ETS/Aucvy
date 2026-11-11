@@ -23,12 +23,25 @@
     // De tegels zijn het filter (?status=): geen rij chips met dezelfde tellers eronder.
     $filter = array_key_exists((string) request('status'), $groups) ? (string) request('status') : 'alle';
     $filterUrl = fn (string $key): string => route('dashboard.lots', $filter === $key ? [] : ['status' => $key]);
-    // De rijen voor de lijst in de browser: de groep en de zoektekst (titel en status).
-    $listRows = $lots->map(fn ($lot): array => ['id' => $lot->id, 'g' => $groupOf($lot->status), 't' => Str::lower($lot->title.' '.$lot->status->label())])->values();
-    $listLimit = 10;
-    // Wat bij het laden al open staat, zodat er niets verspringt.
-    $inFilter = $listRows->filter(fn (array $row): bool => $filter === 'alle' || $row['g'] === $filter);
-    $firstShown = $inFilter->take($listLimit)->pluck('id')->flip();
+    // Per status een eigen tabel, in de volgorde van wat nu het meest speelt. Welke cellen een tabel
+    // toont hangt van de status af: een concept heeft geen bod, een verkochte kavel geen kijkers meer.
+    $tableSpecs = [
+        'live' => ['Live', 'Kavels waar nu op geboden kan worden, met het bod naast de waarde-indicatie van Atlas.', ['interest', 'amount', 'value', 'verdict']],
+        'gepland' => ['Ingepland', 'Goedgekeurd en klaar om te starten. De waarde-indicatie staat erbij zodra Atlas hem heeft.', ['interest', 'value']],
+        'concept' => ['Concepten', 'Nog niet gepubliceerd. De ring toont hoe compleet het concept is.', ['complete']],
+        'gepauzeerd' => ['Gepauzeerd', 'Stilgezet: de klok staat stil en er wordt niet geboden.', ['interest', 'amount', 'value']],
+        'verkocht' => ['Verkocht', 'Kavels met een koper, met de verkoopprijs naast de waarde-indicatie en de stand van de uitbetaling.', ['amount', 'value', 'verdict']],
+        'overig' => ['Niet verkocht of gestopt', 'Kavels zonder koper of die zijn ingetrokken. Je kunt ze opnieuw plaatsen.', ['interest']],
+    ];
+    $tables = collect($tableSpecs)
+        ->filter(fn (array $spec, string $key): bool => $filter === 'alle' || $filter === $key)
+        ->map(fn (array $spec, string $key): array => [
+            'title' => $spec[0],
+            'help' => $spec[1],
+            'columns' => $spec[2],
+            'lots' => $lots->filter(fn ($lot): bool => $groupOf($lot->status) === $key)->values(),
+        ])
+        ->filter(fn (array $table): bool => $table['lots']->isNotEmpty());
 @endphp
 
 <x-layouts.dashboard title="Mijn kavels" eyebrow="Dashboard" intro="Alles wat je hebt geplaatst, met de stand van elke veiling en wat er nog in de la ligt.">
@@ -61,14 +74,17 @@
         @endif
 
         {{--
-            Zoeken gebeurt in de browser: de lijst is al geladen. De eerste tien
-            rijen staan open, de rest achter "Meer tonen". Selecteren voor
-            dupliceren of verwijderen staat achter één knop; bulk gaat via één
-            formulier om de lijst heen.
+            Per status een eigen tabel in een eigen kaart: wat live staat,
+            wat ingepland is, de concepten, en daarna wat verkocht of
+            gestopt is. Zo loopt een concept niet tussen de lopende veilingen
+            door. Elke tabel toont de eerste rijen, de rest zit achter "Meer
+            tonen". Zoeken gebeurt in de browser en werkt door alle tabellen
+            heen; een tabel zonder treffer verdwijnt. Selecteren voor
+            dupliceren of verwijderen staat achter één knop; bulk gaat via
+            één formulier om de tabellen heen.
         --}}
-        <form method="POST" action="{{ route('dashboard.lots.bulk') }}" x-data="{ selected: [], selecting: false }">
+        <form method="POST" action="{{ route('dashboard.lots.bulk') }}" x-data="{ selected: [], selecting: false, search: '', found: {} }">
             @csrf
-            <div class="d-card" x-data="shortList({ rows: {{ Js::from($listRows) }}, filter: '{{ $filter }}', limit: {{ $listLimit }} })">
             <div class="d-listbar">
                 <p class="d-listbar-count">
                     @if ($filter === 'alle')
@@ -80,7 +96,7 @@
                 </p>
                 <label class="d-listbar-search">
                     <span class="sr-only">Zoek in je kavels</span>
-                    <input type="search" x-model="q" placeholder="Zoek in je kavels" autocomplete="off" class="d-input" style="margin:0">
+                    <input type="search" x-model="search" placeholder="Zoek in je kavels" autocomplete="off" class="d-input" style="margin:0">
                 </label>
                 <button type="button" class="d-btn d-btn-secondary d-btn-sm" :aria-pressed="selecting" @click="selecting = ! selecting; if (! selecting) selected = []" x-text="selecting ? 'Klaar' : 'Selecteren'">Selecteren</button>
             </div>
@@ -93,124 +109,50 @@
                 <button type="button" class="link" @click="selected = []">Niets selecteren</button>
             </div>
 
-            {{--
-                Eén tabel in één kaart: de koppen staan er één keer boven en
-                elke kavel is één regel, net als bij Lopende biedingen en Hoe
-                je kocht. Links wat het is met de status eronder, dan de
-                interesse (bij een concept hoe compleet het is, als ring), het
-                bedrag, wanneer er iets gebeurt en rechts de acties als
-                pictogram. Op een smal scherm staat een regel onder elkaar.
-            --}}
-            <div class="d-lottable">
-                <div class="d-lottable-head" aria-hidden="true">
-                    <span>Kavel</span>
-                    <span>Interesse</span>
-                    <span class="num">Bedrag</span>
-                    <span>Wanneer</span>
-                    <span></span>
-                </div>
-                @foreach ($lots as $lot)
+            <div class="d-sections d-stack">
+                @foreach ($tables as $key => $table)
                     @php
-                        $group = $groupOf($lot->status);
-                        $isDraft = $lot->status === LotStatus::Draft;
-                        $siteUrl = $lot->status->isPublic() ? route('lots.show', $lot) : null;
-                        $dossierUrl = $isDraft ? route('sell', ['concept' => $lot->id]) : route('dashboard.lots.show', $lot);
-                        $auction = $lot->auction;
-                        $interest = $isDraft ? null : \App\Lots\Interest\Interest::forBuyer($lot);
-                        // Wat het is: het kavelnummer en de verkoopvorm; een concept heeft nog geen nummer dat ertoe doet.
-                        $kind = $isDraft ? 'Nog niet gepubliceerd' : 'Kavel #'.$lot->public_id.($lot->sale_type !== null ? ' · '.$lot->sale_type->label() : '');
-                        // Wanneer er iets gebeurt: de sluittijd, de uitbetaling of wanneer je er het laatst aan werkte.
-                        $moment = match (true) {
-                            $isDraft => 'bewerkt '.$lot->updated_at->timezone($displayTimezone)->diffForHumans(),
-                            $auction !== null && ! $auction->isClosed() => $auction->closesText(),
-                            $auction !== null && $lot->order?->payout !== null => 'uitbetaling: '.mb_strtolower($lot->order->payout->status->label()),
-                            $auction !== null => 'gesloten op '.rtrim($auction->ends_at->timezone($displayTimezone)->isoFormat('D MMM'), '.'),
-                            default => 'nog geen veiling gepland',
-                        };
-                        [$amountLabel, $amount] = match (true) {
-                            $isDraft => ['', ''],
-                            $lot->status === LotStatus::Sold && $lot->order !== null => ['Verkocht voor', Money::format($lot->order->hammer_cents)],
-                            $auction !== null && $lot->sale_type === SaleType::Dutch => ['Prijs nu', Money::format($lot->currentPriceCents())],
-                            $auction !== null && $lot->sale_type === SaleType::BuyNow => ['Vaste prijs', Money::format($lot->currentPriceCents())],
-                            $auction !== null => ['Huidig bod', Money::format($lot->currentPriceCents())],
-                            default => ['', ''],
-                        };
-                        $complete = (int) $lot->completeness_score;
+                        $rows = $table['lots'];
+                        $columns = $table['columns'];
+                        // Eén tabel in beeld toont tien rijen, meerdere tabellen elk vijf.
+                        $limit = $filter === 'alle' ? 5 : 10;
+                        $shown = $rows->take($limit)->pluck('id')->flip();
+                        $listRows = $rows->map(fn ($lot): array => ['id' => $lot->id, 'g' => 'alle', 't' => Str::lower($lot->title.' '.$lot->status->label())])->values();
+                        $widths = ['interest' => '170px', 'complete' => '170px', 'amount' => '130px', 'value' => '180px', 'verdict' => '240px'];
+                        $template = 'minmax(0,1fr) '.collect($columns)->map(fn (string $column): string => $widths[$column])->implode(' ').' 190px 86px';
                     @endphp
-                    <article class="d-lotrow" x-show="ids[{{ $lot->id }}]" @unless ($firstShown->has($lot->id)) x-cloak @endunless>
-                        <div class="d-lotrow-lot">
-                            <label class="pick" x-show="selecting" x-cloak>
-                                <input type="checkbox" name="lots[]" value="{{ $lot->id }}" x-model="selected" aria-label="Selecteer {{ $lot->title }}">
-                            </label>
-                            <a class="thumb" href="{{ $dossierUrl }}" tabindex="-1" aria-hidden="true">
-                                @if ($lot->cover_path)
-                                    <img src="{{ $lot->cover_path }}" alt="" loading="lazy">
-                                @else
-                                    <x-v4.icon name="image" :size="20" stroke="1.6" />
-                                @endif
-                            </a>
-                            <div class="text">
-                                <strong><a href="{{ $dossierUrl }}">{{ $lot->title ?: 'Concept zonder titel' }}</a></strong>
-                                <span class="d-lotrow-tags">
-                                    <span class="d-tag {{ $tagTone[$group] }}">{{ $lot->status->label() }}</span>
-                                    @if ($lot->is_hot && ! $isDraft)
-                                        <span class="d-tag tone-hot"><x-v4.icon name="flame" :size="12" stroke="2.4" /> Hot</span>
-                                    @endif
-                                    <span class="d-bid-meta">{{ $kind }}</span>
-                                </span>
+                    <section class="d-card" aria-labelledby="kavels-{{ $key }}"
+                             x-data="shortList({ rows: {{ Js::from($listRows) }}, limit: {{ $limit }} })"
+                             x-effect="q = search; found['{{ $key }}'] = total"
+                             x-show="total > 0">
+                        <div class="d-titleline" style="margin-bottom:12px">
+                            <h2 id="kavels-{{ $key }}" class="d-h2">{{ $table['title'] }}</h2>
+                            <span class="d-count tabular" x-text="total">{{ $rows->count() }}</span>
+                            <x-dashboard.help :text="$table['help']" />
+                        </div>
+
+                        <div @class(['d-lottable', 'is-wide' => in_array('verdict', $columns, true)]) style="--cols:{{ $template }}">
+                            <div class="d-lottable-head" aria-hidden="true">
+                                <span>Kavel</span>
+                                @foreach ($columns as $column)
+                                    <span @class(['num' => $column === 'amount' || $column === 'value'])>{{ ['interest' => 'Interesse', 'complete' => 'Compleet', 'amount' => 'Bedrag', 'value' => 'Waarde volgens Atlas', 'verdict' => 'Uitkomst'][$column] }}</span>
+                                @endforeach
+                                <span>Wanneer</span>
+                                <span></span>
                             </div>
+                            @foreach ($rows as $lot)
+                                @include('dashboard.partials.lot-row')
+                            @endforeach
                         </div>
 
-                        <div class="d-lotrow-facts">
-                            <span class="cell is-interest">
-                                @if ($isDraft)
-                                    <span class="d-ring is-sm is-{{ $complete >= 80 ? 'below' : 'within' }}" role="img" aria-label="{{ $complete }}% compleet">
-                                        <svg viewBox="0 0 100 100" aria-hidden="true">
-                                            <circle class="track" cx="50" cy="50" r="38"></circle>
-                                            <circle class="value" cx="50" cy="50" r="38" pathLength="100" stroke-dasharray="{{ min(100, max(4, $complete)) }} 100"></circle>
-                                        </svg>
-                                    </span>
-                                    <span><b class="tabular">{{ $complete }}%</b> compleet</span>
-                                @else
-                                    <span class="d-counts">
-                                        <span title="kijkers"><x-v4.icon name="eye" :size="14" stroke="2" />{{ number_format($interest['viewers'], 0, ',', '.') }}</span>
-                                        <span title="keer opgeslagen"><x-v4.icon name="heart" :size="14" stroke="2" />{{ $interest['saved'] }}</span>
-                                        <span title="bieders"><x-v4.icon name="gavel" :size="14" stroke="2" />{{ (int) ($auction?->bidder_count ?? 0) }}</span>
-                                    </span>
-                                @endif
-                            </span>
-
-                            <span class="cell is-amount">
-                                @if ($amount !== '')
-                                    <b class="tabular">{{ $amount }}</b>
-                                    <small>{{ $amountLabel }}</small>
-                                @endif
-                            </span>
-
-                            <span class="cell is-moment">{{ ucfirst($moment) }}</span>
+                        <div class="d-more" x-show="hidden > 0" @if ($rows->count() <= $limit) x-cloak @endif>
+                            <button type="button" class="d-btn d-btn-secondary d-btn-sm" @click="all = true">Meer tonen <span class="tabular" x-text="'(' + hidden + ')'"></span></button>
                         </div>
-
-                        {{-- Acties als pictogram, met de naam bij aanwijzen en voor de schermlezer. --}}
-                        <div class="d-lotrow-actions">
-                            @if ($siteUrl !== null)
-                                <a href="{{ $siteUrl }}" class="d-iconbtn" data-tip="Bekijk op de site" aria-label="{{ $lot->title }} bekijken op de site"><x-v4.icon name="eye" :size="17" stroke="2" /></a>
-                            @endif
-                            @if ($isDraft)
-                                <a href="{{ $dossierUrl }}" class="d-iconbtn" data-tip="{{ __('dashboard.actions.continue_draft') }}" aria-label="{{ __('dashboard.actions.continue_draft') }}: {{ $lot->title ?: 'concept zonder titel' }}"><x-v4.icon name="pencil" :size="17" stroke="2" /></a>
-                            @elseif (in_array($lot->status, [LotStatus::Unsold, LotStatus::Cancelled], true))
-                                <button type="submit" class="d-iconbtn" data-tip="Opnieuw plaatsen" aria-label="{{ $lot->title }} opnieuw plaatsen" formaction="{{ route('dashboard.lots.duplicate', ['lot' => $lot->id, 'relist' => 1]) }}" formmethod="POST"><x-v4.icon name="refresh" :size="17" stroke="2" /></button>
-                            @elseif (in_array($lot->status, [LotStatus::Scheduled, LotStatus::Live, LotStatus::Closing, LotStatus::Paused], true))
-                                <a href="{{ route('dashboard.lots.edit', $lot) }}" class="d-iconbtn" data-tip="{{ $lot->status === LotStatus::Paused ? 'Hervatten' : 'Bewerken' }}" aria-label="{{ $lot->title }} {{ $lot->status === LotStatus::Paused ? 'hervatten' : 'bewerken' }}"><x-v4.icon :name="$lot->status === LotStatus::Paused ? 'play' : 'pencil'" :size="17" stroke="2" /></a>
-                            @endif
-                        </div>
-                    </article>
+                    </section>
                 @endforeach
             </div>
-            <p class="feed-empty" x-show="total === 0" x-cloak>Geen kavels gevonden. Pas je zoekwoord aan of <a class="d-link" href="{{ route('dashboard.lots') }}">toon alle kavels</a>.</p>
-            <div class="d-more" x-show="hidden > 0" @if ($inFilter->count() <= $listLimit) x-cloak @endif>
-                <button type="button" class="d-btn d-btn-secondary d-btn-sm" @click="all = true">Meer tonen <span class="tabular" x-text="'(' + hidden + ')'"></span></button>
-            </div>
-            </div>
+
+            <p class="feed-empty" x-show="search !== '' && Object.values(found).every((count) => count === 0)" x-cloak>Geen kavels gevonden voor dit zoekwoord. Pas het aan of <button type="button" class="d-link" @click="search = ''">toon alles</button>.</p>
         </form>
     @endif
 </x-layouts.dashboard>
