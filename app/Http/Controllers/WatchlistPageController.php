@@ -26,14 +26,8 @@ final class WatchlistPageController extends Controller
             ->get()
             ->filter(fn (WatchlistItem $item): bool => $item->lot !== null);
 
-        return view('dashboard.watchlist', [
-            'items' => $items,
-            'endingSoon' => $items->filter(fn (WatchlistItem $item): bool => $item->lot->auction !== null
-                && ! $item->lot->auction->isClosed()
-                && ! $item->lot->auction->isPaused()
-                && $item->lot->auction->ends_at->lessThanOrEqualTo(now()->addDay()))->count(),
-            'closed' => $items->filter(fn (WatchlistItem $item): bool => $item->lot->auction?->isClosed() ?? false)->count(),
-        ]);
+        // De weergave verdeelt de kavels zelf over de tabellen per stand.
+        return view('dashboard.watchlist', ['items' => $items]);
     }
 
     public function destroy(Request $request, Lot $lot): RedirectResponse

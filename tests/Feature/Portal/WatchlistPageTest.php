@@ -40,6 +40,28 @@ it('toont de gevolgde kavels met stand en sluittijd, en kan ontvolgen', function
     expect(WatchlistItem::query()->where('user_id', $user->id)->pluck('lot_id')->all())->toBe([$soon->id]);
 });
 
+it('zet de volglijst per stand in een eigen tabel en filtert via de tegels', function () {
+    $user = User::factory()->create();
+    watchedLot($user, 'Rolsteiger 8 meter', 30);
+    watchedLot($user, 'Koelcel 20 m3', 60 * 72);
+
+    // Zonder filter: wat binnen een dag sluit staat in de eerste tabel, de rest eronder.
+    $this->actingAs($user)->get(route('dashboard.watchlist'))
+        ->assertOk()
+        ->assertSeeInOrder(['id="volglijst-bijna"', 'class="d-lottable-head"', 'Waarde volgens Atlas', 'Rolsteiger 8 meter', 'data-tip="Ontvolgen"', 'id="volglijst-loopt"', 'Koelcel 20 m3'], false);
+
+    // De tegel filtert op wat binnen een dag sluit.
+    $this->actingAs($user)->get(route('dashboard.watchlist', ['toon' => 'bijna']))
+        ->assertOk()
+        ->assertSee('Rolsteiger 8 meter')
+        ->assertDontSee('Koelcel 20 m3');
+
+    $this->actingAs($user)->get(route('dashboard.watchlist', ['toon' => 'gesloten']))
+        ->assertOk()
+        ->assertSee('Geen gesloten veilingen op je lijst.')
+        ->assertDontSee('Rolsteiger 8 meter');
+});
+
 it('waarschuwt volgers één keer als de veiling binnen een uur sluit', function () {
     Notification::fake();
 
