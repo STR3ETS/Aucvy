@@ -99,6 +99,32 @@ it('toont uitbetalingen met status en vrijgavemoment', function () {
         ->assertSee('vrijgave');
 });
 
+it('zet uitbetalingen per stand in een eigen tabel en filtert via de tegels', function () {
+    $seller = User::factory()->verified()->create();
+    $make = function (string $title, PayoutStatus $status, array $extra = []) use ($seller): void {
+        $lot = Lot::factory()->live()->create(['seller_id' => $seller->id, 'title' => $title]);
+        $order = Order::factory()->completed()->create(['seller_id' => $seller->id, 'lot_id' => $lot->id]);
+
+        Payout::forceCreate(['order_id' => $order->id, 'seller_id' => $seller->id, 'amount_cents' => 92_500, 'fee_cents' => 7_500, 'status' => $status, ...$extra]);
+    };
+    $make('Koelcel in de houdtermijn', PayoutStatus::Held, ['hold_until' => now()->addHours(48)]);
+    $make('Heftruck vrijgegeven', PayoutStatus::Released, ['released_at' => now()->subDay()]);
+
+    // Zonder filter: wat onderweg is eerst, dan wat is vrijgegeven, met de koppen één keer.
+    $this->actingAs($seller)
+        ->get('/dashboard/uitbetalingen')
+        ->assertOk()
+        ->assertSeeInOrder(['Uitbetalingsrekening', 'id="uitbetalingen-onderweg"', 'class="d-lottable-head"', 'Netto', 'Koelcel in de houdtermijn', 'In houdtermijn, vrijgave', 'data-tip="Bekijk uitbetaling"', 'id="uitbetalingen-klaar"', 'Heftruck vrijgegeven', 'Vrijgegeven op'], false)
+        ->assertDontSee('Uitbetalingsproces');
+
+    // De tegel filtert.
+    $this->actingAs($seller)
+        ->get('/dashboard/uitbetalingen?toon=klaar')
+        ->assertOk()
+        ->assertSee('Heftruck vrijgegeven')
+        ->assertDontSee('Koelcel in de houdtermijn');
+});
+
 it('toont een eerlijke lege staat', function () {
     $user = User::factory()->verified()->create();
 
@@ -128,7 +154,8 @@ it('toont één uitbetaling met de stand en de stappen, alleen aan wie hem mag z
     $this->actingAs($seller)
         ->get(route('dashboard.payouts'))
         ->assertOk()
-        ->assertSee('Uitbetalingsproces')
+        // Het proces staat niet meer als los blok bovenaan: de stand staat per uitbetaling in de tabel.
+        ->assertSee('id="uitbetalingen-onderweg"', false)
         ->assertSee(route('dashboard.payouts.show', $payout), escape: false);
 
     $this->actingAs($seller)

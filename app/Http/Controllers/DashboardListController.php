@@ -70,7 +70,7 @@ final class DashboardListController extends Controller
         return view('dashboard.payouts', [
             'payouts' => Payout::query()
                 ->whereIn('seller_id', $request->user()->financeSellerIds())
-                ->with(['order.lot'])
+                ->with(['order.lot.media'])
                 ->latest('id')
                 ->get(),
             'company' => $request->user()->company,
