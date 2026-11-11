@@ -23,10 +23,11 @@
             </x-slot:action>
         </x-ui.empty-state>
     @else
+        <div x-data="{ all: false }">
         <ul class="space-y-2">
             @foreach ($items as $item)
                 @php $lot = $item->lot; $auction = $lot->auction; @endphp
-                <li class="flex flex-wrap items-center gap-3 rounded-aj-s border border-aj-border bg-aj-surface p-3 pr-4">
+                <li class="flex flex-wrap items-center gap-3 rounded-aj-s border border-aj-border bg-aj-surface p-3 pr-4" @if ($loop->index >= 10) x-show="all" x-cloak @endif>
                     <a href="{{ route('lots.show', $lot) }}" class="block h-16 w-24 flex-none overflow-hidden rounded-aj-sm bg-aj-navy" aria-hidden="true" tabindex="-1">
                         @if ($lot->media->isNotEmpty())
                             <img src="{{ $lot->media->first()->path }}" alt="" class="h-full w-full object-cover" loading="lazy">
@@ -67,5 +68,7 @@
                 </li>
             @endforeach
         </ul>
+        <x-dashboard.more :total="$items->count()" />
+        </div>
     @endif
 </x-layouts.dashboard>

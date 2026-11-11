@@ -1313,3 +1313,6 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-listbar-count b{color:#0e1526}
 .d-listbar-count .d-link{margin-left:8px}
 .d-listbar-search{flex:0 1 240px}
+/* Op een smal scherm staat wat op je wacht bovenaan, voor de grafieken. */
+.d-cols{container-type:inline-size}
+@container (max-width:737px){.d-col-aside{order:-1}}

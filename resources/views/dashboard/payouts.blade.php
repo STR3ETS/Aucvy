@@ -86,7 +86,7 @@
                 </section>
             </div>
 
-            <section aria-labelledby="recent">
+            <section aria-labelledby="recent" x-data="{ all: false }">
                 <h2 id="recent" class="d-h3" style="margin-bottom:10px">Recente uitbetalingen</h2>
                 <div class="d-datatable">
                     <table>
@@ -101,7 +101,7 @@
                                         default => ['aangemaakt', $payout->created_at],
                                     };
                                 @endphp
-                                <tr>
+                                <tr @if ($loop->index >= 10) x-show="all" x-cloak @endif>
                                     <td class="clip"><a href="{{ route('dashboard.payouts.show', $payout) }}" class="d-link" style="font-size:14px">{{ $payout->order->lot->title }}</a><small>Bestelling {{ $payout->order->order_number }}</small></td>
                                     <td class="num">{{ Money::format($payout->order->hammer_cents) }}</td>
                                     <td class="num">- {{ Money::format($payout->fee_cents) }}</td>
@@ -114,6 +114,7 @@
                         </tbody>
                     </table>
                 </div>
+                <x-dashboard.more :total="$payouts->count()" />
             </section>
         </div>
     @endif

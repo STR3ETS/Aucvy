@@ -14,6 +14,12 @@
             default => rtrim($local->isoFormat('D MMM YYYY'), '.'),
         };
     };
+
+    // Drie tabs volstaan: alles, wat je nog niet las en wat je moet doen.
+    $tabs = collect($feed['tabs'])->only(['alles', 'ongelezen', 'task']);
+    // De rijen voor de lijst in de browser: bij welke tabs een regel hoort.
+    $listRows = collect($feed['items'])->values()->map(fn (array $item, int $index): array => ['id' => $index, 'g' => array_values(array_filter(['alles', $item['kind'], $item['unread'] ? 'ongelezen' : null]))]);
+    $listLimit = 10;
 @endphp
 
 <x-layouts.dashboard title="Meldingen" eyebrow="Dashboard" intro="Wat je kunt doen en wat er gebeurd is, op één plek. Een taak verdwijnt zodra hij af is.">
@@ -39,19 +45,20 @@
             </x-slot:action>
         </x-ui.empty-state>
     @else
-        <div x-data="{ tab: 'alles', counts: {{ Js::from(collect($feed['tabs'])->map(fn (array $tab): int => $tab[1])) }} }">
+        {{-- De eerste tien regels staan open, de rest achter "Meer tonen". --}}
+        <div x-data="shortList({ rows: {{ Js::from($listRows) }}, filter: 'alles', limit: {{ $listLimit }} })">
+            <div x-data="{ counts: {{ Js::from($tabs->map(fn (array $tab): int => $tab[1])) }} }">
             <div class="d-chips" role="tablist" aria-label="Filter" style="margin-bottom:14px">
-                @foreach ($feed['tabs'] as $key => [$label, $count])
-                    <button type="button" role="tab" class="d-chip" :class="tab === '{{ $key }}' && 'is-on'" :aria-selected="tab === '{{ $key }}'"
-                            @click="tab = '{{ $key }}'">{{ $label }} <span class="tabular" x-text="counts['{{ $key }}']">{{ $count }}</span></button>
+                @foreach ($tabs as $key => [$label, $count])
+                    <button type="button" role="tab" class="d-chip" :class="filter === '{{ $key }}' && 'is-on'" :aria-selected="filter === '{{ $key }}'"
+                            @click="filter = '{{ $key }}'">{{ $label }} <span class="tabular" x-text="counts['{{ $key }}']">{{ $count }}</span></button>
                 @endforeach
             </div>
 
             <ul class="d-notifs">
                 @foreach ($feed['items'] as $item)
                     <li class="d-notif tone-{{ $item['tone'] }}{{ $item['unread'] ? ' is-unread' : '' }}"
-                        x-data="{ gone: false }"
-                        x-show="! gone && (tab === 'alles' || (tab === 'ongelezen' && {{ $item['unread'] ? 'true' : 'false' }}) || tab === '{{ $item['kind'] }}')">
+                        x-show="ids[{{ $loop->index }}]" @if ($loop->index >= $listLimit) x-cloak @endif>
                         <span class="d-notif-icon" aria-hidden="true"><x-v4.icon :name="$item['icon']" :size="18" stroke="2" /></span>
                         <a class="d-notif-body" href="{{ $item['url'] }}">
                             <strong>{{ $item['title'] }}</strong>
@@ -62,15 +69,19 @@
                         <time class="d-notif-time" datetime="{{ $item['at']->toIso8601String() }}">{{ $when($item['at']) }}</time>
                         @if ($item['dismiss_id'] !== null)
                             <button type="button" class="d-notif-dismiss" aria-label="Taak verbergen"
-                                    @click="gone = true; counts.alles--; counts.ongelezen--; counts.task--; fetch('/api/insights/{{ $item['dismiss_id'] }}/dismiss', {
+                                    @click="drop({{ $loop->index }}); counts.alles--; counts.ongelezen--; counts.task--; fetch('/api/insights/{{ $item['dismiss_id'] }}/dismiss', {
                                         method: 'POST',
                                         headers: {'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''},
                                     })"><x-v4.icon name="x" :size="15" stroke="2.2" /></button>
                         @endif
                     </li>
                 @endforeach
-                <li class="d-notif-empty" x-show="counts[tab] === 0" x-cloak>Niets in deze lijst.</li>
+                <li class="d-notif-empty" x-show="total === 0" x-cloak>Niets in deze lijst.</li>
             </ul>
+            <div class="d-more" x-show="hidden > 0" @if ($listRows->count() <= $listLimit) x-cloak @endif>
+                <button type="button" class="d-btn d-btn-secondary d-btn-sm" @click="all = true">Meer tonen <span class="tabular" x-text="'(' + hidden + ')'"></span></button>
+            </div>
+            </div>
         </div>
     @endif
 </x-layouts.dashboard>

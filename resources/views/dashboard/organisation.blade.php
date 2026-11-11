@@ -12,8 +12,25 @@
 
     <div class="grid gap-5 lg:grid-cols-[1fr_340px] lg:items-start">
         <div class="space-y-5">
-            <section class="d-card" aria-labelledby="bedrijf">
-                <h2 id="bedrijf" class="text-lg font-extrabold">Bedrijfsgegevens</h2>
+            {{-- Eerst de samenvatting; de velden gaan pas open na Wijzig (of bij een fout in het formulier). --}}
+            <section class="d-card" aria-labelledby="bedrijf" x-data="{ edit: {{ $errors->hasAny(['name', 'vat_number', 'description', 'logo', 'cover']) ? 'true' : 'false' }} }">
+                <div class="d-card-head" style="align-items:center">
+                    <h2 id="bedrijf" class="text-lg font-extrabold">Bedrijfsgegevens</h2>
+                    @if ($mayEdit)
+                        <button type="button" class="d-btn d-btn-secondary d-btn-sm" x-show="! edit" @click="edit = true">Wijzig</button>
+                    @endif
+                </div>
+                <dl class="d-specs" style="margin-top:12px" x-show="! edit">
+                    <div class="d-spec"><dt>Bedrijfsnaam</dt><dd>{{ $company->name }}</dd></div>
+                    <div class="d-spec"><dt>KvK-nummer</dt><dd>{{ $company->kvk_number ?? 'nog niet opgegeven' }}</dd></div>
+                    <div class="d-spec"><dt>Btw-nummer</dt><dd>{{ $company->vat_number ?: 'nog niet opgegeven' }}</dd></div>
+                    <div class="d-spec"><dt>Over het bedrijf</dt><dd>{{ $company->description ? Str::limit($company->description, 60) : 'nog niet ingevuld' }}</dd></div>
+                </dl>
+                @unless ($mayEdit)
+                    <p class="mt-3 text-xs text-aj-muted">Alleen een eigenaar of beheerder wijzigt deze gegevens.</p>
+                @endunless
+                @if ($mayEdit)
+                <div x-show="edit" x-cloak>
                 <p class="mt-1 text-sm text-aj-muted">
                     @if ($nameLocked)
                         De naam hoort bij de KvK-controle en staat vast. Klopt hij niet? <a class="underline" href="{{ route('contact') }}">Neem contact op</a>.
@@ -56,24 +73,32 @@
                         <input type="file" name="cover" accept="image/jpeg,image/png,image/webp" @disabled(! $mayEdit) class="text-sm">
                         <span class="text-xs text-aj-muted">Breed, jpg, png of webp, tot 4 MB.</span>
                     </label>
-                    @if ($mayEdit)
-                        <div class="sm:col-span-2"><button type="submit" class="btn btn-primary">Opslaan</button></div>
-                    @else
-                        <p class="text-xs text-aj-muted sm:col-span-2">Alleen een eigenaar of beheerder wijzigt deze gegevens.</p>
-                    @endif
+                    <div class="sm:col-span-2" style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button type="submit" class="btn btn-primary">Opslaan</button>
+                        <button type="button" class="btn btn-ghost" @click="edit = false">Annuleren</button>
+                    </div>
                 </form>
+                </div>
+                @endif
             </section>
 
-            <section class="d-card" aria-labelledby="rekening">
-                <h2 id="rekening" class="text-lg font-extrabold">Uitbetaalrekening</h2>
+            <section class="d-card" aria-labelledby="rekening"
+                     x-data="{ edit: {{ $errors->hasAny(['iban', 'iban_name', 'current_password']) ? 'true' : 'false' }} }"
+                     x-init="if (location.hash === '#rekening' && {{ $company->payout_iban_last4 ? 'false' : 'true' }}) edit = true">
+                <div class="d-titleline">
+                    <h2 id="rekening" class="text-lg font-extrabold">Uitbetaalrekening</h2>
+                    <x-dashboard.help text="We bewaren alleen de laatste vier cijfers en de tenaamstelling; het volledige nummer gaat naar de betaalprovider zodra die gekoppeld is. Zodra er een rekening staat, logt iedereen van het bedrijf in met een extra code per mail." />
+                </div>
                 @if ($company->payout_iban_last4)
                     <p class="mt-1 text-sm">Rekening eindigend op <b class="tabular">{{ $company->payout_iban_last4 }}</b>, op naam van <b>{{ $company->payout_iban_name }}</b>.</p>
                 @else
                     <p class="mt-1 text-sm text-aj-muted">Nog geen rekening. Zonder rekening kan een verkoop niet worden uitbetaald.</p>
                 @endif
-                <p class="mt-2 text-xs text-aj-muted">We bewaren alleen de laatste vier cijfers en de tenaamstelling; het volledige nummer gaat naar de betaalprovider zodra die gekoppeld is. Zodra er een rekening staat, logt iedereen van het bedrijf in met een extra code per mail.</p>
                 @if ($mayEditPayout)
-                    <form method="POST" action="{{ route('organisation.payout') }}" class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div class="mt-3" x-show="! edit">
+                        <button type="button" class="d-btn {{ $company->payout_iban_last4 ? 'd-btn-secondary' : '' }} d-btn-sm" @click="edit = true">{{ $company->payout_iban_last4 ? 'Rekening wijzigen' : 'Rekening toevoegen' }}</button>
+                    </div>
+                    <form method="POST" action="{{ route('organisation.payout') }}" class="mt-4 grid gap-4 sm:grid-cols-2" x-show="edit" x-cloak>
                         @csrf @method('PATCH')
                         <label class="grid gap-1 text-sm">
                             <span class="font-bold">IBAN</span>
@@ -89,7 +114,10 @@
                             <input type="password" name="current_password" required autocomplete="current-password" class="d-input" style="min-height:42px">
                             @error('current_password')<span class="text-xs text-aj-error">{{ $message }}</span>@enderror
                         </label>
-                        <div class="sm:col-span-2"><button type="submit" class="btn btn-primary">{{ $company->payout_iban_last4 ? 'Rekening wijzigen' : 'Rekening vastleggen' }}</button></div>
+                        <div class="sm:col-span-2" style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button type="submit" class="btn btn-primary">{{ $company->payout_iban_last4 ? 'Rekening wijzigen' : 'Rekening vastleggen' }}</button>
+                            <button type="button" class="btn btn-ghost" @click="edit = false">Annuleren</button>
+                        </div>
                     </form>
                 @else
                     <p class="mt-3 text-xs text-aj-muted">Alleen de eigenaar legt de rekening vast of wijzigt hem.</p>

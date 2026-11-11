@@ -95,11 +95,7 @@
                             </article>
                         @endforeach
                     </div>
-                    @if ($orders->count() > $listLimit)
-                        <div class="d-more" x-show="! all">
-                            <button type="button" class="d-btn d-btn-secondary d-btn-sm" @click="all = true">Meer tonen <span class="tabular">({{ $orders->count() - $listLimit }})</span></button>
-                        </div>
-                    @endif
+                    <x-dashboard.more :total="$orders->count()" :limit="$listLimit" />
                 @endif
             </section>
     </div>

@@ -123,11 +123,7 @@
                                 </article>
                             @endforeach
                         </div>
-                        @if ($group->count() > $listLimit)
-                            <div class="d-more" x-show="! all">
-                                <button type="button" class="d-btn d-btn-secondary d-btn-sm" @click="all = true">Meer tonen <span class="tabular">({{ $group->count() - $listLimit }})</span></button>
-                            </div>
-                        @endif
+                        <x-dashboard.more :total="$group->count()" :limit="$listLimit" />
                     </section>
 
             @if ($view === 'gewonnen' && $won->isNotEmpty())

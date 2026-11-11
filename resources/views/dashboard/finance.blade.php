@@ -60,7 +60,8 @@
                 @endif
             </div>
 
-            <section class="d-datatable" aria-label="Afrekeningen" x-show="tab === 'afrekeningen'" style="margin-top:-6px">
+            <div x-show="tab === 'afrekeningen'" x-data="{ all: false }" style="margin-top:-6px">
+            <section class="d-datatable" aria-label="Afrekeningen">
                 <table>
                     <thead>
                         <tr>
@@ -76,7 +77,7 @@
                     <tbody>
                         @foreach ($lines as $line)
                             @php $invoice = $invoiceFor->get($line['order']->id); @endphp
-                            <tr>
+                            <tr @if ($loop->index >= 10) x-show="all" x-cloak @endif>
                                 <td class="clip"><a href="{{ route('orders.show', $line['order']) }}" class="d-link" style="font-size:14px">{{ $line['order']->lot?->title ?? $line['order']->order_number }}</a><small>{{ $line['order']->order_number }} · {{ $line['order']->created_at->timezone($displayTimezone)->isoFormat('D MMM YYYY') }}</small></td>
                                 <td class="num">{{ Money::format($line['hammer_cents']) }}</td>
                                 <td class="num">- {{ Money::format($line['fee_cents']) }}</td>
@@ -105,9 +106,11 @@
                     </tfoot>
                 </table>
             </section>
+            <x-dashboard.more :total="count($lines)" />
+            </div>
 
             @if ($invoices->isNotEmpty())
-                <div x-show="tab === 'facturen'" x-cloak style="margin-top:-6px">
+                <div x-show="tab === 'facturen'" x-cloak x-data="{ all: false }" style="margin-top:-6px">
                     <p class="d-sub" style="margin:0 0 10px">Kavelfacturen namens jou aan de koper, en de facturen van Aucvy voor de succesfee. Opslaan als pdf via Afdrukken.</p>
                     <section class="d-datatable" aria-labelledby="facturen">
                         <h3 id="facturen" class="sr-only">Facturen</h3>
@@ -115,7 +118,7 @@
                             <thead><tr><th>Factuur</th><th>Soort</th><th>Bestelling</th><th class="num">Bedrag</th><th><span class="sr-only">Openen</span></th></tr></thead>
                             <tbody>
                                 @foreach ($invoices as $invoice)
-                                    <tr>
+                                    <tr @if ($loop->index >= 10) x-show="all" x-cloak @endif>
                                         <td class="nowrap"><strong>{{ $invoice->number }}</strong><small>{{ $invoice->issued_at->isoFormat('D MMM YYYY') }}</small></td>
                                         <td>{{ __('invoices.for.'.$invoice->kind) }}</td>
                                         <td class="nowrap">{{ $invoice->order->order_number }}</td>
@@ -126,6 +129,7 @@
                             </tbody>
                         </table>
                     </section>
+                    <x-dashboard.more :total="$invoices->count()" />
                 </div>
             @endif
 

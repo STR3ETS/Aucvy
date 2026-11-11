@@ -33,13 +33,17 @@
         </x-ui.empty-state>
     @else
         <div x-data="{ filter: 'alles' }" class="d-stack" style="gap:18px">
-            <div class="d-chips" role="tablist" aria-label="Filter veilingen">
-                <button type="button" role="tab" class="d-chip" :class="filter === 'alles' && 'is-on'" :aria-selected="filter === 'alles'" @click="filter = 'alles'">Alles</button>
-                @foreach ($groups as $key => $label)
-                    <button type="button" role="tab" class="d-chip" :class="filter === '{{ $key }}' && 'is-on'" :aria-selected="filter === '{{ $key }}'" @click="filter = '{{ $key }}'"
-                            @if ($counts->get($key, 0) === 0) style="opacity:.55" @endif>{{ $label }}</button>
-                @endforeach
-            </div>
+            {{-- Alleen de groepen die je hebt, en geen filter als er niets te kiezen valt. --}}
+            @if ($counts->count() > 1)
+                <div class="d-chips" role="tablist" aria-label="Filter veilingen">
+                    <button type="button" role="tab" class="d-chip" :class="filter === 'alles' && 'is-on'" :aria-selected="filter === 'alles'" @click="filter = 'alles'">Alles</button>
+                    @foreach ($groups as $key => $label)
+                        @if ($counts->get($key, 0) > 0)
+                            <button type="button" role="tab" class="d-chip" :class="filter === '{{ $key }}' && 'is-on'" :aria-selected="filter === '{{ $key }}'" @click="filter = '{{ $key }}'">{{ $label }} <span class="d-muted tabular" style="font-weight:700">{{ $counts->get($key) }}</span></button>
+                        @endif
+                    @endforeach
+                </div>
+            @endif
 
             <div class="d-salegrid">
                 {{-- Lopend eerst, dan gepland, concept en afgerond: wat nu aandacht vraagt staat bovenaan. --}}
