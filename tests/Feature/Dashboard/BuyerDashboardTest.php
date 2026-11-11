@@ -98,3 +98,24 @@ it('toont een lopend bod als kaart met een ring en het bedrag om weer op kop te 
         ->assertSeeInOrder(['Lopende biedingen', 'Vorkheftruck Linde E16', 'Overboden', 'Bied opnieuw', 'Huidig bod', 'Jouw bod', 'Weer op kop vanaf'])
         ->assertSee('class="d-ring is-', escape: false);
 });
+
+it('zegt wordt afgesloten als de eindtijd voorbij is en de veiling nog niet is afgehandeld', function () {
+    $anna = User::factory()->verified()->create();
+    $lot = Lot::factory()->live()->create(['title' => 'Koelwerkbank RVS']);
+    $auction = Auction::factory()->create(['lot_id' => $lot->id, 'start_price_cents' => 100_000, 'current_price_cents' => 100_000]);
+
+    app(PlaceBid::class)->handle($auction, $anna, 100_000, 'test:1');
+
+    expect($auction->fresh()->closesText())->toStartWith('sluit ');
+
+    // De eindtijd is verstreken, maar de veiling is nog niet gesloten.
+    $this->travelTo($auction->fresh()->ends_at->addMinutes(5));
+
+    expect($auction->fresh()->closesText())->toBe('wordt afgesloten');
+
+    $this->actingAs($anna)
+        ->get('/dashboard')
+        ->assertOk()
+        ->assertSee('Wordt afgesloten')
+        ->assertDontSee('geleden');
+});

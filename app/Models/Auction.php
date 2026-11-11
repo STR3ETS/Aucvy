@@ -128,6 +128,21 @@ class Auction extends Model
     }
 
     /**
+     * Wanneer de veiling sluit, in gewone woorden: "sluit over 2 dagen". Is
+     * de eindtijd voorbij maar de veiling nog niet afgehandeld (het moment
+     * tussen de hamer en het sluiten), dan staat er "wordt afgesloten" in
+     * plaats van "sluit 5 dagen geleden".
+     */
+    public function closesText(bool $short = false): string
+    {
+        if ($this->ends_at->isPast()) {
+            return 'wordt afgesloten';
+        }
+
+        return 'sluit '.$this->ends_at->timezone(config('aucvy.display_timezone'))->diffForHumans(short: $short);
+    }
+
+    /**
      * Stilgezet door de verkoper of beheer: de klok staat stil en er wordt
      * niet geboden, maar de veiling is niet voorbij (ResumeLot schuift de
      * sluittijd op).

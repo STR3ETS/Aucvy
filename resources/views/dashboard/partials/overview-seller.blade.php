@@ -160,7 +160,7 @@
                         SaleType::BuyNow => 'Vaste prijs',
                         default => 'Huidig bod',
                     };
-                    $closing = $auction !== null && ! $auction->isClosed() ? 'sluit '.$auction->ends_at->timezone($displayTimezone)->diffForHumans() : null;
+                    $closing = $auction !== null && ! $auction->isClosed() ? $auction->closesText() : null;
                 @endphp
                 <article class="d-intable-item" x-data="{ open: false }" :class="open && 'is-open'">
                     <div class="d-intable-row" @click="if (! $event.target.closest('a')) open = ! open">

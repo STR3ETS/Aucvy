@@ -112,7 +112,7 @@
                             }
                             $metaParts[] = $auction->bidder_count.' '.($auction->bidder_count === 1 ? 'bieder' : 'bieders');
                             if (! $auction->isClosed()) {
-                                $metaParts[] = 'sluit '.$auction->ends_at->timezone($displayTimezone)->diffForHumans();
+                                $metaParts[] = $auction->closesText();
                             } elseif ($lot->order?->payout !== null) {
                                 $metaParts[] = mb_strtolower($lot->order->payout->status->label());
                             }

@@ -80,7 +80,7 @@
                                     @if ($row['interest']['hot'])
                                         <span class="d-tag tone-hot"><x-v4.icon name="flame" :size="12" stroke="2.4" /> Hot</span>
                                     @endif
-                                    <span class="d-bid-meta">Sluit {{ $auction->ends_at->timezone($displayTimezone)->diffForHumans() }}</span>
+                                    <span class="d-bid-meta">{{ ucfirst($auction->closesText()) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -173,7 +173,7 @@
                                 @elseif ($lot->sale_type === SaleType::BuyNow)
                                     Koop direct
                                 @else
-                                    Sluit {{ $auction->ends_at->timezone($displayTimezone)->diffForHumans(short: true) }}
+                                    {{ ucfirst($auction->closesText(short: true)) }}
                                 @endif
                             </div>
                         </div>

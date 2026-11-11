@@ -85,7 +85,7 @@
                                         default => ['tone-warn', 'Overboden'],
                                     };
                                     $meta = 'Kavel #'.$lot->public_id.' · '.($isOpen
-                                        ? ($bid->status === BidStatus::Winning ? 'sluit '.$auction->ends_at->timezone($displayTimezone)->diffForHumans() : 'jouw bod '.Money::format($bid->amount_cents))
+                                        ? ($bid->status === BidStatus::Winning ? $auction->closesText() : 'jouw bod '.Money::format($bid->amount_cents))
                                         : 'gesloten op '.$auction->ends_at->timezone($displayTimezone)->isoFormat('D MMM'));
                                 @endphp
                                 <article class="d-listrow" @if ($loop->index >= $listLimit) x-show="all" x-cloak @endif>
