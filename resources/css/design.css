@@ -1644,8 +1644,10 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-iconbtn.is-on{border-color:#c9d8ff;background:#eef3ff;color:#1e56e0}
 .d-iconbtn.is-on svg{fill:currentColor}
 .d-iconbtn.is-danger:hover,.d-iconbtn.is-danger:focus-visible{border-color:#e7b3ad;background:#fbecea;color:#a93226}
-/* De laatste knop van een rij staat vaak tegen de rand: daar lijnt de naam rechts uit. */
-.d-iconbtn:last-child[data-tip]::after{left:auto;right:0;transform:translate(0,3px)}
-.d-iconbtn:last-child[data-tip]:hover::after,.d-iconbtn:last-child[data-tip]:focus-visible::after{transform:none}
+/* De naam staat altijd midden boven de knop. Alleen op een telefoon, waar de knop tegen de schermrand staat, lijnt hij rechts uit. */
+@media (max-width:640px){
+  .d-iconbtn:last-child[data-tip]::after{left:auto;right:0;transform:translate(0,3px)}
+  .d-iconbtn:last-child[data-tip]:hover::after,.d-iconbtn:last-child[data-tip]:focus-visible::after{transform:none}
+}
 .d-listrow-right .d-iconbtn{margin-left:4px}
 .d-bid-action.d-iconbtn{width:42px;height:42px}
