@@ -15,6 +15,7 @@ import pushToggle from './push';
 import adminLive from './admin-live';
 import lotMedia from './lot-media';
 import shortList from './short-list';
+import { commandPalette, notifDrawer } from './dash-overlays';
 import initHome from './home';
 import initLotsIndex from './lots-index';
 import initLotNav from './lot-nav';
@@ -48,6 +49,10 @@ Alpine.data('lotMedia', lotMedia);
 
 // Lange lijsten in het dashboard: de eerste rijen open, de rest achter "Meer tonen".
 Alpine.data('shortList', shortList);
+
+// De lagen over het dashboard: het zoekvenster (Ctrl K) en de meldingen die rechts uitschuiven.
+Alpine.data('commandPalette', commandPalette);
+Alpine.data('notifDrawer', notifDrawer);
 
 // Het zwevende paneel van Ivy, rechtsonder op elke pagina.
 Alpine.data('ivyPanel', ivyPanel);

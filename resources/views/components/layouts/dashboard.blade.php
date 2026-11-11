@@ -172,19 +172,21 @@
             <header class="dash-bar">
                 {{-- Eén kruimelpad, in de bovenbalk: Dashboard, dan het pad van de pagina (slot crumbs) of anders de titel. --}}
                 <nav class="dash-crumbs" aria-label="Kruimelpad"><a href="{{ route('dashboard') }}">Dashboard</a> <span aria-hidden="true">/</span> @isset($crumbs){{ $crumbs }}@else<span>{{ $heading ?? $title }}</span>@endisset</nav>
-                <form class="dash-search" method="GET" action="{{ route('lots.index') }}" role="search">
+                {{-- Het zoekveld opent het zoekvenster (Ctrl K). Zonder script brengt het je naar de veilingen. --}}
+                <a class="dash-search" href="{{ route('lots.index') }}" role="button" aria-label="Zoeken in Aucvy" aria-keyshortcuts="Control+K"
+                   onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('palette-open'))">
                     <x-v4.icon name="search" :size="16" stroke="2.2" />
-                    <label class="sr-only" for="dash-q">Zoek kavels</label>
-                    <input id="dash-q" name="q" type="search" placeholder="Zoek kavels, categorieën of merken" autocomplete="off">
-                    <kbd>Enter</kbd>
-                </form>
-                <a class="dash-bar-link dash-bell" href="{{ route('notifications.index') }}" aria-label="Meldingen{{ $unreadCount > 0 ? ', '.$unreadCount.' ongelezen' : '' }}">
+                    <span>Zoek in Aucvy</span>
+                    <kbd>Ctrl K</kbd>
+                </a>
+                {{-- De bel schuift de meldingen rechts uit. Zonder script opent de pagina Meldingen. --}}
+                <a class="dash-bar-link dash-bell" href="{{ route('notifications.index') }}" role="button" aria-label="Meldingen{{ $unreadCount > 0 ? ', '.$unreadCount.' ongelezen' : '' }}"
+                   onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('notifs-open'))">
                     <x-v4.icon name="bell" :size="16" stroke="2" />
                     @if ($unreadCount > 0)
                         <span class="notif-count" aria-hidden="true">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
                     @endif
                 </a>
-                <button type="button" class="dash-bar-link" @click="window.dispatchEvent(new CustomEvent('ivy-open', { detail: { agent: 'ivy' } }))">Vraag Ivy</button>
                 <x-marketing.user-menu />
             </header>
 
@@ -239,6 +241,10 @@
         src="{{ asset('images/agents/ivy.jpg') }}" alt="">Vraag Ivy</a>
 
     <x-privacy.cookie-banner />
+
+    {{-- De lagen over het dashboard: het zoekvenster en de meldingen die rechts uitschuiven. --}}
+    <x-dashboard.palette />
+    <x-dashboard.notifications-drawer :unread="$unreadCount" />
 
     <x-ivy.launcher :lot="$ivyLot ?? null" :page="$ivyPage ?? (request()->route()?->getName() ?? 'dashboard')" />
     {!! $pageScripts !!}

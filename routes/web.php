@@ -15,6 +15,7 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardListController;
+use App\Http\Controllers\DashboardSearchController;
 use App\Http\Controllers\DevCheckoutController;
 use App\Http\Controllers\DistributionController;
 use App\Http\Controllers\DocumentController;
@@ -379,7 +380,12 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/dashboard/alerts/{savedSearch}', [SavedSearchController::class, 'update'])->name('dashboard.alerts.update');
     Route::delete('/dashboard/alerts/{savedSearch}', [SavedSearchController::class, 'destroy'])->name('dashboard.alerts.destroy');
 
+    // Het zoekvenster van het dashboard (Ctrl K): pagina's, eigen kavels, bestellingen en wat er te koop staat.
+    Route::get('/dashboard/zoeken', DashboardSearchController::class)->middleware('throttle:120,1')->name('dashboard.search');
+
     Route::get('/dashboard/meldingen', [NotificationCenterController::class, 'index'])->name('notifications.index');
+    // Het paneel dat rechts uitschuift: de laatste meldingen als fragment. Staat vóór de route met {id}.
+    Route::get('/dashboard/meldingen/paneel', [NotificationCenterController::class, 'panel'])->name('notifications.panel');
     Route::post('/dashboard/meldingen/gelezen', [NotificationCenterController::class, 'readAll'])->name('notifications.read-all');
     Route::get('/dashboard/meldingen/{id}', [NotificationCenterController::class, 'open'])->name('notifications.open');
 

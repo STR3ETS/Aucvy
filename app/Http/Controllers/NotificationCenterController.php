@@ -38,6 +38,20 @@ final class NotificationCenterController extends Controller
         ]);
     }
 
+    /**
+     * Het paneel dat rechts uitschuift vanaf de bel: de laatste meldingen en
+     * tickets, wat nog niet gelezen is bovenaan. Taken staan bij het team.
+     */
+    public function panel(Request $request, ActivityFeed $feed): View
+    {
+        $user = $request->user();
+
+        return view('dashboard.partials.notifications-panel', [
+            'items' => array_slice($feed->for($user, collect(), 30)['items'], 0, 15),
+            'unread' => $user->unreadNotifications()->count(),
+        ]);
+    }
+
     public function open(Request $request, string $id): RedirectResponse
     {
         $notification = $request->user()->notifications()->whereKey($id)->firstOrFail();
