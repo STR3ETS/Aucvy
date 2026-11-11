@@ -27,10 +27,11 @@ it('bewaart een overboden-melding in-app en toont hem met ongelezen teller', fun
         ->and($user->notifications()->first()->data['kind'])->toBe('outbid')
         ->and($user->notifications()->first()->data['url'])->toBe(route('lots.show', $lot));
 
-    $this->actingAs($user)->get(route('notifications.index'))
+    // De melding staat in de lade die vanaf de bel uitschuift; daar staat ook "Alles gelezen".
+    $this->actingAs($user)->get(route('notifications.panel'))
         ->assertOk()
-        ->assertSee('Heftruck Linde H25')
-        ->assertSee('Alles gelezen');
+        ->assertSee('Heftruck Linde H25');
+    $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee('Alles gelezen');
 
     // De bel in de bovenbalk telt mee.
     $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee('notif-count', escape: false);
@@ -59,4 +60,39 @@ it('markeert alles als gelezen', function () {
     $this->actingAs($user)->post(route('notifications.read-all'))->assertRedirect();
 
     expect($user->unreadNotifications()->count())->toBe(0);
+});
+
+it('heeft geen eigen pagina Meldingen meer: de oude link opent de lade op het dashboard', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->get('/dashboard/meldingen')->assertRedirect(route('dashboard', ['meldingen' => 1]));
+
+    // Het menu noemt Meldingen niet meer; de bel in de bovenbalk is de ingang.
+    $this->actingAs($user)->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('dash-bell', escape: false)
+        ->assertSee('Oudere meldingen tonen')
+        ->assertDontSee('Alle meldingen');
+
+    expect(view()->exists('dashboard.notifications'))->toBeFalse();
+});
+
+it('toont eerst de laatste meldingen en de oudere pas als erom gevraagd wordt', function () {
+    $user = User::factory()->create(['kyc_status' => KycStatus::Verified]);
+
+    foreach (range(1, 18) as $number) {
+        $this->travel(1)->minutes();
+        $user->notify(new VerificationDecided(KycStatus::Rejected, 'Reden nummer '.$number.'.'));
+    }
+
+    $this->actingAs($user)->get(route('notifications.panel'))
+        ->assertOk()
+        ->assertSee('data-more="1"', escape: false)
+        ->assertSee('Reden nummer 18.')
+        ->assertDontSee('Reden nummer 2.');
+
+    $this->actingAs($user)->get(route('notifications.panel', ['alles' => 1]))
+        ->assertOk()
+        ->assertSee('data-more="0"', escape: false)
+        ->assertSee('Reden nummer 2.');
 });

@@ -10,7 +10,7 @@
         ->mapWithKeys(fn (string $name): array => [$name => \Illuminate\Support\Facades\Blade::render('<x-v4.icon name="'.$name.'" :size="17" stroke="2" />')]);
 @endphp
 
-<div x-data="commandPalette({{ Js::from(['url' => route('dashboard.search'), 'icons' => $paletteIcons]) }})"
+<div x-data="commandPalette({{ Js::from(['url' => route('dashboard.search'), 'icons' => $paletteIcons, 'notifications' => route('notifications.index', [], false)]) }})"
      @palette-open.window="show()" @keydown.escape.window="if (open) close()">
     <div class="d-palette-scrim" x-show="open" x-cloak x-transition.opacity.duration.150ms @click="close()"></div>
 

@@ -1,7 +1,7 @@
 {{--
     De inhoud van het meldingenpaneel dat rechts uitschuift: de laatste
     meldingen en tickets, elk een link. Het paneel zelf (kop, sluiten, de
-    knop naar alle meldingen) staat in components/dashboard/notifications-drawer.
+    knop voor oudere meldingen) staat in components/dashboard/notifications-drawer.
 --}}
 @php
     $displayTimezone = config('aucvy.display_timezone');
@@ -24,7 +24,7 @@
 @if ($items === [])
     <p class="d-drawer-empty">Nog geen meldingen. Zodra je overboden wordt, een alert raak is of een bestelling verandert, staat het hier.</p>
 @else
-    <ul class="d-drawer-list" data-unread="{{ $unread }}">
+    <ul class="d-drawer-list" data-unread="{{ $unread }}" data-more="{{ ($hasMore ?? false) ? 1 : 0 }}">
         @foreach ($items as $item)
             <li class="d-notif tone-{{ $item['tone'] }}{{ $item['unread'] ? ' is-unread' : '' }}">
                 <span class="d-notif-icon" aria-hidden="true"><x-v4.icon :name="$item['icon']" :size="18" stroke="2" /></span>

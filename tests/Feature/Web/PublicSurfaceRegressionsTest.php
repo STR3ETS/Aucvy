@@ -83,7 +83,10 @@ describe('de volglijst', function () {
 
         $this->actingAs($user)->get(route('dashboard.watchlist'))
             ->assertOk()
-            ->assertSee('gepauzeerd')
+            // In de tabel Loopt, met het label Gepauzeerd; niet bij wat binnen een dag sluit.
+            ->assertSee('Gepauzeerd')
+            ->assertSee('De klok staat stil')
+            ->assertDontSee('id="volglijst-bijna"', false)
             ->assertDontSee('Sluit bijna');
     });
 });

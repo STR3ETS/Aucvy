@@ -105,6 +105,14 @@ export function commandPalette(config) {
                 return;
             }
 
+            // Meldingen is geen pagina meer: de treffer schuift de lade uit.
+            if (hit.url && config.notifications && new URL(hit.url, window.location.href).pathname === config.notifications) {
+                this.close();
+                window.dispatchEvent(new CustomEvent('notifs-open'));
+
+                return;
+            }
+
             if (hit.url) window.location.href = hit.url;
         },
 
@@ -120,22 +128,66 @@ export function notifDrawer(config) {
         loading: false,
         html: '',
         failed: false,
+        more: false,
+        loadingMore: false,
+
+        init() {
+            this.openFromUrl();
+            document.addEventListener('dash-nav:swapped', () => this.openFromUrl());
+
+            // Een link naar de oude pagina Meldingen opent de lade, zonder de pagina te verlaten.
+            document.addEventListener('click', (event) => {
+                if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+                const link = event.target.closest?.('a[href]');
+                if (! link || link.target === '_blank') return;
+
+                const url = new URL(link.href, window.location.href);
+                if (url.origin !== window.location.origin || url.pathname !== config.page) return;
+
+                event.preventDefault();
+                event.stopPropagation();
+                this.show();
+            }, true);
+        },
+
+        // Wie via een oude link binnenkomt (?meldingen=1) krijgt de lade meteen open.
+        openFromUrl() {
+            const url = new URL(window.location.href);
+            if (! url.searchParams.has('meldingen')) return;
+
+            url.searchParams.delete('meldingen');
+            window.history.replaceState(window.history.state, '', url);
+            this.show();
+        },
 
         async show() {
             this.open = true;
             this.loading = this.html === '';
             this.failed = false;
 
+            await this.load(config.url);
+
+            this.loading = false;
+        },
+
+        // De oudere meldingen erbij, in dezelfde lade.
+        async showAll() {
+            this.loadingMore = true;
+            await this.load(config.url + '?alles=1');
+            this.loadingMore = false;
+        },
+
+        async load(url) {
             try {
-                const response = await fetch(config.url, { headers: { ...headers(), Accept: 'text/html' } });
+                const response = await fetch(url, { headers: { ...headers(), Accept: 'text/html' } });
                 if (! response.ok) throw new Error('laden mislukt');
 
                 this.html = await response.text();
+                this.more = this.html.includes('data-more="1"');
             } catch (error) {
                 this.failed = true;
             }
-
-            this.loading = false;
         },
 
         close() {

@@ -5,49 +5,47 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Dashboard\ActivityFeed;
-use App\Models\AiInsight;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
  * Het meldingencentrum (briefing sectie 3): alles wat per mail of push is
- * gegaan, in-app terug te vinden. Openen markeert als gelezen en gaat door
- * naar waar de melding over gaat.
+ * gegaan, in-app terug te vinden in de lade die vanaf de bel uitschuift.
+ * Openen markeert als gelezen en gaat door naar waar de melding over gaat.
  */
 final class NotificationCenterController extends Controller
 {
+    /** Zoveel meldingen toont de lade eerst; de rest staat achter "Oudere meldingen". */
+    private const int PANEL_LIMIT = 15;
+
+    /** Zoveel meldingen gaat de lade hooguit terug. */
+    private const int PANEL_MAX = 100;
+
     /**
-     * Dezelfde lijst als op het dashboard (taken, meldingen en tickets), maar
-     * dan de laatste honderd in plaats van een greep.
+     * Een eigen pagina met meldingen is er niet meer: de lade vanaf de bel is
+     * de plek. Oude links (mail, bladwijzer, het menu op de site) komen op
+     * het dashboard uit met de lade open.
      */
-    public function index(Request $request, ActivityFeed $feed): View
+    public function index(): RedirectResponse
     {
-        $user = $request->user();
-
-        $tasks = AiInsight::query()
-            ->where('user_id', $user->id)
-            ->current()
-            ->orderByRaw("field(severity, 'urgent', 'attention', 'info')")
-            ->get()
-            ->filter(fn (AiInsight $insight): bool => $insight->hasAction());
-
-        return view('dashboard.notifications', [
-            'feed' => $feed->for($user, $tasks, 100),
-            'unread' => $user->unreadNotifications()->count(),
-        ]);
+        return redirect()->to($this->drawerUrl());
     }
 
     /**
      * Het paneel dat rechts uitschuift vanaf de bel: de laatste meldingen en
      * tickets, wat nog niet gelezen is bovenaan. Taken staan bij het team.
+     * Met ?alles=1 komen ook de oudere meldingen mee.
      */
     public function panel(Request $request, ActivityFeed $feed): View
     {
         $user = $request->user();
+        $all = $request->boolean('alles');
+        $items = $feed->for($user, collect(), $all ? self::PANEL_MAX : self::PANEL_LIMIT * 2)['items'];
 
         return view('dashboard.partials.notifications-panel', [
-            'items' => array_slice($feed->for($user, collect(), 30)['items'], 0, 15),
+            'items' => $all ? $items : array_slice($items, 0, self::PANEL_LIMIT),
+            'hasMore' => ! $all && count($items) > self::PANEL_LIMIT,
             'unread' => $user->unreadNotifications()->count(),
         ]);
     }
@@ -59,7 +57,15 @@ final class NotificationCenterController extends Controller
 
         $url = $notification->data['url'] ?? null;
 
-        return redirect()->to(is_string($url) && $url !== '' ? $url : route('notifications.index'));
+        return redirect()->to(is_string($url) && $url !== '' ? $url : $this->drawerUrl());
+    }
+
+    /**
+     * Het dashboard met de lade open (zie notifDrawer in dash-overlays.js).
+     */
+    private function drawerUrl(): string
+    {
+        return route('dashboard', ['meldingen' => 1]);
     }
 
     public function readAll(Request $request): RedirectResponse

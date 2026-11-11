@@ -43,7 +43,6 @@
         'Volgen' => [
             ['dashboard.watchlist', ['dashboard.watchlist'], 'Volglijst', 'heart'],
             ['dashboard.alerts', ['dashboard.alerts'], 'Alerts', 'search'],
-            ['notifications.index', ['notifications.*'], 'Meldingen', 'bell'],
         ],
         'Geld en zekerheid' => array_values(array_filter([
             $user->canSeeCompanyFinance() ? ['dashboard.payouts', ['dashboard.payouts'], 'Uitbetalingen', 'banknote'] : null,
@@ -58,8 +57,8 @@
     ];
     $hasTiles = isset($tiles);
     $unreadCount = $user->unreadNotifications()->count();
-    // De tellers achter Meldingen in het menu, zoals in het ontwerp van november.
-    $counts = ['notifications.index' => $unreadCount];
+    // Tellers achter een menu-item. Meldingen staat niet meer in het menu: de bel in de bovenbalk telt.
+    $counts = [];
     // Zachte navigatie (dash-nav.js): een pagina met eigen scripts of head-inhoud
     // wordt altijd volledig geladen, anders draaien die scripts niet.
     $pageHead = $__env->yieldPushContent('head');
@@ -179,7 +178,7 @@
                     <span>Zoek in Aucvy</span>
                     <kbd>Ctrl K</kbd>
                 </a>
-                {{-- De bel schuift de meldingen rechts uit. Zonder script opent de pagina Meldingen. --}}
+                {{-- De bel schuift de meldingen rechts uit; een eigen pagina Meldingen is er niet meer. --}}
                 <a class="dash-bar-link dash-bell" href="{{ route('notifications.index') }}" role="button" aria-label="Meldingen{{ $unreadCount > 0 ? ', '.$unreadCount.' ongelezen' : '' }}"
                    onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('notifs-open'))">
                     <x-v4.icon name="bell" :size="16" stroke="2" />

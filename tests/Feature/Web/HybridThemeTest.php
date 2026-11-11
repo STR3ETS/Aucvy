@@ -52,7 +52,7 @@ it('geeft het dashboard en de bestellingen de dashboardschil met zijbalk', funct
 })->with(['/dashboard', '/dashboard/kavels', '/dashboard/biedingen', '/dashboard/uitbetalingen', '/bestellingen']);
 
 it('geeft een pagina zonder tegels dezelfde dashboardschil', function (string $url) {
-    // Geschillen, alerts en meldingen hebben in het ontwerp geen tegels boven de inhoud.
+    // Geschillen en alerts hebben in het ontwerp geen tegels boven de inhoud.
     $this->actingAs(User::factory()->verified()->create(['name' => 'Anna de Vries']))
         ->get($url)
         ->assertOk()
@@ -60,7 +60,7 @@ it('geeft een pagina zonder tegels dezelfde dashboardschil', function (string $u
         ->assertSee('dash-side', escape: false)
         ->assertSee('dash-band', escape: false)
         ->assertDontSee('footer-c');
-})->with(['/dashboard/geschillen', '/dashboard/alerts', '/dashboard/meldingen']);
+})->with(['/dashboard/geschillen', '/dashboard/alerts']);
 
 it('markeert de huidige pagina in het hoofdmenu', function () {
     $this->get('/veilingen')
