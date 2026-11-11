@@ -95,7 +95,8 @@
 
             {{--
                 Eén tabel in één kaart: de koppen staan er één keer boven en
-                elke kavel is één regel. Links wat het is en de status, dan de
+                elke kavel is één regel, net als bij Lopende biedingen en Hoe
+                je kocht. Links wat het is met de status eronder, dan de
                 interesse (bij een concept hoe compleet het is, als ring), het
                 bedrag, wanneer er iets gebeurt en rechts de acties als
                 pictogram. Op een smal scherm staat een regel onder elkaar.
@@ -103,7 +104,6 @@
             <div class="d-lottable">
                 <div class="d-lottable-head" aria-hidden="true">
                     <span>Kavel</span>
-                    <span>Status</span>
                     <span>Interesse</span>
                     <span class="num">Bedrag</span>
                     <span>Wanneer</span>
@@ -151,18 +151,17 @@
                             </a>
                             <div class="text">
                                 <strong><a href="{{ $dossierUrl }}">{{ $lot->title ?: 'Concept zonder titel' }}</a></strong>
-                                <span>{{ $kind }}</span>
+                                <span class="d-lotrow-tags">
+                                    <span class="d-tag {{ $tagTone[$group] }}">{{ $lot->status->label() }}</span>
+                                    @if ($lot->is_hot && ! $isDraft)
+                                        <span class="d-tag tone-hot"><x-v4.icon name="flame" :size="12" stroke="2.4" /> Hot</span>
+                                    @endif
+                                    <span class="d-bid-meta">{{ $kind }}</span>
+                                </span>
                             </div>
                         </div>
 
                         <div class="d-lotrow-facts">
-                            <span class="cell is-status">
-                                <span class="d-tag {{ $tagTone[$group] }}">{{ $lot->status->label() }}</span>
-                                @if ($lot->is_hot && ! $isDraft)
-                                    <span class="d-tag tone-hot"><x-v4.icon name="flame" :size="12" stroke="2.4" /> Hot</span>
-                                @endif
-                            </span>
-
                             <span class="cell is-interest">
                                 @if ($isDraft)
                                     <span class="d-ring is-sm is-{{ $complete >= 80 ? 'below' : 'within' }}" role="img" aria-label="{{ $complete }}% compleet">
