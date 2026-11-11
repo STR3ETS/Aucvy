@@ -1518,3 +1518,8 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
   .d-palette.is-entering,.d-drawer.is-entering,.d-drawer.is-leaving{transition:none}
   .d-drawer-skeleton i{animation:none}
 }
+
+/* Naast de inhoud net zoveel lucht als tussen de secties: tussen de zijbalk en de inhoud, en rechts tot de rand. */
+@media (min-width:1081px){
+  .c.dash .dash-shell{gap:var(--d-gap);padding-right:var(--d-gap)}
+}
