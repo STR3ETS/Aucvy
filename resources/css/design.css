@@ -1580,14 +1580,13 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 
 /* Een smalle kaart: titel bovenaan, de ring in het midden, de bedragen in twee kolommen eronder en de knop over de volle breedte. */
 @container (max-width:459px){
-  .d-bid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto 1fr auto;grid-template-areas:"head head" "ring ring" "left right" "action action";align-items:start;gap:16px}
-  .d-bid-top{display:contents}
-  .d-bid-head{grid-area:head;align-items:flex-start;min-height:88px}
+  .d-bid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto 1fr;grid-template-areas:"top top" "ring ring" "left right";align-items:start;gap:16px}
+  .d-bid-top{align-items:flex-start;padding-bottom:0;border-bottom:0}
+  .d-bid-head{align-items:flex-start;min-height:88px}
   .d-bid-head strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal}
   .d-bid>.d-ring{justify-self:center;width:104px;height:104px}
   .d-bid-stats.is-left,.d-bid-stats.is-right{justify-items:start;text-align:left;align-content:start}
   .d-bid-stats dd{white-space:normal}
-  .d-bid-action{grid-area:action;align-self:end;width:100%}
 }
 .d-bid-stats dd span{white-space:nowrap}
 
@@ -1649,3 +1648,4 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-iconbtn:last-child[data-tip]::after{left:auto;right:0;transform:translate(0,3px)}
 .d-iconbtn:last-child[data-tip]:hover::after,.d-iconbtn:last-child[data-tip]:focus-visible::after{transform:none}
 .d-listrow-right .d-iconbtn{margin-left:4px}
+.d-bid-action.d-iconbtn{width:42px;height:42px}

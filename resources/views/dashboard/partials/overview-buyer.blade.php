@@ -84,7 +84,12 @@
                                 </div>
                             </div>
                         </div>
-                        <a class="d-btn d-btn-sm d-bid-action {{ $row['winning'] ? 'd-btn-secondary' : 'd-btn-dark' }}" href="{{ route('lots.show', $lot) }}">{{ $row['winning'] ? 'Bekijk kavel' : 'Bied opnieuw' }}</a>
+                        {{-- De actie als pictogram: de hamer om opnieuw te bieden, het oog om de kavel te bekijken. --}}
+                        @if ($row['winning'])
+                            <a class="d-iconbtn d-bid-action" href="{{ route('lots.show', $lot) }}" data-tip="Bekijk kavel" aria-label="Kavel {{ $lot->title }} bekijken"><x-v4.icon name="eye" :size="18" stroke="2" /></a>
+                        @else
+                            <a class="d-iconbtn is-dark d-bid-action" href="{{ route('lots.show', $lot) }}" data-tip="Bied opnieuw" aria-label="Opnieuw bieden op {{ $lot->title }}"><x-v4.icon name="gavel" :size="18" stroke="2" /></a>
+                        @endif
                     </div>
 
                     <dl class="d-bid-stats is-left">

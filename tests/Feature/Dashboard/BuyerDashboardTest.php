@@ -95,7 +95,7 @@ it('toont een lopend bod als kaart met een ring en het bedrag om weer op kop te 
     $this->actingAs($anna)
         ->get('/dashboard')
         ->assertOk()
-        ->assertSeeInOrder(['Lopende biedingen', 'Vorkheftruck Linde E16', 'Overboden', 'Bied opnieuw', 'Huidig bod', 'Jouw bod', 'Weer op kop vanaf'])
+        ->assertSeeInOrder(['Lopende biedingen', 'Vorkheftruck Linde E16', 'Overboden', 'data-tip="Bied opnieuw"', 'Huidig bod', 'Jouw bod', 'Weer op kop vanaf'], escape: false)
         ->assertSee('class="d-ring is-', escape: false);
 });
 
