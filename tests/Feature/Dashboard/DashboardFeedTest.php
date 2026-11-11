@@ -11,27 +11,35 @@ use App\Models\User;
 use App\Notifications\VerificationDecided;
 
 /*
-| Het dashboard als werkplek: snelle acties bovenaan, het team met per
+| Het dashboard als werkplek: snelle acties bovenaan en het team met per
 | teamlid hoeveel er wacht (de taken zelf staan in het gesprek met dat
-| teamlid) en één lijst met meldingen en tickets, met tabs en tellers.
+| teamlid). Meldingen en tickets schuiven uit vanaf de bel in de bovenbalk.
 */
 
-it('zet meldingen en tickets in één lijst en taken bij het teamlid in het paneel', function () {
+it('zet meldingen en tickets achter de bel en taken bij het teamlid in het paneel', function () {
     $user = User::factory()->verified()->create();
     Lot::factory()->anonymousDraft()->create(['seller_id' => $user->id, 'title' => 'Concept in de la']);
     $user->notify(new VerificationDecided(KycStatus::Verified));
     SupportTicket::factory()->create(['user_id' => $user->id, 'subject' => 'Vraag over transport']);
 
-    $response = $this->actingAs($user)->get(route('dashboard'))
+    $this->actingAs($user)->get(route('dashboard'))
         ->assertOk()
-        ->assertSeeInOrder(['Meldingen en tickets', 'Ticket #'])
-        ->assertSee('Vraag over transport')
-        ->assertSee('Je identiteit is bevestigd')
+        // De lijst met meldingen staat niet meer op het overzicht zelf.
+        ->assertDontSee('Meldingen en tickets')
+        ->assertDontSee('Vraag over transport')
+        ->assertDontSee('Je identiteit is bevestigd')
         ->assertSeeInOrder(['Je team', 'Eén ding wacht op je'])
         ->assertSee('1 punt open')
         ->assertDontSee('Taken, meldingen en tickets')
         // De taak zelf staat niet op het dashboard: die staat in het gesprek met het teamlid.
         ->assertDontSee('staat klaar om afgemaakt te worden');
+
+    // Ze staan in het paneel dat vanaf de bel uitschuift.
+    $this->actingAs($user)->get(route('notifications.panel'))
+        ->assertOk()
+        ->assertSee('Ticket #')
+        ->assertSee('Vraag over transport')
+        ->assertSee('Je identiteit is bevestigd');
 
     $owner = collect($this->actingAs($user)->getJson(route('ivy.show'))->json('agents'))->firstWhere('count', 1)['key'];
 

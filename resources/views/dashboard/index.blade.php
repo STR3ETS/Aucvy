@@ -62,8 +62,7 @@
                 @else
                     @include('dashboard.partials.overview-buyer')
                 @endif
-
-                @include('dashboard.partials.feed')
+                {{-- Meldingen en tickets staan niet meer hier: de bel in de bovenbalk schuift ze rechts uit. --}}
             </div>
 
             @include('dashboard.partials.team-aside')

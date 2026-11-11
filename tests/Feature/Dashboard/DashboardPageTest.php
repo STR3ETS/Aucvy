@@ -51,7 +51,10 @@ it('toont een koper zijn eigen signalen via de toggle', function () {
     $this->actingAs($order->buyer)
         ->get(route('dashboard', ['rol' => 'koper']))
         ->assertOk()
-        ->assertSee('Betaal');
+        // De betaalkaart in de zijkolom en een teamlid waar de betaling wacht.
+        ->assertSee('Te betalen')
+        ->assertSee('Nu betalen')
+        ->assertSee('wacht op je');
 });
 
 it('verwelkomt een nieuwe gebruiker met startstappen in plaats van lege blokken', function () {
