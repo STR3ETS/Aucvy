@@ -32,7 +32,7 @@ final class BuyerOverview
     /**
      * @return list<OpenBid>
      */
-    public function openBids(User $user, int $limit = 3): array
+    public function openBids(User $user, int $limit = 4): array
     {
         return Bid::query()
             ->where('user_id', $user->id)

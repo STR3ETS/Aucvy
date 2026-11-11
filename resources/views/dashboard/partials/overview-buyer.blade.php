@@ -29,7 +29,7 @@
     <div class="d-card-head" style="align-items:center">
         <div class="d-titleline">
             <h2 id="bieden-title" class="d-h2">Lopende biedingen</h2>
-            <x-dashboard.help text="Waar je staat, wat de kavel ongeveer waard is en hoeveel interesse er is." />
+            <x-dashboard.help text="Waar je staat en wat de kavel ongeveer waard is. De ring toont het huidige bod als deel van de bovenkant van de waarde-indicatie van Atlas. Dat is een schatting, geen belofte." />
         </div>
         @if ($openBids !== [])
             <a class="d-btn d-btn-secondary d-btn-sm" href="{{ route('dashboard.bids') }}">Alle biedingen</a>
@@ -39,7 +39,12 @@
     @if ($openBids === [])
         <p class="feed-empty" style="margin-top:12px">Je doet nu nergens aan mee. <a class="d-link" href="{{ route('lots.index') }}">Bekijk de veilingen</a> en bied op wat je zoekt.</p>
     @else
-        <div class="d-stack-tight" style="margin-top:12px">
+        {{--
+            Twee kaarten naast elkaar. Per kavel: wat het is en hoe je ervoor
+            staat, een ring die zegt waar het bod zit ten opzichte van de
+            waarde-indicatie van Atlas, de bedragen op een rij en één knop.
+        --}}
+        <div class="d-bids">
             @foreach ($openBids as $row)
                 @php
                     $bid = $row['bid'];
@@ -47,60 +52,76 @@
                     $auction = $bid->auction;
                     $showRange = $lot->mayShowValueComparison();
                     $bar = $showRange ? $range($row['current_cents'], $lot->value_min_cents, $lot->value_max_cents) : null;
+                    // De ring: het bod als deel van de bovenkant van de waarde-indicatie. Boven de 100% is hij vol.
+                    $ringPercent = $showRange && $lot->value_max_cents > 0 ? (int) round($row['current_cents'] / $lot->value_max_cents * 100) : null;
+                    $ringTone = match (true) {
+                        ! $showRange => 'none',
+                        $row['current_cents'] > $lot->value_max_cents => 'above',
+                        $row['current_cents'] < $lot->value_min_cents => 'below',
+                        default => 'within',
+                    };
                 @endphp
-                <article class="d-task" style="padding:14px;{{ $row['winning'] ? '' : 'border:1.5px solid #e8c58a' }}">
-                    <div class="d-lot-row" style="align-items:flex-start">
+                <article class="d-bid">
+                    <div class="d-bid-head">
                         @if ($lot->media->first())
-                            <img class="d-lot-thumb d-lot-thumb-lg" src="{{ $lot->media->first()->path }}" alt="">
+                            <img src="{{ $lot->media->first()->path }}" alt="">
                         @else
-                            <span class="d-lot-thumb d-lot-thumb-lg" aria-hidden="true"></span>
+                            <span class="thumb" aria-hidden="true"></span>
                         @endif
-                        <div class="d-lot-body" style="flex-basis:200px">
-                            <div class="d-task-tags" style="align-items:center">
+                        <div class="text">
+                            <strong><a href="{{ route('lots.show', $lot) }}">{{ $lot->title }}</a></strong>
+                            <div class="d-bid-tags">
                                 <span class="d-tag {{ $row['winning'] ? 'tone-ok' : 'tone-warn' }}">{{ $row['winning'] ? 'Hoogste bieder' : 'Overboden' }}</span>
                                 @if ($row['interest']['hot'])
                                     <span class="d-tag tone-hot"><x-v4.icon name="flame" :size="12" stroke="2.4" /> Hot</span>
                                 @endif
-                                <span class="d-label">Sluit {{ $auction->ends_at->timezone($displayTimezone)->diffForHumans() }}</span>
                             </div>
-                            <strong style="display:block;margin-top:6px;font-size:15px;line-height:1.35"><a href="{{ route('lots.show', $lot) }}" style="color:inherit">{{ $lot->title }}</a></strong>
-                            <div class="d-counts" style="margin-top:4px">
-                                <span title="kijkers"><x-v4.icon name="eye" :size="14" stroke="2" />{{ number_format($row['interest']['viewers'], 0, ',', '.') }}</span>
-                                <span title="keer opgeslagen"><x-v4.icon name="heart" :size="14" stroke="2" />{{ $row['interest']['saved'] }}</span>
-                                <span title="keer gedeeld"><x-v4.icon name="share" :size="14" stroke="2" />{{ $row['interest']['shared'] }}</span>
-                            </div>
-                        </div>
-                        <div class="d-bidprice">
-                            <span>Huidig bod</span>
-                            <b>{{ $short($row['current_cents']) }}</b>
-                            <span>Jouw bod {{ $short($bid->amount_cents) }}</span>
                         </div>
                     </div>
 
-                    @if ($bar !== null)
-                        <div style="margin-top:12px">
-                            <div class="d-range"><span>Waarde-indicatie van Atlas</span><strong>{{ $euro($lot->value_min_cents) }} – {{ $euro($lot->value_max_cents) }}</strong></div>
-                            <div class="d-range-bar" role="img" aria-label="Huidig bod {{ Money::format($row['current_cents']) }}, {{ $bar['note'] }} van {{ $euro($lot->value_min_cents) }} tot {{ $euro($lot->value_max_cents) }}">
-                                <span class="d-range-band" style="left:{{ $bar['left'] }}%;width:{{ $bar['width'] }}%"></span>
-                                <span class="d-range-mark" style="left:{{ $bar['mark'] }}%"></span>
-                            </div>
-                            <div class="d-range-note{{ $row['current_cents'] > $lot->value_max_cents ? ' is-above' : '' }}">{{ ucfirst($bar['note']) }}</div>
-                        </div>
-                    @endif
-
-                    <div class="d-callout" style="background:none;padding:0;margin-top:10px">
-                        <span class="d-muted">
-                            @if ($row['winning'])
-                                @if ($row['interest']['bidders'] > 1)
-                                    Veel interesse: {{ $row['interest']['bidders'] }} bieders. Automatisch meebieden houdt je op kop tot je maximum.
-                                @else
-                                    Je staat bovenaan. Automatisch meebieden houdt je op kop tot je maximum.
+                    <div class="d-bid-mid">
+                        <div class="d-ring is-{{ $ringTone }}" role="img"
+                             aria-label="{{ $bar !== null ? 'Huidig bod is '.$ringPercent.'% van de bovenkant van de waarde-indicatie, '.$bar['note'] : 'Geen waarde-indicatie voor deze kavel' }}">
+                            <svg viewBox="0 0 100 100" aria-hidden="true">
+                                <circle class="track" cx="50" cy="50" r="41"></circle>
+                                @if ($ringPercent !== null)
+                                    <circle class="value" cx="50" cy="50" r="41" pathLength="100" stroke-dasharray="{{ min(100, max(2, $ringPercent)) }} 100"></circle>
                                 @endif
-                            @else
-                                Een bod van {{ $short($row['minimum_cents']) }} of meer brengt je weer op kop.
+                            </svg>
+                            <div class="d-ring-text">
+                                @if ($ringPercent !== null)
+                                    <b class="tabular">{{ $ringPercent }}%</b>
+                                    <span>van de waarde</span>
+                                @else
+                                    <x-v4.icon name="gavel" :size="22" stroke="2" />
+                                @endif
+                            </div>
+                        </div>
+
+                        <dl class="d-bid-facts">
+                            <div class="is-main"><dt>Huidig bod</dt><dd class="tabular">{{ $short($row['current_cents']) }}</dd></div>
+                            <div><dt>Jouw bod</dt><dd class="tabular">{{ $short($bid->amount_cents) }}</dd></div>
+                            @unless ($row['winning'])
+                                <div><dt>Weer op kop vanaf</dt><dd class="tabular">{{ $short($row['minimum_cents']) }}</dd></div>
+                            @endunless
+                            @if ($bar !== null)
+                                <div><dt>Waarde</dt><dd class="tabular">{{ $euro($lot->value_min_cents) }} – {{ $euro($lot->value_max_cents) }}</dd></div>
                             @endif
+                        </dl>
+                    </div>
+
+                    <div class="d-bid-foot">
+                        <span class="d-bid-note is-{{ $ringTone }}">
+                            @if ($bar !== null)
+                                {{ ucfirst($bar['note']) }}
+                            @elseif ($row['winning'])
+                                Je staat bovenaan
+                            @else
+                                Je bent overboden
+                            @endif
+                            <small>Sluit {{ $auction->ends_at->timezone($displayTimezone)->diffForHumans() }}</small>
                         </span>
-                        <a class="d-btn {{ $row['winning'] ? 'd-btn-secondary' : 'd-btn-dark' }}" href="{{ route('lots.show', $lot) }}">{{ $row['winning'] ? 'Bekijk kavel' : 'Bied opnieuw' }}</a>
+                        <a class="d-btn d-btn-sm {{ $row['winning'] ? 'd-btn-secondary' : 'd-btn-dark' }}" href="{{ route('lots.show', $lot) }}">{{ $row['winning'] ? 'Bekijk kavel' : 'Bied opnieuw' }}</a>
                     </div>
                 </article>
             @endforeach

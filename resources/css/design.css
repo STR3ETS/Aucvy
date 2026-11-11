@@ -1532,3 +1532,40 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-tabs button.is-on{color:#1e56e0;border-bottom-color:#2f6bff}
 .d-lead{margin:0 0 16px;font-size:15px;line-height:1.55;color:#0e1526;max-width:72ch}
 .d-lead b{font-weight:800}
+
+/* ---------- lopende biedingen: kaarten naast elkaar met een ring voor de waarde ---------- */
+.d-bids{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;margin-top:16px}
+.d-bid{display:flex;flex-direction:column;gap:16px;padding:16px;border-radius:16px;background:var(--d-inset,#f3f5fa)}
+.d-bid-head{display:flex;align-items:flex-start;gap:12px;min-width:0}
+.d-bid-head img,.d-bid-head .thumb{width:56px;height:56px;flex:0 0 auto;border-radius:12px;object-fit:cover;background:#e1e6f0}
+.d-bid-head .text{min-width:0}
+.d-bid-head strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;font-size:15px;font-weight:700;line-height:1.35}
+.d-bid-head strong a{color:inherit}
+.d-bid-head strong a:hover{color:#1e56e0}
+.d-bid-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.d-bid-mid{display:flex;align-items:center;gap:16px}
+.d-ring{--ring:#2f6bff;position:relative;width:96px;height:96px;flex:0 0 auto}
+.d-ring.is-below{--ring:#12a150}
+.d-ring.is-above{--ring:#e08a00}
+.d-ring.is-none{--ring:#9aa3b5}
+.d-ring svg{display:block;width:100%;height:100%;transform:rotate(-90deg)}
+.d-ring circle{fill:none;stroke-width:9}
+.d-ring .track{stroke:#dfe4ee}
+.d-ring .value{stroke:var(--ring);stroke-linecap:round}
+.d-ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;color:#0e1526}
+.d-ring-text b{font-size:20px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.d-ring-text span{font-size:10.5px;line-height:1.2;color:#5c6577;max-width:58px}
+.d-ring.is-none .d-ring-text{color:#6b7385}
+.d-bid-facts{flex:1 1 auto;min-width:0;margin:0;display:grid;gap:5px}
+.d-bid-facts>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:13px}
+.d-bid-facts dt{color:#5c6577}
+.d-bid-facts dd{margin:0;font-weight:700;text-align:right;white-space:nowrap}
+.d-bid-facts .is-main{margin-bottom:2px}
+.d-bid-facts .is-main dd{font-size:21px;font-weight:800;letter-spacing:-.02em}
+.d-bid-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:14px;border-top:1px solid rgba(14,21,38,.08)}
+.d-bid-note{display:grid;gap:1px;min-width:0;font-size:13px;font-weight:700;line-height:1.35;color:#1e56e0}
+.d-bid-note.is-below{color:#0b7a3b}
+.d-bid-note.is-above{color:#8f5209}
+.d-bid-note.is-none{color:#0e1526}
+.d-bid-note small{font-size:12px;font-weight:500;color:#5c6577}
+.d-bid-foot .d-btn{flex:0 0 auto}

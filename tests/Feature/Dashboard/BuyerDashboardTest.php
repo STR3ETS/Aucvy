@@ -81,3 +81,20 @@ it('opent voor iemand met alleen een concept in kopersmodus', function () {
         ->assertOk()
         ->assertDontSee('Koperintentie');
 });
+
+it('toont een lopend bod als kaart met een ring en het bedrag om weer op kop te komen', function () {
+    $anna = User::factory()->verified()->create();
+    $bram = User::factory()->verified()->create();
+
+    $lot = Lot::factory()->live()->create(['title' => 'Vorkheftruck Linde E16']);
+    $auction = Auction::factory()->create(['lot_id' => $lot->id, 'start_price_cents' => 100_000, 'current_price_cents' => 100_000]);
+
+    app(PlaceBid::class)->handle($auction, $anna, 100_000, 'test:1');
+    app(PlaceBid::class)->handle($auction->fresh(), $bram, 105_000, 'test:2');
+
+    $this->actingAs($anna)
+        ->get('/dashboard')
+        ->assertOk()
+        ->assertSeeInOrder(['Lopende biedingen', 'Vorkheftruck Linde E16', 'Overboden', 'Huidig bod', 'Jouw bod', 'Weer op kop vanaf', 'Bied opnieuw'])
+        ->assertSee('class="d-ring is-', escape: false);
+});
