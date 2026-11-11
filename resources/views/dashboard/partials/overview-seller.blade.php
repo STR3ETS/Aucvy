@@ -99,6 +99,7 @@
             @endif
         </div>
     </div>
+    @if ($hours['total'] > 0)
     <div class="d-hours" role="img" aria-label="Biedingen per uur, {{ $hours['total'] }} in 24 uur{{ $hours['peak_count'] > 0 ? ', drukste moment '.$hours['peak_label'].' met '.$hours['peak_count'] : '' }}">
         @foreach ($hours['hours'] as $index => $hour)
             <div><i class="{{ $index === $hours['peak_index'] && $hour['count'] > 0 ? 'is-peak' : '' }}" style="height:{{ $hours['peak_count'] > 0 ? round($hour['count'] / $hours['peak_count'] * 100, 1) : 0 }}%"></i></div>
@@ -111,14 +112,18 @@
         <span>{{ $hours['hours'][18]['label'] }}</span>
         <span>nu</span>
     </div>
+    @endif
 </section>
 
 <section class="d-card" aria-labelledby="interesse-title">
     <div class="d-card-head">
         <div style="flex:1 1 240px">
-            <h2 id="interesse-title" class="d-h2">Interesse per kavel</h2>
-            <p class="d-sub">Hoeveel mensen je kavel bekeken, opgeslagen en gedeeld hebben. Zo zie je welke kavel hot is en waar je kunt bijsturen.</p>
+            <div class="d-titleline">
+                <h2 id="interesse-title" class="d-h2">Interesse per kavel</h2>
+                <x-dashboard.help text="Hoeveel mensen je kavel bekeken, opgeslagen en gedeeld hebben. Je ziet aantallen, geen namen. Bots en je eigen team tellen niet mee. Opgeslagen betekent: op de volglijst van een koper gezet." />
+            </div>
         </div>
+        <a class="d-btn d-btn-secondary d-btn-sm" href="{{ route('dashboard.lots') }}">Alle kavels</a>
     </div>
 
     @if ($interest === [])
@@ -132,7 +137,7 @@
                     $totalSources = max(1, array_sum($stats['sources']));
                     $funnelMax = max(1, $stats['viewers'], $stats['saved'], $stats['documents'], $stats['bidders']);
                 @endphp
-                <article class="d-task" x-data="{ open: {{ $loop->first ? 'true' : 'false' }} }">
+                <article class="d-task" x-data="{ open: false }">
                     <div class="d-lot-row" style="gap:10px">
                         @if ($lot->media->first())
                             <img class="d-lot-thumb d-lot-thumb-sm" src="{{ $lot->media->first()->path }}" alt="">
@@ -191,7 +196,6 @@
                 </article>
             @endforeach
         </div>
-        <p class="d-footnote">Je ziet aantallen, geen namen. Bots en je eigen team tellen niet mee. Opgeslagen betekent: op de volglijst van een koper gezet.</p>
     @endif
 </section>
 
@@ -205,8 +209,10 @@
     </div>
 
     <section class="d-card" x-show="depth === 'kijkers'" aria-label="{{ __('dashboard.intent.title') }}">
-        <h2 class="d-h2">Wie kijkt er écht?</h2>
-        <p class="d-sub">Bezoekersaantallen zeggen weinig. Dit zijn gedragssignalen van de laatste 30 dagen: wie volgt, wie een bezichtiging vroeg, wie bood.</p>
+        <div class="d-titleline">
+            <h2 class="d-h2">Wie kijkt er écht?</h2>
+            <x-dashboard.help text="Bezoekersaantallen zeggen weinig. Dit zijn gedragssignalen van de laatste 30 dagen: wie volgt, wie een bezichtiging vroeg, wie bood. {{ __('dashboard.intent.privacy') }}" />
+        </div>
         @php $intentMax = max(1, $intent['watchers'], $intent['viewings'], $intent['bidders'], $intent['business']); @endphp
         <div class="d-depth">
             @foreach ([['watchers', 'Volgers'], ['viewings', 'Bezichtigingen'], ['bidders', 'Bieders'], ['business', 'Zakelijk']] as [$key, $label])
@@ -224,7 +230,6 @@
                 <a class="d-btn d-btn-secondary d-btn-sm d-btn-sq" href="{{ route('messages.index') }}">Persoonlijk benaderen</a>
             </div>
         @endif
-        <p class="d-footnote">{{ __('dashboard.intent.privacy') }}</p>
     </section>
 
     <section class="d-card" x-show="depth === 'vraag'" x-cloak aria-label="{{ __('dashboard.forecast.title') }}">
@@ -274,8 +279,10 @@
     </section>
 
     <section class="d-card" x-show="depth === 'ivy'" x-cloak aria-label="Wat Ivy deze week zag">
-        <h2 class="d-h2">Wat Ivy deze week zag</h2>
-        <p class="d-sub">Observaties uit je kavels en biedingen. Geen knoppen: dit is om te weten, niet om te doen.</p>
+        <div class="d-titleline">
+            <h2 class="d-h2">Wat Ivy deze week zag</h2>
+            <x-dashboard.help text="Observaties uit je kavels en biedingen. Dit is om te weten, niet om te doen." />
+        </div>
         @if ($weekly->isEmpty())
             <p class="feed-empty" style="margin-top:12px">Nog niets deze week. Zodra er iets opvalt in je kavels of biedingen, staat het hier.</p>
         @else

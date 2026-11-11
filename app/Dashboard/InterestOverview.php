@@ -37,7 +37,7 @@ final class InterestOverview
     /**
      * @return Collection<int, Lot>
      */
-    public function liveLots(User $user, int $limit = 6): Collection
+    private function liveLots(User $user, int $limit = 6): Collection
     {
         return Lot::query()
             ->whereIn('seller_id', $user->lotSellerIds())
@@ -45,20 +45,6 @@ final class InterestOverview
             ->with(['auction', 'media'])
             ->orderByDesc('is_hot')
             ->orderByDesc('interest_score')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
-     * @return Collection<int, Lot>
-     */
-    public function drafts(User $user, int $limit = 3): Collection
-    {
-        return Lot::query()
-            ->whereIn('seller_id', $user->lotSellerIds())
-            ->where('status', LotStatus::Draft)
-            ->with('media')
-            ->latest('updated_at')
             ->limit($limit)
             ->get();
     }

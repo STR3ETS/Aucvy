@@ -1292,3 +1292,18 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
   .d-home-facts{padding-block:56px}
   .d-home-wip{flex-direction:column;align-items:flex-start}
 }
+
+/* Rust in het dashboard: uitleg achter een vraagteken en lange lijsten achter "Meer tonen". */
+.d-titleline{display:flex;align-items:center;gap:6px;min-width:0}
+.d-help{position:relative;display:inline-flex;flex:0 0 auto}
+.d-help-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:#6b7385;cursor:help;transition:background .15s,color .15s}
+.d-help-btn:hover,.d-help-btn:focus-visible{background:#eef1f7;color:#0e1526}
+.d-help-tip{position:absolute;z-index:30;top:calc(100% + 6px);left:-8px;width:max-content;max-width:min(300px,70vw);padding:10px 12px;border-radius:12px;background:#0c1326;color:#fff;font-size:12.5px;font-weight:500;line-height:1.5;letter-spacing:0;text-transform:none;white-space:normal;box-shadow:0 14px 30px -14px rgba(12,19,38,.5);opacity:0;visibility:hidden;transform:translateY(-2px);transition:opacity .15s,transform .15s,visibility .15s;pointer-events:none}
+.d-help:hover .d-help-tip,.d-help:focus-within .d-help-tip{opacity:1;visibility:visible;transform:none}
+.d-help.is-end .d-help-tip{left:auto;right:-8px}
+.d-more{display:flex;justify-content:center;margin-top:10px}
+.d-more .d-btn{min-height:40px}
+.d-task-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.d-task-x{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin:-4px -4px 0 0;padding:0;border:0;border-radius:8px;background:transparent;color:#6b7385;cursor:pointer}
+.d-task-x:hover{background:#eef1f7;color:#0e1526}
+.d-card-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-size:13px;color:#4d5566}

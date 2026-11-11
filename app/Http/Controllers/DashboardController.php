@@ -101,8 +101,6 @@ final class DashboardController extends Controller
             'revenue' => $isSeller ? $charts->revenueByMonth($user) : null,
             'hours' => $isSeller ? $charts->bidsPerHour($user) : null,
             'interest' => $isSeller ? $interest->forSeller($user, $weekly) : [],
-            'liveLots' => $isSeller ? $interest->liveLots($user) : collect(),
-            'drafts' => $isSeller ? $interest->drafts($user) : collect(),
             'openBids' => $isSeller ? [] : $buyer->openBids($user),
             'watching' => $isSeller ? collect() : $buyer->watching($user),
             'purchases' => $isSeller ? collect() : $buyer->purchases($user),

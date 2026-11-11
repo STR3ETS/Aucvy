@@ -32,7 +32,7 @@ final class BuyerOverview
     /**
      * @return list<OpenBid>
      */
-    public function openBids(User $user, int $limit = 4): array
+    public function openBids(User $user, int $limit = 3): array
     {
         return Bid::query()
             ->where('user_id', $user->id)
@@ -46,7 +46,11 @@ final class BuyerOverview
             ->limit(50)
             ->get()
             ->filter(fn (Bid $bid): bool => $bid->auction !== null && $bid->auction->lot !== null && ! $bid->auction->isClosed())
-            ->sortBy(fn (Bid $bid): int => $bid->auction->ends_at->getTimestamp())
+            // Waar je overboden bent staat bovenaan; daarbinnen wat het eerst sluit.
+            ->sortBy([
+                fn (Bid $a, Bid $b): int => ($a->status === BidStatus::Winning) <=> ($b->status === BidStatus::Winning),
+                fn (Bid $a, Bid $b): int => $a->auction->ends_at->getTimestamp() <=> $b->auction->ends_at->getTimestamp(),
+            ])
             ->take($limit)
             ->map(fn (Bid $bid): array => [
                 'bid' => $bid,

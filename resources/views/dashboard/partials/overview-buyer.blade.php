@@ -26,8 +26,15 @@
 @endphp
 
 <section class="d-card" aria-labelledby="bieden-title">
-    <h2 id="bieden-title" class="d-h2">Lopende biedingen</h2>
-    <p class="d-sub">Waar je staat, wat de kavel ongeveer waard is en hoeveel interesse er is.</p>
+    <div class="d-card-head" style="align-items:center">
+        <div class="d-titleline">
+            <h2 id="bieden-title" class="d-h2">Lopende biedingen</h2>
+            <x-dashboard.help text="Waar je staat, wat de kavel ongeveer waard is en hoeveel interesse er is." />
+        </div>
+        @if ($openBids !== [])
+            <a class="d-btn d-btn-secondary d-btn-sm" href="{{ route('dashboard.bids') }}">Alle biedingen</a>
+        @endif
+    </div>
 
     @if ($openBids === [])
         <p class="feed-empty" style="margin-top:12px">Je doet nu nergens aan mee. <a class="d-link" href="{{ route('lots.index') }}">Bekijk de veilingen</a> en bied op wat je zoekt.</p>
@@ -93,7 +100,7 @@
                                 Een bod van {{ $short($row['minimum_cents']) }} of meer brengt je weer op kop.
                             @endif
                         </span>
-                        <a class="d-btn {{ $row['winning'] ? 'd-btn-secondary' : '' }}" href="{{ route('lots.show', $lot) }}">{{ $row['winning'] ? 'Bekijk kavel' : 'Bied opnieuw' }}</a>
+                        <a class="d-btn {{ $row['winning'] ? 'd-btn-secondary' : 'd-btn-dark' }}" href="{{ route('lots.show', $lot) }}">{{ $row['winning'] ? 'Bekijk kavel' : 'Bied opnieuw' }}</a>
                     </div>
                 </article>
             @endforeach
@@ -104,8 +111,10 @@
 <section class="d-card" aria-labelledby="volgen-title">
     <div class="d-card-head" style="align-items:flex-end">
         <div style="flex:1 1 240px">
-            <h2 id="volgen-title" class="d-h2">Wat je volgt</h2>
-            <p class="d-sub">Zie meteen wat hot is en wat bijna sluit.</p>
+            <div class="d-titleline">
+                <h2 id="volgen-title" class="d-h2">Wat je volgt</h2>
+                <x-dashboard.help text="Zie meteen wat hot is en wat bijna sluit." />
+            </div>
         </div>
     </div>
     @if ($watching->isEmpty())
@@ -160,8 +169,10 @@
 
 @if ($bought->isNotEmpty())
     <section class="d-card" aria-labelledby="kocht-title">
-        <h2 id="kocht-title" class="d-h2">Hoe je kocht</h2>
-        <p class="d-sub">Je winnende bod naast de waarde-indicatie van Atlas. Een range, geen belofte.</p>
+        <div class="d-titleline">
+            <h2 id="kocht-title" class="d-h2">Hoe je kocht</h2>
+            <x-dashboard.help text="Je winnende bod naast de waarde-indicatie van Atlas. Een range, geen belofte." />
+        </div>
         <div class="d-stack-tight" style="margin-top:12px">
             @foreach ($bought as $order)
                 @php $bar = $range($order->hammer_cents, $order->lot->value_min_cents, $order->lot->value_max_cents); @endphp

@@ -11,23 +11,26 @@ use App\Models\User;
 use App\Notifications\VerificationDecided;
 
 /*
-| Het dashboard als werkplek: snelle acties bovenaan en één lijst met taken,
-| meldingen en tickets, met tabs en tellers.
+| Het dashboard als werkplek: snelle acties bovenaan, taken onder "Wacht op
+| jou" en één lijst met meldingen en tickets, met tabs en tellers.
 */
 
-it('zet taken, meldingen en tickets in één lijst met tellers per tab', function () {
+it('zet meldingen en tickets in één lijst en taken alleen onder Wacht op jou', function () {
     $user = User::factory()->verified()->create();
     Lot::factory()->anonymousDraft()->create(['seller_id' => $user->id, 'title' => 'Concept in de la']);
     $user->notify(new VerificationDecided(KycStatus::Verified));
     SupportTicket::factory()->create(['user_id' => $user->id, 'subject' => 'Vraag over transport']);
 
-    $this->actingAs($user)->get(route('dashboard'))
+    $response = $this->actingAs($user)->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Taken, meldingen en tickets')
-        ->assertSee('Ticket #')
+        ->assertSeeInOrder(['Meldingen en tickets', 'Ticket #'])
         ->assertSee('Vraag over transport')
         ->assertSee('Je identiteit is bevestigd')
-        ->assertSee('staat klaar om afgemaakt te worden');
+        ->assertSeeInOrder(['Wacht op jou', 'staat klaar om afgemaakt te worden'])
+        ->assertDontSee('Taken, meldingen en tickets');
+
+    // De taak staat er één keer: met zijn knop in de zijkolom, niet nog eens in de lijst.
+    expect(substr_count($response->getContent(), 'staat klaar om afgemaakt te worden'))->toBe(1);
 
     $feed = app(ActivityFeed::class)->for($user, AiInsight::query()->where('user_id', $user->id)->current()->get());
 
@@ -37,6 +40,30 @@ it('zet taken, meldingen en tickets in één lijst met tellers per tab', functio
         ->and($feed['tabs']['alles'][1])->toBe(3)
         ->and($feed['tabs']['ongelezen'][1])->toBe(3)
         ->and(collect($feed['items'])->pluck('kind')->sort()->values()->all())->toBe(['notification', 'task', 'ticket']);
+});
+
+it('toont de eerste vier taken en zet de rest achter één knop, met één blauwe knop', function () {
+    $user = User::factory()->verified()->create();
+    foreach (range(1, 6) as $number) {
+        AiInsight::create([
+            'user_id' => $user->id,
+            'agent' => 'ivy',
+            'type' => 'weekly',
+            'title' => 'Taak '.$number,
+            'severity' => 'info',
+            'action_route' => 'dashboard.lots',
+            'action_label' => 'Bekijken',
+            'valid_until' => now()->addDay(),
+        ]);
+    }
+
+    $content = $this->actingAs($user)->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Nog 2 tonen')
+        ->getContent();
+
+    expect(substr_count($content, 'class="d-btn d-btn-sm"'))->toBe(1)
+        ->and(substr_count($content, 'class="d-btn d-btn-sm d-btn-secondary" href="'.route('dashboard.lots').'"'))->toBe(5);
 });
 
 it('telt een gelezen melding en een gesloten ticket niet als ongelezen', function () {

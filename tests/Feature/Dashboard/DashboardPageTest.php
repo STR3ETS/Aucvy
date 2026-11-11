@@ -32,7 +32,7 @@ it('toont een verkoper zijn werkplan met signalen en teamchips', function () {
         ->assertOk()
         ->assertSee('Bieden')
         ->assertSee('Kavel plaatsen')
-        ->assertSeeInOrder(['Taken, meldingen en tickets', 'Transportinformatie ontbreekt'])
+        ->assertSeeInOrder(['Wacht op jou', 'Transportinformatie ontbreekt'])
         // Het team staat niet meer als filter boven de lijst; de chips in de zijkolom volstaan.
         ->assertDontSee('Jouw AI-team');
 });

@@ -69,10 +69,9 @@
             @include('dashboard.partials.team-aside')
         </div>
 
-        @if ($isSeller)
-            @include('dashboard.partials.active-lots')
-        @else
+        {{-- De verkoper ziet zijn kavels al bij "Interesse per kavel"; de hele lijst staat op Kavels. --}}
+        @unless ($isSeller)
             @include('dashboard.partials.purchases')
-        @endif
+        @endunless
     </div>
 </x-layouts.dashboard>

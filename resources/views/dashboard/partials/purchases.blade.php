@@ -13,7 +13,8 @@
         <p class="feed-empty" style="margin:0">Nog niets gekocht. Wat je wint of direct koopt, staat hier met factuur en levering.</p>
     @else
         <div class="d-stack-tight">
-            @foreach ($purchases as $order)
+            {{-- De laatste drie; de hele lijst staat op Bestellingen. --}}
+            @foreach ($purchases->take(3) as $order)
                 @php
                     $lot = $order->lot;
                     $invoice = $order->invoices->first(fn ($invoice) => $invoice->isVisibleTo($user));

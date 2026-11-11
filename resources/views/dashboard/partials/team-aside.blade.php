@@ -6,15 +6,21 @@
     taken per specialist en daaronder wat het team al deed.
 --}}
 @php
-    $tasks = collect($feed['items'])->where('kind', 'task')->values();
+    // Wat het eerst moet staat bovenaan: nu, dan vandaag, dan deze week.
+    $urgencyOrder = ['red' => 0, 'orange' => 1, 'blue' => 2, 'green' => 3];
+    $tasks = collect($feed['items'])->where('kind', 'task')->sortBy(fn (array $task): int => $urgencyOrder[$task['tone']] ?? 2)->values();
     $urgency = ['red' => ['Nu', 'tone-live'], 'orange' => ['Vandaag', 'tone-warn'], 'blue' => ['Deze week', 'tone-atlas'], 'green' => ['Klaar', 'tone-ok']];
     $displayTimezone = config('aucvy.display_timezone');
     // Het aantal taken per specialist: de teller bij "Wacht op jou" volgt het filter.
     $taskCounts = $tasks->countBy(fn (array $task): string => (string) ($task['agent'] ?? ''))->all();
+    // Zoveel taken staan open; de rest zit achter "Nog n tonen".
+    $taskLimit = 4;
+    // Eén blauwe knop per scherm: staat de betaalkaart er, dan is dat de hoofdhandeling.
+    $hasPayCard = ! $isSeller && $toPay !== null && $toPay['count'] > 0;
 @endphp
 
 <aside class="d-col-aside" aria-label="Team">
-    @if (! $isSeller && $toPay !== null && $toPay['count'] > 0)
+    @if ($hasPayCard)
         <div class="d-pay">
             <div class="d-pay-head">
                 <span>Te betalen</span>
@@ -40,7 +46,12 @@
         </div>
     </div>
 
-    <div class="d-aside-block" x-data="{ counts: {{ Js::from($taskCounts) }}, total: {{ $tasks->count() }}, get shown() { return agent === null ? this.total : (this.counts[agent] ?? 0); } }">
+    {{--
+        Wacht op jou: de eerste vier staan open, de rest achter één knop. Alleen
+        de bovenste taak heeft de blauwe knop, zodat duidelijk is wat eerst moet.
+        Taken staan alleen hier, niet nog een keer in de lijst met meldingen.
+    --}}
+    <div class="d-aside-block" x-data="{ counts: {{ Js::from($taskCounts) }}, total: {{ $tasks->count() }}, all: false, get shown() { return agent === null ? this.total : (this.counts[agent] ?? 0); } }">
         <div class="d-aside-head">
             <h2 class="d-h3">Wacht op jou</h2>
             <span class="d-muted" x-text="shown + (shown === 1 ? ' punt' : ' punten')">{{ $tasks->count() }} {{ $tasks->count() === 1 ? 'punt' : 'punten' }}</span>
@@ -51,23 +62,39 @@
             <div class="d-stack-tight" style="margin-top:10px">
                 @foreach ($tasks as $task)
                     @php [$when, $whenTone] = $urgency[$task['tone']] ?? ['Deze week', 'tone-atlas']; @endphp
-                    <article class="d-task" x-show="agent === null || agent === '{{ $task['agent'] ?? '' }}'">
-                        <div class="d-task-tags">
-                            @if ($task['agent'])
-                                <span class="d-tag tone-{{ $task['agent'] }}">{{ ucfirst($task['agent']) }}</span>
+                    <article class="d-task" x-data="{ gone: false }"
+                             x-show="! gone && (agent === null ? (all || {{ $loop->index }} < {{ $taskLimit }}) : agent === '{{ $task['agent'] ?? '' }}')"
+                             @if ($loop->index >= $taskLimit) x-cloak @endif>
+                        <div class="d-task-top">
+                            <div class="d-task-tags">
+                                @if ($task['agent'])
+                                    <span class="d-tag tone-{{ $task['agent'] }}">{{ ucfirst($task['agent']) }}</span>
+                                @endif
+                                <span class="d-tag {{ $whenTone }}">{{ $when }}</span>
+                            </div>
+                            @if ($task['dismiss_id'] !== null)
+                                <button type="button" class="d-task-x" aria-label="Taak verbergen" title="Verbergen"
+                                        @click="gone = true; total--; counts['{{ $task['agent'] ?? '' }}'] = (counts['{{ $task['agent'] ?? '' }}'] ?? 1) - 1; fetch('/api/insights/{{ $task['dismiss_id'] }}/dismiss', {
+                                            method: 'POST',
+                                            headers: {'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''},
+                                        })"><x-v4.icon name="x" :size="15" stroke="2.2" /></button>
                             @endif
-                            <span class="d-tag {{ $whenTone }}">{{ $when }}</span>
                         </div>
                         <p>{{ $task['title'] }}</p>
-                        <a class="d-btn d-btn-sm" href="{{ $task['url'] }}">{{ $task['action'] ?? 'Bekijken' }} <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
+                        <a class="d-btn d-btn-sm{{ $loop->first && ! $hasPayCard ? '' : ' d-btn-secondary' }}" href="{{ $task['url'] }}">{{ $task['action'] ?? 'Bekijken' }} <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
                     </article>
                 @endforeach
             </div>
+            @if ($tasks->count() > $taskLimit)
+                <div class="d-more" x-show="agent === null && ! all">
+                    <button type="button" class="d-btn d-btn-secondary d-btn-sm d-btn-wide" @click="all = true">Nog {{ $tasks->count() - $taskLimit }} tonen</button>
+                </div>
+            @endif
             <p class="d-sub" style="margin-top:8px" x-show="shown === 0" x-cloak>Bij deze specialist wacht nu niets op je.</p>
         @endif
     </div>
 
-    <div class="d-aside-block">
+    <div class="d-aside-block" x-data="{ more: false }">
         <div class="d-aside-head">
             <h2 class="d-h3">{{ $isSeller ? 'Al afgehandeld' : 'Ivy regelde deze week' }}</h2>
             <span class="d-muted">{{ $isSeller ? 'laatste 30 dagen' : 'observaties' }}</span>
@@ -86,7 +113,7 @@
             @endforelse
         @else
             @forelse ($weekly as $insight)
-                <div class="d-done" x-show="agent === null || agent === '{{ $insight->agent->value }}'">
+                <div class="d-done" x-show="agent === null ? (more || {{ $loop->index }} < 3) : agent === '{{ $insight->agent->value }}'" @if ($loop->index >= 3) x-cloak @endif>
                     <span class="d-agent d-agent-sm has-photo" aria-hidden="true"><img src="{{ asset('images/agents/'.$insight->agent->value.'.jpg') }}" alt="" width="28" height="28" loading="lazy"></span>
                     <span class="d-done-text">
                         <strong>{{ $insight->title }}</strong>
@@ -96,6 +123,11 @@
             @empty
                 <p class="d-sub" style="margin-top:8px">Nog niets deze week. Zodra er iets opvalt in je biedingen of je volglijst, staat het hier.</p>
             @endforelse
+            @if ($weekly->count() > 3)
+                <div class="d-more" x-show="agent === null && ! more">
+                    <button type="button" class="d-btn d-btn-secondary d-btn-sm d-btn-wide" @click="more = true">Nog {{ $weekly->count() - 3 }} tonen</button>
+                </div>
+            @endif
         @endif
     </div>
 </aside>
