@@ -1533,38 +1533,7 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-lead{margin:0 0 16px;font-size:15px;line-height:1.55;color:#0e1526;max-width:72ch}
 .d-lead b{font-weight:800}
 
-/* ---------- lopende biedingen: kaarten naast elkaar met een ring voor de waarde ---------- */
-.d-bids-wrap{container-type:inline-size;margin-top:16px}
-.d-bids{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-@container (max-width:659px){.d-bids{grid-template-columns:minmax(0,1fr)}}
-
-/* De kaart zelf is de maat. Breed: bovenin titel en knop over de volle breedte, daaronder de ring precies in het midden
-   met de bedragen links en rechts ervan. Smal: alles onder elkaar. */
-.d-bid-slot{container-type:inline-size;min-width:0;display:flex}
-.d-bid{flex:1 1 auto;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-areas:"top top top" "left ring right";align-items:center;gap:18px 28px;padding:20px;border-radius:16px;background:var(--d-inset,#f3f5fa)}
-.d-bid-top{grid-area:top;display:flex;align-items:center;gap:16px;min-width:0;padding-bottom:16px;border-bottom:1px solid rgba(14,21,38,.08)}
-.d-bid-head{flex:1 1 auto;display:flex;align-items:center;gap:12px;min-width:0}
-.d-bid-head img,.d-bid-head .thumb{width:48px;height:48px;flex:0 0 auto;border-radius:12px;object-fit:cover;background:#e1e6f0}
-.d-bid-head .text{min-width:0}
-.d-bid-head strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15.5px;font-weight:700;line-height:1.35}
-.d-bid-head strong a{color:inherit}
-.d-bid-head strong a:hover{color:#1e56e0}
-.d-bid-tags{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:4px}
-.d-bid-meta{font-size:12.5px;color:#5c6577}
-.d-bid-action{flex:0 0 auto}
-.d-bid>.d-ring{grid-area:ring}
-.d-bid-stats{display:grid;gap:12px;align-content:center;margin:0;min-width:0}
-.d-bid-stats.is-left{grid-area:left;justify-items:end;text-align:right}
-.d-bid-stats.is-right{grid-area:right;justify-items:start;text-align:left}
-.d-bid-stats>div{display:grid;gap:2px;min-width:0}
-.d-bid-stats dt{font-size:12.5px;color:#5c6577}
-.d-bid-stats dd{margin:0;font-size:15px;font-weight:700;white-space:nowrap}
-.d-bid-stats .is-main dd{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
-.d-bid-stats dd.d-bid-note{font-size:12px;font-weight:700;white-space:normal}
-.d-bid-note{color:#1e56e0}
-.d-bid-note.is-below{color:#0b7a3b}
-.d-bid-note.is-above{color:#8f5209}
-
+/* ---------- de ring: een bod of voortgang als deel van een geheel ---------- */
 .d-ring{--ring:#2f6bff;position:relative;width:112px;height:112px;flex:0 0 auto}
 .d-ring.is-below{--ring:#12a150}
 .d-ring.is-above{--ring:#e08a00}
@@ -1573,22 +1542,38 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-ring circle{fill:none;stroke-width:9}
 .d-ring .track{stroke:#dfe4ee}
 .d-ring .value{stroke:var(--ring);stroke-linecap:round}
-.d-ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;color:#0e1526}
-.d-ring-text b{font-size:22px;font-weight:800;line-height:1;letter-spacing:-.02em}
-.d-ring-text span{font-size:10.5px;line-height:1.2;color:#5c6577;max-width:60px}
-.d-ring.is-none .d-ring-text{color:#6b7385}
+.d-bid-meta{font-size:12.5px;color:#5c6577}
 
-/* Een smalle kaart: titel bovenaan, de ring in het midden, de bedragen in twee kolommen eronder en de knop over de volle breedte. */
-@container (max-width:459px){
-  .d-bid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto 1fr;grid-template-areas:"top top" "ring ring" "left right";align-items:start;gap:16px}
-  .d-bid-top{align-items:flex-start;padding-bottom:0;border-bottom:0}
-  .d-bid-head{align-items:flex-start;min-height:88px}
-  .d-bid-head strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal}
-  .d-bid>.d-ring{justify-self:center;width:104px;height:104px}
-  .d-bid-stats.is-left,.d-bid-stats.is-right{justify-items:start;text-align:left;align-content:start}
-  .d-bid-stats dd{white-space:normal}
+/* ---------- lopende biedingen: dezelfde tabel als "hoe je kocht" ---------- */
+.d-bidtable{--cols:minmax(0,1fr) 110px 100px 130px 170px 240px 44px;container-type:inline-size;margin-top:14px}
+.d-bidtable-head,.d-bidrow{display:grid;grid-template-columns:var(--cols);align-items:center;column-gap:20px}
+.d-bidtable-head{padding:0 10px 8px;border-bottom:1px solid rgba(14,21,38,.08);font-size:12px;font-weight:700;color:#5c6577}
+.d-bidtable-head .num{text-align:right}
+.d-bidrow{padding:12px 10px;border-bottom:1px solid rgba(14,21,38,.07)}
+.d-bidrow:last-child{border-bottom:0}
+.d-bidrow-tags{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.d-bidrow .d-bought-num.is-current b{font-size:16px;font-weight:800}
+.d-bidrow .d-bought-actions{width:44px}
+/* Middelbreed: titel met de actie rechts, daaronder de bedragen en de uitkomst. Smal: alles onder elkaar. */
+@container (max-width:1099px){
+  .d-bidtable-head{display:none}
+  .d-bidrow{grid-template-columns:repeat(4,minmax(0,auto)) minmax(0,1fr);grid-template-areas:"lot lot lot lot actions" "current own next value verdict";gap:10px 22px;padding:14px 6px}
+  .d-bidrow .d-bought-lot{grid-area:lot}
+  .d-bidrow .d-bought-actions{grid-area:actions;justify-self:end}
+  .d-bidrow .d-bought-num{text-align:left;white-space:normal}
+  .d-bidrow .d-bought-num.is-current{grid-area:current;padding-left:56px}
+  .d-bidrow .d-bought-num.is-own{grid-area:own}
+  .d-bidrow .d-bought-num.is-next{grid-area:next}
+  .d-bidrow .d-bought-num.is-value{grid-area:value}
+  .d-bidrow .d-bought-verdict{grid-area:verdict;justify-self:end;max-width:220px}
+  .d-bidrow .d-bought-num .label{position:static;width:auto;height:auto;overflow:visible;clip:auto;display:block;font-size:12px;color:#5c6577}
 }
-.d-bid-stats dd span{white-space:nowrap}
+@container (max-width:699px){
+  .d-bidrow{grid-template-columns:repeat(2,minmax(0,1fr)) auto;grid-template-areas:"lot lot actions" "current own own" "next value value" "verdict verdict verdict";gap:10px 14px}
+  .d-bidrow .d-bought-lot strong{white-space:normal}
+  .d-bidrow .d-bought-num.is-current{padding-left:0}
+  .d-bidrow .d-bought-verdict{justify-self:start;max-width:none}
+}
 
 /* ---------- hoe je kocht: één tabel met een kleine ring als uitkomst en de weg naar factuur en bestelling ---------- */
 .d-bought{--cols:minmax(0,1fr) 96px 180px 250px auto;container-type:inline-size;margin-top:6px}

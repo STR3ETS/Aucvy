@@ -82,7 +82,7 @@ it('opent voor iemand met alleen een concept in kopersmodus', function () {
         ->assertDontSee('Koperintentie');
 });
 
-it('toont een lopend bod als kaart met een ring en het bedrag om weer op kop te komen', function () {
+it('toont een lopend bod als regel in een tabel met het bedrag om weer op kop te komen', function () {
     $anna = User::factory()->verified()->create();
     $bram = User::factory()->verified()->create();
 
@@ -95,8 +95,8 @@ it('toont een lopend bod als kaart met een ring en het bedrag om weer op kop te 
     $this->actingAs($anna)
         ->get('/dashboard')
         ->assertOk()
-        ->assertSeeInOrder(['Lopende biedingen', 'Vorkheftruck Linde E16', 'Overboden', 'data-tip="Bied opnieuw"', 'Huidig bod', 'Jouw bod', 'Weer op kop vanaf'], escape: false)
-        ->assertSee('class="d-ring is-', escape: false);
+        // De koppen staan er één keer boven; de regel volgt met de actie als pictogram aan het eind.
+        ->assertSeeInOrder(['Lopende biedingen', 'class="d-bidtable-head"', 'Vorkheftruck Linde E16', 'Overboden', 'Huidig bod', 'Jouw bod', 'Weer op kop vanaf', 'data-tip="Bied opnieuw"'], escape: false);
 });
 
 it('zegt wordt afgesloten als de eindtijd voorbij is en de veiling nog niet is afgehandeld', function () {
