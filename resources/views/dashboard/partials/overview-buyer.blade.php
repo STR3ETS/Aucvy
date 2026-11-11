@@ -40,9 +40,10 @@
         <p class="feed-empty" style="margin-top:12px">Je doet nu nergens aan mee. <a class="d-link" href="{{ route('lots.index') }}">Bekijk de veilingen</a> en bied op wat je zoekt.</p>
     @else
         {{--
-            Twee kaarten naast elkaar. Per kavel: wat het is en hoe je ervoor
-            staat, een ring die zegt waar het bod zit ten opzichte van de
-            waarde-indicatie van Atlas, de bedragen op een rij en één knop.
+            Twee kaarten naast elkaar. Per kavel links de ring (waar het bod
+            zit ten opzichte van de waarde-indicatie van Atlas), daarnaast
+            wat het is en hoe je ervoor staat, de bedragen als rij cijfers
+            en rechts één knop. Op een smalle kaart staat alles onder elkaar.
         --}}
         <div class="d-bids-wrap">
         <div class="d-bids">
@@ -62,7 +63,26 @@
                         default => 'within',
                     };
                 @endphp
+                <div class="d-bid-slot">
                 <article class="d-bid">
+                    <div class="d-ring is-{{ $ringTone }}" role="img"
+                         aria-label="{{ $bar !== null ? 'Huidig bod is '.$ringPercent.'% van de bovenkant van de waarde-indicatie, '.$bar['note'] : 'Geen waarde-indicatie voor deze kavel' }}">
+                        <svg viewBox="0 0 100 100" aria-hidden="true">
+                            <circle class="track" cx="50" cy="50" r="41"></circle>
+                            @if ($ringPercent !== null)
+                                <circle class="value" cx="50" cy="50" r="41" pathLength="100" stroke-dasharray="{{ min(100, max(2, $ringPercent)) }} 100"></circle>
+                            @endif
+                        </svg>
+                        <div class="d-ring-text">
+                            @if ($ringPercent !== null)
+                                <b class="tabular">{{ $ringPercent }}%</b>
+                                <span>van de waarde</span>
+                            @else
+                                <x-v4.icon name="gavel" :size="22" stroke="2" />
+                            @endif
+                        </div>
+                    </div>
+
                     <div class="d-bid-head">
                         @if ($lot->media->first())
                             <img src="{{ $lot->media->first()->path }}" alt="">
@@ -76,55 +96,25 @@
                                 @if ($row['interest']['hot'])
                                     <span class="d-tag tone-hot"><x-v4.icon name="flame" :size="12" stroke="2.4" /> Hot</span>
                                 @endif
+                                <span class="d-bid-meta">Sluit {{ $auction->ends_at->timezone($displayTimezone)->diffForHumans() }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="d-bid-mid">
-                        <div class="d-ring is-{{ $ringTone }}" role="img"
-                             aria-label="{{ $bar !== null ? 'Huidig bod is '.$ringPercent.'% van de bovenkant van de waarde-indicatie, '.$bar['note'] : 'Geen waarde-indicatie voor deze kavel' }}">
-                            <svg viewBox="0 0 100 100" aria-hidden="true">
-                                <circle class="track" cx="50" cy="50" r="41"></circle>
-                                @if ($ringPercent !== null)
-                                    <circle class="value" cx="50" cy="50" r="41" pathLength="100" stroke-dasharray="{{ min(100, max(2, $ringPercent)) }} 100"></circle>
-                                @endif
-                            </svg>
-                            <div class="d-ring-text">
-                                @if ($ringPercent !== null)
-                                    <b class="tabular">{{ $ringPercent }}%</b>
-                                    <span>van de waarde</span>
-                                @else
-                                    <x-v4.icon name="gavel" :size="22" stroke="2" />
-                                @endif
-                            </div>
-                        </div>
+                    <dl class="d-bid-stats">
+                        <div class="is-main"><dt>Huidig bod</dt><dd class="tabular">{{ $short($row['current_cents']) }}</dd></div>
+                        <div><dt>Jouw bod</dt><dd class="tabular">{{ $short($bid->amount_cents) }}</dd></div>
+                        @unless ($row['winning'])
+                            <div><dt>Weer op kop vanaf</dt><dd class="tabular">{{ $short($row['minimum_cents']) }}</dd></div>
+                        @endunless
+                        @if ($bar !== null)
+                            <div class="is-wide"><dt>Waarde volgens Atlas</dt><dd class="tabular">{{ $euro($lot->value_min_cents) }} – {{ $euro($lot->value_max_cents) }}</dd><dd class="d-bid-note is-{{ $ringTone }}">{{ ucfirst($bar['note']) }}</dd></div>
+                        @endif
+                    </dl>
 
-                        <dl class="d-bid-facts">
-                            <div class="is-main"><dt>Huidig bod</dt><dd class="tabular">{{ $short($row['current_cents']) }}</dd></div>
-                            <div><dt>Jouw bod</dt><dd class="tabular">{{ $short($bid->amount_cents) }}</dd></div>
-                            @unless ($row['winning'])
-                                <div><dt>Weer op kop vanaf</dt><dd class="tabular">{{ $short($row['minimum_cents']) }}</dd></div>
-                            @endunless
-                            @if ($bar !== null)
-                                <div><dt>Waarde</dt><dd class="tabular">{{ $euro($lot->value_min_cents) }} – {{ $euro($lot->value_max_cents) }}</dd></div>
-                            @endif
-                        </dl>
-                    </div>
-
-                    <div class="d-bid-foot">
-                        <span class="d-bid-note is-{{ $ringTone }}">
-                            @if ($bar !== null)
-                                {{ ucfirst($bar['note']) }}
-                            @elseif ($row['winning'])
-                                Je staat bovenaan
-                            @else
-                                Je bent overboden
-                            @endif
-                            <small>Sluit {{ $auction->ends_at->timezone($displayTimezone)->diffForHumans() }}</small>
-                        </span>
-                        <a class="d-btn d-btn-sm {{ $row['winning'] ? 'd-btn-secondary' : 'd-btn-dark' }}" href="{{ route('lots.show', $lot) }}">{{ $row['winning'] ? 'Bekijk kavel' : 'Bied opnieuw' }}</a>
-                    </div>
+                    <a class="d-btn d-btn-sm d-bid-action {{ $row['winning'] ? 'd-btn-secondary' : 'd-btn-dark' }}" href="{{ route('lots.show', $lot) }}">{{ $row['winning'] ? 'Bekijk kavel' : 'Bied opnieuw' }}</a>
                 </article>
+                </div>
             @endforeach
         </div>
         </div>

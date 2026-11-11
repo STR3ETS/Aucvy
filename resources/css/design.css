@@ -1537,16 +1537,31 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-bids-wrap{container-type:inline-size;margin-top:16px}
 .d-bids{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 @container (max-width:659px){.d-bids{grid-template-columns:minmax(0,1fr)}}
-.d-bid{display:flex;flex-direction:column;gap:16px;min-width:0;padding:18px;border-radius:16px;background:var(--d-inset,#f3f5fa);container-type:inline-size}
-.d-bid-head{display:flex;align-items:flex-start;gap:12px;min-width:0;min-height:74px}
-.d-bid-head img,.d-bid-head .thumb{width:56px;height:56px;flex:0 0 auto;border-radius:12px;object-fit:cover;background:#e1e6f0}
+
+/* De kaart zelf is de maat: breed staat de ring links en de knop rechts, smal staat alles onder elkaar. */
+.d-bid-slot{container-type:inline-size;min-width:0;display:flex}
+.d-bid{flex:1 1 auto;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"ring head action" "ring stats stats";align-items:center;gap:14px 20px;padding:20px;border-radius:16px;background:var(--d-inset,#f3f5fa)}
+.d-bid>.d-ring{grid-area:ring;align-self:center}
+.d-bid-head{grid-area:head;display:flex;align-items:center;gap:12px;min-width:0}
+.d-bid-head img,.d-bid-head .thumb{width:48px;height:48px;flex:0 0 auto;border-radius:12px;object-fit:cover;background:#e1e6f0}
 .d-bid-head .text{min-width:0}
-.d-bid-head strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;font-size:15px;font-weight:700;line-height:1.35}
+.d-bid-head strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15.5px;font-weight:700;line-height:1.35}
 .d-bid-head strong a{color:inherit}
 .d-bid-head strong a:hover{color:#1e56e0}
-.d-bid-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.d-bid-mid{display:flex;align-items:center;gap:20px;min-height:104px}
-.d-ring{--ring:#2f6bff;position:relative;width:96px;height:96px;flex:0 0 auto}
+.d-bid-tags{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:4px}
+.d-bid-meta{font-size:12.5px;color:#5c6577}
+.d-bid-action{grid-area:action;align-self:center}
+.d-bid-stats{grid-area:stats;display:flex;flex-wrap:wrap;gap:10px 32px;margin:0;padding-top:14px;border-top:1px solid rgba(14,21,38,.08)}
+.d-bid-stats>div{display:grid;gap:2px;align-content:start;min-width:0}
+.d-bid-stats dt{font-size:12.5px;color:#5c6577;white-space:nowrap}
+.d-bid-stats dd{margin:0;font-size:15px;font-weight:700;white-space:nowrap}
+.d-bid-stats .is-main dd{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.d-bid-stats dd.d-bid-note{font-size:12px;font-weight:700;white-space:normal}
+.d-bid-note{color:#1e56e0}
+.d-bid-note.is-below{color:#0b7a3b}
+.d-bid-note.is-above{color:#8f5209}
+
+.d-ring{--ring:#2f6bff;position:relative;width:104px;height:104px;flex:0 0 auto}
 .d-ring.is-below{--ring:#12a150}
 .d-ring.is-above{--ring:#e08a00}
 .d-ring.is-none{--ring:#9aa3b5}
@@ -1555,27 +1570,21 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-ring .track{stroke:#dfe4ee}
 .d-ring .value{stroke:var(--ring);stroke-linecap:round}
 .d-ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;color:#0e1526}
-.d-ring-text b{font-size:20px;font-weight:800;line-height:1;letter-spacing:-.02em}
-.d-ring-text span{font-size:10.5px;line-height:1.2;color:#5c6577;max-width:58px}
+.d-ring-text b{font-size:21px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.d-ring-text span{font-size:10.5px;line-height:1.2;color:#5c6577;max-width:60px}
 .d-ring.is-none .d-ring-text{color:#6b7385}
-.d-bid-facts{flex:1 1 auto;min-width:0;max-width:340px;margin:0;display:grid;gap:5px}
-.d-bid-facts>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:13px}
-.d-bid-facts dt{flex:1 1 auto;min-width:0;color:#5c6577;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.d-bid-facts dd{flex:0 0 auto;margin:0;font-weight:700;text-align:right;white-space:nowrap}
-.d-bid-facts .is-main{margin-bottom:2px}
-.d-bid-facts .is-main dd{font-size:21px;font-weight:800;letter-spacing:-.02em}
-.d-bid-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:14px;border-top:1px solid rgba(14,21,38,.08)}
-.d-bid-note{display:grid;gap:1px;min-width:0;font-size:13px;font-weight:700;line-height:1.35;color:#1e56e0}
-.d-bid-note.is-below{color:#0b7a3b}
-.d-bid-note.is-above{color:#8f5209}
-.d-bid-note.is-none{color:#0e1526}
-.d-bid-note small{font-size:12px;font-weight:500;color:#5c6577}
-.d-bid-foot .d-btn{flex:0 0 auto}
-/* Een smalle biedkaart: de ring boven de bedragen, de knop over de volle breedte. */
+
+/* Een smalle kaart: titel bovenaan, de ring naast de cijfers in twee kolommen, de knop over de volle breedte. */
+@container (max-width:559px){
+  .d-bid{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto 1fr auto;grid-template-areas:"head head" "ring stats" "action action";gap:16px}
+  .d-bid-head{align-items:flex-start;min-height:88px}
+  .d-bid-action{align-self:end}
+  .d-bid-head strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal}
+  .d-bid-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;padding-top:0;border-top:0}
+  .d-bid-stats .is-wide{grid-column:1/-1}
+  .d-bid-action{width:100%}
+}
 @container (max-width:339px){
-  .d-bid-mid{flex-direction:column;align-items:stretch;gap:12px}
-  .d-ring{align-self:center}
-  .d-bid-facts{max-width:none}
-  .d-bid-foot{flex-direction:column;align-items:stretch}
-  .d-bid-foot .d-btn{width:100%}
+  .d-bid{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 1fr auto;grid-template-areas:"head" "ring" "stats" "action"}
+  .d-bid>.d-ring{justify-self:center}
 }
