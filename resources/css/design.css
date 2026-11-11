@@ -1710,3 +1710,69 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 @container (max-width:479px){
   .d-lotrow-facts,.d-lottable.is-wide .d-lotrow-facts{padding-left:0}
 }
+
+/* ---------- berichten: lijst, gesprek en kavel als drie losse kaarten ---------- */
+.d-msg-layout{--msg-h:clamp(520px,calc(100dvh - 300px),900px);grid-template-columns:320px minmax(0,1fr) 300px;gap:24px}
+.c.dash .d-convlist{display:flex;flex-direction:column;gap:14px;min-width:0;max-height:var(--msg-h);padding:20px 12px 12px}
+.d-convlist>.d-titleline{padding:0 8px}
+.d-convlist-search{display:block;padding:0 8px}
+.d-convlist-items{display:flex;flex-direction:column;gap:2px;flex:1 1 auto;min-height:0;overflow-y:auto}
+.d-convlist .d-more{margin-top:0}
+.c.dash .d-convlist .d-conv{position:relative;align-items:center;gap:12px;flex:0 0 auto;padding:10px 28px 10px 8px;border:0;border-radius:14px;background:transparent;box-shadow:none}
+.c.dash .d-convlist .d-conv:hover{background:var(--d-inset)}
+.c.dash .d-convlist .d-conv.is-on{background:#eaf0ff}
+.d-convlist .d-conv-thumb{width:46px;height:46px;border-radius:12px}
+.d-convlist .d-conv-body{gap:2px}
+.d-convlist .d-conv-body strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;font-size:14px;font-weight:600}
+.d-convlist .d-conv.is-unread .d-conv-body strong{font-weight:800}
+.d-convlist .d-conv-body>span:not(.d-tag){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
+.d-convlist .d-conv-body .d-tag{align-self:flex-start;margin-top:4px}
+.d-convlist .d-conv-unread{position:absolute;top:50%;right:10px;width:10px;min-width:0;height:10px;margin-top:-5px;padding:0}
+.c.dash .d-thread{height:var(--msg-h)}
+.c.dash .d-thread.is-empty{height:auto;min-height:320px;align-items:center;justify-content:center}
+.d-thread-pick{display:flex;flex-direction:column;align-items:center;gap:6px;max-width:36ch;padding:32px;text-align:center;color:#2f6bff}
+.d-thread-pick .d-h3{margin-top:4px;color:#0e1526}
+.d-thread-head{padding:16px 18px}
+.d-thread-who{flex:1 1 auto;min-width:0}
+.d-thread-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:800}
+.d-thread-who .d-muted{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-thread-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.d-thread-actions form{display:flex}
+.d-thread-back{display:none}
+.d-thread-report{display:flex;align-items:center;gap:8px;padding:12px 18px;border-bottom:1px solid rgba(14,21,38,.08);background:var(--d-inset,#f3f5fa)}
+.d-thread-report .d-input{flex:1 1 auto}
+.d-thread-guard{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 18px 0;font-size:12.5px;color:#5c6577}
+.d-thread-guard img{width:20px;height:20px;flex:0 0 auto;border-radius:50%;object-fit:cover}
+.d-thread-list{flex:1 1 auto;min-height:0;max-height:none;padding:16px 18px}
+/* Een kort gesprek staat onderaan, bij het invoerveld. */
+.d-thread-list>:first-child{margin-top:auto}
+.d-thread-compose{padding:14px 18px 16px}
+.d-thread-compose-row{align-items:flex-end;gap:10px}
+.d-thread-compose-row .d-iconbtn{width:44px;height:44px}
+.d-thread-compose-row .d-textarea{min-height:44px;max-height:160px;padding:11px 16px;border-radius:22px;line-height:1.45;resize:none}
+.d-thread-compose .d-hint{margin:8px 0 0;text-align:center}
+.d-compose-file{display:inline-flex;align-items:center;gap:6px;max-width:100%;margin:0 0 8px;padding:5px 6px 5px 10px;border-radius:999px;background:var(--d-inset,#f3f5fa);font-size:12.5px;font-weight:600;color:#2a3242}
+.d-compose-file span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-compose-file button{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:0 0 auto;padding:0;border:0;border-radius:50%;background:transparent;color:#5c6577;cursor:pointer}
+.d-compose-file button:hover{background:#e1e6f0;color:#0e1526}
+.d-iconbtn.is-accent{border-color:#2f6bff;background:#2f6bff;color:#fff}
+.d-iconbtn.is-accent:hover,.d-iconbtn.is-accent:focus-visible{border-color:#1e56e0;background:#1e56e0;color:#fff}
+label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56e0}
+.d-lotside-state{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:12px 0 0;font-size:13px;color:#4d5566}
+.d-lotside-state b{font-size:15px;font-weight:800;color:#0e1526}
+.d-lotside .d-dossier{margin-top:16px;padding-top:16px;border-top:1px solid rgba(14,21,38,.08)}
+@media (max-width:1180px){
+  .d-msg-layout{grid-template-columns:300px minmax(0,1fr)}
+}
+/* Telefoon: de lijst of het gesprek, niet allebei onder elkaar. */
+@media (max-width:760px){
+  .d-msg-layout{--msg-h:clamp(440px,calc(100dvh - 190px),760px);grid-template-columns:minmax(0,1fr)}
+  .c.dash .d-msg-layout.is-open>nav,.c.dash .d-msg-layout.is-list>.d-thread,.c.dash .d-msg-layout.is-list>aside{display:none}
+  .c.dash .d-convlist{max-height:none}
+  .d-thread-back{display:inline-flex}
+  .d-thread-head{flex-wrap:wrap}
+  .d-thread-head .d-conv-thumb{display:none}
+  .d-thread-who{flex:1 1 0}
+  .d-thread-actions{flex:1 1 100%;justify-content:flex-end}
+  .d-thread-report{flex-wrap:wrap}
+}

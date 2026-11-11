@@ -271,3 +271,55 @@ it('geeft dezelfde client key maar één bericht en kan blokkeren', function () 
     $this->actingAs($lot->seller)->post(route('messages.block', $conversation))->assertRedirect(route('messages.index'));
     $this->actingAs($conversation->buyer)->post(route('messages.store', $conversation), ['body' => 'Nog een'])->assertSessionHasErrors('body');
 });
+
+it('opent Berichten meteen op het gesprek dat aandacht vraagt', function () {
+    $lot = lotForMessages();
+    $other = lotForMessages();
+    $buyer = buyer();
+    $read = app(StartConversation::class)->asBuyer($lot, $buyer, 'chat', 'Eerste gesprek.');
+    $waiting = app(StartConversation::class)->asBuyer($other, $buyer, 'chat', 'Tweede gesprek.');
+
+    // De verkoper antwoordt in het oudste gesprek: dat is voor de koper nu ongelezen.
+    $this->travel(5)->minutes();
+    $this->actingAs($lot->seller)->post(route('messages.store', $read), ['body' => 'Ja, dat klopt.'])->assertRedirect();
+
+    $this->actingAs($buyer)->get(route('messages.index'))->assertRedirect(route('messages.show', $read));
+
+    // Alles gelezen: dan het gesprek met het laatste bericht.
+    $this->actingAs($buyer)->get(route('messages.show', $read))->assertOk();
+    $this->travel(5)->minutes();
+    $this->actingAs($buyer)->post(route('messages.store', $waiting), ['body' => 'Nog een vraag.'])->assertRedirect();
+    $this->actingAs($buyer)->get(route('messages.index'))->assertRedirect(route('messages.show', $waiting));
+
+    // Met ?page= blijft de lijst zonder geopend gesprek bereikbaar.
+    $this->actingAs($buyer)->get(route('messages.index', ['page' => 1]))
+        ->assertOk()
+        ->assertSee('Kies een gesprek')
+        ->assertSee($lot->title);
+
+    // Wie geen gesprekken heeft, ziet de lege staat.
+    $this->actingAs(buyer())->get(route('messages.index'))->assertOk()->assertSee('Nog geen gesprekken');
+});
+
+it('toont de acties van een gesprek als pictogram', function () {
+    $lot = lotForMessages();
+    $conversation = app(StartConversation::class)->asBuyer($lot, buyer(), 'chat', 'Staat hij nog op de foto zoals hij nu is?');
+
+    $this->actingAs($lot->seller)->post(route('messages.store', $conversation), ['body' => 'Ja, precies zo.'])->assertRedirect();
+
+    $this->actingAs($lot->seller)->get(route('messages.show', $conversation))
+        ->assertOk()
+        ->assertSee('data-tip="Naar de kavel"', false)
+        ->assertSee('data-tip="Melden"', false)
+        ->assertSee('data-tip="Blokkeren"', false)
+        ->assertSee('data-tip="Foto of PDF toevoegen"', false)
+        ->assertSee('data-tip="Antwoord ook bij de kavel tonen"', false)
+        ->assertSee('data-tip="Versturen"', false)
+        ->assertSee('Ivy bewaakt dit gesprek.')
+        ->assertSee('Over deze kavel');
+
+    // De koper kan geen antwoord bij de kavel zetten.
+    $this->actingAs($conversation->buyer)->get(route('messages.show', $conversation))
+        ->assertOk()
+        ->assertDontSee('data-tip="Antwoord ook bij de kavel tonen"', false);
+});

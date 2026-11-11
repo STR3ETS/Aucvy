@@ -64,6 +64,7 @@ export default function initMessagesNav() {
         const skeleton = setTimeout(() => {
             current.thread.innerHTML = SKELETON_THREAD;
             current.thread.removeAttribute('style');
+            current.thread.classList.remove('is-empty');
             current.aside.innerHTML = SKELETON_ASIDE;
             current.aside.className = 'd-card';
         }, 140);
@@ -85,6 +86,9 @@ export default function initMessagesNav() {
             // Alpine start het nieuwe gesprek vanzelf en ruimt het oude op.
             current.thread.replaceWith(document.adoptNode(next.thread));
             current.aside.replaceWith(document.adoptNode(next.aside));
+
+            // Op de telefoon staat nu het gesprek in beeld in plaats van de lijst.
+            root.classList.replace('is-list', 'is-open');
 
             document.title = fresh.title;
 

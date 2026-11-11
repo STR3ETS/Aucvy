@@ -26,15 +26,37 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final class ConversationController extends Controller
 {
-    public function index(Request $request): View
+    /** Zoveel gesprekken staan er in de lijst naast een geopend gesprek. */
+    private const int LIST_LIMIT = 25;
+
+    public function index(Request $request): View|RedirectResponse
     {
         $user = $request->user();
+
+        /*
+         | Wie gesprekken heeft, komt meteen in het gesprek dat aandacht
+         | vraagt: het eerste ongelezen, anders het laatste. De lijst zonder
+         | geopend gesprek (met ?page=) blijft voor oudere gesprekken en voor
+         | de terugknop op de telefoon.
+         */
+        if (! $request->has('page')) {
+            $recent = Conversation::query()
+                ->forParticipant($user)
+                ->orderByRaw('last_message_at is null, last_message_at desc')
+                ->limit(self::LIST_LIMIT)
+                ->get();
+            $open = $recent->first(fn (Conversation $conversation): bool => $conversation->isUnreadFor($user)) ?? $recent->first();
+
+            if ($open !== null) {
+                return redirect()->route('messages.show', $open);
+            }
+        }
 
         $conversations = Conversation::query()
             ->forParticipant($user)
             ->with(['lot.media', 'buyer', 'seller', 'company', 'order'])
             ->orderByRaw('last_message_at is null, last_message_at desc')
-            ->paginate(25);
+            ->paginate(self::LIST_LIMIT);
 
         return view('dashboard.messages.index', [
             'conversations' => $conversations,
@@ -56,6 +78,7 @@ final class ConversationController extends Controller
             'user' => $user,
             'isBuyer' => $conversation->isBuyer($user),
             'conversations' => $this->listFor($user, $conversation),
+            'hasOlder' => Conversation::query()->forParticipant($user)->count() > self::LIST_LIMIT,
             // "Alles over deze kavel" naast het gesprek (ontwerp van november): het dossier, alleen wat deze lezer mag zien.
             'dossier' => Dossier::timeline($conversation->lot, $conversation->isBuyer($user) ? 'buyer' : 'seller', $user, orderId: $conversation->order_id, limit: 8),
         ]);
@@ -74,7 +97,7 @@ final class ConversationController extends Controller
             ->forParticipant($user)
             ->with(['lot.media', 'buyer', 'seller', 'company', 'order'])
             ->orderByRaw('last_message_at is null, last_message_at desc')
-            ->limit(25)
+            ->limit(self::LIST_LIMIT)
             ->get();
 
         // Een oud gesprek dat buiten de eerste vijfentwintig valt, staat onderaan.
