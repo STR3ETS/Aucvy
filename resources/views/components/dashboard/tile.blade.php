@@ -9,6 +9,8 @@
     'href' => null,
     // Een trend als "15%" omhoog of "4%" omlaag, met een pijlpictogram: een pil rechts van het label.
     'trend' => null,
+    // De tegel is een filter en staat nu aan.
+    'active' => false,
 ])
 
 {{--
@@ -17,7 +19,7 @@
     getal en één regel context. Met een href is de hele tegel een link.
 --}}
 @php $tag = $href ? 'a' : 'div'; @endphp
-<{{ $tag }} @if ($href) href="{{ $href }}" @endif {{ $attributes->merge(['class' => 'd-tile tone-'.$tone]) }}>
+<{{ $tag }} @if ($href) href="{{ $href }}" @endif @if ($active) aria-current="true" @endif {{ $attributes->merge(['class' => 'd-tile tone-'.$tone.($active ? ' is-on' : '')]) }}>
     <div class="d-tile-head">
         <span class="d-tile-label">{{ $label }}</span>
         @if ($trend !== null)

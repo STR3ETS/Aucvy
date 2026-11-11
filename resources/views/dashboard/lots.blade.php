@@ -19,6 +19,16 @@
         ->filter(fn ($lot): bool => $groupOf($lot->status) === 'live')
         ->sum(fn ($lot): int => (int) ($lot->auction?->bidder_count ?? 0));
     $displayTimezone = config('aucvy.display_timezone');
+
+    // De tegels zijn het filter (?status=): geen rij chips met dezelfde tellers eronder.
+    $filter = array_key_exists((string) request('status'), $groups) ? (string) request('status') : 'alle';
+    $filterUrl = fn (string $key): string => route('dashboard.lots', $filter === $key ? [] : ['status' => $key]);
+    // De rijen voor de lijst in de browser: de groep en de zoektekst (titel en status).
+    $listRows = $lots->map(fn ($lot): array => ['id' => $lot->id, 'g' => $groupOf($lot->status), 't' => Str::lower($lot->title.' '.$lot->status->label())])->values();
+    $listLimit = 10;
+    // Wat bij het laden al open staat, zodat er niets verspringt.
+    $inFilter = $listRows->filter(fn (array $row): bool => $filter === 'alle' || $row['g'] === $filter);
+    $firstShown = $inFilter->take($listLimit)->pluck('id')->flip();
 @endphp
 
 <x-layouts.dashboard title="Mijn kavels" eyebrow="Dashboard" intro="Alles wat je hebt geplaatst, met de stand van elke veiling en wat er nog in de la ligt.">
@@ -28,10 +38,10 @@
     </x-slot:actions>
 
     <x-slot:tiles>
-        <x-dashboard.tile tone="blue" label="Live" :value="$counts->get('live', 0)" sub="nu te zien voor kopers" />
-        <x-dashboard.tile tone="green" label="Bieders" :value="$bidders" sub="op je lopende veilingen" />
-        <x-dashboard.tile tone="orange" label="Concepten" :value="$counts->get('concept', 0)" sub="nog niet gepubliceerd" :href="$counts->get('concept', 0) > 0 ? route('sell') : null" />
-        <x-dashboard.tile tone="purple" label="Verkocht" :value="$counts->get('verkocht', 0)" sub="met een koper" :href="route('orders.index')" />
+        <x-dashboard.tile tone="blue" label="Live" :value="$counts->get('live', 0)" :sub="$bidders.' '.($bidders === 1 ? 'bieder' : 'bieders').' op je veilingen'" :href="$filterUrl('live')" :active="$filter === 'live'" />
+        <x-dashboard.tile tone="green" label="Gepland" :value="$counts->get('gepland', 0)" sub="staat klaar om te starten" :href="$filterUrl('gepland')" :active="$filter === 'gepland'" />
+        <x-dashboard.tile tone="orange" label="Concepten" :value="$counts->get('concept', 0)" sub="nog niet gepubliceerd" :href="$filterUrl('concept')" :active="$filter === 'concept'" />
+        <x-dashboard.tile tone="purple" label="Verkocht" :value="$counts->get('verkocht', 0)" sub="met een koper" :href="$filterUrl('verkocht')" :active="$filter === 'verkocht'" />
     </x-slot:tiles>
 
     @if ($lots->isEmpty())
@@ -50,22 +60,29 @@
             <div role="alert" class="d-soft is-err" style="margin:0 0 14px">{{ $errors->first() }}</div>
         @endif
 
-        {{-- Filteren en zoeken gebeurt in de browser: de lijst is al geladen. Bulk gaat via één formulier om de lijst heen. --}}
-        <form method="POST" action="{{ route('dashboard.lots.bulk') }}" x-data="{ filter: 'alle', q: '', selected: [] }">
+        {{--
+            Zoeken gebeurt in de browser: de lijst is al geladen. De eerste tien
+            rijen staan open, de rest achter "Meer tonen". Selecteren voor
+            dupliceren of verwijderen staat achter één knop; bulk gaat via één
+            formulier om de lijst heen.
+        --}}
+        <form method="POST" action="{{ route('dashboard.lots.bulk') }}" x-data="{ selected: [], selecting: false }">
             @csrf
-            <div class="d-card-head" style="align-items:center;margin-bottom:14px">
-                <div class="d-chips" role="group" aria-label="Filter op status">
-                    <button type="button" class="d-chip" :class="filter === 'alle' && 'is-on'" @click="filter = 'alle'">Alle <span class="d-muted" style="font-weight:700">{{ $lots->count() }}</span></button>
-                    @foreach ($groups as $key => $label)
-                        @if ($counts->get($key, 0) > 0)
-                            <button type="button" class="d-chip" :class="filter === '{{ $key }}' && 'is-on'" @click="filter = '{{ $key }}'">{{ $label }} <span class="d-muted" style="font-weight:700">{{ $counts->get($key) }}</span></button>
-                        @endif
-                    @endforeach
-                </div>
-                <label style="flex:0 1 240px">
+            <div x-data="shortList({ rows: {{ Js::from($listRows) }}, filter: '{{ $filter }}', limit: {{ $listLimit }} })">
+            <div class="d-listbar">
+                <p class="d-listbar-count">
+                    @if ($filter === 'alle')
+                        <b class="tabular">{{ $lots->count() }}</b> {{ $lots->count() === 1 ? 'kavel' : 'kavels' }}
+                    @else
+                        <b class="tabular">{{ $counts->get($filter, 0) }}</b> {{ $filter === 'concept' ? ($counts->get($filter, 0) === 1 ? 'concept' : 'concepten') : mb_strtolower($groups[$filter]) }}
+                        <a class="d-link" href="{{ route('dashboard.lots') }}">Alle {{ $lots->count() }} tonen</a>
+                    @endif
+                </p>
+                <label class="d-listbar-search">
                     <span class="sr-only">Zoek in je kavels</span>
                     <input type="search" x-model="q" placeholder="Zoek in je kavels" autocomplete="off" class="d-input" style="margin:0">
                 </label>
+                <button type="button" class="d-btn d-btn-secondary d-btn-sm" :aria-pressed="selecting" @click="selecting = ! selecting; if (! selecting) selected = []" x-text="selecting ? 'Klaar' : 'Selecteren'">Selecteren</button>
             </div>
 
             <div class="bulk-bar" x-show="selected.length" x-cloak>
@@ -113,9 +130,8 @@
                             default => ['', ''],
                         };
                     @endphp
-                    <article class="d-listrow" data-group="{{ $group }}" data-title="{{ Str::lower($lot->title) }}"
-                             x-show="(filter === 'alle' || filter === $el.dataset.group) && (q === '' || $el.dataset.title.includes(q.toLowerCase()))">
-                        <label class="pick">
+                    <article class="d-listrow" x-show="ids[{{ $lot->id }}]" @unless ($firstShown->has($lot->id)) x-cloak @endunless>
+                        <label class="pick" x-show="selecting" x-cloak>
                             <input type="checkbox" name="lots[]" value="{{ $lot->id }}" x-model="selected" aria-label="Selecteer {{ $lot->title }}">
                         </label>
                         <a href="{{ $dossierUrl ?? route('dashboard.lots') }}" aria-label="{{ $lot->title }}" style="flex:0 0 auto">
@@ -148,7 +164,7 @@
                                 <span>{{ $amountLabel }}</span>
                             @endif
                             @if ($lot->status === LotStatus::Draft)
-                                <a href="{{ $url }}" class="d-btn d-btn-sm">{{ __('dashboard.actions.continue_draft') }}</a>
+                                <a href="{{ $url }}" class="d-btn d-btn-secondary d-btn-sm">{{ __('dashboard.actions.continue_draft') }}</a>
                             @elseif (in_array($lot->status, [LotStatus::Unsold, LotStatus::Cancelled], true))
                                 <button type="submit" class="d-btn d-btn-secondary d-btn-sm" formaction="{{ route('dashboard.lots.duplicate', ['lot' => $lot->id, 'relist' => 1]) }}" formmethod="POST">Opnieuw plaatsen</button>
                             @elseif (in_array($lot->status, [LotStatus::Scheduled, LotStatus::Live, LotStatus::Closing, LotStatus::Paused], true))
@@ -157,6 +173,11 @@
                         </div>
                     </article>
                 @endforeach
+            </div>
+            <p class="feed-empty" x-show="total === 0" x-cloak>Geen kavels gevonden. Pas je zoekwoord aan of <a class="d-link" href="{{ route('dashboard.lots') }}">toon alle kavels</a>.</p>
+            <div class="d-more" x-show="hidden > 0" @if ($inFilter->count() <= $listLimit) x-cloak @endif>
+                <button type="button" class="d-btn d-btn-secondary d-btn-sm" @click="all = true">Meer tonen <span class="tabular" x-text="'(' + hidden + ')'"></span></button>
+            </div>
             </div>
         </form>
     @endif

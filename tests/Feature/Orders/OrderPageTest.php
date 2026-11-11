@@ -92,7 +92,7 @@ it('meldt een probleem via het formulier', function () {
         ->and($order->fresh()->disputes()->count())->toBe(1);
 });
 
-it('toont de lijst met gekochte en verkochte bestellingen', function () {
+it('toont één lijst tegelijk: gekocht eerst, verkocht achter de tegel', function () {
     $user = User::factory()->verified()->create();
     $bought = Order::factory()->create(['buyer_id' => $user->id]);
     $sold = Order::factory()->create(['seller_id' => $user->id]);
@@ -101,5 +101,40 @@ it('toont de lijst met gekochte en verkochte bestellingen', function () {
         ->get(route('orders.index'))
         ->assertOk()
         ->assertSee($bought->order_number)
+        ->assertDontSee($sold->order_number)
+        ->assertSee(route('orders.index', ['toon' => 'verkocht']), escape: false);
+
+    $this->actingAs($user)
+        ->get(route('orders.index', ['toon' => 'verkocht']))
+        ->assertOk()
+        ->assertSee($sold->order_number)
+        ->assertDontSee($bought->order_number);
+
+    // Lopend toont beide kanten in één lijst.
+    $this->actingAs($user)
+        ->get(route('orders.index', ['toon' => 'lopend']))
+        ->assertOk()
+        ->assertSee($bought->order_number)
         ->assertSee($sold->order_number);
+});
+
+it('opent op verkocht voor wie alleen verkocht heeft', function () {
+    $user = User::factory()->verified()->create();
+    $sold = Order::factory()->create(['seller_id' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('orders.index'))
+        ->assertOk()
+        ->assertSee($sold->order_number);
+});
+
+it('zet lange lijsten achter Meer tonen', function () {
+    $user = User::factory()->verified()->create();
+    Order::factory()->count(12)->create(['buyer_id' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('orders.index'))
+        ->assertOk()
+        ->assertSee('Meer tonen')
+        ->assertSee('(2)');
 });
