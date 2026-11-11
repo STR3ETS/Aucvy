@@ -80,11 +80,11 @@
                         </div>
 
                         <div class="d-alert-actions">
-                            <button type="button" class="d-link" @click="rename = ! rename">Naam wijzigen</button>
+                            <button type="button" class="d-iconbtn" data-tip="Naam wijzigen" aria-label="Naam van deze alert wijzigen" @click="rename = ! rename"><x-v4.icon name="pencil" :size="17" stroke="2" /></button>
                             <form method="POST" action="{{ route('dashboard.alerts.destroy', $search) }}">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="d-link" style="color:#a93226">Verwijderen</button>
+                                <button type="submit" class="d-iconbtn is-danger" data-tip="Verwijderen" aria-label="Deze alert verwijderen"><x-v4.icon name="trash" :size="17" stroke="2" /></button>
                             </form>
                         </div>
 

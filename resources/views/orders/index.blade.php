@@ -90,7 +90,11 @@
                                 <div class="d-listrow-right">
                                     <b>{{ Money::format($asSeller ? $order->hammer_cents : $order->total_cents) }}</b>
                                     <span>{{ $asSeller ? 'hamerprijs' : 'totaal' }}</span>
-                                    <a href="{{ route('orders.show', $order) }}" class="d-btn {{ $order->id === $firstUnpaid && ! $asSeller ? '' : 'd-btn-secondary' }} d-btn-sm d-btn-sq">{{ ! $asSeller && $order->status === OrderStatus::AwaitingPayment ? 'Betalen' : 'Bekijk' }}</a>
+                                    @if (! $asSeller && $order->status === OrderStatus::AwaitingPayment)
+                                        <a href="{{ route('orders.show', $order) }}" class="d-iconbtn{{ $order->id === $firstUnpaid ? ' is-dark' : '' }}" data-tip="Betalen" aria-label="{{ $lot?->title ?? $order->order_number }} betalen"><x-v4.icon name="banknote" :size="17" stroke="2" /></a>
+                                    @else
+                                        <a href="{{ route('orders.show', $order) }}" class="d-iconbtn" data-tip="Bekijk bestelling" aria-label="Bestelling {{ $lot?->title ?? $order->order_number }} bekijken"><x-v4.icon name="eye" :size="17" stroke="2" /></a>
+                                    @endif
                                 </div>
                             </article>
                         @endforeach

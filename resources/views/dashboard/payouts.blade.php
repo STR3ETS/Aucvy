@@ -108,7 +108,7 @@
                                     <td class="num"><strong>{{ Money::format($payout->amount_cents) }}</strong></td>
                                     <td><span class="d-tag {{ $tagTone($payout->status) }}">{{ $payout->status->label() }}</span></td>
                                     <td class="nowrap">{{ $moment[1]?->timezone($displayTimezone)->isoFormat('D MMM YYYY') }}<small>{{ $moment[0] }}{{ $moment[0] === 'vrijgave' ? ' om '.$moment[1]->timezone($displayTimezone)->format('H:i') : '' }}</small></td>
-                                    <td class="num"><a href="{{ route('dashboard.payouts.show', $payout) }}" class="d-link">Bekijk</a></td>
+                                    <td class="num"><a href="{{ route('dashboard.payouts.show', $payout) }}" class="d-iconbtn" data-tip="Bekijk uitbetaling" aria-label="Uitbetaling van {{ $payout->order->lot->title }} bekijken"><x-v4.icon name="eye" :size="17" stroke="2" /></a></td>
                                 </tr>
                             @endforeach
                         </tbody>

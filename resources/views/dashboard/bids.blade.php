@@ -115,9 +115,13 @@
                                         <b>{{ Money::format($isOpen && $bid->status === BidStatus::Outbid ? $lot->currentPriceCents() : $bid->amount_cents) }}</b>
                                         <span>{{ $isOpen ? ($bid->status === BidStatus::Outbid ? 'Huidig bod' : 'Jouw bod') : ($bid->status === BidStatus::Winning ? 'Winnend bod' : 'Jouw bod') }}</span>
                                         @if ($isOpen && $bid->status === BidStatus::Outbid)
-                                            <a href="{{ route('lots.show', $lot) }}" class="d-btn d-btn-dark d-btn-sm d-btn-sq">Bied opnieuw</a>
+                                            <a href="{{ route('lots.show', $lot) }}" class="d-iconbtn is-dark" data-tip="Bied opnieuw" aria-label="Opnieuw bieden op {{ $lot->title }}"><x-v4.icon name="gavel" :size="17" stroke="2" /></a>
                                         @elseif (! $isOpen && $bid->status === BidStatus::Winning && $lot->order !== null)
-                                            <a href="{{ route('orders.show', $lot->order) }}" class="d-btn d-btn-secondary d-btn-sm d-btn-sq">{{ $lot->order->status === \App\Enums\OrderStatus::AwaitingPayment ? 'Betalen' : 'Bestelling' }}</a>
+                                            @if ($lot->order->status === \App\Enums\OrderStatus::AwaitingPayment)
+                                            <a href="{{ route('orders.show', $lot->order) }}" class="d-iconbtn is-dark" data-tip="Betalen" aria-label="{{ $lot->title }} betalen"><x-v4.icon name="banknote" :size="17" stroke="2" /></a>
+                                        @else
+                                            <a href="{{ route('orders.show', $lot->order) }}" class="d-iconbtn" data-tip="Bekijk bestelling" aria-label="Bestelling van {{ $lot->title }} bekijken"><x-v4.icon name="shopping-bag" :size="17" stroke="2" /></a>
+                                        @endif
                                         @endif
                                     </div>
                                 </article>

@@ -86,7 +86,7 @@
                                 <td class="nowrap">{{ $line['payout_status'] }}</td>
                                 <td class="nowrap">
                                     @if ($invoice)
-                                        <a href="{{ route('invoices.show', $invoice) }}" class="d-link">Bekijk factuur</a>
+                                        <a href="{{ route('invoices.show', $invoice) }}" class="d-iconbtn" data-tip="Bekijk factuur" aria-label="Factuur {{ $invoice->number }} bekijken"><x-v4.icon name="file-text" :size="17" stroke="2" /></a>
                                     @else
                                         <span class="d-muted">volgt</span>
                                     @endif
@@ -123,7 +123,7 @@
                                         <td>{{ __('invoices.for.'.$invoice->kind) }}</td>
                                         <td class="nowrap">{{ $invoice->order->order_number }}</td>
                                         <td class="num"><strong>{{ Money::format($invoice->total_cents) }}</strong></td>
-                                        <td class="num"><a href="{{ route('invoices.show', $invoice) }}" class="d-link">Bekijken</a></td>
+                                        <td class="num"><a href="{{ route('invoices.show', $invoice) }}" class="d-iconbtn" data-tip="Bekijk factuur" aria-label="Factuur {{ $invoice->number }} bekijken"><x-v4.icon name="file-text" :size="17" stroke="2" /></a></td>
                                     </tr>
                                 @endforeach
                             </tbody>

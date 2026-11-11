@@ -164,11 +164,11 @@
                                 <span>{{ $amountLabel }}</span>
                             @endif
                             @if ($lot->status === LotStatus::Draft)
-                                <a href="{{ $url }}" class="d-btn d-btn-secondary d-btn-sm">{{ __('dashboard.actions.continue_draft') }}</a>
+                                <a href="{{ $url }}" class="d-iconbtn" data-tip="{{ __('dashboard.actions.continue_draft') }}" aria-label="{{ __('dashboard.actions.continue_draft') }}: {{ $lot->title ?: 'concept zonder titel' }}"><x-v4.icon name="pencil" :size="17" stroke="2" /></a>
                             @elseif (in_array($lot->status, [LotStatus::Unsold, LotStatus::Cancelled], true))
-                                <button type="submit" class="d-btn d-btn-secondary d-btn-sm" formaction="{{ route('dashboard.lots.duplicate', ['lot' => $lot->id, 'relist' => 1]) }}" formmethod="POST">Opnieuw plaatsen</button>
+                                <button type="submit" class="d-iconbtn" data-tip="Opnieuw plaatsen" aria-label="{{ $lot->title }} opnieuw plaatsen" formaction="{{ route('dashboard.lots.duplicate', ['lot' => $lot->id, 'relist' => 1]) }}" formmethod="POST"><x-v4.icon name="refresh" :size="17" stroke="2" /></button>
                             @elseif (in_array($lot->status, [LotStatus::Scheduled, LotStatus::Live, LotStatus::Closing, LotStatus::Paused], true))
-                                <a href="{{ route('dashboard.lots.edit', $lot) }}" class="d-btn d-btn-secondary d-btn-sm">{{ $lot->status === LotStatus::Paused ? 'Hervatten' : 'Bewerken' }}</a>
+                                <a href="{{ route('dashboard.lots.edit', $lot) }}" class="d-iconbtn" data-tip="{{ $lot->status === LotStatus::Paused ? 'Hervatten' : 'Bewerken' }}" aria-label="{{ $lot->title }} {{ $lot->status === LotStatus::Paused ? 'hervatten' : 'bewerken' }}"><x-v4.icon :name="$lot->status === LotStatus::Paused ? 'play' : 'pencil'" :size="17" stroke="2" /></a>
                             @endif
                         </div>
                     </article>

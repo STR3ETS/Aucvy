@@ -59,11 +59,11 @@
                         </span>
                     @endif
 
-                    <a href="{{ route('lots.show', $lot) }}" class="btn btn-ghost" style="height:36px;font-size:13px">Naar de kavel</a>
+                    <a href="{{ route('lots.show', $lot) }}" class="d-iconbtn" data-tip="Naar de kavel" aria-label="Naar de kavel {{ $lot->title }}"><x-v4.icon name="eye" :size="17" stroke="2" /></a>
                     <form method="POST" action="{{ route('dashboard.watchlist.remove', $lot) }}">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-ghost" style="height:36px;font-size:13px" aria-label="Stop met volgen van {{ $lot->title }}">Ontvolgen</button>
+                        <button type="submit" class="d-iconbtn is-on" data-tip="Ontvolgen" aria-label="Stop met volgen van {{ $lot->title }}"><x-v4.icon name="heart" :size="17" stroke="2" /></button>
                     </form>
                 </li>
             @endforeach
