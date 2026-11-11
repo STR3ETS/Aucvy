@@ -1,3 +1,4 @@
+@use('App\Support\Charts\SmoothLine')
 @use('App\Support\Money\Money')
 
 {{--
@@ -13,7 +14,10 @@
     // De lijn van de omzetgrafiek: 11 of 12 punten op een vlak van 100 bij 100.
     $months = $revenue['months'];
     $peak = $revenue['peak_cents'];
-    $points = collect($months)->map(fn (array $month, int $index): string => sprintf('%.2f,%.2f', count($months) > 1 ? $index / (count($months) - 1) * 100 : 50, 100 - $month['revenue_cents'] / $peak * 100))->implode(' ');
+    $points = collect($months)->values()->map(fn (array $month, int $index): array => [count($months) > 1 ? $index / (count($months) - 1) * 100 : 50, 100 - $month['revenue_cents'] / $peak * 100])->all();
+    // Een vloeiende lijn door de maanden; het vlak eronder sluit op de onderrand.
+    $linePath = SmoothLine::through($points);
+    $areaPath = $points === [] ? '' : $linePath.' L'.round(end($points)[0], 2).',100 L'.round($points[0][0], 2).',100 Z';
     $axis = collect([1, 2 / 3, 1 / 3, 0])->map(fn (float $share): array => ['top' => (1 - $share) * 200 + 10, 'label' => $share === 0.0 ? '€ 0' : $euro((int) round($peak * $share))]);
 @endphp
 
@@ -46,8 +50,8 @@
                 <div class="d-line-grid" aria-hidden="true" style="top:{{ $line['top'] }}px"><span>{{ $line['label'] }}</span></div>
             @endforeach
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="top:10px">
-                <polygon points="0,100 {{ $points }} 100,100" fill="rgba(47,107,255,.12)"></polygon>
-                <polyline points="{{ $points }}" fill="none" stroke="#2f6bff" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>
+                <path d="{{ $areaPath }}" fill="rgba(47,107,255,.12)"></path>
+                <path d="{{ $linePath }}" fill="none" stroke="#2f6bff" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"></path>
             </svg>
             <div class="d-line-hit" x-ref="hit" aria-hidden="true"
                  @mousemove="at($event)" @mouseleave="i = null" @touchstart.passive="at($event)" @touchmove.passive="at($event)">

@@ -122,3 +122,20 @@ describe('de cijferblokken', function () {
         expect(app(DemandForecast::class)->forSeller($seller)['has_history'])->toBeFalse();
     });
 });
+
+it('tekent de opbrengst als een vloeiende lijn zodra er verkopen zijn', function () {
+    $seller = User::factory()->verified()->create();
+    Lot::factory()->live()->create(['seller_id' => $seller->id]);
+    Order::factory()->completed()->create(['seller_id' => $seller->id, 'hammer_cents' => 250_000, 'completed_at' => now()->subMonths(2)]);
+    Order::factory()->completed()->create(['seller_id' => $seller->id, 'hammer_cents' => 400_000, 'completed_at' => now()->subDays(3)]);
+
+    $content = $this->actingAs($seller)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Bekijk als tabel')
+        ->getContent();
+
+    // Een pad met krommen (C), geen rechte lijnstukken tussen de maanden.
+    expect($content)->toMatch('/<path d="M[\d.]+,[\d.]+ C[^"]+" fill="none" stroke="#2f6bff"/')
+        ->and($content)->not->toContain('<polyline');
+});
