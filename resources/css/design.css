@@ -1316,3 +1316,53 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 /* Op een smal scherm staat wat op je wacht bovenaan, voor de grafieken. */
 .d-cols{container-type:inline-size}
 @container (max-width:737px){.d-col-aside{order:-1}}
+
+/* ---------- losse kaarten (11 november 2026) ----------
+   Geen grote witte plaat meer: de werkruimte ligt op een zachte vloer en
+   elke kaart ligt daar los op, zonder rand, met een lichte schaduw. Vakjes
+   binnen een kaart zijn gevuld in plaats van omlijnd. Alleen het dashboard. */
+.c.dash{--d-floor:#e8ecf4;--d-inset:#f3f5fa;--d-lift:0 1px 2px rgba(12,19,38,.05),0 16px 32px -22px rgba(12,19,38,.25);background:var(--d-floor)}
+.c.dash .dash-main{background:transparent;overflow:visible}
+.c.dash .dash-hero{border-radius:20px}
+.c.dash .dash-band{padding-bottom:72px}
+.c.dash .dash-hero.no-tiles .dash-band{padding-bottom:32px}
+.c.dash .dash-tiles,.c.dash .dash-tiles:has(.action-stack){margin-top:-44px;padding:0 24px;border-radius:0;background:transparent}
+.c.dash .dash-body{padding:18px 0 32px;background:transparent}
+.c.dash .dash-hero.no-tiles+.dash-body{margin-top:0;padding-top:18px;border-radius:0;background:transparent}
+.c.dash .d-foot{border-radius:20px}
+
+/* De cijfertegels: wit, met een dunne rand in de kleur van de tegel. */
+.c.dash .d-tile{background:#fff;border-color:transparent;box-shadow:var(--d-lift)}
+.c.dash .d-tile.tone-green{border-color:#bfe3cd}
+.c.dash .d-tile.tone-blue{border-color:#c9d8ff}
+.c.dash .d-tile.tone-orange{border-color:#f3d9a8}
+.c.dash .d-tile.tone-purple{border-color:#d9cdfb}
+.c.dash .d-tile.tone-pink{border-color:#f6cfe2}
+.c.dash .d-tile.is-on{border-color:#2f6bff;box-shadow:0 0 0 2px #2f6bff inset,var(--d-lift)}
+
+/* Alles wat los op de vloer ligt. */
+.c.dash :is(.d-card,.d-col-aside,.feed,.d-listrow,.d-lot,.d-datatable,.d-notifs,.d-salecard,.d-profilecard,.d-navtile,.d-conv,.d-thread,.d-side-card){border-color:transparent;box-shadow:var(--d-lift)}
+.c.dash .d-card{padding:22px}
+.c.dash .d-seg{border-color:transparent;background:#fff;box-shadow:0 1px 2px rgba(12,19,38,.06)}
+
+/* Een vak binnen een kaart is een gevuld vlak, geen tweede kaart. */
+.c.dash :is(.d-task,.d-depth-item){border-color:transparent;background:var(--d-inset)}
+.c.dash .d-stat{background:var(--d-inset)}
+.c.dash .d-depth-item.is-on{background:#eaf0ff;box-shadow:0 0 0 1.5px #2f6bff inset}
+.c.dash :is(.d-card,.feed,.d-col-aside) :is(.d-card,.d-listrow,.d-lot,.d-datatable){box-shadow:none;background:var(--d-inset)}
+
+@media (max-width:1080px){
+  .c.dash .dash-hero{border-radius:18px}
+  .c.dash .dash-band{padding-bottom:64px}
+  .c.dash .dash-hero.no-tiles .dash-band{padding-bottom:28px}
+  .c.dash .dash-tiles,.c.dash .dash-tiles:has(.action-stack){margin-top:-40px;padding:0 14px}
+  .c.dash .dash-body{padding:16px 0 28px}
+  .c.dash .d-foot{border-radius:18px}
+}
+@media print{
+  .c.dash{background:#fff}
+  .c.dash :is(.d-card,.d-col-aside,.feed,.d-listrow,.d-lot,.d-datatable,.d-notifs,.d-salecard,.d-profilecard,.d-navtile,.d-conv,.d-thread,.d-side-card,.d-tile){box-shadow:none}
+}
+/* Een zacht vlak dat los op de vloer ligt is wit; binnen een kaart blijft het een gevuld vlak. */
+.c.dash :is(.d-soft:not(.is-ok,.is-warn,.is-err),.d-total,.feed-empty){background:#fff}
+.c.dash :is(.d-card,.feed,.d-col-aside,.d-listrow,.d-side-card,.d-sheet) :is(.d-soft:not(.is-ok,.is-warn,.is-err),.d-total,.feed-empty){background:var(--d-inset)}
