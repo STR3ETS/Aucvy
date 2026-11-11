@@ -11,11 +11,12 @@ use App\Models\User;
 use App\Notifications\VerificationDecided;
 
 /*
-| Het dashboard als werkplek: snelle acties bovenaan, taken onder "Wacht op
-| jou" en één lijst met meldingen en tickets, met tabs en tellers.
+| Het dashboard als werkplek: snelle acties bovenaan, het team met per
+| teamlid hoeveel er wacht (de taken zelf staan in het gesprek met dat
+| teamlid) en één lijst met meldingen en tickets, met tabs en tellers.
 */
 
-it('zet meldingen en tickets in één lijst en taken alleen onder Wacht op jou', function () {
+it('zet meldingen en tickets in één lijst en taken bij het teamlid in het paneel', function () {
     $user = User::factory()->verified()->create();
     Lot::factory()->anonymousDraft()->create(['seller_id' => $user->id, 'title' => 'Concept in de la']);
     $user->notify(new VerificationDecided(KycStatus::Verified));
@@ -26,11 +27,18 @@ it('zet meldingen en tickets in één lijst en taken alleen onder Wacht op jou',
         ->assertSeeInOrder(['Meldingen en tickets', 'Ticket #'])
         ->assertSee('Vraag over transport')
         ->assertSee('Je identiteit is bevestigd')
-        ->assertSeeInOrder(['Wacht op jou', 'staat klaar om afgemaakt te worden'])
-        ->assertDontSee('Taken, meldingen en tickets');
+        ->assertSeeInOrder(['Je team', 'Eén ding wacht op je'])
+        ->assertSee('1 punt open')
+        ->assertDontSee('Taken, meldingen en tickets')
+        // De taak zelf staat niet op het dashboard: die staat in het gesprek met het teamlid.
+        ->assertDontSee('staat klaar om afgemaakt te worden');
 
-    // De taak staat er één keer: met zijn knop in de zijkolom, niet nog eens in de lijst.
-    expect(substr_count($response->getContent(), 'staat klaar om afgemaakt te worden'))->toBe(1);
+    $owner = collect($this->actingAs($user)->getJson(route('ivy.show'))->json('agents'))->firstWhere('count', 1)['key'];
+
+    $this->actingAs($user)->getJson(route('ivy.show', ['agent' => $owner]))
+        ->assertOk()
+        ->assertJsonPath('agent.key', $owner)
+        ->assertJsonPath('tasks.0.title', fn (string $title): bool => str_contains($title, 'staat klaar om afgemaakt te worden'));
 
     $feed = app(ActivityFeed::class)->for($user, AiInsight::query()->where('user_id', $user->id)->current()->get());
 
@@ -42,7 +50,7 @@ it('zet meldingen en tickets in één lijst en taken alleen onder Wacht op jou',
         ->and(collect($feed['items'])->pluck('kind')->sort()->values()->all())->toBe(['notification', 'task', 'ticket']);
 });
 
-it('toont de eerste vier taken en zet de rest achter één knop, met één blauwe knop', function () {
+it('toont per teamlid hoeveel er wacht en opent het gesprek met een klik', function () {
     $user = User::factory()->verified()->create();
     foreach (range(1, 6) as $number) {
         AiInsight::create([
@@ -59,11 +67,16 @@ it('toont de eerste vier taken en zet de rest achter één knop, met één blauw
 
     $content = $this->actingAs($user)->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Nog 2 tonen')
+        ->assertSee('6 punten open')
+        ->assertSee('6 dingen wachten op je')
+        ->assertSee("detail: { agent: 'ivy' }", escape: false)
+        ->assertSee("detail: { agent: 'finn' }", escape: false)
+        ->assertDontSee('Taak 1')
         ->getContent();
 
-    expect(substr_count($content, 'class="d-btn d-btn-sm"'))->toBe(1)
-        ->and(substr_count($content, 'class="d-btn d-btn-sm d-btn-secondary" href="'.route('dashboard.lots').'"'))->toBe(5);
+    // Zes teamleden, één met een teller.
+    expect(substr_count($content, 'class="d-member'))->toBeGreaterThanOrEqual(6)
+        ->and(substr_count($content, 'class="d-member-count"'))->toBe(1);
 });
 
 it('telt een gelezen melding en een gesloten ticket niet als ongelezen', function () {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AiAgent;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * met de pagina en eventueel de kavel waar het over gaat. Blijft bewaard
  * tussen pagina's; een gast neemt het mee bij het aanmaken van een account.
  */
-#[Fillable(['user_id', 'guest_token', 'role', 'lot_id', 'page_type', 'status', 'summary', 'pitched', 'handoff_at', 'last_message_at'])]
+#[Fillable(['user_id', 'guest_token', 'role', 'agent', 'lot_id', 'page_type', 'status', 'summary', 'pitched', 'handoff_at', 'last_message_at'])]
 class IvyConversation extends Model
 {
     use HasUlids;
@@ -37,7 +38,7 @@ class IvyConversation extends Model
      */
     protected function casts(): array
     {
-        return ['pitched' => 'boolean', 'handoff_at' => 'datetime', 'last_message_at' => 'datetime'];
+        return ['agent' => AiAgent::class, 'pitched' => 'boolean', 'handoff_at' => 'datetime', 'last_message_at' => 'datetime'];
     }
 
     public function user(): BelongsTo

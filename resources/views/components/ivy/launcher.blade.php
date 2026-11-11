@@ -4,6 +4,10 @@
     eroverheen. Desktop een kolom naast de pagina, mobiel volledig scherm.
     Behoudt het gesprek tussen pagina's. Zegt in de kop dat ze AI is.
 
+    Wie is ingelogd praat met Ivy of met een van de vijf specialisten: de
+    rij foto's onder de kop wisselt van gesprekspartner. Elk teamlid opent
+    met wat er vanuit zijn vak nog op je wacht.
+
     Het gedrag (stroom met stappen, uittypen, stoppen, opnieuw, kopiëren,
     voorlezen, inspreken) staat in resources/js/ivy-panel.js, de opmaak in
     resources/css/ivy.css. De opmaak volgt de Ivy-canvassen uit het ontwerp
@@ -14,12 +18,12 @@
 @php $ivyEnabled = (bool) config('aucvy.ai.enabled') && \App\Ivy\Chat\IvyFlags::on('ivy.enabled'); @endphp
 
 @if ($ivyEnabled)
-<div x-data="ivyPanel({{ Js::from(['show' => route('ivy.show'), 'send' => route('ivy.send'), 'reset' => route('ivy.reset'), 'upload' => route('ivy.upload'), 'lot' => $lot?->slug, 'page' => $page, 'name' => auth()->user()?->name]) }})"
-     class="ivy-root" @ivy-open.window="open($event.detail?.text)">
+<div x-data="ivyPanel({{ Js::from(['show' => route('ivy.show'), 'send' => route('ivy.send'), 'reset' => route('ivy.reset'), 'upload' => route('ivy.upload'), 'lot' => $lot?->slug, 'page' => $page, 'name' => auth()->user()?->name, 'photo' => asset('images/agents/ivy.jpg')]) }})"
+     class="ivy-root" @ivy-open.window="open($event.detail?.text, $event.detail?.agent)">
 
-    <button type="button" class="ivy-fab" @click="toggle()" :aria-expanded="opened" aria-controls="ivy-panel" aria-label="Open Ivy, de AI-assistent">
-        <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">
-        <span>Ivy</span>
+    <button type="button" class="ivy-fab" @click="toggle()" :aria-expanded="opened" aria-controls="ivy-panel" :aria-label="'Open ' + current.name + ', de AI-assistent'" aria-label="Open Ivy, de AI-assistent">
+        <img src="{{ asset('images/agents/ivy.jpg') }}" :src="current.photo" alt="">
+        <span x-text="current.name">Ivy</span>
         <span class="count" x-show="openCount > 0" x-text="openCount" x-cloak></span>
     </button>
 
@@ -27,9 +31,9 @@
              @dragover.prevent="dropping = true" @dragleave.prevent="dropping = false"
              @drop.prevent="dropping = false; upload($event.dataTransfer.files[0])">
         <header class="ivy-head">
-            <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">
+            <img src="{{ asset('images/agents/ivy.jpg') }}" :src="current.photo" alt="">
             <div class="ivy-head-text">
-                <strong>Ivy <span>AI-assistent</span></strong>
+                <strong><bdi x-text="current.name">Ivy</bdi> <span>AI-assistent</span></strong>
                 <p>
                     <i class="ivy-dot" :class="busy && 'is-busy'" aria-hidden="true"></i>
                     <span x-text="busy ? 'Is ermee bezig…' : (lotTitle ? 'Kijkt mee op ' + lotTitle : 'Kijkt mee op ' + pageTitle)">Kijkt mee op deze pagina</span>
@@ -50,12 +54,29 @@
             </button>
         </header>
 
-        <div class="ivy-log" x-ref="log" @scroll.passive="onScroll()" aria-live="polite">
+        {{-- Met wie je praat: Ivy of een specialist. Een teller zegt waar nog iets op je wacht. --}}
+        <nav class="ivy-team" x-show="agents.length > 1" x-cloak aria-label="Kies met wie je praat">
+            <template x-for="member in agents" :key="member.key">
+                <button type="button" class="ivy-member" :class="member.key === agent && 'is-on'" :aria-pressed="member.key === agent"
+                        :title="member.name + ', ' + member.speciality" :disabled="busy" @click="switchTo(member.key)">
+                    <span class="pic">
+                        <img :src="member.photo" alt="">
+                        <i class="count" :class="member.urgent && 'is-urgent'" x-show="member.count > 0" x-text="member.count"></i>
+                    </span>
+                    <span x-text="member.name"></span>
+                </button>
+            </template>
+        </nav>
+
+        <div class="ivy-log" x-ref="log" @scroll.passive="onScroll()" aria-live="polite" :class="switching && 'is-switching'">
+
+            {{-- Wisselen van teamlid: alleen het gesprek laadt opnieuw, de kop blijft staan. --}}
+            <div class="ivy-skeleton" x-show="switching" x-cloak aria-hidden="true"><i></i><i></i><i></i></div>
 
             {{-- Nog geen berichten: Ivy begroet, zegt wat er wacht en geeft een paar vragen om mee te beginnen. --}}
-            <div class="ivy-start" x-show="loaded && ! messages.length" x-cloak>
+            <div class="ivy-start" x-show="loaded && ! switching && ! messages.length" x-cloak>
                 <div class="ivy-answer">
-                    <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">
+                    <img src="{{ asset('images/agents/ivy.jpg') }}" :src="current.photo" alt="">
                     <div class="ivy-answer-body">
                         <div class="ivy-bubble"><strong x-text="hello + '.'"></strong> <span x-text="greeting ?? 'Ik ben Ivy, de AI-assistent van Aucvy. Waar kan ik mee helpen?'"></span></div>
                     </div>
@@ -64,7 +85,50 @@
                     <i aria-hidden="true"></i>
                     <span x-text="openCount === 1 ? 'Eén voorstel wacht op je ja' : openCount + ' voorstellen wachten op je ja'"></span>
                 </a>
-                <p class="ivy-label" x-show="enabled && chips.length">Sneller met Ivy</p>
+            </div>
+
+            {{-- Wat er vanuit dit teamlid nog op je wacht: bovenaan het gesprek, elk punt met zijn knop. --}}
+            <section class="ivy-tasks" x-show="loaded && ! switching && tasks.length" x-cloak aria-label="Wat nog op je wacht">
+                <p class="ivy-label" x-text="tasks.length === 1 ? 'Dit wacht nog op je' : 'Deze ' + tasks.length + ' dingen wachten nog op je'"></p>
+                <template x-for="task in tasks" :key="task.id">
+                    <article class="ivy-task" :class="'is-' + task.urgency">
+                        <div class="ivy-task-top">
+                            <span class="ivy-task-when" x-text="task.when"></span>
+                            <button type="button" class="ivy-task-x" aria-label="Taak verbergen" title="Verbergen" @click="dropTask(task.id)">
+                                <x-v4.icon name="x" :size="14" stroke="2.2" />
+                            </button>
+                        </div>
+                        <strong x-text="task.title"></strong>
+                        <span x-show="task.body" x-text="task.body"></span>
+                        <a class="ivy-task-go" :href="task.url"><span x-text="task.action"></span> <x-v4.icon name="arrow-right" :size="14" stroke="2.4" /></a>
+                    </article>
+                </template>
+            </section>
+
+            {{-- Ivy overziet het team: bij wie nog meer wacht, met één klik naar dat teamlid. --}}
+            <div class="ivy-elsewhere" x-show="loaded && ! switching && ! messages.length && agent === 'ivy' && others.length" x-cloak>
+                <p class="ivy-label">Bij je team wacht ook nog iets</p>
+                <div class="ivy-elsewhere-row">
+                    <template x-for="member in others" :key="member.key">
+                        <button type="button" @click="switchTo(member.key)">
+                            <img :src="member.photo" alt="">
+                            <span x-text="member.name"></span>
+                            <b x-text="member.count"></b>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            {{-- Wat dit teamlid deze week opviel: om te weten, niet om te doen. --}}
+            <section class="ivy-notes" x-show="loaded && ! switching && ! messages.length && notes.length" x-cloak aria-label="Wat me deze week opviel">
+                <p class="ivy-label">Dit viel me deze week op</p>
+                <template x-for="(note, index) in notes" :key="index">
+                    <p class="ivy-note"><strong x-text="note.title"></strong> <span x-show="note.body" x-text="note.body"></span></p>
+                </template>
+            </section>
+
+            <div class="ivy-start ivy-start-more" x-show="loaded && ! switching && ! messages.length" x-cloak>
+                <p class="ivy-label" x-show="enabled && chips.length" x-text="'Sneller met ' + current.name">Sneller met Ivy</p>
                 <div class="ivy-suggest" x-show="enabled && chips.length">
                     <template x-for="chip in chips" :key="chip">
                         <button type="button" @click="send(chip)">
@@ -84,7 +148,7 @@
 
                     <template x-if="message.sender !== 'user'">
                         <div class="ivy-answer" :class="message.id === lastId && 'is-last'">
-                            <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">
+                            <img src="{{ asset('images/agents/ivy.jpg') }}" :src="current.photo" alt="">
                             <div class="ivy-answer-body">
 
                                 {{-- Wat Ivy aan het doen is, terwijl ze het doet. --}}
@@ -175,7 +239,7 @@
                     <span class="sr-only">Stuur een foto</span>
                 </label>
                 <textarea x-ref="input" x-model="draft" rows="1" maxlength="2000" :disabled="! enabled"
-                          :placeholder="listening ? 'Ik luister…' : 'Vraag Ivy iets'" title="Typ je vraag, of sleep een foto in dit venster" aria-label="Je bericht aan Ivy"
+                          :placeholder="listening ? 'Ik luister…' : 'Vraag ' + current.name + ' iets'" title="Typ je vraag, of sleep een foto in dit venster" aria-label="Je bericht aan Ivy"
                           @input="resize()" @keydown.enter="onEnter($event)"></textarea>
                 <button type="button" class="ivy-icon-btn" :class="listening && 'is-on'" x-show="canDictate" x-cloak @click="dictate()" :disabled="busy || ! enabled"
                         :title="listening ? 'Stop met luisteren' : 'Inspreken'" :aria-label="listening ? 'Stop met luisteren' : 'Spreek je vraag in'" :aria-pressed="listening">
@@ -187,7 +251,7 @@
                 </button>
             </form>
             <p class="ivy-note">
-                <span x-show="enabled">Ivy is een AI-assistent. Een bod of aankoop bevestig je altijd zelf op een scherm met het actuele bedrag en alle kosten. <kbd x-text="shortcut"></kbd> opent en sluit.</span>
+                <span x-show="enabled"><bdi x-text="current.name">Ivy</bdi> is een AI-assistent. Een bod of aankoop bevestig je altijd zelf op een scherm met het actuele bedrag en alle kosten. <kbd x-text="shortcut"></kbd> opent en sluit.</span>
                 <span x-show="! enabled" x-cloak>Ivy staat even uit. Bieden, zoeken en je meldingen werken gewoon.</span>
             </p>
         </div>

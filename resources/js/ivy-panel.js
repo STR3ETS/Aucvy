@@ -133,6 +133,12 @@ export function ivyPanel(config) {
         greeting: null,
         firstName: config.name ? String(config.name).trim().split(' ')[0] : null,
         chips: [],
+        // Met wie de klant praat (Ivy of een specialist), het team en wat er vanuit dit teamlid nog wacht.
+        agent: 'ivy',
+        agents: [],
+        tasks: [],
+        notes: [],
+        switching: false,
         messages: [],
         openCount: 0,
         inboxUrl: null,
@@ -153,6 +159,11 @@ export function ivyPanel(config) {
         async init() {
             this.readPage();
 
+            // Met wie je het laatst praatte, onthouden we op dit apparaat. Alleen met een account.
+            if (config.name) {
+                try { this.agent = window.localStorage.getItem('ivy.agent') || 'ivy'; } catch (error) { /* zonder opslag begint het bij Ivy */ }
+            }
+
             // De stemmen komen vaak pas na het laden binnen; kies opnieuw zodra ze er zijn.
             if (this.canSpeak) {
                 const choose = () => { this.voice = ivyVoice(window.speechSynthesis.getVoices()); };
@@ -169,6 +180,8 @@ export function ivyPanel(config) {
                 const data = await response.json();
                 this.openCount = data.open_count ?? 0;
                 this.inboxUrl = data.inbox_url;
+                this.agents = data.agents ?? [];
+                this.agent = data.agent?.key ?? 'ivy';
             } catch (error) {
                 // Zonder Ivy werkt alles gewoon; de knop blijft staan.
             }
@@ -188,6 +201,7 @@ export function ivyPanel(config) {
                 lot: samePage ? (config.lot ?? '') : '',
                 page: config.page ?? '',
                 path: window.location.pathname,
+                agent: this.agent,
             }).toString();
         },
 
@@ -230,11 +244,49 @@ export function ivyPanel(config) {
             this.scroll(true);
         },
 
-        async open(text) {
+        async open(text, agent) {
             this.opened = true;
             this.readPage();
-            if (! this.loaded) await this.load();
+
+            if (agent && agent !== this.agent) await this.switchTo(agent);
+            else if (! this.loaded) await this.load();
+
             if (text) await this.send(text); else this.focus();
+            this.scroll(true);
+        },
+
+        // Wisselen van gesprekspartner: elk teamlid heeft zijn eigen gesprek en zijn eigen takenlijst.
+        async switchTo(key) {
+            if (this.busy || this.switching || (key === this.agent && this.loaded)) return;
+
+            this.stopSpeaking();
+            this.agent = key;
+            try { window.localStorage.setItem('ivy.agent', key); } catch (error) { /* onthouden is een gemak, geen eis */ }
+
+            this.switching = true;
+            await this.load();
+            this.switching = false;
+            this.focus();
+        },
+
+        // Wie er nu praat. Voor het laden, en voor een bezoeker zonder account, is dat Ivy.
+        get current() {
+            return this.agents.find((member) => member.key === this.agent) ?? { key: 'ivy', name: 'Ivy', speciality: '', photo: config.photo, count: 0, urgent: false };
+        },
+
+        // De teamleden bij wie ook nog iets wacht.
+        get others() {
+            return this.agents.filter((member) => member.key !== this.agent && member.count > 0);
+        },
+
+        // Een taak verbergen: hij verdwijnt uit de lijst en de teller loopt mee.
+        dropTask(id) {
+            this.tasks = this.tasks.filter((task) => task.id !== id);
+
+            const member = this.agents.find((item) => item.key === this.agent);
+            if (member) member.count = Math.max(0, member.count - 1);
+
+            fetch('/api/insights/' + id + '/dismiss', { method: 'POST', headers: this.headers() }).catch(() => {});
         },
 
         close() {
@@ -254,6 +306,10 @@ export function ivyPanel(config) {
             this.greeting = data.greeting;
             this.firstName = data.first_name ?? this.firstName;
             this.chips = data.chips ?? [];
+            this.agents = data.agents ?? [];
+            this.agent = data.agent?.key ?? 'ivy';
+            this.tasks = data.tasks ?? [];
+            this.notes = data.notes ?? [];
             this.messages = (data.messages ?? []).map((message) => this.prepared(message));
             this.openCount = data.open_count ?? 0;
             this.inboxUrl = data.inbox_url;

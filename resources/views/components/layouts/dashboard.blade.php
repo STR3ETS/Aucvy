@@ -184,7 +184,7 @@
                         <span class="notif-count" aria-hidden="true">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
                     @endif
                 </a>
-                <button type="button" class="dash-bar-link" @click="window.dispatchEvent(new CustomEvent('ivy-open'))">Vraag Ivy</button>
+                <button type="button" class="dash-bar-link" @click="window.dispatchEvent(new CustomEvent('ivy-open', { detail: { agent: 'ivy' } }))">Vraag Ivy</button>
                 <x-marketing.user-menu />
             </header>
 

@@ -24,7 +24,7 @@
         @endforeach
     </x-slot:tiles>
 
-    <div x-data="{ agent: null }">
+    <div x-data>
         {{-- Als verkoper of als koper: dezelfde pagina, een andere bril. --}}
         <nav class="d-seg dash-page-switch" aria-label="Weergave">
             <a href="{{ route('dashboard', ['rol' => 'verkoper']) }}" class="{{ $isSeller ? 'is-on' : '' }}" @if ($isSeller) aria-current="page" @endif>Als verkoper</a>

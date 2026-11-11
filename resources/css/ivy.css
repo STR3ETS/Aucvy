@@ -160,3 +160,46 @@
 @media (prefers-reduced-motion:reduce){
   .ivy-panel,.ivy-spin,.ivy-thinking i,.ivy-dot.is-busy,.ivy-icon-btn.is-on,.ivy-md.is-typing>:last-child::after{animation:none}
 }
+
+/* Het team in het paneel: wisselen van gesprekspartner en wat er per teamlid nog wacht. */
+.ivy-team{display:flex;gap:2px;padding:8px 10px;border-bottom:1px solid #dde1ea;background:#fff;overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
+.ivy-team::-webkit-scrollbar{display:none}
+.ivy-member{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1 0 54px;padding:6px 2px;border:0;border-radius:12px;background:transparent;color:#4d5566;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
+.ivy-member:hover{background:#f3f5fa;color:#0e1526}
+.ivy-member:disabled{opacity:.5;cursor:not-allowed}
+.ivy-member .pic{position:relative;display:block;width:36px;height:36px}
+.ivy-member img{width:36px;height:36px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px #fff,0 0 0 3px transparent;transition:box-shadow .15s}
+.ivy-member.is-on{color:#1e56e0}
+.ivy-member.is-on img{box-shadow:0 0 0 2px #fff,0 0 0 4px #2f6bff}
+.ivy-member .count{position:absolute;top:-4px;right:-7px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#0c1326;color:#fff;font-style:normal;font-size:10.5px;font-weight:800;line-height:18px;text-align:center;box-shadow:0 0 0 2px #fff}
+.ivy-member .count.is-urgent{background:#d92d20}
+.ivy-start{min-height:0}
+.ivy-tasks{display:flex;flex-direction:column;gap:8px}
+.ivy-tasks .ivy-label,.ivy-notes .ivy-label,.ivy-elsewhere .ivy-label{margin:2px 0 0}
+.ivy-task{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:14px;background:#f3f5fa;font-size:13px;line-height:1.45}
+.ivy-task strong{font-size:13.5px;font-weight:700;line-height:1.4}
+.ivy-task>span{color:#4d5566}
+.ivy-task-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ivy-task-when{padding:2px 8px;border-radius:999px;background:#e6ecfb;color:#1e56e0;font-size:11px;font-weight:800}
+.ivy-task.is-urgent .ivy-task-when{background:#fde8e6;color:#b42318}
+.ivy-task.is-attention .ivy-task-when{background:#fdf0d8;color:#8f5209}
+.ivy-task-x{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;margin-right:-4px;padding:0;border:0;border-radius:7px;background:transparent;color:#6b7385;cursor:pointer}
+.ivy-task-x:hover{background:#e3e7f0;color:#0e1526}
+.ivy-task-go{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;min-height:34px;margin-top:4px;padding:0 12px;border:1.5px solid #2f6bff;border-radius:999px;background:#fff;color:#1e56e0;font-size:12.5px;font-weight:700}
+.ivy-task-go:hover{background:#2f6bff;color:#fff}
+.ivy-elsewhere-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.ivy-elsewhere-row button{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px 0 4px;border:1px solid #dde1ea;border-radius:999px;background:#fff;color:#0e1526;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.ivy-elsewhere-row button:hover{border-color:#2f6bff;background:#f5f8ff}
+.ivy-elsewhere-row img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+.ivy-elsewhere-row b{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#0c1326;color:#fff;font-size:10.5px;line-height:18px;text-align:center}
+.ivy-notes{display:flex;flex-direction:column;gap:6px}
+.ivy-note{margin:0;padding:9px 12px;border-radius:12px;background:#f5f1fe;font-size:13px;line-height:1.45}
+.ivy-note span{color:#4d5566}
+.ivy-skeleton{display:flex;flex-direction:column;gap:10px}
+.ivy-skeleton i{display:block;height:44px;border-radius:14px;background:linear-gradient(90deg,#eef1f7 25%,#f7f8fb 50%,#eef1f7 75%);background-size:200% 100%;animation:ivy-shimmer 1.2s linear infinite}
+.ivy-skeleton i:nth-child(2){width:72%}
+.ivy-skeleton i:nth-child(3){width:54%;height:34px}
+.ivy-log.is-switching>:not(.ivy-skeleton){display:none !important}
+@keyframes ivy-shimmer{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.ivy-skeleton i{animation:none}}
+.ivy-log>*{flex-shrink:0}

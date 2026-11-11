@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\AiAgent;
 use App\Ivy\Alerts\Alerts;
 use App\Ivy\Chat\IvyFlags;
 use App\Ivy\Chat\KnowledgeBase;
 use App\Ivy\Chat\Pages;
 use App\Ivy\Chat\RunIvyTurn;
+use App\Ivy\Chat\Team;
 use App\Ivy\StartTask;
 use App\Ivy\Tasks\AnalyseGuestPhoto;
 use App\Models\IvyConversation;
@@ -25,15 +27,18 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 /**
- * Het paneel van Ivy: één gesprek per klant (of gast via cookie), dat
- * tussen pagina's bewaard blijft en weet op welke pagina je zit. Ivy zegt
- * in het eerste bericht dat ze AI is. Alles blijft werken zonder haar.
+ * Het paneel van Ivy: één gesprek per klant (of gast via cookie) en per
+ * teamlid, dat tussen pagina's bewaard blijft en weet op welke pagina je
+ * zit. Een klant met een account kan wisselen tussen Ivy en de vijf
+ * specialisten; elk teamlid laat zien wat er vanuit zijn vak nog wacht.
+ * Ivy zegt in het eerste bericht dat ze AI is. Alles blijft werken zonder
+ * haar.
  */
 final class IvyChatController extends Controller
 {
     public const string GUEST_COOKIE = 'ivy_guest';
 
-    public function __construct(private readonly RunIvyTurn $turn, private readonly Alerts $alerts, private readonly Pages $pages) {}
+    public function __construct(private readonly RunIvyTurn $turn, private readonly Alerts $alerts, private readonly Pages $pages, private readonly Team $team) {}
 
     public function show(Request $request): JsonResponse
     {
@@ -44,6 +49,8 @@ final class IvyChatController extends Controller
         return $this->respond($request, [
             'enabled' => IvyFlags::forRole($conversation->role),
             'role' => $conversation->role,
+            // Met wie de klant praat, het team om naar te wisselen en wat er vanuit dit teamlid nog wacht.
+            ...$this->desk($conversation, $user),
             'conversation_id' => $conversation->id,
             'first_name' => $user !== null ? (explode(' ', trim((string) $user->name))[0] ?: null) : null,
             'greeting' => $conversation->messages()->count() === 0 ? $this->greeting($conversation, $lot, $user) : null,
@@ -197,11 +204,13 @@ final class IvyChatController extends Controller
         $pageType = Str::limit((string) $request->input('page', 'onbekend'), 40, '');
         $role = $this->roleFor($user, $lot, $pageType);
 
-        $query = IvyConversation::query()->where('status', IvyConversation::OPEN)->where('role', $role)->latest('updated_at');
+        $agent = $this->team->resolve($request->input('agent'), $user);
+
+        $query = IvyConversation::query()->where('status', IvyConversation::OPEN)->where('role', $role)->where('agent', $agent)->latest('updated_at');
         $conversation = $user !== null ? $query->where('user_id', $user->id)->first() : $query->where('guest_token', $this->guestToken($request))->first();
 
         if ($conversation === null) {
-            $conversation = IvyConversation::create(['user_id' => $user?->id, 'guest_token' => $user === null ? $this->guestToken($request) : null, 'role' => $role, 'lot_id' => $lot?->id, 'page_type' => $pageType, 'status' => IvyConversation::OPEN]);
+            $conversation = IvyConversation::create(['user_id' => $user?->id, 'guest_token' => $user === null ? $this->guestToken($request) : null, 'role' => $role, 'agent' => $agent, 'lot_id' => $lot?->id, 'page_type' => $pageType, 'status' => IvyConversation::OPEN]);
         } elseif ($conversation->lot_id !== $lot?->id || $conversation->page_type !== $pageType) {
             $conversation->forceFill(['lot_id' => $lot?->id ?? $conversation->lot_id, 'page_type' => $pageType])->save();
         }
@@ -253,8 +262,35 @@ final class IvyChatController extends Controller
         return $response;
     }
 
+    /**
+     * Het teamlid van dit gesprek, het team om naar te wisselen, wat er
+     * vanuit dit teamlid nog op de klant wacht en wat hem deze week opviel.
+     *
+     * @return array<string, mixed>
+     */
+    private function desk(IvyConversation $conversation, ?User $user): array
+    {
+        $agent = $conversation->agent ?? AiAgent::Ivy;
+        $open = $user !== null ? $this->team->open($user) : collect();
+        $roster = $this->team->roster($user, $open);
+
+        return [
+            'agent' => collect($roster)->firstWhere('key', $agent->value),
+            // Een bezoeker zonder account praat alleen met Ivy.
+            'agents' => $user !== null ? $roster : [],
+            'tasks' => $user !== null ? $this->team->tasks($user, $agent, $open) : [],
+            'notes' => $user !== null ? $this->team->notes($user, $agent) : [],
+        ];
+    }
+
     private function greeting(IvyConversation $conversation, ?Lot $lot, ?User $user): string
     {
+        $agent = $conversation->agent ?? AiAgent::Ivy;
+
+        if ($agent !== AiAgent::Ivy) {
+            return __('ivy.hello.'.$agent->value);
+        }
+
         return match ($conversation->role) {
             IvyConversation::VISITOR => match (true) {
                 Str::startsWith($conversation->page_type, 'verkoop') => 'Hoi, ik ben Ivy, de AI-assistent van Aucvy. Stuur een foto van wat je wilt verkopen, dan laat ik zien wat ik ervan maak. Of vraag me wat je wilt weten.',
@@ -271,6 +307,20 @@ final class IvyChatController extends Controller
      */
     private function chips(IvyConversation $conversation, ?Lot $lot, ?User $user, ?string $path = null): array
     {
+        // Een specialist stelt vragen voor uit zijn eigen vak.
+        $own = match ($conversation->agent ?? AiAgent::Ivy) {
+            AiAgent::Atlas => ['Wat is mijn kavel ongeveer waard?', 'Hoeveel interesse is er?', 'Wat doet de markt nu?'],
+            AiAgent::Nova => ['Verbeter mijn advertentietekst', 'Hoe krijg ik meer kijkers?', 'Waar kan ik mijn kavel delen?'],
+            AiAgent::Finn => ['Wanneer krijg ik mijn uitbetaling?', 'Hoe werkt de staffel?', 'Wat moet ik nog betalen?'],
+            AiAgent::Flow => ['Hoe werkt ophalen?', 'Wat moet ik nog leveren?', 'Hoe regel ik transport?'],
+            AiAgent::Lex => ['Welke documenten ontbreken nog?', 'Hoe werkt verificatie?', 'Wat staat er in de voorwaarden?'],
+            AiAgent::Ivy => null,
+        };
+
+        if ($own !== null) {
+            return $own;
+        }
+
         if ($user !== null && $lot === null && $path !== null) {
             $forPage = match (true) {
                 Str::startsWith($path, ['/dashboard/financien', '/dashboard/uitbetalingen']) => ['Wanneer krijg ik mijn uitbetaling?', 'Hoe werkt de staffel?', 'Wat hou ik over bij € 12.000?'],

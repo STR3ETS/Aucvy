@@ -320,7 +320,7 @@
         @else
             <ul class="mt-3 grid gap-3 sm:grid-cols-2" style="list-style:none;padding:0;margin-top:12px">
                 @foreach ($weekly as $insight)
-                    <li class="d-task" x-show="agent === null || agent === '{{ $insight->agent->value }}'">
+                    <li class="d-task">
                         <span class="d-tag tone-{{ $insight->agent->value }}">{{ $insight->agent->label() }}</span>
                         <p>{{ $insight->title }}</p>
                         @if ($insight->body)

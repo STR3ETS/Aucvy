@@ -1424,3 +1424,20 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 /* Zonder biedingen blijft de grafiek staan, leeg: per uur een zachte baan, zodat je ziet wat hier komt. */
 .d-hours.is-empty>div{border-radius:4px 4px 0 0;background:var(--d-inset,#f3f5fa)}
 .d-hours.is-empty i{min-height:0}
+
+/* ---------- het team in de zijkolom: één regel per teamlid, een klik opent het gesprek ---------- */
+.d-col-aside{flex:1 1 340px}
+@container (max-width:803px){.d-col-aside{order:-1}}
+.d-team{display:flex;flex-direction:column;gap:4px;margin:10px -6px -4px}
+.d-member{display:flex;align-items:center;gap:12px;padding:8px 10px 8px 6px;border-radius:14px;color:inherit;transition:background .15s}
+.d-member:hover,.d-member:focus-visible{background:var(--d-inset,#f3f5fa)}
+.d-member img{width:44px;height:44px;flex:0 0 auto;border-radius:50%;object-fit:cover}
+.d-member-text{flex:1 1 auto;min-width:0;display:grid;gap:1px}
+.d-member-text strong{font-size:14.5px;font-weight:800;line-height:1.3}
+.d-member-text small{margin-left:4px;font-size:12.5px;font-weight:500;color:#5c6577}
+.d-member-text span{font-size:13px;line-height:1.4;color:#5c6577;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-member.has-open .d-member-text span{color:#0e1526;font-weight:600}
+.d-member-count{flex:0 0 auto;min-width:26px;height:26px;padding:0 8px;border-radius:999px;background:#0c1326;color:#fff;font-size:12.5px;font-weight:800;line-height:26px;text-align:center;font-variant-numeric:tabular-nums}
+.d-member-count.is-urgent{background:#d92d20}
+.d-member-go{flex:0 0 auto;display:inline-flex;width:26px;justify-content:center;color:#9aa3b5;transition:transform .15s,color .15s}
+.d-member:hover .d-member-go{color:#1e56e0;transform:translateX(2px)}

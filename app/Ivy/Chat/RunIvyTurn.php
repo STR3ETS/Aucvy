@@ -70,7 +70,7 @@ final class RunIvyTurn
             'subject_type' => $lot?->getMorphClass(),
             'subject_id' => $lot?->getKey(),
             'user_id' => $user?->id,
-            'agent' => AiAgent::Ivy,
+            'agent' => $conversation->agent ?? AiAgent::Ivy,
             'task' => 'ivy_chat',
             'input' => ['text' => Str::limit($text, 500), 'role' => $conversation->role],
             'cache_key' => hash('sha256', 'chat|'.$conversation->id.'|'.now()->timestamp.'|'.Str::random(6)),

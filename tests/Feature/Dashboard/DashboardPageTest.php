@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Dashboard\DemandForecast;
 use App\Dashboard\IntentFunnel;
+use App\Enums\AiAgent;
 use App\Enums\OrderStatus;
 use App\Models\AiInsight;
 use App\Models\Auction;
@@ -19,7 +20,7 @@ use App\Orders\Actions\TransitionOrder;
 | (hfst. 13.5). Volgorde en inhoud van de blokken zijn het ontwerp.
 */
 
-it('toont een verkoper zijn werkplan met signalen en teamchips', function () {
+it('toont een verkoper zijn werkplan met het team en wat er wacht', function () {
     $seller = User::factory()->verified()->create();
     Lot::factory()->live()->create([
         'seller_id' => $seller->id,
@@ -32,9 +33,16 @@ it('toont een verkoper zijn werkplan met signalen en teamchips', function () {
         ->assertOk()
         ->assertSee('Bieden')
         ->assertSee('Kavel plaatsen')
-        ->assertSeeInOrder(['Wacht op jou', 'Transportinformatie ontbreekt'])
-        // Het team staat niet meer als filter boven de lijst; de chips in de zijkolom volstaan.
+        ->assertSeeInOrder(['Je team', 'wacht op je'])
+        // Het team staat niet meer als filter boven de lijst; de regels in de zijkolom volstaan.
         ->assertDontSee('Jouw AI-team');
+
+    // De taak zelf staat in het gesprek met het teamlid dat erover gaat.
+    $titles = collect(AiAgent::cases())
+        ->flatMap(fn (AiAgent $agent): array => $this->actingAs($seller)->getJson(route('ivy.show', ['agent' => $agent->value]))->json('tasks'))
+        ->pluck('title');
+
+    expect($titles->contains(fn (string $title): bool => str_contains($title, 'Transportinformatie ontbreekt')))->toBeTrue();
 });
 
 it('toont een koper zijn eigen signalen via de toggle', function () {
