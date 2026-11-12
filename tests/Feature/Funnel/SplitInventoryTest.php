@@ -37,10 +37,14 @@ it('stelt per product een groep voor, in foto-id\'s van het concept', function (
         ->assertCreated()
         ->json('run');
 
-    $groups = $this->withCookie(DraftAccess::COOKIE, $this->lot->draft_token)
+    $run = $this->withCookie(DraftAccess::COOKIE, $this->lot->draft_token)
         ->getJson("/api/ivy/tasks/{$started['id']}")
         ->assertOk()
-        ->json('run.groups');
+        ->json('run');
+    $groups = $run['groups'];
+
+    // De zekerheid staat er in gewone taal, niet als vertaalsleutel.
+    expect($run['confidence_hint'])->toStartWith('Redelijke zekerheid');
 
     expect($groups)->toHaveCount(3)
         ->and(array_merge(...array_column($groups, 'media')))->toBe($this->photos->pluck('id')->all())

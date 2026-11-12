@@ -915,7 +915,10 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                 case 'check_documents':
                     return output.summary ?? 'Gecontroleerd.';
                 case 'group_photos':
-                    return (item.run?.groups?.length ?? 1) > 1 ? item.run.groups.length + ' producten gezien.' : 'Eén product op alle foto\'s.';
+                    if ((item.run?.groups?.length ?? 1) < 2) return 'Eén product op alle foto\'s.';
+                    if (this.ivy.proposal) return 'Ivy ziet ' + item.run.groups.length + ' producten.';
+
+                    return item.run.groups.length + (this.ivy.keepTogether ? ' producten, samen in één kavel.' : ' producten, elk een eigen kavel.');
                 default:
                     return 'Klaar.';
             }

@@ -8,6 +8,20 @@ declare(strict_types=1);
 return [
 
     /*
+    | Wat de UI naast een Ivy-uitkomst zet (ConfidencePolicy, hfst. 8). De
+    | client krijgt bij een mislukte run één eigen zin; de echte fout staat
+    | in het log.
+    */
+    'failed' => 'De analyse is niet gelukt. Probeer het later opnieuw of vul het zelf in.',
+    'guest_limit' => 'Te veel Ivy-verzoeken vanaf dit adres vandaag. Log in om verder te gaan.',
+
+    'confidence' => [
+        'low' => 'Lage zekerheid: zie dit als een eerste richting en controleer alles zelf.',
+        'medium' => 'Redelijke zekerheid: loop de ingevulde velden even na.',
+        'high' => 'Hoge zekerheid: gebaseerd op duidelijk herkenbaar materiaal.',
+    ],
+
+    /*
     | Het vak van elke specialist, voor het systeembericht en de begroeting
     | in het paneel. Gewone woorden: de klant leest ze ook.
     */
