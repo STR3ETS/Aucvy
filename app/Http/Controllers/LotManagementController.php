@@ -161,6 +161,29 @@ final class LotManagementController extends Controller
         return redirect()->route('dashboard.lots')->with('status', trans_choice('lots.manage.bulk_'.$validated['action'], $count, ['count' => $count]));
     }
 
+    /**
+     * Eén concept weg, vanaf Mijn kavels of uit het conceptmenu van de
+     * funnel. Alleen een concept: wat live staat of verkocht is, blijft.
+     */
+    public function destroyDraft(Request $request, Lot $lot, DeleteDraft $deleteDraft): RedirectResponse
+    {
+        $this->own($request, $lot);
+        abort_unless($lot->status === LotStatus::Draft, 404);
+
+        $deleteDraft->handle($lot, $request->user());
+
+        $status = trans_choice('lots.manage.bulk_delete_drafts', 1, ['count' => 1]);
+
+        if ($request->input('terug') !== 'verkopen') {
+            return redirect()->route('dashboard.lots', ['status' => 'concept'])->with('status', $status);
+        }
+
+        // Vanuit de funnel: terug naar het concept waar je was, of een nieuw als je dat net verwijderde.
+        $concept = (int) $request->input('concept');
+
+        return redirect()->route('sell', $concept > 0 && $concept !== $lot->id ? ['concept' => $concept] : ['nieuw' => 1])->with('status', $status);
+    }
+
     private function own(Request $request, Lot $lot): void
     {
         abort_unless($lot->isManagedBy($request->user()), 404);

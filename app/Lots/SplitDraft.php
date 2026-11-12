@@ -92,7 +92,7 @@ final class SplitDraft
     /**
      * De andere concepten uit dezelfde splitsing, van dezelfde eigenaar.
      *
-     * @return list<array{id: int, public_id: string, title: ?string, cover: ?string, photos: int, value_min_cents: ?int, value_max_cents: ?int}>
+     * @return list<array{id: int, public_id: string, title: ?string, cover: ?string, photos: int, analysed: bool, value_min_cents: ?int, value_max_cents: ?int}>
      */
     public static function siblingsOf(Lot $lot): array
     {
@@ -121,6 +121,8 @@ final class SplitDraft
                 'title' => $sibling->title,
                 'cover' => $sibling->media->first()?->path,
                 'photos' => $sibling->media->count(),
+                // Schreef Nova de titel al bij deze foto's? Dan hoeft Ivy dit kavel niet opnieuw te doen.
+                'analysed' => ($sibling->field_sources['title']['source'] ?? null) === Provenance::TEXT,
                 'value_min_cents' => $sibling->value_min_cents,
                 'value_max_cents' => $sibling->value_max_cents,
             ])

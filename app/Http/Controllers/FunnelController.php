@@ -47,6 +47,9 @@ final class FunnelController extends Controller
         return view('sell.funnel', [
             'initial' => $payload->for($current, $user),
             'drafts' => $drafts,
+            // Vanzelf hervat (niet via ?concept): de funnel zegt dat erbij, met de
+            // weg naar een nieuw concept, zodat niemand denkt dat hij leeg begint.
+            'resumed' => $current !== null && ! $request->filled('concept') ? $current : null,
             'categories' => Category::roots()->with('children')->get(),
             // Per categorie de kenmerken uit het schema (van de ouder als de
             // subcategorie er geen heeft), voor de editor in stap 4.

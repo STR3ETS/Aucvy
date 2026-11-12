@@ -143,6 +143,10 @@
         @endif
         @if ($isDraft)
             <a href="{{ $dossierUrl }}" class="d-iconbtn" data-tip="{{ __('dashboard.actions.continue_draft') }}" aria-label="{{ __('dashboard.actions.continue_draft') }}: {{ $lot->title ?: 'concept zonder titel' }}"><x-v4.icon name="pencil" :size="17" stroke="2" /></a>
+            {{-- De rij staat in het bulkformulier: deze knop stuurt dat formulier naar de eigen route, met het token erin. --}}
+            <button type="submit" class="d-iconbtn is-danger" data-tip="Concept verwijderen" aria-label="Concept verwijderen: {{ $lot->title ?: 'concept zonder titel' }}"
+                    formaction="{{ route('dashboard.lots.destroy-draft', $lot) }}" formmethod="POST"
+                    onclick="return confirm('Dit concept verwijderen? Dat kan niet ongedaan worden gemaakt.')"><x-v4.icon name="trash" :size="17" stroke="2" /></button>
         @elseif (in_array($lot->status, [LotStatus::Unsold, LotStatus::Cancelled], true))
             <button type="submit" class="d-iconbtn" data-tip="Opnieuw plaatsen" aria-label="{{ $lot->title }} opnieuw plaatsen" formaction="{{ route('dashboard.lots.duplicate', ['lot' => $lot->id, 'relist' => 1]) }}" formmethod="POST"><x-v4.icon name="refresh" :size="17" stroke="2" /></button>
         @elseif (in_array($lot->status, [LotStatus::Scheduled, LotStatus::Live, LotStatus::Closing, LotStatus::Paused], true))

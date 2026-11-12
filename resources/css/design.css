@@ -2025,3 +2025,15 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
   .fn-product-toggle{flex-wrap:wrap}
   .fn-product-toggle .amount{order:3;flex:1 1 100%;justify-items:start;text-align:left;padding-left:70px}
 }
+
+/* Kavel plaatsen: het conceptmenu met verwijderen, en de melding dat je een concept hervat. */
+.fn-draftmenu-panel li{display:flex;align-items:center;gap:6px}
+.fn-draftmenu-panel li a{flex:1 1 auto;min-width:0}
+.fn-draftmenu-panel li form{flex:0 0 auto}
+.fn-draftmenu-actions{display:flex;flex-wrap:wrap;gap:8px}
+.fn-draftmenu-actions>*{flex:1 1 auto}
+.fn-draftmenu-actions .d-btn{width:100%}
+.d-btn.is-danger{color:#a93226}
+.d-btn.is-danger:hover{border-color:#e7b3ad;background:#fbecea}
+.fn-resume{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:14px 18px;border-radius:16px;background:#fff;box-shadow:var(--d-lift);font-size:14px;color:#2a3242}
+.fn-resume strong{color:#0e1526}

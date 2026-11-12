@@ -70,27 +70,41 @@
                             · <span x-text="saving ? 'opslaan…' : 'automatisch opgeslagen'">automatisch opgeslagen</span>
                         </span>
 
-                        {{-- Conceptoverzicht (briefing sectie 5): hervatten of nieuw beginnen. --}}
-                        @if ($drafts->isNotEmpty())
+                        {{-- Conceptoverzicht (briefing sectie 5): hervatten, nieuw beginnen of opruimen. --}}
+                        @auth
+                            @php($deleteUrl = route('dashboard.lots.destroy-draft', ['lot' => '__LOT__']))
                             <details class="fn-draftmenu" x-data @click.outside="$el.removeAttribute('open')">
-                                <summary class="fn-head-btn is-quiet">{{ $drafts->count() === 1 ? 'Nog één ander concept' : 'Nog '.$drafts->count().' andere concepten' }}</summary>
+                                <summary class="fn-head-btn is-quiet">{{ match ($drafts->count()) { 0 => 'Concepten', 1 => 'Nog één ander concept', default => 'Nog '.$drafts->count().' andere concepten' } }}</summary>
                                 <div class="fn-draftmenu-panel">
-                                    <ul>
-                                        @foreach ($drafts as $other)
-                                            <li>
-                                                <a href="{{ route('sell', ['concept' => $other->id]) }}">
-                                                    <strong>{{ $other->title ?: 'Zonder titel' }}</strong>
-                                                    <span class="tabular">#{{ $other->public_id }} · {{ $other->completeness_score }}% · {{ $other->updated_at->timezone(config('aucvy.display_timezone'))->diffForHumans() }}</span>
-                                                </a>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                    <a href="{{ route('sell', ['nieuw' => 1]) }}" class="d-btn d-btn-secondary d-btn-sm d-btn-wide">Nieuw concept</a>
+                                    @if ($drafts->isNotEmpty())
+                                        <ul>
+                                            @foreach ($drafts as $other)
+                                                <li>
+                                                    <a href="{{ route('sell', ['concept' => $other->id]) }}">
+                                                        <strong>{{ $other->title ?: 'Zonder titel' }}</strong>
+                                                        <span class="tabular">#{{ $other->public_id }} · {{ $other->completeness_score }}% · {{ $other->updated_at->timezone(config('aucvy.display_timezone'))->diffForHumans() }}</span>
+                                                    </a>
+                                                    <form method="POST" action="{{ route('dashboard.lots.destroy-draft', $other) }}" onsubmit="return confirm('Dit concept verwijderen? Dat kan niet ongedaan worden gemaakt.')">
+                                                        @csrf
+                                                        <input type="hidden" name="terug" value="verkopen">
+                                                        <input type="hidden" name="concept" :value="draft?.id ?? ''">
+                                                        <button type="submit" class="d-iconbtn is-danger" data-tip="Verwijderen" aria-label="Concept {{ $other->title ?: 'zonder titel' }} verwijderen"><x-v4.icon name="trash" :size="16" stroke="2" /></button>
+                                                    </form>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @endif
+                                    <div class="fn-draftmenu-actions">
+                                        <a href="{{ route('sell', ['nieuw' => 1]) }}" class="d-btn d-btn-secondary d-btn-sm">Nieuw concept</a>
+                                        <form method="POST" x-show="draft" :action="@js($deleteUrl).replace('__LOT__', draft?.id)" onsubmit="return confirm('Dit concept verwijderen? Dat kan niet ongedaan worden gemaakt.')">
+                                            @csrf
+                                            <input type="hidden" name="terug" value="verkopen">
+                                            <button type="submit" class="d-btn d-btn-secondary d-btn-sm is-danger">Dit concept verwijderen</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </details>
-                        @elseif (auth()->check())
-                            <a class="fn-head-btn is-quiet" href="{{ route('sell', ['nieuw' => 1]) }}">Nieuw concept</a>
-                        @endif
+                        @endauth
 
                         <a class="fn-head-btn" href="{{ $closeUrl }}" @click.prevent="flush().finally(() => window.location.assign(@js($closeUrl)))">Opslaan en sluiten</a>
                     </div>
@@ -122,6 +136,12 @@
 
                         {{-- 1 · Wat ------------------------------------------------- --}}
                         <section x-show="step === 0" x-cloak aria-label="Wat wil je verkopen" class="d-stack">
+                            @if ($resumed)
+                                <div class="fn-resume">
+                                    <span><strong>Je gaat verder met een concept</strong>{{ $resumed->title ? ': '.$resumed->title : '' }} · {{ $resumed->updated_at->timezone(config('aucvy.display_timezone'))->diffForHumans() }} bijgewerkt.</span>
+                                    <a href="{{ route('sell', ['nieuw' => 1]) }}" class="d-btn d-btn-secondary d-btn-sm d-btn-sq">Begin een nieuw concept</a>
+                                </div>
+                            @endif
                             {{-- Hoeveel: invoer voor Ivy. De echte hoeveelheid zet de verkoper in stap 4. --}}
                             <div class="fn-block d-stack">
                                 <div class="d-titleline">

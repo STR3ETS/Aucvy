@@ -309,6 +309,7 @@ Route::middleware('auth')->group(function (): void {
      | hervatten, dupliceren, opnieuw plaatsen en bulk.
      */
     Route::post('/dashboard/kavels/bulk', [LotManagementController::class, 'bulk'])->middleware('throttle:10,10')->name('dashboard.lots.bulk');
+    Route::post('/dashboard/kavels/{lot:id}/concept-verwijderen', [LotManagementController::class, 'destroyDraft'])->middleware('throttle:30,1')->name('dashboard.lots.destroy-draft');
     // Berichten (briefing nieuwe functies): inbox en gesprek voor koper en verkoper.
     Route::get('/dashboard/berichten', [ConversationController::class, 'index'])->name('messages.index');
     Route::get('/dashboard/berichten/{conversation}', [ConversationController::class, 'show'])->name('messages.show');

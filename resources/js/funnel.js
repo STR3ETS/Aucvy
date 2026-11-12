@@ -631,11 +631,11 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             if (! this.draft) return;
 
             // Meerdere producten: eerst de foto's per product bij elkaar
-            // zetten, zolang het concept nog niet gesplitst is en de verkoper
-            // niet zei dat het één kavel blijft.
+            // zetten, ook in een kavel dat al uit een splitsing komt (wie er
+            // foto's bij zet, kan weer meerdere producten hebben), tenzij de
+            // verkoper zei dat het één kavel blijft.
             const keepTogether = this.ivy.keepTogether ?? false;
-            const grouping = ['multiple', 'inventory'].includes(this.meta.scope) && (this.draft?.media?.length ?? 0) >= 2
-                && ! (this.draft?.siblings?.length) && ! keepTogether;
+            const grouping = ['multiple', 'inventory'].includes(this.meta.scope) && (this.draft?.media?.length ?? 0) >= 2 && ! keepTogether;
 
             this.ivy = {
                 running: false,
@@ -665,7 +665,8 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         /**
          * De producten in deze analyse: dit concept eerst, dan de kavels die
          * eruit gesplitst zijn. Elk krijgt dezelfde taken; een ander kavel
-         * dat al een titel en een waarde heeft, doet Ivy niet nog eens.
+         * waarvan Nova de titel al schreef en Atlas de waarde schatte, doet
+         * Ivy niet nog eens.
          */
         buildProducts() {
             const tasks = (documents) => [
@@ -676,7 +677,8 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             const own = { id: this.draft.id, own: true, open: true, status: 'waiting', tasks: tasks((this.draft.documents ?? []).length > 0) };
 
             const others = (this.draft.siblings ?? []).map((sibling) => {
-                const finished = sibling.title && sibling.value_min_cents != null;
+                // Alleen overslaan wat Ivy zelf al afmaakte; een titel van elders krijgt een nieuwe blik.
+                const finished = sibling.analysed && sibling.value_min_cents != null;
 
                 return { ...sibling, own: false, open: false, status: finished ? 'done' : 'waiting', tasks: finished ? [] : tasks(false) };
             });

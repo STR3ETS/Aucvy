@@ -109,3 +109,46 @@ it('toont de flow als losse kaarten, met de bijzaken als pictogram en één rij 
         ->assertSee('Nieuw concept')
         ->assertDontSee('Upload foto');
 });
+
+it('zegt erbij dat je een bestaand concept hervat, met de weg naar een nieuw', function () {
+    $seller = User::factory()->verified()->create();
+    Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id, 'title' => 'JBL-speakers']);
+
+    $this->actingAs($seller)->get('/verkopen')
+        ->assertOk()
+        ->assertSee('Je gaat verder met een concept')
+        ->assertSee('Begin een nieuw concept');
+
+    $this->actingAs($seller)->get('/verkopen?nieuw=1')
+        ->assertOk()
+        ->assertDontSee('Je gaat verder met een concept');
+});
+
+it('verwijdert een concept vanaf Mijn kavels en uit het conceptmenu, maar niets anders', function () {
+    $seller = User::factory()->verified()->create();
+    $draft = Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id, 'title' => 'Oude poging']);
+    $kept = Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id, 'title' => 'Blijft']);
+    $live = Lot::factory()->live()->create(['seller_id' => $seller->id]);
+
+    // Mijn kavels heeft per concept een prullenbak.
+    $this->actingAs($seller)->get(route('dashboard.lots', ['status' => 'concept']))
+        ->assertOk()
+        ->assertSee(route('dashboard.lots.destroy-draft', $draft), escape: false);
+
+    $this->actingAs($seller)->post(route('dashboard.lots.destroy-draft', $draft))
+        ->assertRedirect(route('dashboard.lots', ['status' => 'concept']));
+
+    // Uit de funnel: terug naar het concept waar je was.
+    $other = Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id]);
+    $this->actingAs($seller)->post(route('dashboard.lots.destroy-draft', $other), ['terug' => 'verkopen', 'concept' => $kept->id])
+        ->assertRedirect(route('sell', ['concept' => $kept->id]));
+
+    // Een live kavel of het concept van een ander: 404.
+    $this->actingAs($seller)->post(route('dashboard.lots.destroy-draft', $live))->assertNotFound();
+    $this->actingAs(User::factory()->verified()->create())->post(route('dashboard.lots.destroy-draft', $kept))->assertNotFound();
+
+    expect(Lot::find($draft->id))->toBeNull()
+        ->and(Lot::find($other->id))->toBeNull()
+        ->and(Lot::find($kept->id))->not->toBeNull()
+        ->and(Lot::find($live->id))->not->toBeNull();
+});
