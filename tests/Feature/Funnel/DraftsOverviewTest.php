@@ -152,3 +152,19 @@ it('verwijdert een concept vanaf Mijn kavels en uit het conceptmenu, maar niets 
         ->and(Lot::find($kept->id))->not->toBeNull()
         ->and(Lot::find($live->id))->not->toBeNull();
 });
+
+it('telt elke limiet per route: veel autosaves blokkeren het verwijderen niet', function () {
+    $seller = User::factory()->verified()->create();
+    $busy = Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id]);
+    $draft = Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id]);
+
+    // Vroeger deelden alle routes met throttle:x,y één teller per gebruiker.
+    foreach (range(1, 35) as $attempt) {
+        $this->actingAs($seller)->patchJson("/api/drafts/{$busy->id}", ['intake' => 'Poging '.$attempt])->assertOk();
+    }
+
+    $this->actingAs($seller)->post(route('dashboard.lots.destroy-draft', $draft))
+        ->assertRedirect(route('dashboard.lots', ['status' => 'concept']));
+
+    expect(Lot::find($draft->id))->toBeNull();
+});

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Auctions\Exceptions\BidRejected;
 use App\Http\Middleware\EnsureSecondFactorOnRecall;
 use App\Http\Middleware\EnsureStaffArea;
+use App\Http\Middleware\ThrottlePerRoute;
 use App\Support\Health\ErrorLog;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -46,7 +47,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // "Ingelogd blijven" omzeilt de tweede factor niet (hfst. 15).
         $middleware->web(append: [EnsureSecondFactorOnRecall::class]);
-        $middleware->alias(['area' => EnsureStaffArea::class]);
+        // Elke limiet telt per route, niet één teller per gebruiker voor alle routes samen.
+        $middleware->alias(['area' => EnsureStaffArea::class, 'throttle' => ThrottlePerRoute::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
