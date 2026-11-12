@@ -70,6 +70,8 @@ final class DraftPayload
                     'url' => $media->path,
                     'position' => (int) $media->position,
                 ])->all(),
+                // De andere kavels uit dezelfde inventaris (SplitDraft).
+                'siblings' => SplitDraft::siblingsOf($lot),
                 'documents' => $lot->documents->map(fn (LotDocument $document): array => [
                     'id' => $document->id,
                     'name' => $document->original_filename,

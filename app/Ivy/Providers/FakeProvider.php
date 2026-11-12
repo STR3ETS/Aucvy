@@ -31,6 +31,11 @@ final class FakeProvider implements LlmProvider
             'recognise_lot' => $this->recognise($input, $seed),
             'draft_listing' => $this->listing($input),
             'estimate_value' => $this->estimate($input, $seed),
+            // Elke foto een eigen product: zo is het splitsen te testen zonder model.
+            'group_photos' => [
+                'groups' => array_map(fn (int $number): array => ['photos' => [$number], 'label' => 'Product '.$number], range(1, max(1, (int) ($input['photo_count'] ?? 1)))),
+                'confidence' => 0.7,
+            ],
             'weekly_insights' => $this->weekly($input),
             'bid_advice' => $this->advice($input),
             'check_documents' => $this->checkDocuments($input),

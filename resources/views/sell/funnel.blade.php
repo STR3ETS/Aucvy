@@ -151,14 +151,14 @@
                                     </p>
                                 @endguest
 
-                                <p class="fn-note" x-show="meta.scope === 'inventory'" x-cloak>
+                                <p class="fn-note" x-show="['multiple', 'inventory'].includes(meta.scope)" x-cloak>
                                     <span>
-                                        <strong>Veel kavels tegelijk? Bundel ze in één veiling.</strong>
-                                        Eén sluitschema, één bezichtiging en één set voorwaarden. Dit concept wordt één kavel;
+                                        <strong>Voeg foto's toe van alles wat je verkoopt.</strong>
+                                        Ivy zet de foto's per product bij elkaar en maakt van elk product een eigen kavel met een eigen advertentie.
                                         @auth
-                                            de rest zet je erbij via <a class="d-link" href="{{ route('dashboard.sales') }}">Veilingen</a> of <a class="d-link" href="{{ route('dashboard.import') }}">de import</a>.
+                                            Bundelen tot één veiling met één sluitschema doe je daarna bij <a class="d-link" href="{{ route('dashboard.sales') }}">Veilingen</a>; heel veel kavels gaan sneller via <a class="d-link" href="{{ route('dashboard.import') }}">de import</a>.
                                         @else
-                                            de rest zet je er na het inloggen bij via Veilingen of de import.
+                                            Bundelen tot één veiling doe je na het inloggen bij Veilingen.
                                         @endauth
                                     </span>
                                 </p>
@@ -342,7 +342,7 @@
                                             <x-dashboard.help text="Ivy herkent het object, Nova schrijft de advertentie en Atlas schat de waarde uit vergelijkbare verkopen. Een range, geen belofte. Wat jij straks aanpast, wint altijd." />
                                         </div>
                                         <button type="button" class="d-iconbtn" data-tip="Opnieuw laten kijken" aria-label="Opnieuw laten kijken"
-                                                x-show="ivy.tasks.length && ! ivy.running" x-cloak @click="analyse()">
+                                                x-show="ivy.tasks.length && ! ivy.running && ! ivy.proposal" x-cloak @click="analyse()">
                                             <x-v4.icon name="refresh" :size="17" stroke="2" />
                                         </button>
                                     </div>
@@ -387,7 +387,8 @@
                                                         <span x-text="ivyActivity(item).text + '…'"></span>
                                                         <span class="secs tabular" x-text="ivyActivity(item).seconds + ' s'"></span>
                                                     </span>
-                                                    <span class="sk fn-sk-line" x-show="item.status === 'waiting'"></span>
+                                                    <span class="sk fn-sk-line" x-show="item.status === 'waiting' && ivy.running"></span>
+                                                    <span class="result d-muted" x-show="item.status === 'waiting' && ! ivy.running">Wacht op je keuze</span>
                                                     <span class="result" x-show="['done', 'failed', 'skipped'].includes(item.status)" x-text="ivyResult(item, {{ Js::from($conditionLabels) }})"></span>
                                                     <span class="hint" x-show="item.status === 'done' && item.run?.confidence_hint" x-text="item.run?.confidence_hint"></span>
                                                 </div>
@@ -400,6 +401,27 @@
                                         </template>
                                     </ol>
 
+                                    {{-- Foto's van verschillende producten: Ivy stelt voor om er losse kavels van te maken. De verkoper kiest. --}}
+                                    <div class="fn-split" x-show="ivy.proposal" x-cloak>
+                                        <h3 class="d-h3" x-text="'Ivy ziet ' + (ivy.proposal?.length ?? 0) + ' producten'"></h3>
+                                        <p class="d-lead">Elk product wordt een eigen kavel, met een eigen advertentie en waarde-indicatie. Ze blijven bij elkaar staan; bundelen tot één veiling doe je daarna bij Veilingen.</p>
+                                        <ul class="fn-split-groups">
+                                            <template x-for="(group, index) in ivy.proposal ?? []" :key="index">
+                                                <li>
+                                                    <span class="thumbs">
+                                                        <template x-for="photo in groupPhotos(group).slice(0, 3)" :key="photo.id"><img :src="photo.url" alt=""></template>
+                                                    </span>
+                                                    <strong x-text="group.label"></strong>
+                                                    <span class="d-muted" x-text="group.media.length === 1 ? '1 foto' : group.media.length + ' foto\'s'"></span>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                        <div class="d-chips">
+                                            <button type="button" class="d-btn d-btn-sq" @click="split()" x-text="'Maak er ' + (ivy.proposal?.length ?? 0) + ' kavels van'">Maak er losse kavels van</button>
+                                            <button type="button" class="d-btn d-btn-secondary d-btn-sq" @click="keepTogether()">Houd het één kavel</button>
+                                        </div>
+                                    </div>
+
                                     {{-- Ivy ziet dat de woorden en de foto's niet bij elkaar passen: dat hoort de verkoper, niet de koper. --}}
                                     <p class="fn-note is-warn" x-show="ivy.note && ! ivy.running" x-cloak>
                                         <span><strong>Ivy zag iets.</strong> <span x-text="ivy.note"></span></span>
@@ -410,7 +432,7 @@
                                             <button type="button" class="d-link" @click="analyse()">Laat Ivy opnieuw kijken</button>, dan passen titel en tekst er weer bij.</span>
                                     </p>
 
-                                    <p class="fn-note is-ok" x-show="! ivy.running && ivyDone && ! ivyStale" x-cloak>
+                                    <p class="fn-note is-ok" x-show="! ivy.running && ivyDone && ! ivyStale && ! ivy.proposal" x-cloak>
                                         <span><strong>Ivy is klaar.</strong> Kijk in de volgende stap na wat ze invulde. Wat jij aanpast, wint altijd.</span>
                                     </p>
 
@@ -428,6 +450,30 @@
                                     </p>
                                 </div>
                             @endif
+
+                            {{-- De andere kavels uit dezelfde inventaris: elk met een eigen advertentie, te openen om na te kijken. --}}
+                            <div class="fn-block d-stack" x-show="siblingRows.length" x-cloak>
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">De andere kavels</h2>
+                                    <span class="d-count tabular" x-text="siblingRows.length"></span>
+                                    <x-dashboard.help text="Uit dezelfde foto's gesplitst, elk een eigen concept. Open een kavel om de tekst na te kijken en een prijs te kiezen. Bundelen tot één veiling met één sluitschema doe je bij Veilingen." />
+                                </div>
+                                <ul class="fn-siblings">
+                                    <template x-for="sibling in siblingRows" :key="sibling.id">
+                                        <li class="fn-lotline is-small">
+                                            <span class="thumb" aria-hidden="true">
+                                                <template x-if="sibling.cover"><img :src="sibling.cover" alt=""></template>
+                                            </span>
+                                            <div class="text">
+                                                <span class="sk fn-sk-title" x-show="['waiting', 'busy'].includes(sibling.status) && ! sibling.title"></span>
+                                                <strong x-show="! (['waiting', 'busy'].includes(sibling.status) && ! sibling.title)" x-text="sibling.title || 'Nog zonder titel'"></strong>
+                                                <span class="d-muted" x-text="sibling.status === 'busy' ? ivyLabel(sibling.task) + '…' : (sibling.status === 'waiting' ? 'Wacht op Ivy' : (sibling.status === 'failed' ? 'Ivy kwam er niet uit; vul het zelf in' : (sibling.value_min_cents != null ? money(sibling.value_min_cents) + ' – ' + money(sibling.value_max_cents) : 'Nog geen waarde-indicatie')))"></span>
+                                            </div>
+                                            <a class="d-iconbtn" :href="@js(route('sell')) + '?concept=' + sibling.id" data-tip="Openen" aria-label="Kavel openen"><x-v4.icon name="pencil" :size="17" stroke="2" /></a>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
                         </section>
 
                         {{-- 4 · Advertentie ----------------------------------------- --}}
@@ -838,7 +884,7 @@
                             <button type="button" class="d-btn d-btn-secondary d-btn-sq" x-show="step > 0" @click="step--">Terug</button>
                             <span class="d-muted" x-show="saving" x-cloak>Opslaan…</span>
                             <span class="d-muted" style="color:#177249" x-show="saved" x-cloak>Opgeslagen</span>
-                            <button type="button" class="d-btn d-btn-sq" style="margin-left:auto" x-show="step < 7" @click="step++"
+                            <button type="button" class="d-btn d-btn-sq" style="margin-left:auto" x-show="step < 7 && ! (step === 2 && ivy.proposal)" @click="step++"
                                     x-text="({{ Js::from($nextLabels) }})[step] ?? 'Volgende'">{{ $nextLabels[0] }}</button>
                             <button type="button" class="d-btn d-btn-sq" style="margin-left:auto" x-show="step === 7" x-cloak @click="publish()" :disabled="! canPublish">
                                 <span x-text="loggedIn ? 'Publiceer deze kavel' : 'Inloggen en publiceren'">Publiceer deze kavel</span>

@@ -26,6 +26,9 @@ final class AnthropicProvider implements LlmProvider
      */
     private const LONG_TEXT_TASKS = ['draft_listing', 'translate_listing'];
 
+    /** Foto's per product groeperen kan alleen als het model ze allemaal ziet (max 20 per kavel). */
+    private const ALL_PHOTO_TASKS = ['group_photos'];
+
     public function complete(AiTask $task, string $prompt): AiResult
     {
         $client = new Client(apiKey: (string) config('services.anthropic.key'));
@@ -38,13 +41,18 @@ final class AnthropicProvider implements LlmProvider
         // Grote telefoonfoto's worden eerst verkleind (ModelImage); wat de API
         // niet aanneemt, zoals heic, valt eruit in plaats van de hele analyse
         // te laten mislukken.
-        foreach (array_slice($task->images(), 0, 8) as $path) {
+        // Elke foto krijgt zijn nummer mee, zodat het model ernaar kan
+        // verwijzen; een overgeslagen foto verschuift de nummers niet.
+        $limit = in_array($task->name(), self::ALL_PHOTO_TASKS, true) ? 20 : 8;
+
+        foreach (array_slice($task->images(), 0, $limit) as $index => $path) {
             $image = ModelImage::encode($path);
 
             if ($image === null) {
                 continue;
             }
 
+            $content[] = ['type' => 'text', 'text' => 'Foto '.($index + 1)];
             $content[] = [
                 'type' => 'image',
                 'source' => [

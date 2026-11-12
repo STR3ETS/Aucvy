@@ -125,6 +125,8 @@ Route::prefix('drafts')->name('drafts.')->group(function (): void {
     Route::patch('{lot:id}', [DraftController::class, 'update'])->middleware('throttle:120,1')->name('update');
     Route::post('{lot:id}/confirm', [DraftController::class, 'confirm'])->middleware('throttle:60,1')->name('confirm');
     Route::post('{lot:id}/publish', [DraftController::class, 'publish'])->name('publish');
+    // Een inventaris: de foto's per product in losse kavels.
+    Route::post('{lot:id}/split', [DraftController::class, 'split'])->middleware('throttle:10,1')->name('split');
 
     // Scannen (briefing nieuwe functies): productcode met controlegetal, typeplaat door Ivy gelezen.
     Route::middleware('throttle:30,1')->group(function (): void {

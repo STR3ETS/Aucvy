@@ -8,6 +8,7 @@ use App\Enums\MediaType;
 use App\Ivy\Contracts\AiTask;
 use App\Models\Lot;
 use App\Models\LotMedia;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
@@ -34,12 +35,23 @@ abstract class LotTask implements AiTask
      */
     public function images(): array
     {
+        return $this->imageMedia()
+            ->map(fn (LotMedia $media): string => Storage::disk('public')->path((string) ($media->variants['original'] ?? '')))
+            ->all();
+    }
+
+    /**
+     * De foto's die het model krijgt, in dezelfde volgorde: Foto 1 is de
+     * eerste hiervan. GroupPhotos vertaalt de nummers zo terug naar id's.
+     *
+     * @return Collection<int, LotMedia>
+     */
+    public function imageMedia(): Collection
+    {
         return $this->lot->media
             ->where('type', MediaType::Image)
-            ->map(fn (LotMedia $media): string => Storage::disk('public')->path((string) ($media->variants['original'] ?? '')))
-            ->filter(fn (string $path): bool => is_file($path))
-            ->values()
-            ->all();
+            ->filter(fn (LotMedia $media): bool => is_file(Storage::disk('public')->path((string) ($media->variants['original'] ?? ''))))
+            ->values();
     }
 
     /**

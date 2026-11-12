@@ -40,7 +40,7 @@ final class DraftAccess
 
         // De cookie opent een concept zolang het nog van niemand is; is het
         // op naam gezet, dan telt alleen die naam (gedeelde browser).
-        if ($token !== '' && $lot->draft_token !== null && hash_equals($lot->draft_token, $token) && ($user === null || $lot->seller_id === null)) {
+        if ($token !== '' && self::tokenOpens($lot, $token) && ($user === null || $lot->seller_id === null)) {
             return $lot;
         }
 
@@ -52,6 +52,27 @@ final class DraftAccess
      * al live is mag zijn foto's beheren (briefing sectie 4: object
      * bewerken). Voor al het andere blijft het concept de grens.
      */
+    /**
+     * De cookie opent het concept zelf, en de kavels die uit dat concept
+     * gesplitst zijn (SplitDraft): die hebben een eigen token, want een token
+     * is uniek, en bewaren de hash van de cookie die ze maakte.
+     */
+    public static function tokenOpens(Lot $lot, string $token): bool
+    {
+        if ($lot->draft_token !== null && hash_equals($lot->draft_token, $token)) {
+            return true;
+        }
+
+        $cookie = $lot->draft_meta['cookie'] ?? null;
+
+        return is_string($cookie) && hash_equals($cookie, self::cookieHash($token));
+    }
+
+    public static function cookieHash(string $token): string
+    {
+        return hash('sha256', $token);
+    }
+
     public function resolveForMedia(Request $request, Lot $lot): Lot
     {
         $user = $request->user();
@@ -112,7 +133,7 @@ final class DraftAccess
         }
 
         Lot::query()
-            ->where('draft_token', $token)
+            ->where(fn ($query) => $query->where('draft_token', $token)->orWhere('draft_meta->cookie', self::cookieHash($token)))
             ->where('status', LotStatus::Draft)
             ->whereNull('seller_id')
             ->update([

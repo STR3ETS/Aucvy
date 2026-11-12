@@ -9,6 +9,7 @@ use App\Ivy\Tasks\BidAdvice;
 use App\Ivy\Tasks\CheckDocuments;
 use App\Ivy\Tasks\DraftListing;
 use App\Ivy\Tasks\EstimateValue;
+use App\Ivy\Tasks\GroupPhotos;
 use App\Ivy\Tasks\InterpretSearch;
 use App\Ivy\Tasks\RecogniseLot;
 use App\Ivy\Tasks\ScreenListing;
@@ -34,6 +35,7 @@ final class TaskRegistry
         'draft_listing' => DraftListing::class,
         'estimate_value' => EstimateValue::class,
         'check_documents' => CheckDocuments::class,
+        'group_photos' => GroupPhotos::class,
     ];
 
     /** Live-kavel-gebonden: elke ingelogde gebruiker mag ze aanvragen. */

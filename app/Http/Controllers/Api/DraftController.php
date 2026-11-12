@@ -14,6 +14,7 @@ use App\Lots\DraftPayload;
 use App\Lots\Provenance;
 use App\Lots\PublicId;
 use App\Lots\PublishLot;
+use App\Lots\SplitDraft;
 use App\Models\Category;
 use App\Models\Lot;
 use App\Support\Idempotency\Idempotency;
@@ -186,6 +187,25 @@ final class DraftController extends Controller
         }
 
         return $merged;
+    }
+
+    /**
+     * Foto's van verschillende producten worden losse kavels, één per groep
+     * (het voorstel van Ivy, of zoals de verkoper het aanpaste).
+     */
+    public function split(Request $request, Lot $lot, SplitDraft $split): JsonResponse
+    {
+        $lot = $this->access->resolve($request, $lot);
+
+        $validated = $request->validate([
+            'groups' => ['required', 'array', 'min:2', 'max:20'],
+            'groups.*' => ['required', 'array', 'min:1'],
+            'groups.*.*' => ['required', 'integer'],
+        ]);
+
+        $split->handle($lot, array_values(array_map(fn (array $group): array => array_values(array_map('intval', $group)), $validated['groups'])));
+
+        return response()->json($this->payload($lot->fresh()));
     }
 
     /**

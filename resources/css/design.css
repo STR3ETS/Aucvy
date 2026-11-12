@@ -1979,3 +1979,16 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
 .fn-sk-title{display:block;height:16px;width:min(280px,85%);border-radius:7px;margin-bottom:4px}
 .fn-sk-amount{display:block;height:16px;width:130px;border-radius:7px;margin-bottom:3px}
 @media (prefers-reduced-motion:reduce){.fn-ivytasks .spin{animation-duration:2.4s}}
+
+/* ---------- kavel plaatsen: een inventaris splitsen in losse kavels ---------- */
+.fn-split{display:grid;gap:12px;padding:16px;border-radius:14px;background:#eaf0ff}
+.fn-split .d-lead{margin:0}
+.fn-split-groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:0;padding:0;list-style:none}
+.fn-split-groups li{display:grid;gap:4px;padding:10px;border-radius:12px;background:#fff}
+.fn-split-groups .thumbs{display:flex;gap:4px;margin-bottom:4px}
+.fn-split-groups .thumbs img{width:44px;height:44px;border-radius:8px;object-fit:cover}
+.fn-split-groups strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:700}
+.fn-split-groups .d-muted{font-size:12.5px}
+.fn-siblings{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.fn-siblings .fn-lotline.is-small{padding:10px 12px;background:var(--d-inset,#f3f5fa)}
+.fn-siblings .fn-lotline .text strong{font-size:14px}

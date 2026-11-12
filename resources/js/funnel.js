@@ -41,7 +41,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
 
         // Ivy (stap 3): de taken lopen na elkaar en staan als lijst op het
         // scherm, elk met een stand: waiting, busy, done, failed of skipped.
-        ivy: { running: false, sharpened: false, note: null, analysedKey: null, now: 0, tasks: [] },
+        ivy: { running: false, sharpened: false, note: null, proposal: null, keepTogether: false, siblings: [], analysedKey: null, now: 0, tasks: [] },
 
         _pending: {},
         _timer: null,
@@ -629,59 +629,175 @@ export default function funnel(initial, feePercentage, schemas = {}) {
 
             if (! this.draft) return;
 
-            // Onthoud de vorige schatting: wordt de range smaller doordat er
-            // meer is aangeleverd, dan vieren we dat expliciet.
-            const previousSpread = this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
-                ? this.draft.value_max_cents - this.draft.value_min_cents
-                : null;
-
             const names = ['recognise_lot', 'draft_listing', 'estimate_value'];
 
             // Documentcontrole alleen als er iets te controleren valt.
             if ((this.draft?.documents ?? []).length > 0) names.push('check_documents');
 
+            // Meerdere producten: eerst de foto's per product bij elkaar
+            // zetten, zolang het concept nog niet gesplitst is en de verkoper
+            // niet zei dat het één kavel blijft.
+            const keepTogether = this.ivy.keepTogether ?? false;
+
+            if (['multiple', 'inventory'].includes(this.meta.scope) && (this.draft?.media?.length ?? 0) >= 2
+                && ! (this.draft?.siblings?.length) && ! keepTogether) {
+                names.unshift('group_photos');
+            }
+
             this.ivy = {
-                running: true,
+                running: false,
                 sharpened: false,
                 note: null,
+                proposal: null,
+                keepTogether,
+                siblings: [],
                 analysedKey: this.ivyInputKey,
                 now: Date.now(),
+                // Onthoud de vorige schatting: wordt de range smaller doordat
+                // er meer is aangeleverd, dan vieren we dat expliciet.
+                previousSpread: this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
+                    ? this.draft.value_max_cents - this.draft.value_min_cents
+                    : null,
                 tasks: names.map((task) => ({ task, status: 'waiting', run: null, started: null })),
             };
+
+            await this.runTasks();
+        },
+
+        /**
+         * De taken die nog wachten, na elkaar. Stelt Ivy voor om de foto's
+         * over meerdere kavels te verdelen, dan stopt de reeks tot de
+         * verkoper kiest (split of keepTogether).
+         */
+        async runTasks() {
+            this.ivy.running = true;
 
             // Een klok voor de wisselende zin bij de taak die loopt.
             const clock = setInterval(() => (this.ivy.now = Date.now()), 1000);
 
-            for (const item of this.ivy.tasks) {
-                item.status = 'busy';
-                item.started = Date.now();
+            try {
+                for (const item of this.ivy.tasks) {
+                    if (item.status !== 'waiting') continue;
 
-                const started = await this.request('/api/ivy/tasks', 'POST', { task: item.task, lot_id: this.draft.id });
+                    item.status = 'busy';
+                    item.started = Date.now();
 
-                const run = started ? await this.awaitRun(started.run) : { status: 'failed' };
-                item.run = run;
-                item.status = { completed: 'done', skipped: 'skipped' }[run.status] ?? 'failed';
+                    const started = await this.request('/api/ivy/tasks', 'POST', { task: item.task, lot_id: this.draft.id });
 
-                if (item.task === 'recognise_lot' && run.output?.seller_note) {
-                    this.ivy.note = run.output.seller_note;
+                    const run = started ? await this.awaitRun(started.run) : { status: 'failed' };
+                    item.run = run;
+                    item.status = { completed: 'done', skipped: 'skipped' }[run.status] ?? 'failed';
+
+                    if (item.task === 'recognise_lot' && run.output?.seller_note) {
+                        this.ivy.note = run.output.seller_note;
+                    }
+
+                    if (item.task === 'group_photos' && run.status === 'completed' && (run.groups?.length ?? 0) > 1) {
+                        this.ivy.proposal = run.groups;
+
+                        return;
+                    }
+
+                    // Noodrem, budget of geen verbinding: de volgende taken
+                    // gaan hetzelfde zeggen.
+                    if (! started || run.status === 'skipped') break;
                 }
 
-                // Noodrem, budget of geen verbinding: de volgende taken gaan
-                // hetzelfde zeggen.
-                if (! started || run.status === 'skipped') break;
+                // Wat niet meer aan de beurt kwam, staat als overgeslagen.
+                this.ivy.tasks.filter((item) => item.status === 'waiting').forEach((item) => (item.status = 'skipped'));
+
+                const spread = this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
+                    ? this.draft.value_max_cents - this.draft.value_min_cents
+                    : null;
+
+                this.ivy.sharpened = this.ivy.previousSpread != null && spread !== null && spread < this.ivy.previousSpread;
+
+                if (this.draft?.siblings?.length) await this.analyseSiblings();
+            } finally {
+                clearInterval(clock);
+                this.ivy.running = false;
             }
+        },
 
-            // Wat niet meer aan de beurt kwam, staat als overgeslagen.
-            this.ivy.tasks.filter((item) => item.status === 'waiting').forEach((item) => (item.status = 'skipped'));
+        /** De verkoper neemt het voorstel over: elk product een eigen kavel. */
+        async split() {
+            const response = await this.request(`/api/drafts/${this.draft.id}/split`, 'POST', {
+                groups: this.ivy.proposal.map((group) => group.media),
+            });
 
-            clearInterval(clock);
-            this.ivy.running = false;
+            if (! response) return;
 
-            const spread = this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
-                ? this.draft.value_max_cents - this.draft.value_min_cents
-                : null;
+            this.apply(response);
+            this.ivy.proposal = null;
+            // De foto's zijn verdeeld, niet veranderd: de analyse is niet verouderd.
+            this.ivy.analysedKey = this.ivyInputKey;
 
-            this.ivy.sharpened = previousSpread !== null && spread !== null && spread < previousSpread;
+            await this.runTasks();
+        },
+
+        /** De verkoper houdt alles als één kavel. */
+        async keepTogether() {
+            this.ivy.proposal = null;
+            this.ivy.keepTogether = true;
+
+            await this.runTasks();
+        },
+
+        /** De foto's van een groep uit het voorstel, voor de miniaturen. */
+        groupPhotos(group) {
+            return (this.draft?.media ?? []).filter((item) => group.media.includes(item.id));
+        },
+
+        /**
+         * Elk ander kavel uit de inventaris krijgt dezelfde analyse, drie
+         * tegelijk. Wat al een titel en een waarde heeft, slaat Ivy over.
+         */
+        async analyseSiblings() {
+            this.ivy.siblings = this.draft.siblings.map((sibling) => ({ ...sibling, status: 'waiting', task: null }));
+
+            const queue = this.ivy.siblings.filter((sibling) => {
+                if (sibling.title && sibling.value_min_cents != null) {
+                    sibling.status = 'done';
+
+                    return false;
+                }
+
+                return true;
+            });
+
+            const worker = async () => {
+                for (let sibling = queue.shift(); sibling; sibling = queue.shift()) {
+                    sibling.status = 'busy';
+
+                    for (const task of ['recognise_lot', 'draft_listing', 'estimate_value']) {
+                        sibling.task = task;
+
+                        const started = await this.request('/api/ivy/tasks', 'POST', { task, lot_id: sibling.id });
+                        const run = started
+                            ? await this.awaitRun(started.run, (response) => Object.assign(sibling, {
+                                title: response.draft.title,
+                                value_min_cents: response.draft.value_min_cents,
+                                value_max_cents: response.draft.value_max_cents,
+                            }))
+                            : { status: 'failed' };
+
+                        if (run.status !== 'completed') {
+                            sibling.status = 'failed';
+                            break;
+                        }
+                    }
+
+                    if (sibling.status === 'busy') sibling.status = 'done';
+                    sibling.task = null;
+                }
+            };
+
+            await Promise.all([worker(), worker(), worker()]);
+        },
+
+        /** De andere kavels: tijdens de analyse met hun stand, anders zoals de server ze kent. */
+        get siblingRows() {
+            return this.ivy.siblings?.length ? this.ivy.siblings : (this.draft?.siblings ?? []).map((sibling) => ({ ...sibling, status: 'done' }));
         },
 
         /**
@@ -716,7 +832,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         },
 
         /** Pollen tot de run klaar is; de taken zelf draaien op de queue. */
-        async awaitRun(run) {
+        async awaitRun(run, onDraft = (response) => this.apply(response)) {
             // Even lang wachten als de server de taak gunt (180 s), anders
             // meldt de wizard "te lang" terwijl de run nog slaagt.
             for (let attempt = 0; attempt < 120; attempt++) {
@@ -730,7 +846,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
 
                 run = response.run;
 
-                if (run.status === 'completed' && response.draft) this.apply(response);
+                if (run.status === 'completed' && response.draft) onDraft(response);
             }
 
             if (! ['completed', 'failed', 'skipped'].includes(run.status)) {
@@ -746,6 +862,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                 draft_listing: 'Advertentie schrijven',
                 estimate_value: 'Waarde schatten',
                 check_documents: 'Documenten controleren',
+                group_photos: 'Producten onderscheiden',
             }[task] ?? task;
         },
 
@@ -770,6 +887,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                 draft_listing: ['Een titel kiezen', 'De omschrijving schrijven', 'Gebreken eerlijk benoemen'],
                 estimate_value: ['Vergelijkbare verkopen zoeken', 'Prijzen naast elkaar leggen', 'De bandbreedte bepalen'],
                 check_documents: ['De documenten lezen', 'Gegevens vergelijken met de kavel'],
+                group_photos: [photos > 1 ? `${photos} foto's naast elkaar leggen` : 'De foto bekijken', 'Zelfde producten bij elkaar zetten', 'Per product een naam kiezen'],
             }[item.task] ?? ['Bezig'];
 
             const seconds = Math.max(0, Math.floor((this.ivy.now - (item.started ?? this.ivy.now)) / 1000));
@@ -796,6 +914,8 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                         : 'Te weinig vergelijkbare verkopen.';
                 case 'check_documents':
                     return output.summary ?? 'Gecontroleerd.';
+                case 'group_photos':
+                    return (item.run?.groups?.length ?? 1) > 1 ? item.run.groups.length + ' producten gezien.' : 'Eén product op alle foto\'s.';
                 default:
                     return 'Klaar.';
             }

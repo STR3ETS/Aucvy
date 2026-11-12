@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Ivy\Guards\ConfidencePolicy;
 use App\Ivy\Jobs\RunAiTask;
 use App\Ivy\TaskRegistry;
+use App\Ivy\Tasks\GroupPhotos;
 use App\Lots\DraftAccess;
 use App\Lots\DraftPayload;
 use App\Models\AiRun;
@@ -149,6 +150,15 @@ final class IvyTaskController extends Controller
             $payload['confidence'] = $run->confidence;
             $payload['confidence_level'] = $this->confidence->level($run->confidence);
             $payload['confidence_hint'] = $this->confidence->hint($run->confidence);
+
+            // Het groepsvoorstel in foto-id's van het concept, niet in de nummers die het model zag.
+            if ($run->task === 'group_photos' && $run->subject_type === (new Lot)->getMorphClass()) {
+                $lot = Lot::find($run->subject_id);
+                $payload['groups'] = $lot === null ? [] : GroupPhotos::groupsFor(
+                    $run->output ?? [],
+                    (new GroupPhotos($lot))->imageMedia()->pluck('id')->map(fn (mixed $id): int => (int) $id)->all(),
+                );
+            }
         }
 
         if ($run->status === AiRunStatus::Skipped) {
