@@ -123,3 +123,30 @@ describe('de beoordeling', function () {
             ->and($order->fresh()->payout->status)->toBe(PayoutStatus::Failed);
     });
 });
+
+it('zet geschillen per stand in een eigen tabel, met de toelichting eronder', function () {
+    $order = deliveredOrder();
+    $dispute = app(ReportProblem::class)->handle($order, $order->buyer, 'damaged', 'Deur zit vol deuken.');
+
+    // De koper ziet zijn melding bij Lopend, met de stand, de toelichting open en de weg naar de bestelling.
+    $this->actingAs($order->buyer)->get(route('dashboard.disputes'))
+        ->assertOk()
+        ->assertSeeInOrder(['id="geschillen-lopend"', 'class="d-lottable-head"', 'Stand', $order->lot->title, 'De verkoper kan reageren tot', 'data-tip="Naar de bestelling"', 'Je melding is binnen', 'We doen geen toezegging over de uitkomst', 'Melding gedaan', 'Deur zit vol deuken.'], false)
+        ->assertDontSee('id="geschillen-afgehandeld"', false)
+        ->assertSee('Zo werkt de geschilroute');
+
+    // De verkoper moet reageren: dat is de donkere knop.
+    $this->actingAs($order->seller)->get(route('dashboard.disputes'))
+        ->assertOk()
+        ->assertSee('Reageer vóór')
+        ->assertSee('data-tip="Reageer op de melding"', false);
+
+    // Na de uitkomst staat het geschil bij Afgehandeld.
+    app(RespondToDispute::class)->handle($dispute, $order->seller, 'De deur is bij het laden beschadigd.');
+    $dispute->fresh()->forceFill(['status' => DisputeStatus::Rejected, 'resolved_at' => now()])->save();
+
+    $this->actingAs($order->buyer)->get(route('dashboard.disputes'))
+        ->assertOk()
+        ->assertSeeInOrder(['id="geschillen-afgehandeld"', $order->lot->title, 'Melding afgewezen', 'De deur is bij het laden beschadigd.'], false)
+        ->assertDontSee('id="geschillen-lopend"', false);
+});

@@ -1812,3 +1812,13 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
 @media (max-width:560px){
   .d-feecard-top{flex-direction:column;align-items:flex-start;gap:14px}
 }
+
+/* ---------- geschillen: de toelichting klapt uit onder de regel ---------- */
+.d-disputedetail{grid-column:1/-1;display:grid;gap:18px;margin-top:14px;padding:18px 20px;border-radius:14px;background:var(--d-inset,#f3f5fa)}
+.d-disputedetail .d-lead{margin:0}
+.d-disputedetail .d-hsteps{margin-top:0}
+.d-disputetalk{display:grid;gap:8px}
+.d-disputedetail .d-dispute-msg{background:#fff}
+.d-fold svg{transition:transform .18s}
+.d-fold.is-open{border-color:#c9d8ff;background:#eef3ff;color:#1e56e0}
+.d-fold.is-open svg{transform:rotate(180deg)}
