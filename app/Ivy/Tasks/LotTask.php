@@ -61,6 +61,29 @@ abstract class LotTask implements AiTask
     }
 
     /**
+     * Wat de verkoper in stap 1 vertelde: in eigen woorden, en of het om één
+     * object, meerdere of een hele inventaris gaat. Invoer voor Ivy en Nova,
+     * geen tekst voor de koper.
+     *
+     * @return array{intake: ?string, scope: ?string}
+     */
+    protected function sellerContext(): array
+    {
+        $meta = $this->lot->draft_meta ?? [];
+        $intake = trim((string) ($meta['intake'] ?? ''));
+
+        return [
+            'intake' => $intake === '' ? null : $intake,
+            'scope' => match ($meta['scope'] ?? null) {
+                'single' => 'één object',
+                'multiple' => 'meerdere objecten',
+                'inventory' => 'een hele inventaris',
+                default => null,
+            },
+        ];
+    }
+
+    /**
      * De checksums maken de cachesleutel foto-precies: andere foto's met
      * hetzelfde aantal zijn een andere analyse.
      *

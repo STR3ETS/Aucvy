@@ -1955,3 +1955,27 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
   .fn-lotline{flex-wrap:wrap}
   .fn-lotline .amount{justify-items:start;flex:1 1 100%;text-align:left}
 }
+
+/* ---------- kavel plaatsen, stap 3: de taken van Ivy op een rij, met skeletten tot er een uitkomst is ---------- */
+.fn-ivytasks{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.fn-ivytasks li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--d-inset,#f3f5fa);transition:background .2s,opacity .2s}
+.fn-ivytasks li img{width:34px;height:34px;flex:0 0 auto;border-radius:50%;object-fit:cover}
+.fn-ivytasks .body{flex:1 1 auto;min-width:0;display:grid;gap:3px}
+.fn-ivytasks .body strong{font-size:14px;font-weight:700;color:#0e1526}
+.fn-ivytasks .now{display:flex;gap:8px;align-items:baseline;font-size:13px;color:#1e56e0}
+.fn-ivytasks .now .secs{margin-left:auto;font-size:12px;color:#5c6577}
+.fn-ivytasks .result{font-size:13px;line-height:1.45;color:#2a3242;overflow-wrap:anywhere}
+.fn-ivytasks .hint{font-size:12px;color:#5c6577}
+.fn-ivytasks .state{display:flex;align-items:center;justify-content:center;width:26px;height:26px;flex:0 0 auto;border-radius:50%;font-size:13px;font-weight:800}
+.fn-ivytasks li.is-waiting{opacity:.6}
+.fn-ivytasks li.is-waiting img{filter:grayscale(1)}
+.fn-ivytasks li.is-busy{background:#eaf0ff}
+.fn-ivytasks li.is-done .state{background:#2f9e68;color:#fff}
+.fn-ivytasks li.is-failed .state{background:#fdf3e3;color:#a35a00}
+.fn-ivytasks li.is-skipped{opacity:.7}
+.fn-ivytasks .spin{width:18px;height:18px;border:2.5px solid #c9d7ff;border-top-color:#2f6bff;border-radius:50%;animation:fn-spin .8s linear infinite}
+@keyframes fn-spin{to{transform:rotate(360deg)}}
+.fn-sk-line{display:block;height:12px;width:min(220px,70%);border-radius:6px}
+.fn-sk-title{display:block;height:16px;width:min(280px,85%);border-radius:7px;margin-bottom:4px}
+.fn-sk-amount{display:block;height:16px;width:130px;border-radius:7px;margin-bottom:3px}
+@media (prefers-reduced-motion:reduce){.fn-ivytasks .spin{animation-duration:2.4s}}

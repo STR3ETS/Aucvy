@@ -40,6 +40,9 @@
     $documentKinds = ['invoice' => 'Factuur', 'warranty' => 'Garantiebewijs', 'ownership' => 'Eigendomsbewijs', 'manual' => 'Handleiding', 'inspection' => 'Keuringscertificaat', 'maintenance' => 'Onderhoudsrapport', 'logbook' => 'Logboek', 'pickup_instruction' => 'Ophaalinstructie', 'nameplate' => 'Typeplaat met serienummer (foto)', 'other' => 'Overig'];
     $closeUrl = auth()->check() ? route('dashboard.lots') : route('home');
     $vatPercent = \App\Support\Money\Money::vatRatePercent();
+    $conditionLabels = collect(\App\Enums\LotCondition::cases())->mapWithKeys(fn ($condition) => [$condition->value => $condition->label()])->all();
+    // De knop onderaan zegt wat er na deze stap komt.
+    $nextLabels = [0 => 'Volgende: foto\'s', 1 => $ivyEnabled ? 'Laat Ivy kijken' : 'Volgende: advertentie', 2 => 'Door naar de advertentie', 3 => 'Volgende: verkoopvorm', 4 => 'Volgende: promotie', 5 => 'Door naar de kosten', 6 => 'Laatste controle'];
 @endphp
 
 {{--
@@ -119,13 +122,18 @@
 
                         {{-- 1 · Wat ------------------------------------------------- --}}
                         <section x-show="step === 0" x-cloak aria-label="Wat wil je verkopen" class="d-stack">
+                            {{-- Hoeveel: invoer voor Ivy. De echte hoeveelheid zet de verkoper in stap 4. --}}
                             <div class="fn-block d-stack">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Hoeveel verkoop je?</h2>
+                                    <x-dashboard.help text="Dit helpt Ivy je foto's te lezen: één object, of een partij. Het aantal en de eenheid vul je later in bij de advertentie." />
+                                </div>
                                 <div class="fn-options">
-                                    <template x-for="option in [{q: 1, icon: 'box', label: 'Eén object', hint: 'Een los item'}, {q: 10, icon: 'layers', label: 'Meerdere objecten', hint: 'Een aantal items'}, {q: 100, icon: 'layout', label: 'Hele inventaris', hint: 'Complete veiling'}]" :key="option.q">
+                                    <template x-for="option in [{scope: 'single', icon: 'box', label: 'Eén object', hint: 'Een machine, een meubelstuk'}, {scope: 'multiple', icon: 'layers', label: 'Meerdere objecten', hint: 'Een partij of een set'}, {scope: 'inventory', icon: 'layout', label: 'Hele inventaris', hint: 'Een complete veiling'}]" :key="option.scope">
                                         <button type="button" class="fn-option"
-                                                :class="((draft?.quantity ?? 0) === 0 ? false : (option.q === 1 ? draft.quantity === 1 : (option.q === 10 ? (draft.quantity > 1 && draft.quantity < 100) : draft.quantity >= 100))) && 'is-on'"
-                                                :aria-pressed="(draft?.quantity ?? 0) !== 0 && (option.q === 1 ? draft.quantity === 1 : (option.q === 10 ? (draft.quantity > 1 && draft.quantity < 100) : draft.quantity >= 100))"
-                                                @click="set('quantity', option.q)">
+                                                :class="meta.scope === option.scope && 'is-on'"
+                                                :aria-pressed="meta.scope === option.scope"
+                                                @click="set('scope', option.scope)">
                                             <span class="fn-option-icon" aria-hidden="true">
                                                 <span x-show="option.icon === 'box'"><x-v4.icon name="box" :size="20" stroke="2" /></span>
                                                 <span x-show="option.icon === 'layers'"><x-v4.icon name="layers" :size="20" stroke="2" /></span>
@@ -143,7 +151,7 @@
                                     </p>
                                 @endguest
 
-                                <p class="fn-note" x-show="(draft?.quantity ?? 0) >= 100" x-cloak>
+                                <p class="fn-note" x-show="meta.scope === 'inventory'" x-cloak>
                                     <span>
                                         <strong>Veel kavels tegelijk? Bundel ze in één veiling.</strong>
                                         Eén sluitschema, één bezichtiging en één set voorwaarden. Dit concept wordt één kavel;
@@ -158,28 +166,20 @@
 
                             <div class="fn-block">
                                 <div class="d-titleline">
-                                    <h2 class="d-h2"><label for="fn-words">In je eigen woorden</label></h2>
-                                    <x-dashboard.help text="Eén zin is genoeg. Ivy maakt er straks een advertentie van, en jij keurt hem goed. Met de microfoon kun je het ook inspreken." />
+                                    <h2 class="d-h2"><label for="fn-words">Vertel wat het is</label></h2>
+                                    <x-dashboard.help text="Ivy leest dit samen met je foto's. Vertel wat een foto niet laat zien: hoe oud het is, hoe vaak gebruikt, waarom je het verkoopt. Met de microfoon kun je het ook inspreken." />
                                 </div>
+                                <p class="d-lead">Eén zin is genoeg. Dit is nog niet je advertentie: die schrijft Nova straks, en jij keurt hem goed.</p>
                                 <div class="fn-textwrap">
-                                    <textarea id="fn-words" rows="4" placeholder="Ik stop met mijn restaurant en wil alles verkopen." class="d-textarea"
-                                              :value="draft?.description ?? ''"
-                                              @input="set('description', $event.target.value)"></textarea>
+                                    <textarea id="fn-words" rows="3" placeholder="Bijvoorbeeld: gaming-pc, een jaar oud, weinig gebruikt." class="d-textarea"
+                                              :value="meta.intake ?? ''"
+                                              @input="set('intake', $event.target.value)"></textarea>
                                     {{-- Dicteren via de spraakherkenning van de browser (briefing stap 1: spraak). --}}
                                     <button type="button" class="d-iconbtn" x-show="canDictate" x-cloak data-tip="Dicteren"
-                                            :class="dictating === 'description' && 'is-rec'" :data-tip="dictating === 'description' ? 'Stop met dicteren' : 'Dicteren'"
-                                            :aria-label="dictating === 'description' ? 'Stop met dicteren' : 'Dicteren'" @click="dictate('description')">
+                                            :class="dictating === 'intake' && 'is-rec'" :data-tip="dictating === 'intake' ? 'Stop met dicteren' : 'Dicteren'"
+                                            :aria-label="dictating === 'intake' ? 'Stop met dicteren' : 'Dicteren'" @click="dictate('intake')">
                                         <x-v4.icon name="mic" :size="17" stroke="2" />
                                     </button>
-                                </div>
-
-                                <div class="fn-examples" x-show="! (draft?.description ?? '').trim()">
-                                    <span class="fn-suggest-label">Bijvoorbeeld</span>
-                                    <div class="d-chips">
-                                        @foreach (['Ik stop met mijn restaurant en wil de volledige keukeninventaris verkopen.', 'Kantoorinventaris na een verhuizing: bureaus, stoelen en kasten.', 'Eén machine uit mijn werkplaats, nog in gebruik.'] as $example)
-                                            <button type="button" class="d-chip" style="font-weight:600" @click="set('description', @js($example))">{{ Str::limit($example, 44) }}</button>
-                                        @endforeach
-                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -334,48 +334,85 @@
                         {{-- 3 · Analyse --------------------------------------------- --}}
                         <section x-show="step === 2" x-cloak aria-label="Analyse" class="d-stack">
                             @if ($ivyEnabled)
-                                <div class="fn-block d-stack">
+                                {{-- Bij het openen van deze stap begint Ivy vanzelf, en opnieuw als de foto's of woorden veranderd zijn. --}}
+                                <div class="fn-block d-stack" x-init="$watch('step', (value) => value === 2 && autoAnalyse())">
                                     <div class="fn-row">
                                         <div class="d-titleline">
                                             <h2 class="d-h2">Dit plaats je</h2>
-                                            <x-dashboard.help text="De waarde-indicatie komt uit vergelijkbare verkopen, met de bron erbij. Het is een range, geen belofte. Zelf invullen werkt net zo goed." />
+                                            <x-dashboard.help text="Ivy herkent het object, Nova schrijft de advertentie en Atlas schat de waarde uit vergelijkbare verkopen. Een range, geen belofte. Wat jij straks aanpast, wint altijd." />
                                         </div>
-                                        <button type="button" class="d-btn d-btn-secondary d-btn-sq" :disabled="ivy.running" @click="analyse()">
-                                            <span x-text="ivy.running ? 'Ivy kijkt mee…' : (ivy.notes.length || draft?.value_min_cents != null ? 'Laat opnieuw analyseren' : 'Laat Ivy meekijken')">Laat Ivy meekijken</span>
+                                        <button type="button" class="d-iconbtn" data-tip="Opnieuw laten kijken" aria-label="Opnieuw laten kijken"
+                                                x-show="ivy.tasks.length && ! ivy.running" x-cloak @click="analyse()">
+                                            <x-v4.icon name="refresh" :size="17" stroke="2" />
                                         </button>
                                     </div>
 
-                                    <p class="fn-note is-ok" x-show="! ivy.running && (ivy.notes.length || draft?.value_min_cents != null)" x-cloak>
-                                        <span><strong>Ivy heeft je kavel herkend.</strong> Kijk in de volgende stap na wat ze invulde. Wat jij aanpast, wint altijd.</span>
-                                    </p>
-
+                                    {{-- De kavel zoals hij er nu voor staat; wat nog uitgezocht wordt is een skelet. --}}
                                     <article class="fn-lotline">
                                         <span class="thumb" aria-hidden="true">
                                             <template x-if="draft?.media?.length"><img :src="draft.media[0].url" alt=""></template>
                                             <template x-if="! draft?.media?.length"><x-v4.icon name="image" :size="22" stroke="1.6" /></template>
                                         </span>
                                         <div class="text">
-                                            <strong x-text="draft?.title || 'Nog zonder titel'">Nog zonder titel</strong>
-                                            <span class="d-muted" x-text="({{ Js::from($categoryNames) }})[draft?.category_id] ?? 'Nog geen categorie'"></span>
+                                            <span class="sk fn-sk-title" x-show="ivyPending('draft_listing')" x-cloak></span>
+                                            <strong x-show="! ivyPending('draft_listing')" x-text="draft?.title || 'Nog zonder titel'">Nog zonder titel</strong>
+                                            <span class="sk fn-sk-line" x-show="ivyPending('recognise_lot')" x-cloak></span>
+                                            <span class="d-muted" x-show="! ivyPending('recognise_lot')"
+                                                  x-text="[draft?.specifications?.objecttype?.value, draft?.brand, draft?.model].filter(Boolean).join(' · ') || ({{ Js::from($categoryNames) }})[draft?.category_id] || 'Nog niet herkend'"></span>
                                         </div>
                                         <div class="amount">
-                                            <b class="tabular" x-text="draft?.value_min_cents != null ? money(draft.value_min_cents) + ' – ' + money(draft.value_max_cents) : 'Nog geen indicatie'"></b>
+                                            <span class="sk fn-sk-amount" x-show="ivyPending('estimate_value')" x-cloak></span>
+                                            <b class="tabular" x-show="! ivyPending('estimate_value')" x-text="draft?.value_min_cents != null ? money(draft.value_min_cents) + ' – ' + money(draft.value_max_cents) : 'Nog geen indicatie'"></b>
                                             <span>Waarde-indicatie van Atlas</span>
                                         </div>
                                     </article>
 
-                                    {{-- Voortgang per taak, met het zekerheidslabel uit de ConfidencePolicy - nooit een kale modelbelofte (hfst. 8). --}}
-                                    <ul class="fn-notes" x-show="ivy.notes.length || ivy.running" x-cloak aria-live="polite">
-                                        <template x-for="note in ivy.notes" :key="note.id">
-                                            <li>
-                                                <img :src="'/images/agents/' + note.agent + '.jpg'" :alt="note.agent + ', AI-specialist'" loading="lazy">
-                                                <span><strong x-text="ivyLabel(note.task)"></strong> <span class="d-muted" x-text="'- ' + ivyNote(note)"></span></span>
+                                    {{-- Niets om naar te kijken: eerst foto's of een zin. --}}
+                                    <div class="fn-note" x-show="! ivy.tasks.length && ! ivy.running && ! (draft?.media?.length || (meta.intake ?? '').trim())" x-cloak>
+                                        <span><strong>Ivy heeft nog niets om naar te kijken.</strong> Voeg foto's toe of vertel in stap 1 wat het is.</span>
+                                    </div>
+                                    <div class="d-chips" x-show="! ivy.tasks.length && ! ivy.running" x-cloak>
+                                        <button type="button" class="d-btn d-btn-secondary d-btn-sm d-btn-sq" x-show="! draft?.media?.length" @click="step = 1">Foto's toevoegen</button>
+                                        <button type="button" class="d-btn d-btn-secondary d-btn-sm d-btn-sq" x-show="draft?.media?.length || (meta.intake ?? '').trim()" @click="analyse()">Laat Ivy kijken</button>
+                                    </div>
+
+                                    {{-- De taken op een rij: wat nog komt, wat Ivy nu doet en wat eruit kwam. Elk met het zekerheidslabel, nooit een kale modelbelofte (hfst. 8). --}}
+                                    <ol class="fn-ivytasks" x-show="ivy.tasks.length" x-cloak aria-live="polite">
+                                        <template x-for="item in ivy.tasks" :key="item.task">
+                                            <li :class="'is-' + item.status">
+                                                <img :src="'/images/agents/' + ivyAgent(item.task) + '.jpg'" alt="" loading="lazy">
+                                                <div class="body">
+                                                    <strong x-text="ivyLabel(item.task)"></strong>
+                                                    <span class="now" x-show="item.status === 'busy'">
+                                                        <span x-text="ivyActivity(item).text + '…'"></span>
+                                                        <span class="secs tabular" x-text="ivyActivity(item).seconds + ' s'"></span>
+                                                    </span>
+                                                    <span class="sk fn-sk-line" x-show="item.status === 'waiting'"></span>
+                                                    <span class="result" x-show="['done', 'failed', 'skipped'].includes(item.status)" x-text="ivyResult(item, {{ Js::from($conditionLabels) }})"></span>
+                                                    <span class="hint" x-show="item.status === 'done' && item.run?.confidence_hint" x-text="item.run?.confidence_hint"></span>
+                                                </div>
+                                                <span class="state" aria-hidden="true">
+                                                    <span class="spin" x-show="item.status === 'busy'"></span>
+                                                    <span x-show="item.status === 'done'"><x-v4.icon name="check" :size="14" stroke="3" /></span>
+                                                    <span x-show="item.status === 'failed'">!</span>
+                                                </span>
                                             </li>
                                         </template>
-                                        <li x-show="ivy.running" x-cloak class="d-muted">
-                                            <span x-text="(ivy.current ? ivyLabel(ivy.current) : 'Bezig') + '…'"></span>
-                                        </li>
-                                    </ul>
+                                    </ol>
+
+                                    {{-- Ivy ziet dat de woorden en de foto's niet bij elkaar passen: dat hoort de verkoper, niet de koper. --}}
+                                    <p class="fn-note is-warn" x-show="ivy.note && ! ivy.running" x-cloak>
+                                        <span><strong>Ivy zag iets.</strong> <span x-text="ivy.note"></span></span>
+                                    </p>
+
+                                    <p class="fn-note is-warn" x-show="ivyStale" x-cloak>
+                                        <span><strong>Je foto's of woorden zijn veranderd.</strong>
+                                            <button type="button" class="d-link" @click="analyse()">Laat Ivy opnieuw kijken</button>, dan passen titel en tekst er weer bij.</span>
+                                    </p>
+
+                                    <p class="fn-note is-ok" x-show="! ivy.running && ivyDone && ! ivyStale" x-cloak>
+                                        <span><strong>Ivy is klaar.</strong> Kijk in de volgende stap na wat ze invulde. Wat jij aanpast, wint altijd.</span>
+                                    </p>
 
                                     {{-- Meer aangeleverd = scherpere schatting: dat moment benoemen we expliciet (preview v4). --}}
                                     <p x-show="ivy.sharpened" x-cloak class="fn-note is-ok">
@@ -802,7 +839,7 @@
                             <span class="d-muted" x-show="saving" x-cloak>Opslaan…</span>
                             <span class="d-muted" style="color:#177249" x-show="saved" x-cloak>Opgeslagen</span>
                             <button type="button" class="d-btn d-btn-sq" style="margin-left:auto" x-show="step < 7" @click="step++"
-                                    x-text="({2: 'Door naar de advertentie', 5: 'Door naar de kosten'})[step] ?? 'Volgende'">Volgende</button>
+                                    x-text="({{ Js::from($nextLabels) }})[step] ?? 'Volgende'">{{ $nextLabels[0] }}</button>
                             <button type="button" class="d-btn d-btn-sq" style="margin-left:auto" x-show="step === 7" x-cloak @click="publish()" :disabled="! canPublish">
                                 <span x-text="loggedIn ? 'Publiceer deze kavel' : 'Inloggen en publiceren'">Publiceer deze kavel</span>
                             </button>

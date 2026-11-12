@@ -10,7 +10,9 @@ use App\Ivy\AiResult;
 use App\Ivy\Contracts\AiTask;
 use App\Ivy\Contracts\LlmProvider;
 use App\Ivy\Jobs\RunAiTask;
+use App\Ivy\ModelImage;
 use App\Ivy\TaskRegistry;
+use App\Lots\DraftAccess;
 use App\Lots\Preflight;
 use App\Models\AiRun;
 use App\Models\Lot;
@@ -204,6 +206,117 @@ describe('herkenning', function () {
             ->and($lot->specifications)->not->toHaveKey('afmetingen')
             ->and($lot->specifications)->not->toHaveKey('lang')
             ->and($lot->year)->toBeNull();
+    });
+
+    it('vervangt wat Ivy eerder uit foto\'s afleidde, maar niet wat de verkoper zette', function () {
+        // De vorige foto's waren een gaming-pc; de verkoper zette zelf het model en een kleur.
+        $lot = Lot::factory()->anonymousDraft()->create([
+            'brand' => 'Antec', 'model' => 'X1', 'year' => null, 'condition' => null,
+            'specifications' => [
+                'objecttype' => ['value' => 'Gaming desktop', 'source' => 'ai', 'confidence' => 0.6],
+                'koeling' => ['value' => 'Waterkoeling', 'source' => 'ai', 'confidence' => 0.6],
+                'kleur' => ['value' => 'Zwart', 'source' => 'seller'],
+            ],
+            'field_sources' => [
+                'brand' => ['source' => 'photo', 'confidence' => 0.6, 'needs_confirmation' => true, 'confirmed_at' => null, 'run_id' => null],
+                'model' => ['source' => 'seller', 'confidence' => 1.0, 'needs_confirmation' => false, 'confirmed_at' => null, 'run_id' => null],
+            ],
+        ]);
+
+        regressionProvider(json_encode([
+            'object_type' => 'Partij kantoorelektronica', 'brand' => null, 'model' => 'Y2', 'year' => null,
+            'condition' => 'used', 'specifications' => ['aantal_stuks' => '6'], 'confidence' => 0.7, 'field_confidence' => [],
+            'seller_note' => 'Je woorden noemen een gaming-pc, op de foto\'s staan een monitor en speakers.',
+        ]));
+
+        $run = regressionRun($lot, 'recognise_lot');
+        $lot = $lot->fresh();
+
+        expect($run->status)->toBe(AiRunStatus::Completed)
+            // Het merk van de vorige foto's is weg, met zijn herkomst.
+            ->and($lot->brand)->toBeNull()
+            ->and($lot->field_sources)->not->toHaveKey('brand')
+            // Wat de verkoper zette blijft staan.
+            ->and($lot->model)->toBe('X1')
+            ->and($lot->specifications['kleur']['value'])->toBe('Zwart')
+            // Het objecttype en de kenmerken komen van de nieuwe foto's.
+            ->and($lot->specifications['objecttype']['value'])->toBe('Partij kantoorelektronica')
+            ->and($lot->specifications)->not->toHaveKey('koeling')
+            ->and($lot->specifications)->toHaveKey('aantal_stuks')
+            ->and($run->output['seller_note'])->toContain('monitor');
+    });
+
+    it('geeft Ivy de eigen woorden en de omvang mee, niet een verzonnen aantal', function () {
+        $lot = Lot::factory()->anonymousDraft()->create([
+            'description' => null,
+            'draft_meta' => ['intake' => 'Gaming-pc, een jaar oud.', 'scope' => 'single'],
+        ]);
+
+        $prompt = TaskRegistry::forLot('recognise_lot', $lot)->prompt();
+        $listing = TaskRegistry::forLot('draft_listing', $lot)->input();
+
+        expect($prompt)->toContain('Gaming-pc, een jaar oud.')
+            ->and($prompt)->toContain('één object')
+            ->and($prompt)->toContain('De foto\'s zijn leidend')
+            ->and($listing['intake'])->toBe('Gaming-pc, een jaar oud.')
+            ->and($listing['scope'])->toBe('één object');
+    });
+});
+
+describe('de advertentie', function () {
+    it('vervangt een titel die Nova eerder schreef, maar niet een titel uit een import', function () {
+        $written = Lot::factory()->anonymousDraft()->create([
+            'title' => 'Gaming desktop van Antec',
+            'field_sources' => ['title' => ['source' => 'ivy', 'confidence' => 0.6, 'needs_confirmation' => true, 'confirmed_at' => null, 'run_id' => null]],
+        ]);
+        $imported = Lot::factory()->anonymousDraft()->create(['title' => 'Magazijnstellingen 60 meter', 'field_sources' => null]);
+
+        regressionProvider(json_encode(['title' => 'Partij kantoorelektronica', 'description' => 'Een monitor en vier speakers.', 'confidence' => 0.7]));
+
+        regressionRun($written, 'draft_listing');
+        regressionRun($imported, 'draft_listing');
+
+        expect($written->fresh()->title)->toBe('Partij kantoorelektronica')
+            ->and($imported->fresh()->title)->toBe('Magazijnstellingen 60 meter');
+    });
+
+    it('bewaart de eigen woorden van stap 1 apart, zodat Nova de omschrijving mag schrijven', function () {
+        $this->withCredentials()->postJson('/api/drafts')->assertCreated();
+        $lot = Lot::sole();
+
+        $this->withCookie(DraftAccess::COOKIE, $lot->draft_token)
+            ->patchJson("/api/drafts/{$lot->id}", ['intake' => 'Gaming-pc, een jaar oud.', 'scope' => 'single'])
+            ->assertOk()
+            ->assertJsonPath('draft.meta.intake', 'Gaming-pc, een jaar oud.')
+            ->assertJsonPath('draft.meta.scope', 'single');
+
+        $lot->refresh();
+
+        expect($lot->description)->toBeNull()
+            ->and($lot->field_sources ?? [])->not->toHaveKey('description');
+
+        regressionProvider(json_encode(['title' => 'Gaming-pc', 'description' => 'Een gaming-pc van een jaar oud, weinig gebruikt.', 'confidence' => 0.7]));
+        regressionRun($lot, 'draft_listing');
+
+        expect($lot->fresh()->description)->toBe('Een gaming-pc van een jaar oud, weinig gebruikt.');
+    });
+});
+
+describe('foto\'s voor het model', function () {
+    it('verkleint een grote foto tot de maat waar het model naar kijkt', function () {
+        $path = tempnam(sys_get_temp_dir(), 'ivy').'.jpg';
+        $image = imagecreatetruecolor(4000, 3000);
+        imagefill($image, 0, 0, imagecolorallocate($image, 200, 120, 40));
+        imagejpeg($image, $path, 95);
+
+        $encoded = ModelImage::encode($path);
+        [$width, $height] = getimagesizefromstring(base64_decode($encoded['data'], true));
+
+        expect($encoded['mime'])->toBe('image/jpeg')
+            ->and(max($width, $height))->toBe(1568)
+            ->and(ModelImage::encode($path.'.ontbreekt'))->toBeNull();
+
+        @unlink($path);
     });
 });
 

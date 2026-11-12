@@ -8,6 +8,7 @@ use Anthropic\Client;
 use App\Ivy\AiResult;
 use App\Ivy\Contracts\AiTask;
 use App\Ivy\Contracts\LlmProvider;
+use App\Ivy\ModelImage;
 
 /**
  * De echte multimodale API, via de officiële Anthropic PHP SDK.
@@ -19,11 +20,6 @@ use App\Ivy\Contracts\LlmProvider;
  */
 final class AnthropicProvider implements LlmProvider
 {
-    /** Wat de Messages API als foto accepteert, en tot welke grootte. */
-    private const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-
-    private const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-
     /**
      * Een advertentie of vertaling van een lange omschrijving past niet in
      * 2048 tokens; afgekapte JSON is een mislukte (en betaalde) run.
@@ -39,16 +35,13 @@ final class AnthropicProvider implements LlmProvider
 
         // Maximaal acht foto's mee: genoeg voor herkenning, en het houdt de
         // tokenkosten van een fotorijk concept begrensd.
+        // Grote telefoonfoto's worden eerst verkleind (ModelImage); wat de API
+        // niet aanneemt, zoals heic, valt eruit in plaats van de hele analyse
+        // te laten mislukken.
         foreach (array_slice($task->images(), 0, 8) as $path) {
-            if (! is_file($path) || filesize($path) > self::MAX_IMAGE_BYTES) {
-                continue;
-            }
+            $image = ModelImage::encode($path);
 
-            // De API neemt alleen jpeg, png, gif en webp aan; één heic in de
-            // reeks zou anders élke analyse van dit concept laten mislukken.
-            $mime = (string) (mime_content_type($path) ?: '');
-
-            if (! in_array($mime, self::IMAGE_TYPES, true)) {
+            if ($image === null) {
                 continue;
             }
 
@@ -56,8 +49,8 @@ final class AnthropicProvider implements LlmProvider
                 'type' => 'image',
                 'source' => [
                     'type' => 'base64',
-                    'mediaType' => $mime,
-                    'data' => base64_encode((string) file_get_contents($path)),
+                    'mediaType' => $image['mime'],
+                    'data' => $image['data'],
                 ],
             ];
         }

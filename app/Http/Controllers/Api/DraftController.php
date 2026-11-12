@@ -119,13 +119,22 @@ final class DraftController extends Controller
             'warranty' => ['sometimes', 'nullable', Rule::in(array_keys((array) config('listings.warranty_options')))],
             'warranty_until' => ['sometimes', 'nullable', 'date', 'after:today'],
             'documents_authentic' => ['sometimes', 'boolean'],
+
+            /*
+             | Stap 1: wat de verkoper in eigen woorden vertelt en hoeveel hij
+             | verkoopt. Dat is invoer voor Ivy, niet de advertentie zelf: de
+             | omschrijving schrijft Nova, de hoeveelheid zet de verkoper in
+             | stap 4.
+             */
+            'intake' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'scope' => ['sometimes', 'nullable', Rule::in(['single', 'multiple', 'inventory'])],
         ]);
 
         $metaKeys = [
             'sale_type', 'start_price_cents', 'reserve_price_cents',
             'buy_now_price_cents', 'dutch_start_cents', 'dutch_floor_cents',
             'dutch_step_cents', 'dutch_interval_s', 'duration_days', 'ownership_declared',
-            'warranty', 'warranty_until', 'documents_authentic',
+            'warranty', 'warranty_until', 'documents_authentic', 'intake', 'scope',
         ];
 
         $meta = $lot->draft_meta ?? [];

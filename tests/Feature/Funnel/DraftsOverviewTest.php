@@ -98,6 +98,12 @@ it('toont de flow als losse kaarten, met de bijzaken als pictogram en één rij 
         ->assertSee('data-tip="Kenmerk toevoegen"', false)
         // De eindcontrole toont wat nog moet; wat in orde is klapt uit.
         ->assertSee('Toon wat in orde is')
+        // Stap 1 zegt wat elke kaart doet; stap 3 toont de taken van Ivy op een rij.
+        ->assertSee('Hoeveel verkoop je?')
+        ->assertSee('Dit is nog niet je advertentie')
+        ->assertSee('class="fn-ivytasks"', false)
+        ->assertSee('Laat Ivy kijken')
+        ->assertDontSee('fn-examples')
         // De andere concepten staan als menu in de kop.
         ->assertSee('class="fn-draftmenu"', false)
         ->assertSee('Nieuw concept')

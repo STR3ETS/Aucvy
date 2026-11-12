@@ -39,9 +39,9 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         error: null,
         uploading: false,
 
-        // Ivy (stap 3): de drie taken lopen na elkaar; elke afgeronde run
-        // komt als notitie in de lijst. `failed` betekent: verder zonder Ivy.
-        ivy: { running: false, current: null, notes: [], sharpened: false },
+        // Ivy (stap 3): de taken lopen na elkaar en staan als lijst op het
+        // scherm, elk met een stand: waiting, busy, done, failed of skipped.
+        ivy: { running: false, sharpened: false, note: null, analysedKey: null, now: 0, tasks: [] },
 
         _pending: {},
         _timer: null,
@@ -78,6 +78,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                 'buy_now_price_cents', 'dutch_start_cents', 'dutch_floor_cents',
                 'dutch_step_cents', 'dutch_interval_s', 'duration_days',
                 'ownership_declared', 'warranty', 'warranty_until', 'documents_authentic',
+                'intake', 'scope',
             ];
 
             metaFields.includes(field)
@@ -440,7 +441,8 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             recognition.continuous = true;
             recognition.interimResults = false;
 
-            const base = (this.draft?.[field] ?? '').trim();
+            // De eigen woorden van stap 1 wonen in meta, de omschrijving op het concept.
+            const base = ((field === 'intake' ? this.meta.intake : this.draft?.[field]) ?? '').trim();
             recognition.onresult = (event) => {
                 const spoken = Array.from(event.results).filter((r) => r.isFinal).map((r) => r[0].transcript.trim()).join(' ');
                 this.set(field, (base ? base + ' ' : '') + spoken);
@@ -611,6 +613,10 @@ export default function funnel(initial, feePercentage, schemas = {}) {
          * invulde. Elke geslaagde run stuurt de verse conceptstand mee en
          * die overschrijft de lokale staat, net als bij autosave.
          *
+         * De taken staan vanaf de start als lijst op het scherm: wat nog moet
+         * komen is grijs, wat loopt zegt wat Ivy op dat moment doet, wat klaar
+         * is toont het resultaat. Zo ziet de verkoper wat er gebeurt.
+         *
          * Faalt of skipt er iets (noodrem, budget), dan stopt de reeks en
          * vult de verkoper zelf in - Ivy is nooit een blokkade (hfst. 8).
          */
@@ -621,44 +627,92 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             await this.flush();
             await this.ensureDraft();
 
+            if (! this.draft) return;
+
             // Onthoud de vorige schatting: wordt de range smaller doordat er
             // meer is aangeleverd, dan vieren we dat expliciet.
             const previousSpread = this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
                 ? this.draft.value_max_cents - this.draft.value_min_cents
                 : null;
 
-            this.ivy = { running: true, current: null, notes: [], sharpened: false };
-
-            const tasks = ['recognise_lot', 'draft_listing', 'estimate_value'];
+            const names = ['recognise_lot', 'draft_listing', 'estimate_value'];
 
             // Documentcontrole alleen als er iets te controleren valt.
-            if ((this.draft?.documents ?? []).length > 0) tasks.push('check_documents');
+            if ((this.draft?.documents ?? []).length > 0) names.push('check_documents');
 
-            for (const task of tasks) {
-                this.ivy.current = task;
+            this.ivy = {
+                running: true,
+                sharpened: false,
+                note: null,
+                analysedKey: this.ivyInputKey,
+                now: Date.now(),
+                tasks: names.map((task) => ({ task, status: 'waiting', run: null, started: null })),
+            };
 
-                const started = await this.request('/api/ivy/tasks', 'POST', {
-                    task,
-                    lot_id: this.draft.id,
-                });
+            // Een klok voor de wisselende zin bij de taak die loopt.
+            const clock = setInterval(() => (this.ivy.now = Date.now()), 1000);
 
-                if (! started) break;
+            for (const item of this.ivy.tasks) {
+                item.status = 'busy';
+                item.started = Date.now();
 
-                const run = await this.awaitRun(started.run);
-                this.ivy.notes.push(run);
+                const started = await this.request('/api/ivy/tasks', 'POST', { task: item.task, lot_id: this.draft.id });
 
-                // Noodrem of budget: de volgende taken gaan hetzelfde zeggen.
-                if (run.status === 'skipped') break;
+                const run = started ? await this.awaitRun(started.run) : { status: 'failed' };
+                item.run = run;
+                item.status = { completed: 'done', skipped: 'skipped' }[run.status] ?? 'failed';
+
+                if (item.task === 'recognise_lot' && run.output?.seller_note) {
+                    this.ivy.note = run.output.seller_note;
+                }
+
+                // Noodrem, budget of geen verbinding: de volgende taken gaan
+                // hetzelfde zeggen.
+                if (! started || run.status === 'skipped') break;
             }
 
+            // Wat niet meer aan de beurt kwam, staat als overgeslagen.
+            this.ivy.tasks.filter((item) => item.status === 'waiting').forEach((item) => (item.status = 'skipped'));
+
+            clearInterval(clock);
             this.ivy.running = false;
-            this.ivy.current = null;
 
             const spread = this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
                 ? this.draft.value_max_cents - this.draft.value_min_cents
                 : null;
 
             this.ivy.sharpened = previousSpread !== null && spread !== null && spread < previousSpread;
+        },
+
+        /**
+         * Bij het openen van stap 3 begint Ivy vanzelf, als er iets te zien is
+         * en ze dit nog niet bekeken heeft. Een tweede bezoek met dezelfde
+         * foto's en woorden start niets.
+         */
+        autoAnalyse() {
+            if (this.ivy.running || (this.ivy.tasks.length && ! this.ivyStale)) return;
+
+            if (! (this.draft?.media?.length || (this.meta.intake ?? '').trim())) return;
+
+            this.analyse();
+        },
+
+        /** Wat Ivy bekijkt: de foto's en de eigen woorden. Verandert dit, dan is de analyse verouderd. */
+        get ivyInputKey() {
+            return (this.draft?.media ?? []).map((item) => item.id).join(',') + '|' + (this.meta.intake ?? '').trim();
+        },
+
+        get ivyStale() {
+            return ! this.ivy.running && this.ivy.analysedKey !== null && this.ivy.analysedKey !== this.ivyInputKey;
+        },
+
+        get ivyDone() {
+            return this.ivy.tasks.some((item) => item.status === 'done');
+        },
+
+        /** Is deze taak nog niet klaar terwijl de analyse loopt? Dan krijgt het veld een skelet. */
+        ivyPending(task) {
+            return this.ivy.running && this.ivy.tasks.some((item) => item.task === task && ['waiting', 'busy'].includes(item.status));
         },
 
         /** Pollen tot de run klaar is; de taken zelf draaien op de queue. */
@@ -695,19 +749,56 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             }[task] ?? task;
         },
 
-        ivyNote(run) {
-            if (run.status === 'completed') {
-                // De documentcontrole heeft een eigen samenvatting (Lex).
-                if (run.task === 'check_documents' && run.output?.summary) {
-                    return run.output.summary;
-                }
+        ivyAgent(task) {
+            return { draft_listing: 'nova', estimate_value: 'atlas', check_documents: 'lex' }[task] ?? 'ivy';
+        },
 
-                return run.confidence_hint ?? 'klaar.';
+        /**
+         * Wat de taak op dit moment doet, in een zin die om de paar seconden
+         * wisselt. Het zijn de stappen die de taak echt zet; het model meldt
+         * zelf geen tussenstand.
+         */
+        ivyActivity(item) {
+            const photos = this.draft?.media?.length ?? 0;
+            const phrases = {
+                recognise_lot: [
+                    photos > 1 ? `${photos} foto's bekijken` : (photos === 1 ? 'De foto bekijken' : 'Je woorden lezen'),
+                    'Zoeken naar merk, model en typeplaat',
+                    'De staat beoordelen',
+                    'Kenmerken noteren',
+                ],
+                draft_listing: ['Een titel kiezen', 'De omschrijving schrijven', 'Gebreken eerlijk benoemen'],
+                estimate_value: ['Vergelijkbare verkopen zoeken', 'Prijzen naast elkaar leggen', 'De bandbreedte bepalen'],
+                check_documents: ['De documenten lezen', 'Gegevens vergelijken met de kavel'],
+            }[item.task] ?? ['Bezig'];
+
+            const seconds = Math.max(0, Math.floor((this.ivy.now - (item.started ?? this.ivy.now)) / 1000));
+
+            return { text: phrases[Math.floor(seconds / 3) % phrases.length], seconds };
+        },
+
+        /** Het resultaat van een afgeronde taak, in één regel. */
+        ivyResult(item, conditions) {
+            const output = item.run?.output ?? {};
+
+            if (item.status === 'skipped') return item.run?.error ?? 'Overgeslagen.';
+            if (item.status === 'failed') return 'Niet gelukt. Vul dit zelf in bij de volgende stap.';
+
+            switch (item.task) {
+                case 'recognise_lot':
+                    return [output.object_type, [output.brand, output.model].filter(Boolean).join(' '), conditions[output.condition]]
+                        .filter(Boolean).join(' · ');
+                case 'draft_listing':
+                    return this.draft?.title ? `"${this.draft.title}"` : 'Tekst geschreven.';
+                case 'estimate_value':
+                    return this.draft?.value_min_cents != null
+                        ? this.money(this.draft.value_min_cents) + ' tot ' + this.money(this.draft.value_max_cents)
+                        : 'Te weinig vergelijkbare verkopen.';
+                case 'check_documents':
+                    return output.summary ?? 'Gecontroleerd.';
+                default:
+                    return 'Klaar.';
             }
-
-            if (run.status === 'skipped') return run.error ?? 'overgeslagen.';
-
-            return 'niet gelukt - vul dit zelf in bij de volgende stap.';
         },
 
         // Publiceren ---------------------------------------------------------

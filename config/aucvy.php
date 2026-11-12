@@ -309,7 +309,7 @@ return [
          | een prompt, verhoog dit nummer - anders serveert de cache antwoorden
          | van de oude prompt (hfst. 8).
          */
-        'prompt_version' => 2,
+        'prompt_version' => 3,
 
         /*
          | Onder deze zekerheid moet de verkoper een door Ivy ingevuld veld

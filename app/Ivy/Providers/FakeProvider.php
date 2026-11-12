@@ -74,7 +74,8 @@ final class FakeProvider implements LlmProvider
      */
     private function recognise(array $input, int $seed): array
     {
-        $description = mb_strtolower((string) ($input['description'] ?? ''));
+        // De eigen woorden uit stap 1 en een omschrijving die er al staat.
+        $description = mb_strtolower(trim(((string) ($input['intake'] ?? '')).' '.((string) ($input['description'] ?? ''))));
         $photos = (int) ($input['photo_count'] ?? 0);
 
         $objectType = match (true) {
@@ -125,7 +126,7 @@ final class FakeProvider implements LlmProvider
     {
         $objectType = (string) ($input['object_type'] ?: 'Bedrijfsmiddel');
         $brand = $input['brand'] ?? null;
-        $description = trim((string) ($input['description'] ?? ''));
+        $description = trim((string) ($input['intake'] ?? $input['description'] ?? ''));
 
         $title = trim($objectType.($brand !== null ? ' van '.$brand : ''));
 

@@ -118,6 +118,20 @@ final class Provenance
         self::store($lot, $sources);
     }
 
+    /**
+     * Ivy heeft deze velden weer leeggemaakt: er hoort geen herkomst meer bij.
+     *
+     * @param  list<string>  $fields
+     */
+    public static function forget(Lot $lot, array $fields): void
+    {
+        if ($fields === []) {
+            return;
+        }
+
+        self::store($lot, array_diff_key($lot->field_sources ?? [], array_flip($fields)));
+    }
+
     public static function isHuman(Lot $lot, string $field): bool
     {
         return ($lot->field_sources[$field]['source'] ?? null) === self::SELLER;
