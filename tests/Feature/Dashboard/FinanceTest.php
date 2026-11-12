@@ -29,6 +29,18 @@ it('toont de afrekening per verkoop met totalen en per maand', function () {
         ->assertDontSee('€ 9.999,99');
 });
 
+it('zet afrekeningen, facturen en maanden als tabs in één kaart, met de acties als pictogram', function () {
+    $seller = User::factory()->verified()->create();
+    $order = Order::factory()->create(['seller_id' => $seller->id, 'status' => OrderStatus::AwaitingPayment, 'hammer_cents' => 100_000]);
+    app(TransitionOrder::class)->handle($order, OrderStatus::Paid);
+
+    $this->actingAs($seller)->get(route('dashboard.finance'))
+        ->assertOk()
+        ->assertSeeInOrder(['Je boekhouding', 'id="fin-tab-afrekeningen"', 'id="fin-tab-maanden"', 'class="d-lottable-head"', 'Hamerbedrag', $order->order_number, 'data-tip="Bekijk bestelling"', 'Totaal', 'id="fin-maanden"', 'Je succesfee', 'De staffel'], false)
+        // De losse uitleg en de lange lijsten zijn weg: die staan achter het vraagteken en de tabs.
+        ->assertDontSee('Betalen kopers ook kosten?');
+});
+
 it('levert een csv met puntkomma\'s en Nederlandse bedragen', function () {
     $seller = User::factory()->verified()->create();
     $order = Order::factory()->create(['seller_id' => $seller->id, 'status' => OrderStatus::AwaitingPayment, 'hammer_cents' => 123_456]);

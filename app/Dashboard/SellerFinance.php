@@ -28,7 +28,7 @@ final class SellerFinance
         return Order::query()
             ->whereIn('seller_id', $seller->financeSellerIds())
             ->whereNotIn('status', [OrderStatus::AwaitingPayment, OrderStatus::Cancelled])
-            ->with(['lot:id,title,public_id', 'payout'])
+            ->with(['lot:id,title,public_id', 'lot.media', 'payout'])
             ->latest('id')
             ->get()
             ->map(function (Order $order) use ($seller): array {
