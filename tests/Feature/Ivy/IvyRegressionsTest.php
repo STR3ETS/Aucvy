@@ -264,20 +264,27 @@ describe('herkenning', function () {
 });
 
 describe('de advertentie', function () {
-    it('vervangt een titel die Nova eerder schreef, maar niet een titel uit een import', function () {
+    it('vervangt elke titel behalve die van de verkoper, ook een zonder herkomst', function () {
         $written = Lot::factory()->anonymousDraft()->create([
             'title' => 'Gaming desktop van Antec',
             'field_sources' => ['title' => ['source' => 'ivy', 'confidence' => 0.6, 'needs_confirmation' => true, 'confirmed_at' => null, 'run_id' => null]],
         ]);
-        $imported = Lot::factory()->anonymousDraft()->create(['title' => 'Magazijnstellingen 60 meter', 'field_sources' => null]);
+        $unknown = Lot::factory()->anonymousDraft()->create(['title' => 'Magazijnstellingen 60 meter', 'field_sources' => null]);
+        // Een import zet zijn titel als bron seller (LotImporter): die blijft.
+        $imported = Lot::factory()->anonymousDraft()->create([
+            'title' => 'Heftruck Linde H25',
+            'field_sources' => ['title' => ['source' => 'seller', 'confidence' => 1.0, 'needs_confirmation' => false, 'confirmed_at' => null, 'run_id' => null, 'via' => 'import']],
+        ]);
 
         regressionProvider(json_encode(['title' => 'Partij kantoorelektronica', 'description' => 'Een monitor en vier speakers.', 'confidence' => 0.7]));
 
         regressionRun($written, 'draft_listing');
+        regressionRun($unknown, 'draft_listing');
         regressionRun($imported, 'draft_listing');
 
         expect($written->fresh()->title)->toBe('Partij kantoorelektronica')
-            ->and($imported->fresh()->title)->toBe('Magazijnstellingen 60 meter');
+            ->and($unknown->fresh()->title)->toBe('Partij kantoorelektronica')
+            ->and($imported->fresh()->title)->toBe('Heftruck Linde H25');
     });
 
     it('bewaart de eigen woorden van stap 1 apart, zodat Nova de omschrijving mag schrijven', function () {

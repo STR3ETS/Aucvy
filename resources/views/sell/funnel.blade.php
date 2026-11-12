@@ -342,84 +342,72 @@
                                             <x-dashboard.help text="Ivy herkent het object, Nova schrijft de advertentie en Atlas schat de waarde uit vergelijkbare verkopen. Een range, geen belofte. Wat jij straks aanpast, wint altijd." />
                                         </div>
                                         <button type="button" class="d-iconbtn" data-tip="Opnieuw laten kijken" aria-label="Opnieuw laten kijken"
-                                                x-show="ivy.tasks.length && ! ivy.running && ! ivy.proposal" x-cloak @click="analyse()">
+                                                x-show="ivy.products.length && ! ivy.running && ! ivy.proposal" x-cloak @click="analyse()">
                                             <x-v4.icon name="refresh" :size="17" stroke="2" />
                                         </button>
                                     </div>
 
-                                    {{-- De kavel zoals hij er nu voor staat; wat nog uitgezocht wordt is een skelet. --}}
-                                    <article class="fn-lotline">
-                                        <span class="thumb" aria-hidden="true">
-                                            <template x-if="draft?.media?.length"><img :src="draft.media[0].url" alt=""></template>
-                                            <template x-if="! draft?.media?.length"><x-v4.icon name="image" :size="22" stroke="1.6" /></template>
-                                        </span>
-                                        <div class="text">
-                                            <span class="sk fn-sk-title" x-show="ivyPending('draft_listing')" x-cloak></span>
-                                            <strong x-show="! ivyPending('draft_listing')" x-text="draft?.title || 'Nog zonder titel'">Nog zonder titel</strong>
-                                            <span class="sk fn-sk-line" x-show="ivyPending('recognise_lot')" x-cloak></span>
-                                            <span class="d-muted" x-show="! ivyPending('recognise_lot')"
-                                                  x-text="[draft?.specifications?.objecttype?.value, draft?.brand, draft?.model].filter(Boolean).join(' · ') || ({{ Js::from($categoryNames) }})[draft?.category_id] || 'Nog niet herkend'"></span>
-                                        </div>
-                                        <div class="amount">
-                                            <span class="sk fn-sk-amount" x-show="ivyPending('estimate_value')" x-cloak></span>
-                                            <b class="tabular" x-show="! ivyPending('estimate_value')" x-text="draft?.value_min_cents != null ? money(draft.value_min_cents) + ' – ' + money(draft.value_max_cents) : 'Nog geen indicatie'"></b>
-                                            <span>Waarde-indicatie van Atlas</span>
-                                        </div>
-                                    </article>
-
                                     {{-- Niets om naar te kijken: eerst foto's of een zin. --}}
-                                    <div class="fn-note" x-show="! ivy.tasks.length && ! ivy.running && ! (draft?.media?.length || (meta.intake ?? '').trim())" x-cloak>
+                                    <div class="fn-note" x-show="! ivy.products.length && ! ivy.running && ! (draft?.media?.length || (meta.intake ?? '').trim())" x-cloak>
                                         <span><strong>Ivy heeft nog niets om naar te kijken.</strong> Voeg foto's toe of vertel in stap 1 wat het is.</span>
                                     </div>
-                                    <div class="d-chips" x-show="! ivy.tasks.length && ! ivy.running" x-cloak>
+                                    <div class="d-chips" x-show="! ivy.products.length && ! ivy.running" x-cloak>
                                         <button type="button" class="d-btn d-btn-secondary d-btn-sm d-btn-sq" x-show="! draft?.media?.length" @click="step = 1">Foto's toevoegen</button>
                                         <button type="button" class="d-btn d-btn-secondary d-btn-sm d-btn-sq" x-show="draft?.media?.length || (meta.intake ?? '').trim()" @click="analyse()">Laat Ivy kijken</button>
                                     </div>
 
-                                    {{-- De taken op een rij: wat nog komt, wat Ivy nu doet en wat eruit kwam. Elk met het zekerheidslabel, nooit een kale modelbelofte (hfst. 8). --}}
+                                    {{-- Wat voor het hele concept geldt: de foto's per product verdelen. --}}
                                     <ol class="fn-ivytasks" x-show="ivy.tasks.length" x-cloak aria-live="polite">
                                         <template x-for="item in ivy.tasks" :key="item.task">
-                                            <li :class="['is-' + item.status, item.task === 'group_photos' && ivy.proposal && 'is-asking']">
-                                                <img :src="'/images/agents/' + ivyAgent(item.task) + '.jpg'" alt="" loading="lazy">
-                                                <div class="body">
-                                                    <strong x-text="ivyLabel(item.task)"></strong>
-                                                    <span class="now" x-show="item.status === 'busy'">
-                                                        <span x-text="ivyActivity(item).text + '…'"></span>
-                                                        <span class="secs tabular" x-text="ivyActivity(item).seconds + ' s'"></span>
-                                                    </span>
-                                                    <span class="sk fn-sk-line" x-show="item.status === 'waiting' && ivy.running"></span>
-                                                    <span class="result d-muted" x-show="item.status === 'waiting' && ! ivy.running">Wacht op je keuze</span>
-                                                    <span class="result" x-show="['done', 'failed', 'skipped'].includes(item.status)" x-text="ivyResult(item, {{ Js::from($conditionLabels) }})"></span>
-                                                    <span class="hint" x-show="item.status === 'done' && item.run?.confidence_hint && item.task !== 'group_photos'" x-text="item.run?.confidence_hint"></span>
-
-                                                    {{-- Foto's van verschillende producten: Ivy stelt hier, in haar eigen stap, voor om er losse kavels van te maken. De verkoper kiest. --}}
-                                                    <div class="fn-split" x-show="item.task === 'group_photos' && ivy.proposal" x-cloak>
-                                                        <ul class="fn-split-groups">
-                                                            <template x-for="(group, index) in ivy.proposal ?? []" :key="index">
-                                                                <li>
-                                                                    <span class="thumbs">
-                                                                        <template x-for="photo in groupPhotos(group).slice(0, 3)" :key="photo.id"><img :src="photo.url" alt=""></template>
-                                                                    </span>
-                                                                    <strong x-text="group.label"></strong>
-                                                                    <span class="d-muted" x-text="group.media.length === 1 ? '1 foto' : group.media.length + ' foto\'s'"></span>
-                                                                </li>
-                                                            </template>
-                                                        </ul>
-                                                        <p class="fn-split-lead">Maak van elk product een eigen kavel, met een eigen advertentie en waarde-indicatie. Bundelen tot één veiling doe je daarna bij Veilingen.</p>
-                                                        <div class="d-chips">
-                                                            <button type="button" class="d-btn d-btn-sq" @click="split()" x-text="'Maak er ' + (ivy.proposal?.length ?? 0) + ' kavels van'">Maak er losse kavels van</button>
-                                                            <button type="button" class="d-btn d-btn-secondary d-btn-sq" @click="keepTogether()">Houd het één kavel</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <span class="state" aria-hidden="true">
-                                                    <span class="spin" x-show="item.status === 'busy'"></span>
-                                                    <span x-show="item.status === 'done'"><x-v4.icon name="check" :size="14" stroke="3" /></span>
-                                                    <span x-show="item.status === 'failed'">!</span>
-                                                </span>
-                                            </li>
+                                            @include('sell.partials.ivy-task', ['conditionLabels' => $conditionLabels])
                                         </template>
                                     </ol>
+
+                                    {{--
+                                        Dan het rijtje af, product voor product. Wat aan de beurt is klapt
+                                        open en doorloopt zijn stappen; daarna klapt het dicht en gaat het
+                                        volgende open. De kop is de kavel zoals hij er nu voor staat: wat nog
+                                        uitgezocht wordt is een skelet.
+                                    --}}
+                                    <div class="fn-products" x-show="ivy.products.length" x-cloak aria-live="polite">
+                                        <template x-for="(product, index) in ivy.products" :key="product.id">
+                                            <article class="fn-product" :class="['is-' + product.status, product.open && 'is-open']">
+                                                <div class="fn-product-head">
+                                                    <button type="button" class="fn-product-toggle" @click="product.open = ! product.open" :aria-expanded="product.open">
+                                                        <span class="thumb" aria-hidden="true">
+                                                            <template x-if="productView(product).cover"><img :src="productView(product).cover" alt=""></template>
+                                                            <template x-if="! productView(product).cover"><x-v4.icon name="image" :size="20" stroke="1.6" /></template>
+                                                        </span>
+                                                        <span class="text">
+                                                            <span class="sk fn-sk-title" x-show="productPending(product, 'draft_listing')"></span>
+                                                            <strong x-show="! productPending(product, 'draft_listing')" x-text="productView(product).title || 'Nog zonder titel'"></strong>
+                                                            <span class="sk fn-sk-line" x-show="productPending(product, 'recognise_lot')"></span>
+                                                            <span class="d-muted" x-show="! productPending(product, 'recognise_lot')"
+                                                                  x-text="(ivy.products.length > 1 ? 'Kavel ' + (index + 1) + ' van ' + ivy.products.length + (productView(product).subtitle ? ' · ' : '') : '') + (productView(product).subtitle || (ivy.products.length > 1 ? '' : 'Nog niet herkend'))"></span>
+                                                        </span>
+                                                        <span class="amount">
+                                                            <span class="sk fn-sk-amount" x-show="productPending(product, 'estimate_value')"></span>
+                                                            <b class="tabular" x-show="! productPending(product, 'estimate_value')" x-text="productView(product).value_min_cents != null ? money(productView(product).value_min_cents) + ' – ' + money(productView(product).value_max_cents) : 'Nog geen indicatie'"></b>
+                                                            <span>Waarde-indicatie van Atlas</span>
+                                                        </span>
+                                                        <span class="state" aria-hidden="true">
+                                                            <span class="spin" x-show="product.status === 'busy'"></span>
+                                                            <span x-show="product.status === 'done'"><x-v4.icon name="check" :size="14" stroke="3" /></span>
+                                                            <span x-show="product.status === 'failed'">!</span>
+                                                            <span class="chev" x-show="product.status === 'waiting'"><x-v4.icon name="chevron-down" :size="16" stroke="2" /></span>
+                                                        </span>
+                                                    </button>
+                                                    {{-- Een ander kavel uit de inventaris: openen om de tekst na te kijken en een prijs te kiezen. --}}
+                                                    <a class="d-iconbtn" x-show="! product.own" :href="@js(route('sell')) + '?concept=' + product.id" data-tip="Openen" aria-label="Kavel openen"><x-v4.icon name="pencil" :size="17" stroke="2" /></a>
+                                                </div>
+                                                <ol class="fn-ivytasks" x-show="product.open && product.tasks.length">
+                                                    <template x-for="item in product.tasks" :key="item.task">
+                                                        @include('sell.partials.ivy-task', ['product' => 'product', 'conditionLabels' => $conditionLabels])
+                                                    </template>
+                                                </ol>
+                                            </article>
+                                        </template>
+                                    </div>
 
                                     {{-- Ivy ziet dat de woorden en de foto's niet bij elkaar passen: dat hoort de verkoper, niet de koper. --}}
                                     <p class="fn-note is-warn" x-show="ivy.note && ! ivy.running" x-cloak>
@@ -449,30 +437,6 @@
                                     </p>
                                 </div>
                             @endif
-
-                            {{-- De andere kavels uit dezelfde inventaris: elk met een eigen advertentie, te openen om na te kijken. --}}
-                            <div class="fn-block d-stack" x-show="siblingRows.length" x-cloak>
-                                <div class="d-titleline">
-                                    <h2 class="d-h2">De andere kavels</h2>
-                                    <span class="d-count tabular" x-text="siblingRows.length"></span>
-                                    <x-dashboard.help text="Uit dezelfde foto's gesplitst, elk een eigen concept. Open een kavel om de tekst na te kijken en een prijs te kiezen. Bundelen tot één veiling met één sluitschema doe je bij Veilingen." />
-                                </div>
-                                <ul class="fn-siblings">
-                                    <template x-for="sibling in siblingRows" :key="sibling.id">
-                                        <li class="fn-lotline is-small">
-                                            <span class="thumb" aria-hidden="true">
-                                                <template x-if="sibling.cover"><img :src="sibling.cover" alt=""></template>
-                                            </span>
-                                            <div class="text">
-                                                <span class="sk fn-sk-title" x-show="['waiting', 'busy'].includes(sibling.status) && ! sibling.title"></span>
-                                                <strong x-show="! (['waiting', 'busy'].includes(sibling.status) && ! sibling.title)" x-text="sibling.title || 'Nog zonder titel'"></strong>
-                                                <span class="d-muted" x-text="sibling.status === 'busy' ? ivyLabel(sibling.task) + '…' : (sibling.status === 'waiting' ? 'Wacht op Ivy' : (sibling.status === 'failed' ? 'Ivy kwam er niet uit; vul het zelf in' : (sibling.value_min_cents != null ? money(sibling.value_min_cents) + ' – ' + money(sibling.value_max_cents) : 'Nog geen waarde-indicatie')))"></span>
-                                            </div>
-                                            <a class="d-iconbtn" :href="@js(route('sell')) + '?concept=' + sibling.id" data-tip="Openen" aria-label="Kavel openen"><x-v4.icon name="pencil" :size="17" stroke="2" /></a>
-                                        </li>
-                                    </template>
-                                </ul>
-                            </div>
                         </section>
 
                         {{-- 4 · Advertentie ----------------------------------------- --}}

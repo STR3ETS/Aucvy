@@ -92,7 +92,7 @@ final class SplitDraft
     /**
      * De andere concepten uit dezelfde splitsing, van dezelfde eigenaar.
      *
-     * @return list<array{id: int, public_id: string, title: ?string, cover: ?string, value_min_cents: ?int, value_max_cents: ?int}>
+     * @return list<array{id: int, public_id: string, title: ?string, cover: ?string, photos: int, value_min_cents: ?int, value_max_cents: ?int}>
      */
     public static function siblingsOf(Lot $lot): array
     {
@@ -120,6 +120,7 @@ final class SplitDraft
                 'public_id' => $sibling->public_id,
                 'title' => $sibling->title,
                 'cover' => $sibling->media->first()?->path,
+                'photos' => $sibling->media->count(),
                 'value_min_cents' => $sibling->value_min_cents,
                 'value_max_cents' => $sibling->value_max_cents,
             ])

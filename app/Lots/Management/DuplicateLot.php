@@ -51,8 +51,12 @@ final class DuplicateLot
                 'draft_token' => Str::random(48),
                 'draft_meta' => $this->saleSettings($source),
                 // Wat al bevestigd en gepubliceerd was, hoeft niet opnieuw.
+                // Een gepubliceerde titel en tekst heeft de verkoper goedgekeurd: die zijn van hem.
                 'field_sources' => collect($source->field_sources ?? [])
                     ->map(fn (array $info): array => [...$info, 'needs_confirmation' => false])
+                    ->merge(collect(['title', 'description'])
+                        ->filter(fn (string $field): bool => $source->{$field} !== null)
+                        ->mapWithKeys(fn (string $field): array => [$field => ['source' => 'seller', 'confidence' => 1.0, 'needs_confirmation' => false, 'confirmed_at' => now()->toIso8601String(), 'run_id' => null, 'via' => 'duplicate']]))
                     ->all() ?: null,
             ]);
 

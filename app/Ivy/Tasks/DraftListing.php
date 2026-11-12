@@ -108,11 +108,10 @@ final class DraftListing extends LotTask
         // zou dat de bewerkte tekst zijn en de vergelijking altijd slagen.
         $untouched = $lot->description === ($run->input['description'] ?? null);
 
-        // Een lege titel, of een titel die Nova eerder schreef: na nieuwe foto's
-        // hoort er een nieuwe titel bij. Een titel uit een import of kopie
-        // heeft geen herkomst en blijft staan, net als wat de verkoper typte.
-        $ownTitle = in_array($lot->field_sources['title']['source'] ?? null, [Provenance::TEXT, Provenance::PHOTO], true);
-        $writesTitle = (trim((string) $lot->title) === '' || $ownTitle) && ! Provenance::isHuman($lot, 'title');
+        // Alleen wat de verkoper zelf schreef blijft staan; dat geldt ook voor
+        // een import of een kopie (bron seller). Elke andere titel, zoals een
+        // eerdere van Nova bij andere foto's, maakt plaats voor een nieuwe.
+        $writesTitle = ! Provenance::isHuman($lot, 'title');
         $writesDescription = $untouched && ! Provenance::isHuman($lot, 'description');
 
         $lot->update([

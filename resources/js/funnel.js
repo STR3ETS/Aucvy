@@ -39,9 +39,10 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         error: null,
         uploading: false,
 
-        // Ivy (stap 3): de taken lopen na elkaar en staan als lijst op het
-        // scherm, elk met een stand: waiting, busy, done, failed of skipped.
-        ivy: { running: false, sharpened: false, note: null, proposal: null, keepTogether: false, siblings: [], analysedKey: null, now: 0, tasks: [] },
+        // Ivy (stap 3): eerst wat voor het hele concept geldt (tasks), dan
+        // per product dezelfde stappen (products), na elkaar. Elke taak heeft
+        // een stand: waiting, busy, done, failed of skipped.
+        ivy: { running: false, sharpened: false, note: null, proposal: null, keepTogether: false, analysedKey: null, now: 0, tasks: [], products: [] },
 
         _pending: {},
         _timer: null,
@@ -629,20 +630,12 @@ export default function funnel(initial, feePercentage, schemas = {}) {
 
             if (! this.draft) return;
 
-            const names = ['recognise_lot', 'draft_listing', 'estimate_value'];
-
-            // Documentcontrole alleen als er iets te controleren valt.
-            if ((this.draft?.documents ?? []).length > 0) names.push('check_documents');
-
             // Meerdere producten: eerst de foto's per product bij elkaar
             // zetten, zolang het concept nog niet gesplitst is en de verkoper
             // niet zei dat het één kavel blijft.
             const keepTogether = this.ivy.keepTogether ?? false;
-
-            if (['multiple', 'inventory'].includes(this.meta.scope) && (this.draft?.media?.length ?? 0) >= 2
-                && ! (this.draft?.siblings?.length) && ! keepTogether) {
-                names.unshift('group_photos');
-            }
+            const grouping = ['multiple', 'inventory'].includes(this.meta.scope) && (this.draft?.media?.length ?? 0) >= 2
+                && ! (this.draft?.siblings?.length) && ! keepTogether;
 
             this.ivy = {
                 running: false,
@@ -650,7 +643,6 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                 note: null,
                 proposal: null,
                 keepTogether,
-                siblings: [],
                 analysedKey: this.ivyInputKey,
                 now: Date.now(),
                 // Onthoud de vorige schatting: wordt de range smaller doordat
@@ -658,39 +650,57 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                 previousSpread: this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
                     ? this.draft.value_max_cents - this.draft.value_min_cents
                     : null,
-                tasks: names.map((task) => ({ task, status: 'waiting', run: null, started: null })),
+                // Wat voor het hele concept geldt (de foto's verdelen), daarna per product.
+                tasks: grouping ? [this.ivyTask('group_photos')] : [],
+                products: this.buildProducts(),
             };
 
             await this.runTasks();
         },
 
+        ivyTask(task) {
+            return { task, status: 'waiting', run: null, started: null };
+        },
+
         /**
-         * De taken die nog wachten, na elkaar. Stelt Ivy voor om de foto's
-         * over meerdere kavels te verdelen, dan stopt de reeks tot de
-         * verkoper kiest (split of keepTogether).
+         * De producten in deze analyse: dit concept eerst, dan de kavels die
+         * eruit gesplitst zijn. Elk krijgt dezelfde taken; een ander kavel
+         * dat al een titel en een waarde heeft, doet Ivy niet nog eens.
+         */
+        buildProducts() {
+            const tasks = (documents) => [
+                'recognise_lot', 'draft_listing', 'estimate_value',
+                ...(documents ? ['check_documents'] : []),
+            ].map((task) => this.ivyTask(task));
+
+            const own = { id: this.draft.id, own: true, open: true, status: 'waiting', tasks: tasks((this.draft.documents ?? []).length > 0) };
+
+            const others = (this.draft.siblings ?? []).map((sibling) => {
+                const finished = sibling.title && sibling.value_min_cents != null;
+
+                return { ...sibling, own: false, open: false, status: finished ? 'done' : 'waiting', tasks: finished ? [] : tasks(false) };
+            });
+
+            return [own, ...others];
+        },
+
+        /**
+         * Het rijtje af: eerst wat voor het hele concept geldt, dan elk
+         * product na elkaar. Het product dat aan de beurt is klapt open en
+         * doorloopt zijn stappen; daarna klapt het dicht en gaat het
+         * volgende open. Stelt Ivy voor om de foto's te verdelen, dan wacht
+         * de reeks op de keuze van de verkoper (split of keepTogether).
          */
         async runTasks() {
             this.ivy.running = true;
 
             // Een klok voor de wisselende zin bij de taak die loopt.
             const clock = setInterval(() => (this.ivy.now = Date.now()), 1000);
+            let halted = false;
 
             try {
-                for (const item of this.ivy.tasks) {
-                    if (item.status !== 'waiting') continue;
-
-                    item.status = 'busy';
-                    item.started = Date.now();
-
-                    const started = await this.request('/api/ivy/tasks', 'POST', { task: item.task, lot_id: this.draft.id });
-
-                    const run = started ? await this.awaitRun(started.run) : { status: 'failed' };
-                    item.run = run;
-                    item.status = { completed: 'done', skipped: 'skipped' }[run.status] ?? 'failed';
-
-                    if (item.task === 'recognise_lot' && run.output?.seller_note) {
-                        this.ivy.note = run.output.seller_note;
-                    }
+                for (const item of this.ivy.tasks.filter((task) => task.status === 'waiting')) {
+                    const run = await this.runOne(item, this.draft.id, (response) => this.apply(response));
 
                     if (item.task === 'group_photos' && run.status === 'completed' && (run.groups?.length ?? 0) > 1) {
                         this.ivy.proposal = run.groups;
@@ -698,25 +708,103 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                         return;
                     }
 
-                    // Noodrem, budget of geen verbinding: de volgende taken
-                    // gaan hetzelfde zeggen.
-                    if (! started || run.status === 'skipped') break;
+                    if (run.status === 'skipped' || run.halted) halted = true;
+                }
+
+                for (const product of this.ivy.products) {
+                    if (halted || product.status === 'done') continue;
+
+                    this.ivy.products.forEach((other) => (other.open = other === product));
+                    product.status = 'busy';
+
+                    for (const item of product.tasks.filter((task) => task.status === 'waiting')) {
+                        const run = await this.runOne(item, product.id, product.own
+                            ? (response) => this.apply(response)
+                            : (response) => Object.assign(product, this.productFacts(response.draft)));
+
+                        if (product.own && item.task === 'recognise_lot' && run.output?.seller_note) {
+                            this.ivy.note = run.output.seller_note;
+                        }
+
+                        // Noodrem, budget of geen verbinding: de rest gaat hetzelfde zeggen.
+                        if (run.status === 'skipped' || run.halted) {
+                            halted = true;
+                            break;
+                        }
+                    }
+
+                    product.status = product.tasks.some((task) => task.status === 'failed') ? 'failed' : 'done';
                 }
 
                 // Wat niet meer aan de beurt kwam, staat als overgeslagen.
-                this.ivy.tasks.filter((item) => item.status === 'waiting').forEach((item) => (item.status = 'skipped'));
+                [...this.ivy.tasks, ...this.ivy.products.flatMap((product) => product.tasks)]
+                    .filter((item) => item.status === 'waiting')
+                    .forEach((item) => (item.status = 'skipped'));
+
+                // Klaar: alles dicht, zodat je de rij in één oogopslag ziet. Eén product blijft open.
+                if (this.ivy.products.length > 1) this.ivy.products.forEach((product) => (product.open = false));
 
                 const spread = this.draft?.value_min_cents != null && this.draft?.value_max_cents != null
                     ? this.draft.value_max_cents - this.draft.value_min_cents
                     : null;
 
                 this.ivy.sharpened = this.ivy.previousSpread != null && spread !== null && spread < this.ivy.previousSpread;
-
-                if (this.draft?.siblings?.length) await this.analyseSiblings();
             } finally {
                 clearInterval(clock);
                 this.ivy.running = false;
             }
+        },
+
+        /** Eén taak voor één kavel: starten, wachten, de stand bijwerken. */
+        async runOne(item, lotId, onDraft) {
+            item.status = 'busy';
+            item.started = Date.now();
+
+            const started = await this.request('/api/ivy/tasks', 'POST', { task: item.task, lot_id: lotId });
+            const run = started ? await this.awaitRun(started.run, onDraft) : { status: 'failed', halted: true };
+
+            item.run = run;
+            item.status = { completed: 'done', skipped: 'skipped' }[run.status] ?? 'failed';
+
+            return run;
+        },
+
+        /** Wat de kop van een ander kavel toont, uit de verse conceptstand van de server. */
+        productFacts(draft) {
+            return {
+                title: draft.title,
+                subtitle: [draft.specifications?.objecttype?.value, draft.brand, draft.model].filter(Boolean).join(' · '),
+                value_min_cents: draft.value_min_cents,
+                value_max_cents: draft.value_max_cents,
+            };
+        },
+
+        /** De kop van een product: voor dit concept live uit het concept, voor de andere uit hun stand. */
+        productView(product) {
+            if (! product.own) {
+                return {
+                    title: product.title,
+                    subtitle: product.subtitle ?? '',
+                    cover: product.cover,
+                    photos: product.photos ?? 0,
+                    value_min_cents: product.value_min_cents,
+                    value_max_cents: product.value_max_cents,
+                };
+            }
+
+            return {
+                title: this.draft?.title,
+                subtitle: [this.draft?.specifications?.objecttype?.value, this.draft?.brand, this.draft?.model].filter(Boolean).join(' · '),
+                cover: this.draft?.media?.[0]?.url,
+                photos: this.draft?.media?.length ?? 0,
+                value_min_cents: this.draft?.value_min_cents,
+                value_max_cents: this.draft?.value_max_cents,
+            };
+        },
+
+        /** Is deze taak van dit product nog niet klaar terwijl Ivy loopt? Dan krijgt dat deel van de kop een skelet. */
+        productPending(product, task) {
+            return this.ivy.running && product.tasks.some((item) => item.task === task && ['waiting', 'busy'].includes(item.status));
         },
 
         /** De verkoper neemt het voorstel over: elk product een eigen kavel. */
@@ -731,6 +819,8 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             this.ivy.proposal = null;
             // De foto's zijn verdeeld, niet veranderd: de analyse is niet verouderd.
             this.ivy.analysedKey = this.ivyInputKey;
+            // Nu er meer kavels zijn, gaat Ivy ze een voor een af.
+            this.ivy.products = this.buildProducts();
 
             await this.runTasks();
         },
@@ -749,64 +839,12 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         },
 
         /**
-         * Elk ander kavel uit de inventaris krijgt dezelfde analyse, drie
-         * tegelijk. Wat al een titel en een waarde heeft, slaat Ivy over.
-         */
-        async analyseSiblings() {
-            this.ivy.siblings = this.draft.siblings.map((sibling) => ({ ...sibling, status: 'waiting', task: null }));
-
-            const queue = this.ivy.siblings.filter((sibling) => {
-                if (sibling.title && sibling.value_min_cents != null) {
-                    sibling.status = 'done';
-
-                    return false;
-                }
-
-                return true;
-            });
-
-            const worker = async () => {
-                for (let sibling = queue.shift(); sibling; sibling = queue.shift()) {
-                    sibling.status = 'busy';
-
-                    for (const task of ['recognise_lot', 'draft_listing', 'estimate_value']) {
-                        sibling.task = task;
-
-                        const started = await this.request('/api/ivy/tasks', 'POST', { task, lot_id: sibling.id });
-                        const run = started
-                            ? await this.awaitRun(started.run, (response) => Object.assign(sibling, {
-                                title: response.draft.title,
-                                value_min_cents: response.draft.value_min_cents,
-                                value_max_cents: response.draft.value_max_cents,
-                            }))
-                            : { status: 'failed' };
-
-                        if (run.status !== 'completed') {
-                            sibling.status = 'failed';
-                            break;
-                        }
-                    }
-
-                    if (sibling.status === 'busy') sibling.status = 'done';
-                    sibling.task = null;
-                }
-            };
-
-            await Promise.all([worker(), worker(), worker()]);
-        },
-
-        /** De andere kavels: tijdens de analyse met hun stand, anders zoals de server ze kent. */
-        get siblingRows() {
-            return this.ivy.siblings?.length ? this.ivy.siblings : (this.draft?.siblings ?? []).map((sibling) => ({ ...sibling, status: 'done' }));
-        },
-
-        /**
          * Bij het openen van stap 3 begint Ivy vanzelf, als er iets te zien is
          * en ze dit nog niet bekeken heeft. Een tweede bezoek met dezelfde
          * foto's en woorden start niets.
          */
         autoAnalyse() {
-            if (this.ivy.running || (this.ivy.tasks.length && ! this.ivyStale)) return;
+            if (this.ivy.running || (this.ivy.products.length && ! this.ivyStale)) return;
 
             if (! (this.draft?.media?.length || (this.meta.intake ?? '').trim())) return;
 
@@ -823,12 +861,7 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         },
 
         get ivyDone() {
-            return this.ivy.tasks.some((item) => item.status === 'done');
-        },
-
-        /** Is deze taak nog niet klaar terwijl de analyse loopt? Dan krijgt het veld een skelet. */
-        ivyPending(task) {
-            return this.ivy.running && this.ivy.tasks.some((item) => item.task === task && ['waiting', 'busy'].includes(item.status));
+            return this.ivy.products.some((product) => product.tasks.some((item) => item.status === 'done'));
         },
 
         /** Pollen tot de run klaar is; de taken zelf draaien op de queue. */
@@ -875,8 +908,8 @@ export default function funnel(initial, feePercentage, schemas = {}) {
          * wisselt. Het zijn de stappen die de taak echt zet; het model meldt
          * zelf geen tussenstand.
          */
-        ivyActivity(item) {
-            const photos = this.draft?.media?.length ?? 0;
+        ivyActivity(item, product = null) {
+            const photos = product ? this.productView(product).photos : (this.draft?.media?.length ?? 0);
             const phrases = {
                 recognise_lot: [
                     photos > 1 ? `${photos} foto's bekijken` : (photos === 1 ? 'De foto bekijken' : 'Je woorden lezen'),
@@ -896,8 +929,9 @@ export default function funnel(initial, feePercentage, schemas = {}) {
         },
 
         /** Het resultaat van een afgeronde taak, in één regel. */
-        ivyResult(item, conditions) {
+        ivyResult(item, conditions, product = null) {
             const output = item.run?.output ?? {};
+            const view = product ? this.productView(product) : null;
 
             if (item.status === 'skipped') return item.run?.error ?? 'Overgeslagen.';
             if (item.status === 'failed') return 'Niet gelukt. Vul dit zelf in bij de volgende stap.';
@@ -907,10 +941,10 @@ export default function funnel(initial, feePercentage, schemas = {}) {
                     return [output.object_type, [output.brand, output.model].filter(Boolean).join(' '), conditions[output.condition]]
                         .filter(Boolean).join(' · ');
                 case 'draft_listing':
-                    return this.draft?.title ? `"${this.draft.title}"` : 'Tekst geschreven.';
+                    return view?.title ? `"${view.title}"` : 'Tekst geschreven.';
                 case 'estimate_value':
-                    return this.draft?.value_min_cents != null
-                        ? this.money(this.draft.value_min_cents) + ' tot ' + this.money(this.draft.value_max_cents)
+                    return view?.value_min_cents != null
+                        ? this.money(view.value_min_cents) + ' tot ' + this.money(view.value_max_cents)
                         : 'Te weinig vergelijkbare verkopen.';
                 case 'check_documents':
                     return output.summary ?? 'Gecontroleerd.';

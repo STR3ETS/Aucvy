@@ -1973,7 +1973,7 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
 .fn-ivytasks>li.is-done .state{background:#2f9e68;color:#fff}
 .fn-ivytasks>li.is-failed .state{background:#fdf3e3;color:#a35a00}
 .fn-ivytasks>li.is-skipped{opacity:.7}
-.fn-ivytasks .spin{width:18px;height:18px;border:2.5px solid #c9d7ff;border-top-color:#2f6bff;border-radius:50%;animation:fn-spin .8s linear infinite}
+.fn-ivytasks .spin,.fn-product-toggle .spin{width:18px;height:18px;border:2.5px solid #c9d7ff;border-top-color:#2f6bff;border-radius:50%;animation:fn-spin .8s linear infinite}
 @keyframes fn-spin{to{transform:rotate(360deg)}}
 .fn-sk-line{display:block;height:12px;width:min(220px,70%);border-radius:6px}
 .fn-sk-title{display:block;height:16px;width:min(280px,85%);border-radius:7px;margin-bottom:4px}
@@ -1998,3 +1998,30 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
 .fn-ivytasks>li.is-asking .state{margin-top:4px}
 .fn-ivytasks .fn-split{gap:12px;margin-top:10px;padding:0;background:transparent}
 .fn-split-lead{margin:0;font-size:13.5px;line-height:1.5;color:#2a3242}
+
+/* Stap 3: het rijtje producten. Wat aan de beurt is klapt open met zijn stappen; de rest is een kop. */
+.fn-products{display:grid;gap:10px}
+.fn-product{border-radius:16px;background:var(--d-inset,#f3f5fa);transition:background .2s,box-shadow .2s}
+.fn-product.is-open{background:#fff;box-shadow:0 0 0 1.5px #c9d7ff}
+.fn-product-head{display:flex;align-items:center;gap:8px;padding-right:12px}
+.fn-product-toggle{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:14px;padding:12px;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.fn-product-toggle:focus-visible{outline:2px solid #2f6bff;outline-offset:-2px;border-radius:16px}
+.fn-product-toggle .thumb{display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:0 0 auto;border-radius:12px;overflow:hidden;background:#e1e6f0;color:#9aa3b5}
+.fn-product-toggle .thumb img{width:100%;height:100%;object-fit:cover}
+.fn-product-toggle .text{flex:1 1 auto;min-width:0;display:grid;gap:3px}
+.fn-product-toggle .text strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:800}
+.fn-product-toggle .text .d-muted{font-size:13px}
+.fn-product-toggle .amount{display:grid;justify-items:end;gap:1px;flex:0 0 auto;text-align:right}
+.fn-product-toggle .amount b{font-size:15px;font-weight:800;white-space:nowrap}
+.fn-product-toggle .amount>span:last-child{font-size:12px;color:#5c6577}
+.fn-product-toggle .state{display:flex;align-items:center;justify-content:center;width:26px;height:26px;flex:0 0 auto;border-radius:50%;font-size:13px;font-weight:800;color:#5c6577}
+.fn-product.is-done .fn-product-toggle .state{background:#2f9e68;color:#fff}
+.fn-product.is-failed .fn-product-toggle .state{background:#fdf3e3;color:#a35a00}
+.fn-product.is-waiting{opacity:.75}
+.fn-product>.fn-ivytasks{padding:0 12px 12px}
+.fn-product>.fn-ivytasks>li{background:var(--d-inset,#f3f5fa)}
+.fn-product>.fn-ivytasks>li.is-busy{background:#eaf0ff}
+@media (max-width:640px){
+  .fn-product-toggle{flex-wrap:wrap}
+  .fn-product-toggle .amount{order:3;flex:1 1 100%;justify-items:start;text-align:left;padding-left:70px}
+}
