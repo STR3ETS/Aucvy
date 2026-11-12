@@ -1822,3 +1822,31 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
 .d-fold svg{transition:transform .18s}
 .d-fold.is-open{border-color:#c9d8ff;background:#eef3ff;color:#1e56e0}
 .d-fold.is-open svg{transform:rotate(180deg)}
+
+/* ---------- bestelling: de kop met het bedrag, de acties en de vier stappen ---------- */
+.d-orderhead-top{display:flex;align-items:center;gap:16px}
+.d-orderhead-top .thumb{display:flex;align-items:center;justify-content:center;width:64px;height:64px;flex:0 0 auto;border-radius:14px;overflow:hidden;background:#e9edf5;color:#9aa3b5}
+.d-orderhead-top .thumb img{width:100%;height:100%;object-fit:cover}
+.d-orderhead-top .text{flex:1 1 auto;min-width:0;display:grid;gap:6px}
+.d-orderhead-title{font-size:18px;font-weight:800;letter-spacing:-.01em;line-height:1.3}
+.d-orderhead-amount{display:grid;justify-items:end;gap:1px;flex:0 0 auto;text-align:right}
+.d-orderhead-amount b{font-size:22px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+.d-orderhead-amount span{font-size:12.5px;color:#5c6577}
+.d-orderhead-amount .is-due{padding:3px 9px;border-radius:999px;background:#fdf3e3;font-weight:700;color:#8f5209}
+.d-orderhead .d-hsteps{margin-top:22px;padding-top:22px;border-top:1px solid rgba(14,21,38,.08)}
+.d-orderhead-note{margin:18px 0 0;font-size:13.5px;color:#4d5566}
+.d-orderhead-note time{font-weight:700;color:#0e1526}
+.d-orderhead-report{display:grid;gap:12px;margin-top:20px;padding:18px 20px;border-radius:14px;background:var(--d-inset,#f3f5fa)}
+.d-options.is-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.c.dash .d-orderdispute{box-shadow:0 0 0 1.5px rgba(192,57,43,.28) inset,var(--d-lift)}
+.d-invoicelist{display:grid;margin-top:6px}
+.d-invoicelist>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid rgba(14,21,38,.08)}
+.d-invoicelist>div:first-child{border-top:0}
+.d-invoicelist>div>span{display:grid;gap:1px;min-width:0;font-size:13.5px}
+.d-invoicelist strong{font-weight:700}
+@media (max-width:720px){
+  .d-orderhead-top{flex-wrap:wrap}
+  .d-orderhead-top .text{flex:1 1 calc(100% - 80px)}
+  .d-orderhead-amount{justify-items:start;flex:1 1 auto;text-align:left}
+  .d-options.is-two{grid-template-columns:minmax(0,1fr)}
+}

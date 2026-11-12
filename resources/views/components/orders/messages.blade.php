@@ -1,13 +1,21 @@
-@props(['order', 'messages', 'action', 'viewer', 'staff' => false])
+@props([
+    'order',
+    'messages',
+    'action',
+    'viewer',
+    'staff' => false,
+    // Zonder eigen kaart en kop: voor in een tab op de bestelpagina van het dashboard.
+    'bare' => false,
+])
 
 {{--
     De berichtendraad van een bestelling (briefing sectie 7): koper,
     verkoper en support in één draad. Wie wat schreef staat erbij; support
     is herkenbaar aan de eigen kleur.
 --}}
-<section id="berichten" class="d-card" aria-labelledby="berichten-kop">
-    <h2 id="berichten-kop" class="text-sm font-extrabold text-aj-soft">Berichten</h2>
-    <p class="mt-1 text-xs text-aj-muted">
+<section id="berichten" @class(['d-card' => ! $bare]) aria-labelledby="berichten-kop">
+    <h2 id="berichten-kop" @class(['text-sm font-extrabold text-aj-soft' => ! $bare, 'sr-only' => $bare])>Berichten</h2>
+    <p @class(['mt-1 text-xs text-aj-muted' => ! $bare, 'd-lead' => $bare])>
         @if ($staff)
             Alles wat koper en verkoper elkaar schreven; jouw bericht gaat naar allebei, als Aucvy support.
         @else
@@ -39,6 +47,12 @@
         @error('body')
             <p class="text-xs text-aj-error">{{ $message }}</p>
         @enderror
-        <div><button type="submit" class="btn btn-primary" style="height:40px;font-size:13px">Versturen</button></div>
+        <div>
+            @if ($bare)
+                <button type="submit" class="d-btn d-btn-dark d-btn-sq">Versturen</button>
+            @else
+                <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px">Versturen</button>
+            @endif
+        </div>
     </form>
 </section>

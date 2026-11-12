@@ -150,3 +150,45 @@ it('zet lange lijsten achter Meer tonen', function () {
         ->assertSee('Meer tonen')
         ->assertSee('(2)');
 });
+
+it('toont een bestelling als één kop met de stappen, hoogstens één actie en drie tabs', function () {
+    $order = Order::factory()->create(['status' => OrderStatus::AwaitingPayment]);
+
+    // De koper moet betalen: het bedrag met de termijn, de stap Betalen is aan de beurt, één blauwe knop.
+    $this->actingAs($order->buyer)->get(route('orders.show', $order))
+        ->assertOk()
+        ->assertSeeInOrder(['d-orderhead', $order->lot->title, 'Betalen vóór', 'class="d-hsteps"', 'Kavel gewonnen', 'class="is-now"', 'Betalen', 'Betaalmethode', 'Nu betalen', 'id="order-tab-berichten"', 'id="order-tab-tijdlijn"', 'id="order-tab-dossier"', 'Kostenopbouw', 'Jij betaalt'], false)
+        // De losse blokken van vroeger zijn weg.
+        ->assertDontSee('Besteloverzicht')
+        ->assertDontSee('Wat gebeurt er nu?')
+        ->assertDontSee('Totaalbedrag');
+
+    // De verkoper ziet de hamerprijs en leest niet dat hij zelf betaalt.
+    $this->actingAs($order->seller)->get(route('orders.show', $order))
+        ->assertOk()
+        ->assertSee('Kavel verkocht')
+        ->assertSee('Hamerprijs')
+        ->assertSee('De koper betaalt')
+        ->assertDontSee('Jij betaalt')
+        ->assertDontSee('Nu betalen');
+
+    // Na betaling regelt de verkoper de levering; de koper kan nog niets doen.
+    app(TransitionOrder::class)->handle($order, OrderStatus::Paid);
+
+    $this->actingAs($order->seller)->get(route('orders.show', $order))
+        ->assertOk()
+        ->assertSeeInOrder(['Regel de levering', 'Verzonden', 'Klaar om op te halen'])
+        ->assertSee('Nog te regelen');
+    $this->actingAs($order->buyer)->get(route('orders.show', $order))
+        ->assertOk()
+        ->assertSee('De verkoper maakt de kavel klaar')
+        ->assertDontSee('Regel de levering');
+
+    // Onderweg: de koper bevestigt de levering en kan via de vlag een probleem melden.
+    app(TransitionOrder::class)->handle($order->fresh(), OrderStatus::Shipped);
+
+    $this->actingAs($order->buyer)->get(route('orders.show', $order))
+        ->assertOk()
+        ->assertSee('Levering bevestigen')
+        ->assertSee('data-tip="Probleem melden"', false);
+});

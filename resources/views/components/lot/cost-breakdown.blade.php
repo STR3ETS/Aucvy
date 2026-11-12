@@ -5,6 +5,8 @@
     // Op de kavelpagina is het transportbedrag een vanaf-tarief; deze
     // toelichting maakt dat expliciet zonder de orderweergave te raken.
     'transportNote' => null,
+    // Wie het totaal betaalt: op de bestelpagina van de verkoper is dat de koper.
+    'totalLabel' => 'Jij betaalt',
 ])
 
 {{--
@@ -34,7 +36,7 @@
             </div>
         @endforeach
         <div class="d-row is-total">
-            <span>Jij betaalt</span>
+            <span>{{ $totalLabel }}</span>
             <strong>{{ \App\Support\Money\Money::format($costs->totalCents) }}</strong>
         </div>
     </div>

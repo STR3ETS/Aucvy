@@ -1,12 +1,16 @@
-@props(['entries'])
+@props([
+    'entries',
+    // Zonder eigen kaart en kop: voor in een tab op de bestelpagina van het dashboard.
+    'bare' => false,
+])
 
 {{--
     De tijdlijn van een bestelling: wat er gebeurd is, op volgorde. De
     volgende stap staat in het statusblok, niet hier.
 --}}
-<section class="d-card" aria-labelledby="tijdlijn">
-    <h2 id="tijdlijn" class="text-sm font-extrabold text-aj-soft">Tijdlijn</h2>
-    <ol class="order-timeline mt-4">
+<section @class(['d-card' => ! $bare]) aria-labelledby="tijdlijn">
+    <h2 id="tijdlijn" @class(['text-sm font-extrabold text-aj-soft' => ! $bare, 'sr-only' => $bare])>Tijdlijn</h2>
+    <ol @class(['order-timeline', 'mt-4' => ! $bare])>
         @foreach ($entries as $entry)
             <li class="order-event kind-{{ $entry['kind'] }}">
                 <span class="dot" aria-hidden="true"></span>
