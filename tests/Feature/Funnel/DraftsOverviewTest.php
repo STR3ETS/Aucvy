@@ -76,3 +76,30 @@ it('houdt de compleetheidsscore op de rij bij elke telling', function () {
 
     expect($lot->fresh()->completeness_score)->toBeGreaterThan($initial);
 });
+
+it('toont de flow als losse kaarten, met de bijzaken als pictogram en één rij stappen', function () {
+    $user = User::factory()->verified()->create();
+    Lot::factory()->anonymousDraft()->create(['seller_id' => $user->id, 'title' => 'Koelcel 20 m3']);
+    Lot::factory()->anonymousDraft()->create(['seller_id' => $user->id, 'title' => 'Rolsteiger 8 meter']);
+
+    $this->actingAs($user)->get(route('sell'))
+        ->assertOk()
+        // De stappen als rij bolletjes in plaats van acht knoppen.
+        ->assertSee('class="fn-stepper"', false)
+        ->assertDontSee('class="d-step"', false)
+        // Elk onderwerp in een eigen kaart, de uitleg achter een vraagteken.
+        ->assertSee('class="fn-block', false)
+        ->assertSee('class="d-help', false)
+        // Bijzaken zijn pictogramknoppen met een naam bij aanwijzen.
+        ->assertSee('data-tip="Foto maken"', false)
+        ->assertSee('data-tip="Barcode scannen"', false)
+        ->assertSee('data-tip="Typeplaat lezen"', false)
+        ->assertSee('data-tip="Dicteren"', false)
+        ->assertSee('data-tip="Kenmerk toevoegen"', false)
+        // De eindcontrole toont wat nog moet; wat in orde is klapt uit.
+        ->assertSee('Toon wat in orde is')
+        // De andere concepten staan als menu in de kop.
+        ->assertSee('class="fn-draftmenu"', false)
+        ->assertSee('Nieuw concept')
+        ->assertDontSee('Upload foto');
+});

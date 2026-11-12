@@ -1850,3 +1850,105 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
   .d-orderhead-amount{justify-items:start;flex:1 1 auto;text-align:left}
   .d-options.is-two{grid-template-columns:minmax(0,1fr)}
 }
+
+/* ---------- kavel plaatsen: losse kaarten op een zachte vloer, net als het dashboard ---------- */
+.c.funnel{--d-floor:#e8ecf4;--d-inset:#f3f5fa;--d-lift:0 1px 2px rgba(12,19,38,.05),0 16px 32px -22px rgba(12,19,38,.25);--d-gap:24px;background:var(--d-floor)}
+.c.funnel .fn-card{overflow:visible;border-radius:0;background:transparent;box-shadow:none}
+.c.funnel .fn-head{padding-bottom:30px;border-radius:24px}
+.c.funnel .fn-body{margin-top:var(--d-gap);padding:0;border-radius:0;background:transparent}
+.c.funnel .fn-grid{grid-template-columns:minmax(0,1fr) 320px;gap:var(--d-gap);margin-top:var(--d-gap)}
+.c.funnel .fn-main,.c.funnel .fn-main>section,.c.funnel .fn-aside{gap:var(--d-gap)}
+.c.funnel .fn-nav{margin-top:0;padding-top:0;border-top:0}
+.fn-block,.fn-sidecard{min-width:0;margin:0;padding:22px;border:0;border-radius:16px;background:#fff;box-shadow:var(--d-lift)}
+.fn-sidecard{padding:18px}
+.fn-block>.d-titleline,.fn-block>.fn-row{margin-bottom:14px}
+.fn-block.d-stack>.d-titleline,.fn-block.d-stack>.fn-row{margin-bottom:0}
+.fn-block>.d-lead{margin-bottom:14px}
+.fn-block .d-h2 label{cursor:pointer}
+.c.funnel .fn-aside>.d-insight,.c.funnel .fn-preview{border:0;border-radius:16px;box-shadow:var(--d-lift)}
+
+/* De kop: de andere concepten als uitklapmenu naast opslaan en sluiten. */
+.fn-head-btn.is-quiet{border-color:transparent;background:rgba(255,255,255,.1)}
+.fn-draftmenu{position:relative}
+.fn-draftmenu summary{list-style:none;cursor:pointer}
+.fn-draftmenu summary::-webkit-details-marker{display:none}
+.fn-draftmenu-panel{position:absolute;z-index:40;top:calc(100% + 8px);right:0;width:min(340px,86vw);padding:10px;border-radius:16px;background:#fff;color:#0e1526;box-shadow:0 24px 60px -24px rgba(12,19,38,.45)}
+.fn-draftmenu-panel ul{margin:0 0 8px;padding:0;list-style:none;max-height:300px;overflow-y:auto}
+.fn-draftmenu-panel li a{display:grid;gap:2px;padding:10px;border-radius:10px;color:inherit}
+.fn-draftmenu-panel li a:hover{background:var(--d-inset)}
+.fn-draftmenu-panel strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:700}
+.fn-draftmenu-panel li span{font-size:12.5px;color:#5c6577}
+
+/* De acht stappen als een rij bolletjes met een lijn ertussen. */
+.fn-stepper{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));padding:18px 10px 14px;border-radius:16px;background:#fff;box-shadow:var(--d-lift)}
+.fn-stepper-item{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;padding:0 4px;border:0;background:none;font:inherit;font-size:12.5px;font-weight:600;color:#5c6577;cursor:pointer}
+.fn-stepper-item::before{content:"";position:absolute;top:14px;right:50%;width:100%;height:2px;background:#dfe4ee}
+/* De knoppen komen uit een template; die telt mee als eerste kind. */
+.fn-stepper-item:first-of-type::before{display:none}
+.fn-stepper-item.is-done::before,.fn-stepper-item.is-on::before{background:#2f6bff}
+.fn-stepper-item .dot{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid #dfe4ee;border-radius:50%;background:#fff;font-size:12.5px;font-weight:800;color:#5c6577;transition:border-color .2s,background .2s,box-shadow .2s}
+.fn-stepper-item:hover .dot{border-color:#9db8ff}
+.fn-stepper-item.is-done .dot{border-color:#2f6bff;background:#2f6bff;color:#fff}
+.fn-stepper-item.is-on .dot{border-color:#2f6bff;color:#1e56e0;box-shadow:0 0 0 4px #eaf0ff}
+.fn-stepper-item .name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fn-stepper-item.is-on .name{font-weight:800;color:#0e1526}
+.fn-stepper-item:focus{outline:none}
+.fn-stepper-item:focus-visible .dot{outline:2px solid #2f6bff;outline-offset:2px}
+
+/* Binnen een kaart: gevulde vlakken in plaats van omlijnde blokken. */
+.fn-note{display:flex;gap:10px;margin:0;padding:12px 14px;border-radius:12px;background:var(--d-inset,#f3f5fa);font-size:13.5px;line-height:1.5;color:#2a3242}
+.fn-note strong{font-weight:700;color:#0e1526}
+.fn-note.is-ok{background:#e8f6ef;color:#14532d}
+.fn-note.is-warn{background:#fdf3e3;color:#6b3f06}
+.c.funnel .fn-option{border-color:transparent;background:var(--d-inset)}
+.c.funnel .fn-option:hover{border-color:rgba(14,21,38,.2)}
+.c.funnel .fn-option.is-on{border-color:#2f6bff;background:#eaf0ff}
+.c.funnel .fn-channels>div{border:0;background:var(--d-inset)}
+.fn-textwrap{position:relative}
+.fn-textwrap .d-textarea{display:block;padding-right:58px}
+.fn-textwrap .d-iconbtn{position:absolute;right:10px;bottom:10px}
+.d-iconbtn.is-rec{border-color:#e9b6af;background:#fbecea;color:#a93226}
+.fn-examples{display:grid;gap:8px;margin-top:14px}
+.c.funnel .fn-drop{gap:10px;padding:26px 18px;border-width:1.5px;background:var(--d-inset)}
+.fn-drop-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px}
+.fn-drop-actions .d-iconbtn{width:44px;height:44px;cursor:pointer}
+.c.funnel .fn-gtin{margin-top:0}
+.fn-doclist{display:grid;gap:6px}
+.fn-doclist>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:10px;background:var(--d-inset);font-size:14px}
+.fn-lotline{display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px;background:var(--d-inset)}
+.fn-lotline .thumb{display:flex;align-items:center;justify-content:center;width:64px;height:64px;flex:0 0 auto;border-radius:12px;overflow:hidden;background:#e1e6f0;color:#9aa3b5}
+.fn-lotline .thumb img{width:100%;height:100%;object-fit:cover}
+.fn-lotline .text{flex:1 1 auto;min-width:0;display:grid;gap:2px}
+.fn-lotline .text strong{font-size:15px;font-weight:800;line-height:1.3}
+.fn-lotline .amount{display:grid;justify-items:end;gap:1px;flex:0 0 auto;text-align:right}
+.fn-lotline .amount b{font-size:16px;font-weight:800;white-space:nowrap}
+.fn-lotline .amount span{font-size:12.5px;color:#5c6577}
+.fn-lotline.is-small{padding:0;background:transparent}
+.fn-lotline.is-small .thumb{width:52px;height:52px}
+.fn-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fn-stats>div{display:grid;gap:2px;padding:14px 16px;border-radius:14px;background:var(--d-inset)}
+.fn-stats span{font-size:12.5px;font-weight:700;color:#5c6577}
+.fn-stats b{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.fn-stats small{font-size:12.5px;color:#5c6577}
+.c.funnel .fn-specadd{align-items:center;flex-wrap:nowrap}
+.c.funnel .fn-specadd .d-iconbtn{width:44px;height:44px}
+.c.funnel .fn-checklist .d-iconbtn{flex:0 0 auto}
+.c.funnel .fn-checklist>div:first-of-type{padding-top:0;border-top:0}
+.fn-complete{display:flex;align-items:center;gap:14px}
+.fn-complete .d-ring{width:72px;height:72px}
+.fn-complete .d-ring-center{font-size:15px}
+.c.funnel .fn-sidecard .seo-preview{margin-top:10px;padding:0;border:0;background:transparent}
+@media (max-width:980px){
+  .c.funnel .fn-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:760px){
+  .fn-stepper{padding:14px 6px}
+  .fn-stepper-item .name{display:none}
+}
+@media (max-width:640px){
+  .c.funnel .fn-head{padding-bottom:26px;border-radius:18px}
+  .fn-block{padding:18px}
+  .fn-stats{grid-template-columns:minmax(0,1fr)}
+  .fn-lotline{flex-wrap:wrap}
+  .fn-lotline .amount{justify-items:start;flex:1 1 100%;text-align:left}
+}

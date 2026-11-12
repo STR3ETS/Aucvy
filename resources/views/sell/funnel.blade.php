@@ -39,13 +39,22 @@
     $categoryNames = $categories->pluck('name', 'id')->all() + $categories->flatMap(fn ($root) => $root->children)->pluck('name', 'id')->all();
     $documentKinds = ['invoice' => 'Factuur', 'warranty' => 'Garantiebewijs', 'ownership' => 'Eigendomsbewijs', 'manual' => 'Handleiding', 'inspection' => 'Keuringscertificaat', 'maintenance' => 'Onderhoudsrapport', 'logbook' => 'Logboek', 'pickup_instruction' => 'Ophaalinstructie', 'nameplate' => 'Typeplaat met serienummer (foto)', 'other' => 'Overig'];
     $closeUrl = auth()->check() ? route('dashboard.lots') : route('home');
+    $vatPercent = \App\Support\Money\Money::vatRatePercent();
 @endphp
 
+{{--
+    Kavel plaatsen in acht stappen. De opzet volgt het dashboard: een navy kop,
+    daaronder losse kaarten op een zachte vloer. Per stap staat elk onderwerp
+    in een eigen kaart, de uitleg staat achter een vraagteken en bijzaken
+    (foto maken, barcode, typeplaat, dicteren) zijn pictogramknoppen. Er is
+    per scherm één blauwe knop: verder. Het gedrag staat in
+    resources/js/funnel.js.
+--}}
 <x-layouts.funnel title="Kavel plaatsen" description="Plaats je kavel in acht stappen. Geen account nodig om te beginnen: je ziet eerst wat Ivy voor je maakt.">
     <div class="fn-page" x-data="funnel({{ Js::from($initial) }}, {{ $feePercentage }}, {{ Js::from($schemas) }})">
         <div class="fn-card">
 
-            {{-- De navy kop: het concept, opslaan en sluiten, en de titel van de stap. --}}
+            {{-- De navy kop: het concept, de andere concepten, opslaan en sluiten, en de titel van de stap. --}}
             <header class="fn-head" style="background-image:url('{{ asset('images/design/dash-head.png') }}')">
                 <div class="fn-head-top">
                     <a class="fn-brand" href="{{ route('home') }}" aria-label="Aucvy - home">
@@ -57,6 +66,29 @@
                             Concept <b class="tabular" x-text="'#' + draft?.public_id">#{{ $initial['draft']['public_id'] ?? '' }}</b>
                             · <span x-text="saving ? 'opslaan…' : 'automatisch opgeslagen'">automatisch opgeslagen</span>
                         </span>
+
+                        {{-- Conceptoverzicht (briefing sectie 5): hervatten of nieuw beginnen. --}}
+                        @if ($drafts->isNotEmpty())
+                            <details class="fn-draftmenu" x-data @click.outside="$el.removeAttribute('open')">
+                                <summary class="fn-head-btn is-quiet">{{ $drafts->count() === 1 ? 'Nog één ander concept' : 'Nog '.$drafts->count().' andere concepten' }}</summary>
+                                <div class="fn-draftmenu-panel">
+                                    <ul>
+                                        @foreach ($drafts as $other)
+                                            <li>
+                                                <a href="{{ route('sell', ['concept' => $other->id]) }}">
+                                                    <strong>{{ $other->title ?: 'Zonder titel' }}</strong>
+                                                    <span class="tabular">#{{ $other->public_id }} · {{ $other->completeness_score }}% · {{ $other->updated_at->timezone(config('aucvy.display_timezone'))->diffForHumans() }}</span>
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                    <a href="{{ route('sell', ['nieuw' => 1]) }}" class="d-btn d-btn-secondary d-btn-sm d-btn-wide">Nieuw concept</a>
+                                </div>
+                            </details>
+                        @elseif (auth()->check())
+                            <a class="fn-head-btn is-quiet" href="{{ route('sell', ['nieuw' => 1]) }}">Nieuw concept</a>
+                        @endif
+
                         <a class="fn-head-btn" href="{{ $closeUrl }}" @click.prevent="flush().finally(() => window.location.assign(@js($closeUrl)))">Opslaan en sluiten</a>
                     </div>
                 </div>
@@ -67,37 +99,17 @@
 
             <div class="fn-body">
 
-                {{-- Conceptoverzicht (briefing sectie 5): hervatten of nieuw beginnen. --}}
-                @if ($drafts->isNotEmpty() || auth()->check())
-                    <div class="fn-drafts">
-                        @if ($drafts->isNotEmpty())
-                            <details class="draft-others">
-                                <summary>{{ $drafts->count() === 1 ? 'Nog één ander concept' : 'Nog '.$drafts->count().' andere concepten' }}</summary>
-                                <ul>
-                                    @foreach ($drafts as $other)
-                                        <li>
-                                            <a href="{{ route('sell', ['concept' => $other->id]) }}">{{ $other->title ?: 'Zonder titel' }}</a>
-                                            <span class="tabular">#{{ $other->public_id }} · {{ $other->completeness_score }}% · {{ $other->updated_at->timezone(config('aucvy.display_timezone'))->diffForHumans() }}</span>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </details>
-                        @endif
-                        @auth
-                            <a href="{{ route('sell', ['nieuw' => 1]) }}" class="d-link" style="margin-left:auto">Nieuw concept</a>
-                        @endauth
-                    </div>
-                @endif
-
-                {{-- Stappenbalk (briefing 13.4): acht chips, klikbaar; wat achter je ligt krijgt een vinkje. --}}
-                <nav aria-label="Stappen" class="fn-steps">
+                {{-- De acht stappen op een rij (briefing 13.4): klikbaar; wat achter je ligt krijgt een vinkje. --}}
+                <nav aria-label="Stappen" class="fn-stepper">
                     <template x-for="(name, index) in steps" :key="index">
-                        <button type="button" @click="step = index"
-                                class="d-step"
+                        <button type="button" @click="step = index" class="fn-stepper-item"
                                 :class="{ 'is-on': step === index, 'is-done': index < step }"
                                 :aria-current="step === index ? 'step' : null">
-                            <svg x-show="index < step" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-                            <span x-text="(index + 1) + ' · ' + name"></span>
+                            <span class="dot" aria-hidden="true">
+                                <svg x-show="index < step" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                <span x-show="index >= step" x-text="index + 1"></span>
+                            </span>
+                            <span class="name" x-text="name"></span>
                         </button>
                     </template>
                 </nav>
@@ -107,127 +119,135 @@
 
                         {{-- 1 · Wat ------------------------------------------------- --}}
                         <section x-show="step === 0" x-cloak aria-label="Wat wil je verkopen" class="d-stack">
-                            <div class="fn-options">
-                                <template x-for="option in [{q: 1, icon: 'box', label: 'Eén object', hint: 'Een los item'}, {q: 10, icon: 'layers', label: 'Meerdere objecten', hint: 'Een aantal items'}, {q: 100, icon: 'layout', label: 'Hele inventaris', hint: 'Complete veiling'}]" :key="option.q">
-                                    <button type="button" class="fn-option"
-                                            :class="((draft?.quantity ?? 0) === 0 ? false : (option.q === 1 ? draft.quantity === 1 : (option.q === 10 ? (draft.quantity > 1 && draft.quantity < 100) : draft.quantity >= 100))) && 'is-on'"
-                                            :aria-pressed="(draft?.quantity ?? 0) !== 0 && (option.q === 1 ? draft.quantity === 1 : (option.q === 10 ? (draft.quantity > 1 && draft.quantity < 100) : draft.quantity >= 100))"
-                                            @click="set('quantity', option.q)">
-                                        <span class="fn-option-icon" aria-hidden="true">
-                                            <span x-show="option.icon === 'box'"><x-v4.icon name="box" :size="20" stroke="2" /></span>
-                                            <span x-show="option.icon === 'layers'"><x-v4.icon name="layers" :size="20" stroke="2" /></span>
-                                            <span x-show="option.icon === 'layout'"><x-v4.icon name="layout" :size="20" stroke="2" /></span>
-                                        </span>
-                                        <strong x-text="option.label"></strong>
-                                        <span x-text="option.hint"></span>
+                            <div class="fn-block d-stack">
+                                <div class="fn-options">
+                                    <template x-for="option in [{q: 1, icon: 'box', label: 'Eén object', hint: 'Een los item'}, {q: 10, icon: 'layers', label: 'Meerdere objecten', hint: 'Een aantal items'}, {q: 100, icon: 'layout', label: 'Hele inventaris', hint: 'Complete veiling'}]" :key="option.q">
+                                        <button type="button" class="fn-option"
+                                                :class="((draft?.quantity ?? 0) === 0 ? false : (option.q === 1 ? draft.quantity === 1 : (option.q === 10 ? (draft.quantity > 1 && draft.quantity < 100) : draft.quantity >= 100))) && 'is-on'"
+                                                :aria-pressed="(draft?.quantity ?? 0) !== 0 && (option.q === 1 ? draft.quantity === 1 : (option.q === 10 ? (draft.quantity > 1 && draft.quantity < 100) : draft.quantity >= 100))"
+                                                @click="set('quantity', option.q)">
+                                            <span class="fn-option-icon" aria-hidden="true">
+                                                <span x-show="option.icon === 'box'"><x-v4.icon name="box" :size="20" stroke="2" /></span>
+                                                <span x-show="option.icon === 'layers'"><x-v4.icon name="layers" :size="20" stroke="2" /></span>
+                                                <span x-show="option.icon === 'layout'"><x-v4.icon name="layout" :size="20" stroke="2" /></span>
+                                            </span>
+                                            <strong x-text="option.label"></strong>
+                                            <span x-text="option.hint"></span>
+                                        </button>
+                                    </template>
+                                </div>
+
+                                @guest
+                                    <p class="fn-note">
+                                        <span><strong>Verkopen op Aucvy is alleen voor bedrijven.</strong> Geen account nodig om een concept te maken. Om te publiceren heb je een geverifieerd zakelijk account nodig.</span>
+                                    </p>
+                                @endguest
+
+                                <p class="fn-note" x-show="(draft?.quantity ?? 0) >= 100" x-cloak>
+                                    <span>
+                                        <strong>Veel kavels tegelijk? Bundel ze in één veiling.</strong>
+                                        Eén sluitschema, één bezichtiging en één set voorwaarden. Dit concept wordt één kavel;
+                                        @auth
+                                            de rest zet je erbij via <a class="d-link" href="{{ route('dashboard.sales') }}">Veilingen</a> of <a class="d-link" href="{{ route('dashboard.import') }}">de import</a>.
+                                        @else
+                                            de rest zet je er na het inloggen bij via Veilingen of de import.
+                                        @endauth
+                                    </span>
+                                </p>
+                            </div>
+
+                            <div class="fn-block">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2"><label for="fn-words">In je eigen woorden</label></h2>
+                                    <x-dashboard.help text="Eén zin is genoeg. Ivy maakt er straks een advertentie van, en jij keurt hem goed. Met de microfoon kun je het ook inspreken." />
+                                </div>
+                                <div class="fn-textwrap">
+                                    <textarea id="fn-words" rows="4" placeholder="Ik stop met mijn restaurant en wil alles verkopen." class="d-textarea"
+                                              :value="draft?.description ?? ''"
+                                              @input="set('description', $event.target.value)"></textarea>
+                                    {{-- Dicteren via de spraakherkenning van de browser (briefing stap 1: spraak). --}}
+                                    <button type="button" class="d-iconbtn" x-show="canDictate" x-cloak data-tip="Dicteren"
+                                            :class="dictating === 'description' && 'is-rec'" :data-tip="dictating === 'description' ? 'Stop met dicteren' : 'Dicteren'"
+                                            :aria-label="dictating === 'description' ? 'Stop met dicteren' : 'Dicteren'" @click="dictate('description')">
+                                        <x-v4.icon name="mic" :size="17" stroke="2" />
                                     </button>
-                                </template>
-                            </div>
+                                </div>
 
-                            @guest
-                                <div class="d-callout-info">
-                                    <span class="mark" aria-hidden="true">i</span>
-                                    <div>
-                                        <strong>Verkopen op Aucvy is alleen voor bedrijven</strong>
-                                        Geen account nodig om een concept te maken. Om te publiceren heb je een geverifieerd zakelijk account nodig.
+                                <div class="fn-examples" x-show="! (draft?.description ?? '').trim()">
+                                    <span class="fn-suggest-label">Bijvoorbeeld</span>
+                                    <div class="d-chips">
+                                        @foreach (['Ik stop met mijn restaurant en wil de volledige keukeninventaris verkopen.', 'Kantoorinventaris na een verhuizing: bureaus, stoelen en kasten.', 'Eén machine uit mijn werkplaats, nog in gebruik.'] as $example)
+                                            <button type="button" class="d-chip" style="font-weight:600" @click="set('description', @js($example))">{{ Str::limit($example, 44) }}</button>
+                                        @endforeach
                                     </div>
-                                </div>
-                            @endguest
-
-                            <div class="d-callout-info" x-show="(draft?.quantity ?? 0) >= 100" x-cloak>
-                                <span class="mark" aria-hidden="true">i</span>
-                                <div>
-                                    <strong>Veel kavels tegelijk? Bundel ze in één veiling</strong>
-                                    Eén sluitschema, één bezichtiging en één set voorwaarden. Dit concept wordt één kavel;
-                                    @auth
-                                        de rest zet je erbij via <a class="d-link" href="{{ route('dashboard.sales') }}">Veilingen</a> of <a class="d-link" href="{{ route('dashboard.import') }}">de import</a>.
-                                    @else
-                                        de rest zet je er na het inloggen bij via Veilingen of de import.
-                                    @endauth
-                                </div>
-                            </div>
-
-                            <label class="d-field">In je eigen woorden
-                                <textarea rows="4" placeholder="Ik stop met mijn restaurant en wil alles verkopen." class="d-textarea" style="margin-top:6px"
-                                          :value="draft?.description ?? ''"
-                                          @input="set('description', $event.target.value)"></textarea>
-                            </label>
-                            <div class="d-chips">
-                                {{-- Dicteren via de spraakherkenning van de browser (briefing stap 1: spraak). --}}
-                                <button type="button" class="d-btn d-btn-secondary d-btn-sq" x-show="canDictate" x-cloak
-                                        :class="dictating === 'description' && 'is-on'" @click="dictate('description')">
-                                    <x-v4.icon name="mic" :size="15" stroke="2.2" />
-                                    <span x-text="dictating === 'description' ? 'Stop met dicteren' : 'Dicteren'">Dicteren</span>
-                                </button>
-                                <button type="button" class="d-btn d-btn-secondary d-btn-sq" @click="step = 1">Upload foto's</button>
-                            </div>
-
-                            <div>
-                                <span class="fn-suggest-label">Bijvoorbeeld</span>
-                                <div class="d-chips" style="margin-top:8px">
-                                    @foreach (['Ik stop met mijn restaurant en wil de volledige keukeninventaris verkopen.', 'Kantoorinventaris na een verhuizing: bureaus, stoelen en kasten.', 'Eén machine uit mijn werkplaats, nog in gebruik.'] as $example)
-                                        <button type="button" class="d-chip" style="font-weight:600" @click="set('description', @js($example))">{{ Str::limit($example, 44) }}</button>
-                                    @endforeach
                                 </div>
                             </div>
                         </section>
 
                         {{-- 2 · Aanleveren ------------------------------------------ --}}
                         <section x-show="step === 1" x-cloak aria-label="Foto's en documenten" class="d-stack">
-                            {{-- Slepen, kiezen of fotograferen; voortgang per bestand (briefing sectie 5, stap 1). --}}
-                            <div class="fn-drop" :class="dragOver && 'is-over'"
-                                 @dragover.prevent="dragOver = true" @dragleave.prevent="dragOver = false"
-                                 @drop.prevent="uploadPhotos([...$event.dataTransfer.files])">
-                                <strong>Sleep je foto's hierheen</strong>
-                                <span>JPG, PNG of WebP, maximaal 10 MB per stuk.</span>
-                                <div class="d-chips" style="justify-content:center;margin-top:10px">
-                                    <label class="d-btn d-btn-sq" style="cursor:pointer">
-                                        Foto's kiezen
-                                        <input type="file" accept="image/*" multiple class="sr-only"
-                                               @change="uploadPhotos([...$event.target.files]); $event.target.value = ''">
-                                    </label>
-                                    <label class="d-btn d-btn-secondary d-btn-sq" style="cursor:pointer">
-                                        Foto maken
-                                        <input type="file" accept="image/*" capture="environment" class="sr-only"
-                                               @change="uploadPhotos([...$event.target.files]); $event.target.value = ''">
-                                    </label>
-                                    {{-- Barcode: de lezer van de browser waar die er is, anders leest Ivy de foto (briefing: scanner voor alle browsers). --}}
-                                    <label class="d-btn d-btn-secondary d-btn-sq" style="cursor:pointer">
-                                        Barcode scannen
-                                        <input type="file" accept="image/*" capture="environment" class="sr-only"
-                                               @change="scanBarcode($event.target.files[0]); $event.target.value = ''">
-                                    </label>
-                                    {{-- Typeplaat: Ivy leest merk, model, bouwjaar, vermogen en serienummer. De foto blijft intern. --}}
-                                    <label class="d-btn d-btn-secondary d-btn-sq" style="cursor:pointer">
-                                        Typeplaat lezen
-                                        <input type="file" accept="image/*" capture="environment" class="sr-only"
-                                               @change="scanNameplate($event.target.files[0]); $event.target.value = ''">
-                                    </label>
+                            <div class="fn-block d-stack">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Foto's</h2>
+                                    <span class="d-count tabular" x-show="draft?.media.length" x-cloak x-text="draft?.media.length ?? 0"></span>
+                                    <x-dashboard.help text="JPG, PNG of WebP, maximaal 10 MB per stuk. De hoofdfoto is wat kopers in de lijst zien. Een foto van de barcode of de typeplaat vult merk, model en bouwjaar voor je in; die foto blijft intern." />
                                 </div>
-                                <form class="fn-gtin" @submit.prevent="submitGtin()">
-                                    <label for="gtin-input">Of typ de productcode (EAN)</label>
-                                    <input id="gtin-input" type="text" inputmode="numeric" x-model="scan.code" maxlength="20" placeholder="8712345678906" class="d-input" style="margin:0;width:180px;height:40px">
-                                    <button type="submit" class="d-btn d-btn-secondary d-btn-sm d-btn-sq" style="min-height:40px" :disabled="scan.busy || !scan.code">Opzoeken</button>
-                                </form>
-                                <p class="d-hint" x-show="scan.busy" x-cloak x-text="scan.busyText"></p>
-                                <p class="d-hint" style="color:#177249;font-weight:700" x-show="scan.result" x-text="scan.result" x-cloak></p>
-                                <p class="d-hint is-warn" x-show="scan.error" x-text="scan.error" x-cloak></p>
-                            </div>
 
-                            <ul class="upload-list" x-show="uploads.length" x-cloak>
-                                <template x-for="(upload, index) in uploads" :key="index">
-                                    <li :class="upload.error ? 'is-error' : (upload.pct === 100 ? 'is-done' : '')">
-                                        <span class="name" x-text="upload.name"></span>
-                                        <span class="bar" x-show="! upload.error"><i :style="'width:' + upload.pct + '%'"></i></span>
-                                        <span class="msg" x-text="upload.error ?? (upload.pct === 100 ? 'Klaar' : upload.pct + '%')"></span>
-                                        <button type="button" x-show="upload.error" @click="uploads.splice(index, 1)" aria-label="Melding sluiten"><x-v4.icon name="x" :size="14" stroke="2.2" /></button>
-                                    </li>
-                                </template>
-                            </ul>
+                                {{-- Slepen, kiezen of fotograferen; voortgang per bestand (briefing sectie 5, stap 1). --}}
+                                <div class="fn-drop" :class="dragOver && 'is-over'" x-data="{ gtin: false }"
+                                     @dragover.prevent="dragOver = true" @dragleave.prevent="dragOver = false"
+                                     @drop.prevent="uploadPhotos([...$event.dataTransfer.files])">
+                                    <strong>Sleep je foto's hierheen</strong>
+                                    <div class="fn-drop-actions">
+                                        <label class="d-btn d-btn-secondary d-btn-sq" style="cursor:pointer">
+                                            Foto's kiezen
+                                            <input type="file" accept="image/*" multiple class="sr-only"
+                                                   @change="uploadPhotos([...$event.target.files]); $event.target.value = ''">
+                                        </label>
+                                        <label class="d-iconbtn" data-tip="Foto maken">
+                                            <x-v4.icon name="camera" :size="18" stroke="2" />
+                                            <span class="sr-only">Foto maken</span>
+                                            <input type="file" accept="image/*" capture="environment" class="sr-only"
+                                                   @change="uploadPhotos([...$event.target.files]); $event.target.value = ''">
+                                        </label>
+                                        {{-- Barcode: de lezer van de browser waar die er is, anders leest Ivy de foto (briefing: scanner voor alle browsers). --}}
+                                        <label class="d-iconbtn" data-tip="Barcode scannen">
+                                            <x-v4.icon name="barcode" :size="18" stroke="2" />
+                                            <span class="sr-only">Barcode scannen</span>
+                                            <input type="file" accept="image/*" capture="environment" class="sr-only"
+                                                   @change="scanBarcode($event.target.files[0]); $event.target.value = ''">
+                                        </label>
+                                        {{-- Typeplaat: Ivy leest merk, model, bouwjaar, vermogen en serienummer. De foto blijft intern. --}}
+                                        <label class="d-iconbtn" data-tip="Typeplaat lezen">
+                                            <x-v4.icon name="tag" :size="18" stroke="2" />
+                                            <span class="sr-only">Typeplaat lezen</span>
+                                            <input type="file" accept="image/*" capture="environment" class="sr-only"
+                                                   @change="scanNameplate($event.target.files[0]); $event.target.value = ''">
+                                        </label>
+                                    </div>
+                                    <button type="button" class="d-link" x-show="! gtin" @click="gtin = true; $nextTick(() => $refs.gtin.focus())">Of typ de productcode (EAN)</button>
+                                    <form class="fn-gtin" @submit.prevent="submitGtin()" x-show="gtin" x-cloak>
+                                        <label for="gtin-input" class="sr-only">Productcode (EAN)</label>
+                                        <input id="gtin-input" x-ref="gtin" type="text" inputmode="numeric" x-model="scan.code" maxlength="20" placeholder="8712345678906" class="d-input" style="margin:0;width:180px;height:40px">
+                                        <button type="submit" class="d-btn d-btn-secondary d-btn-sm d-btn-sq" style="min-height:40px" :disabled="scan.busy || !scan.code">Opzoeken</button>
+                                    </form>
+                                    <p class="d-hint" x-show="scan.busy" x-cloak x-text="scan.busyText"></p>
+                                    <p class="d-hint" style="color:#177249;font-weight:700" x-show="scan.result" x-text="scan.result" x-cloak></p>
+                                    <p class="d-hint is-warn" x-show="scan.error" x-text="scan.error" x-cloak></p>
+                                </div>
 
-                            <div x-show="draft?.media.length" x-cloak>
-                                <h2 class="fn-h2">Geüpload (<span x-text="draft?.media.length ?? 0"></span> <span x-text="(draft?.media.length ?? 0) === 1 ? 'foto' : 'foto\'s'"></span>)</h2>
-                                <ul class="photo-grid" style="margin-top:8px">
+                                <ul class="upload-list" x-show="uploads.length" x-cloak>
+                                    <template x-for="(upload, index) in uploads" :key="index">
+                                        <li :class="upload.error ? 'is-error' : (upload.pct === 100 ? 'is-done' : '')">
+                                            <span class="name" x-text="upload.name"></span>
+                                            <span class="bar" x-show="! upload.error"><i :style="'width:' + upload.pct + '%'"></i></span>
+                                            <span class="msg" x-text="upload.error ?? (upload.pct === 100 ? 'Klaar' : upload.pct + '%')"></span>
+                                            <button type="button" x-show="upload.error" @click="uploads.splice(index, 1)" aria-label="Melding sluiten"><x-v4.icon name="x" :size="14" stroke="2.2" /></button>
+                                        </li>
+                                    </template>
+                                </ul>
+
+                                <ul class="photo-grid" x-show="draft?.media.length" x-cloak>
                                     <template x-for="(item, index) in draft?.media ?? []" :key="item.id">
                                         <li class="photo" :class="index === 0 && 'is-cover'">
                                             <img :src="item.url" alt="">
@@ -239,14 +259,16 @@
                                         </li>
                                     </template>
                                 </ul>
-                                <p class="d-hint">De hoofdfoto is wat kopers in de lijst zien. Kies een andere met "Als hoofdfoto".</p>
                             </div>
 
-                            <div class="fn-divide">
-                                <h2 class="fn-h2">Documenten</h2>
-                                <p class="d-sub">Facturen en eigendomsbewijzen blijven privé. Per document kies je in het kaveldossier of kopers het via het oogje mogen inzien; downloaden kan niet.</p>
+                            <div class="fn-block d-stack">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Documenten</h2>
+                                    <span class="d-count tabular" x-show="draft?.documents.length" x-cloak x-text="draft?.documents.length ?? 0"></span>
+                                    <x-dashboard.help text="Facturen en eigendomsbewijzen blijven privé. Per document kies je in het kaveldossier of kopers het via het oogje mogen inzien; downloaden kan niet. Documenten kunnen ook later." />
+                                </div>
 
-                                <div class="d-chips" style="margin-top:10px" x-data="{ kind: 'invoice' }">
+                                <div class="d-chips" x-data="{ kind: 'invoice' }">
                                     <select x-model="kind" class="d-select" style="margin:0;min-width:170px" aria-label="Soort document">
                                         @foreach ($documentKinds as $value => $label)
                                             <option value="{{ $value }}">{{ $label }}</option>
@@ -259,17 +281,17 @@
                                     </label>
                                 </div>
 
-                                <div class="d-stack-tight" style="margin-top:10px;gap:8px" x-show="draft?.documents.length" x-cloak>
+                                <div class="fn-doclist" x-show="draft?.documents.length" x-cloak>
                                     <template x-for="doc in draft?.documents ?? []" :key="doc.id">
-                                        <div class="d-soft" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px">
-                                            <strong x-text="doc.name" style="font-size:14px"></strong>
+                                        <div>
+                                            <strong x-text="doc.name"></strong>
                                             <span class="d-muted" x-text="({{ Js::from($documentKinds) }})[doc.kind] ?? doc.kind"></span>
                                         </div>
                                     </template>
                                 </div>
 
                                 {{-- De echtheid van documenten aanvinken (besluit Raph): alleen als er documenten zijn. --}}
-                                <label class="fn-check" style="margin-top:10px" x-show="(draft?.documents?.length ?? 0) > 0" x-cloak>
+                                <label class="fn-check" x-show="(draft?.documents?.length ?? 0) > 0" x-cloak>
                                     <input type="checkbox" :checked="meta.documents_authentic === true" @change="set('documents_authentic', $event.target.checked)">
                                     <span>
                                         <strong>De documenten die ik toevoeg zijn echt en volledig.</strong>
@@ -278,8 +300,13 @@
                                 </label>
                             </div>
 
-                            {{-- Garantie (publicatiecriterium, besluit Raph 2 november 2026). --}}
-                            <div class="d-soft" style="padding:14px">
+                            <div class="fn-block d-stack">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Garantie en eigendom</h2>
+                                    <x-dashboard.help text="Beide zijn nodig om te publiceren. Een eigendomsbewijs of factuur als document maakt je kavel sterker en geldt ook als verklaring." />
+                                </div>
+
+                                {{-- Garantie (publicatiecriterium, besluit Raph 2 november 2026). --}}
                                 <div class="fn-fields">
                                     <label class="d-field">Garantie
                                         <select class="d-input" :value="meta.warranty ?? ''" @change="set('warranty', $event.target.value || null)">
@@ -293,174 +320,180 @@
                                         <input type="date" class="d-input" :value="meta.warranty_until ?? ''" @change="set('warranty_until', $event.target.value || null)">
                                     </label>
                                 </div>
-                            </div>
 
-                            {{-- Eigendom (preflight, briefing sectie 5): verklaring of bewijs. --}}
-                            <label class="fn-check is-card">
-                                <input type="checkbox" :checked="meta.ownership_declared === true" @change="set('ownership_declared', $event.target.checked)">
-                                <span>
-                                    <strong>Ik ben eigenaar van dit object, of gemachtigd om het te verkopen.</strong>
-                                    <span>Nodig om te publiceren. Een eigendomsbewijs of factuur als document maakt je kavel sterker en geldt ook als verklaring.</span>
-                                </span>
-                            </label>
+                                {{-- Eigendom (preflight, briefing sectie 5): verklaring of bewijs. --}}
+                                <label class="fn-check">
+                                    <input type="checkbox" :checked="meta.ownership_declared === true" @change="set('ownership_declared', $event.target.checked)">
+                                    <span>
+                                        <strong>Ik ben eigenaar van dit object, of gemachtigd om het te verkopen.</strong>
+                                    </span>
+                                </label>
+                            </div>
                         </section>
 
                         {{-- 3 · Analyse --------------------------------------------- --}}
                         <section x-show="step === 2" x-cloak aria-label="Analyse" class="d-stack">
                             @if ($ivyEnabled)
-                                <div class="d-callout-ok" x-show="! ivy.running && (ivy.notes.length || draft?.value_min_cents != null)" x-cloak>
-                                    <span class="mark" aria-hidden="true"><x-v4.icon name="check" :size="20" stroke="3" /></span>
-                                    <div>
-                                        <strong>Ivy heeft je kavel herkend</strong>
-                                        <span>Kijk in de volgende stap na wat ze invulde. Wat jij aanpast, wint altijd.</span>
-                                    </div>
-                                </div>
-
-                                <div class="fn-row">
-                                    <h2 class="fn-h2">Dit plaats je</h2>
-                                    <button type="button" class="d-btn d-btn-secondary d-btn-sq" :disabled="ivy.running" @click="analyse()">
-                                        <span x-text="ivy.running ? 'Ivy kijkt mee…' : (ivy.notes.length || draft?.value_min_cents != null ? 'Laat opnieuw analyseren' : 'Laat Ivy meekijken')">Laat Ivy meekijken</span>
-                                    </button>
-                                </div>
-
-                                <div class="fn-lotcards">
-                                    <article class="fn-lotcard is-on">
-                                        <div class="fn-lotcard-media">
-                                            <template x-if="draft?.media?.length"><img :src="draft.media[0].url" alt=""></template>
+                                <div class="fn-block d-stack">
+                                    <div class="fn-row">
+                                        <div class="d-titleline">
+                                            <h2 class="d-h2">Dit plaats je</h2>
+                                            <x-dashboard.help text="De waarde-indicatie komt uit vergelijkbare verkopen, met de bron erbij. Het is een range, geen belofte. Zelf invullen werkt net zo goed." />
                                         </div>
-                                        <div class="fn-lotcard-body">
+                                        <button type="button" class="d-btn d-btn-secondary d-btn-sq" :disabled="ivy.running" @click="analyse()">
+                                            <span x-text="ivy.running ? 'Ivy kijkt mee…' : (ivy.notes.length || draft?.value_min_cents != null ? 'Laat opnieuw analyseren' : 'Laat Ivy meekijken')">Laat Ivy meekijken</span>
+                                        </button>
+                                    </div>
+
+                                    <p class="fn-note is-ok" x-show="! ivy.running && (ivy.notes.length || draft?.value_min_cents != null)" x-cloak>
+                                        <span><strong>Ivy heeft je kavel herkend.</strong> Kijk in de volgende stap na wat ze invulde. Wat jij aanpast, wint altijd.</span>
+                                    </p>
+
+                                    <article class="fn-lotline">
+                                        <span class="thumb" aria-hidden="true">
+                                            <template x-if="draft?.media?.length"><img :src="draft.media[0].url" alt=""></template>
+                                            <template x-if="! draft?.media?.length"><x-v4.icon name="image" :size="22" stroke="1.6" /></template>
+                                        </span>
+                                        <div class="text">
                                             <strong x-text="draft?.title || 'Nog zonder titel'">Nog zonder titel</strong>
                                             <span class="d-muted" x-text="({{ Js::from($categoryNames) }})[draft?.category_id] ?? 'Nog geen categorie'"></span>
-                                            <span class="d-muted" style="margin-top:6px">Waarde-indicatie van Atlas</span>
+                                        </div>
+                                        <div class="amount">
                                             <b class="tabular" x-text="draft?.value_min_cents != null ? money(draft.value_min_cents) + ' – ' + money(draft.value_max_cents) : 'Nog geen indicatie'"></b>
+                                            <span>Waarde-indicatie van Atlas</span>
                                         </div>
                                     </article>
-                                </div>
 
-                                {{-- Voortgang per taak, met het zekerheidslabel uit de ConfidencePolicy - nooit een kale modelbelofte (hfst. 8). --}}
-                                <ul class="fn-notes" x-show="ivy.notes.length || ivy.running" x-cloak aria-live="polite">
-                                    <template x-for="note in ivy.notes" :key="note.id">
-                                        <li>
-                                            <img :src="'/images/agents/' + note.agent + '.jpg'" :alt="note.agent + ', AI-specialist'" loading="lazy">
-                                            <span><strong x-text="ivyLabel(note.task)"></strong> <span class="d-muted" x-text="'- ' + ivyNote(note)"></span></span>
+                                    {{-- Voortgang per taak, met het zekerheidslabel uit de ConfidencePolicy - nooit een kale modelbelofte (hfst. 8). --}}
+                                    <ul class="fn-notes" x-show="ivy.notes.length || ivy.running" x-cloak aria-live="polite">
+                                        <template x-for="note in ivy.notes" :key="note.id">
+                                            <li>
+                                                <img :src="'/images/agents/' + note.agent + '.jpg'" :alt="note.agent + ', AI-specialist'" loading="lazy">
+                                                <span><strong x-text="ivyLabel(note.task)"></strong> <span class="d-muted" x-text="'- ' + ivyNote(note)"></span></span>
+                                            </li>
+                                        </template>
+                                        <li x-show="ivy.running" x-cloak class="d-muted">
+                                            <span x-text="(ivy.current ? ivyLabel(ivy.current) : 'Bezig') + '…'"></span>
                                         </li>
-                                    </template>
-                                    <li x-show="ivy.running" x-cloak class="d-muted">
-                                        <span x-text="(ivy.current ? ivyLabel(ivy.current) : 'Bezig') + '…'"></span>
-                                    </li>
-                                </ul>
+                                    </ul>
 
-                                {{-- Meer aangeleverd = scherpere schatting: dat moment benoemen we expliciet (preview v4). --}}
-                                <p x-show="ivy.sharpened" x-cloak class="d-soft is-ok" style="margin:0">
-                                    Je waarde-indicatie werd scherper:
-                                    <span class="tabular" x-text="money(draft?.value_min_cents) + ' – ' + money(draft?.value_max_cents)"></span>
-                                </p>
-
-                                <div class="d-callout-info">
-                                    <span class="mark" aria-hidden="true">i</span>
-                                    <div>
-                                        <strong>Een range, geen belofte</strong>
-                                        De waarde-indicatie komt uit vergelijkbare verkopen, met de bron erbij. Zelf invullen werkt net zo goed.
-                                    </div>
+                                    {{-- Meer aangeleverd = scherpere schatting: dat moment benoemen we expliciet (preview v4). --}}
+                                    <p x-show="ivy.sharpened" x-cloak class="fn-note is-ok">
+                                        <span>Je waarde-indicatie werd scherper:
+                                            <b class="tabular" x-text="money(draft?.value_min_cents) + ' – ' + money(draft?.value_max_cents)"></b></span>
+                                    </p>
                                 </div>
                             @else
                                 {{-- Noodrem om (hfst. 8): geen knop die niets gaat doen, wel de eerlijke handmatige route. --}}
-                                <div class="d-callout-info">
-                                    <span class="mark" aria-hidden="true">i</span>
-                                    <div>
-                                        <strong>Ivy staat op dit moment uit</strong>
-                                        Je vult de advertentie zelf in bij de volgende stap. Dat werkt net zo goed.
-                                    </div>
+                                <div class="fn-block">
+                                    <p class="fn-note">
+                                        <span><strong>Ivy staat op dit moment uit.</strong> Je vult de advertentie zelf in bij de volgende stap. Dat werkt net zo goed.</span>
+                                    </p>
                                 </div>
                             @endif
                         </section>
 
                         {{-- 4 · Advertentie ----------------------------------------- --}}
                         <section x-show="step === 3" x-cloak aria-label="Advertentie" class="d-stack">
-                            <label class="d-field">Titel
-                                <input type="text" maxlength="150" placeholder="Complete designkeuken met Siemens-apparatuur" class="d-input"
-                                       :value="draft?.title ?? ''" @input="set('title', $event.target.value)">
-                                <x-funnel.provenance field="title" />
-                            </label>
+                            <div class="fn-block d-stack">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Tekst</h2>
+                                    <x-dashboard.help text="Eerlijk over gebreken: dat verkoopt aantoonbaar beter. Onder elk veld zie je of Ivy of jij het invulde. Wat jij aanpast, wint altijd." />
+                                </div>
 
-                            <label class="d-field">Omschrijving
-                                <textarea rows="6" class="d-textarea" style="margin-top:6px" placeholder="Eerlijk over gebreken: dat verkoopt aantoonbaar beter."
-                                          :value="draft?.description ?? ''" @input="set('description', $event.target.value)"></textarea>
-                                <x-funnel.provenance field="description" />
-                            </label>
-                            <div>
-                                <button type="button" class="d-btn d-btn-secondary d-btn-sq" x-show="canDictate" x-cloak
-                                        :class="dictating === 'description' && 'is-on'" @click="dictate('description')">
-                                    <x-v4.icon name="mic" :size="15" stroke="2.2" />
-                                    <span x-text="dictating === 'description' ? 'Stop met dicteren' : 'Dicteren'">Dicteren</span>
-                                </button>
+                                <label class="d-field">Titel
+                                    <input type="text" maxlength="150" placeholder="Complete designkeuken met Siemens-apparatuur" class="d-input"
+                                           :value="draft?.title ?? ''" @input="set('title', $event.target.value)">
+                                    <x-funnel.provenance field="title" />
+                                </label>
+
+                                <div class="d-field"><label for="fn-description">Omschrijving</label>
+                                    <div class="fn-textwrap" style="margin-top:6px">
+                                        <textarea id="fn-description" rows="6" class="d-textarea" placeholder="Eerlijk over gebreken: dat verkoopt aantoonbaar beter."
+                                                  :value="draft?.description ?? ''" @input="set('description', $event.target.value)"></textarea>
+                                        <button type="button" class="d-iconbtn" x-show="canDictate" x-cloak data-tip="Dicteren"
+                                                :class="dictating === 'description' && 'is-rec'" :data-tip="dictating === 'description' ? 'Stop met dicteren' : 'Dicteren'"
+                                                :aria-label="dictating === 'description' ? 'Stop met dicteren' : 'Dicteren'" @click="dictate('description')">
+                                            <x-v4.icon name="mic" :size="17" stroke="2" />
+                                        </button>
+                                    </div>
+                                    <x-funnel.provenance field="description" />
+                                </div>
+
+                                <p class="fn-note is-warn" x-show="unconfirmed.length" x-cloak>
+                                    <span>Ivy heeft velden ingevuld waar ze niet zeker van is. Kijk ze na: corrigeer wat niet klopt, of
+                                        <button type="button" class="d-link" @click="confirmAll()">bevestig alles in één keer</button>.</span>
+                                </p>
                             </div>
 
-                            <p class="d-soft is-warn" style="margin:0;font-weight:500;color:#0e1526" x-show="unconfirmed.length" x-cloak>
-                                Ivy heeft velden ingevuld waar ze niet zeker van is. Kijk ze na: corrigeer wat niet klopt, of
-                                <button type="button" class="d-link" @click="confirmAll()">bevestig alles in één keer</button>.
-                            </p>
-
-                            <div class="fn-fields is-four">
-                                <label class="d-field">Categorie
-                                    <select class="d-input" :value="draft?.category_id ?? ''"
-                                            @change="set('category_id', $event.target.value ? Number($event.target.value) : null)">
-                                        <option value="">Kies een categorie</option>
-                                        @foreach ($categories as $root)
-                                            <optgroup label="{{ $root->name }}">
-                                                @foreach ($root->children as $child)
-                                                    <option value="{{ $child->id }}">{{ $child->name }}</option>
-                                                @endforeach
-                                            </optgroup>
-                                        @endforeach
-                                    </select>
-                                    <x-funnel.provenance field="category_id" />
-                                </label>
-
-                                <label class="d-field">Conditie
-                                    <select class="d-input" :value="draft?.condition ?? ''" @change="set('condition', $event.target.value || null)">
-                                        <option value="">Kies de conditie</option>
-                                        @foreach (\App\Enums\LotCondition::cases() as $condition)
-                                            <option value="{{ $condition->value }}">{{ $condition->label() }}</option>
-                                        @endforeach
-                                    </select>
-                                    <x-funnel.provenance field="condition" />
-                                </label>
-
-                                <label class="d-field">Merk
-                                    <input type="text" maxlength="80" class="d-input" :value="draft?.brand ?? ''" @input="set('brand', $event.target.value || null)">
-                                    <x-funnel.provenance field="brand" />
-                                </label>
-
-                                <label class="d-field">Model of type
-                                    <input type="text" maxlength="80" class="d-input" :value="draft?.model ?? ''" @input="set('model', $event.target.value || null)">
-                                    <x-funnel.provenance field="model" />
-                                </label>
-
-                                <label class="d-field">Bouwjaar
-                                    <input type="number" min="1900" max="{{ now()->year }}" class="d-input tabular" :value="draft?.year ?? ''"
-                                           @input="set('year', $event.target.value ? Number($event.target.value) : null)">
-                                    <x-funnel.provenance field="year" />
-                                </label>
-
-                                {{-- Hoeveelheid met eenheid (publicatiecriterium, besluit Raph 2 november 2026). --}}
-                                <div class="d-field">Hoeveelheid en eenheid
-                                    <div style="display:flex;gap:6px">
-                                        <input type="number" min="1" max="100000" class="d-input tabular" style="width:90px" aria-label="Aantal"
-                                               :value="draft?.quantity ?? 1" @change="set('quantity', Math.max(1, parseInt($event.target.value || '1', 10)))">
-                                        <select class="d-input" aria-label="Eenheid" :value="draft?.unit ?? 'stuk'" @change="set('unit', $event.target.value)">
-                                            @foreach (config('listings.unit_options') as $value => $label)
-                                                <option value="{{ $value }}">{{ $label }}</option>
+                            <div class="fn-block d-stack">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Gegevens</h2>
+                                </div>
+                                <div class="fn-fields is-three">
+                                    <label class="d-field">Categorie
+                                        <select class="d-input" :value="draft?.category_id ?? ''"
+                                                @change="set('category_id', $event.target.value ? Number($event.target.value) : null)">
+                                            <option value="">Kies een categorie</option>
+                                            @foreach ($categories as $root)
+                                                <optgroup label="{{ $root->name }}">
+                                                    @foreach ($root->children as $child)
+                                                        <option value="{{ $child->id }}">{{ $child->name }}</option>
+                                                    @endforeach
+                                                </optgroup>
                                             @endforeach
                                         </select>
+                                        <x-funnel.provenance field="category_id" />
+                                    </label>
+
+                                    <label class="d-field">Conditie
+                                        <select class="d-input" :value="draft?.condition ?? ''" @change="set('condition', $event.target.value || null)">
+                                            <option value="">Kies de conditie</option>
+                                            @foreach (\App\Enums\LotCondition::cases() as $condition)
+                                                <option value="{{ $condition->value }}">{{ $condition->label() }}</option>
+                                            @endforeach
+                                        </select>
+                                        <x-funnel.provenance field="condition" />
+                                    </label>
+
+                                    {{-- Hoeveelheid met eenheid (publicatiecriterium, besluit Raph 2 november 2026). --}}
+                                    <div class="d-field">Hoeveelheid en eenheid
+                                        <div style="display:flex;gap:6px">
+                                            <input type="number" min="1" max="100000" class="d-input tabular" style="width:90px" aria-label="Aantal"
+                                                   :value="draft?.quantity ?? 1" @change="set('quantity', Math.max(1, parseInt($event.target.value || '1', 10)))">
+                                            <select class="d-input" aria-label="Eenheid" :value="draft?.unit ?? 'stuk'" @change="set('unit', $event.target.value)">
+                                                @foreach (config('listings.unit_options') as $value => $label)
+                                                    <option value="{{ $value }}">{{ $label }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
+
+                                    <label class="d-field">Merk
+                                        <input type="text" maxlength="80" class="d-input" :value="draft?.brand ?? ''" @input="set('brand', $event.target.value || null)">
+                                        <x-funnel.provenance field="brand" />
+                                    </label>
+
+                                    <label class="d-field">Model of type
+                                        <input type="text" maxlength="80" class="d-input" :value="draft?.model ?? ''" @input="set('model', $event.target.value || null)">
+                                        <x-funnel.provenance field="model" />
+                                    </label>
+
+                                    <label class="d-field">Bouwjaar
+                                        <input type="number" min="1900" max="{{ now()->year }}" class="d-input tabular" :value="draft?.year ?? ''"
+                                               @input="set('year', $event.target.value ? Number($event.target.value) : null)">
+                                        <x-funnel.provenance field="year" />
+                                    </label>
                                 </div>
                             </div>
 
                             {{-- Kenmerken: de velden uit het schema van de categorie, plus wat Ivy of jijzelf er los bij zet (briefing sectie 5, stap 4). --}}
-                            <div class="specs fn-divide">
-                                <h2 class="fn-h2">Kenmerken</h2>
-                                <p class="d-sub" x-text="draft?.category_id ? 'Ivy weet per categorie welke kenmerken kopers verwachten.' : 'Kies eerst een categorie; dan weet Ivy welke kenmerken kopers verwachten.'">Ivy weet per categorie welke kenmerken kopers verwachten.</p>
+                            <div class="fn-block specs">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Kenmerken</h2>
+                                    <x-dashboard.help text="Ivy weet per categorie welke kenmerken kopers verwachten. Mis je er een, dan zet je hem er zelf bij." />
+                                </div>
+                                <p class="fn-note" x-show="! draft?.category_id" x-cloak><span>Kies eerst een categorie; dan weet Ivy welke kenmerken kopers verwachten.</span></p>
                                 <div class="spec-grid">
                                     {{-- Merk, model en bouwjaar staan hierboven al als eigen veld. --}}
                                     <template x-for="field in schemaFields.filter((item) => ! ['brand', 'model', 'build_year'].includes(item.key))" :key="field.key">
@@ -495,34 +528,34 @@
                                     </template>
                                 </div>
                                 <form class="fn-specadd" @submit.prevent="addSpec()">
-                                    <input type="text" x-model="newSpecKey" maxlength="40" placeholder="Nog een kenmerk, bijvoorbeeld: draagvermogen" class="d-input" style="margin:0">
-                                    <button type="submit" class="d-btn d-btn-secondary d-btn-sq">Toevoegen</button>
+                                    <input type="text" x-model="newSpecKey" maxlength="40" placeholder="Nog een kenmerk, bijvoorbeeld: draagvermogen" class="d-input" style="margin:0" aria-label="Nog een kenmerk">
+                                    <button type="submit" class="d-iconbtn" data-tip="Kenmerk toevoegen" aria-label="Kenmerk toevoegen"><x-v4.icon name="plus" :size="18" stroke="2.2" /></button>
                                 </form>
-                            </div>
-
-                            {{-- Zo ziet het eruit in Google: slug en meta-omschrijving uit titel en tekst. --}}
-                            <div class="seo-preview" x-show="draft?.title" x-cloak>
-                                <span class="seo-url">{{ rtrim(config('app.url'), '/') }}/kavel/<span x-text="seoSlug"></span></span>
-                                <span class="seo-title" x-text="draft?.title"></span>
-                                <span class="seo-desc" x-text="seoDescription || 'Schrijf een omschrijving; de eerste 155 tekens worden de samenvatting in Google.'"></span>
                             </div>
                         </section>
 
                         {{-- 5 · Vorm ------------------------------------------------ --}}
                         <section x-show="step === 4" x-cloak aria-label="Verkoopvorm" class="d-stack">
-                            <div class="fn-options">
-                                <template x-for="form in [{v: 'auction', label: 'Veiling', hint: 'Oplopend bieden. De markt bepaalt de prijs.'}, {v: 'dutch', label: 'Afslag', hint: 'De prijs daalt in stappen. Wie afmijnt, koopt.'}, {v: 'buy_now', label: 'Koop direct', hint: 'Een vaste prijs, meteen te kopen.'}]" :key="form.v">
-                                    <button type="button" class="fn-option" :class="meta.sale_type === form.v && 'is-on'" :aria-pressed="meta.sale_type === form.v" @click="set('sale_type', form.v)">
-                                        {{-- Het tarief is voor elke vorm hetzelfde: de staffel op je omzet. --}}
-                                        <b class="fn-option-fee tabular" x-text="fee.toString().replace('.', ',') + '%'"></b>
-                                        <span>bij verkoop</span>
-                                        <strong x-text="form.label" style="margin-top:10px"></strong>
-                                        <span x-text="form.hint"></span>
-                                    </button>
-                                </template>
+                            <div class="fn-block">
+                                <div class="fn-options">
+                                    <template x-for="form in [{v: 'auction', label: 'Veiling', hint: 'Oplopend bieden. De markt bepaalt de prijs.'}, {v: 'dutch', label: 'Afslag', hint: 'De prijs daalt in stappen. Wie afmijnt, koopt.'}, {v: 'buy_now', label: 'Koop direct', hint: 'Een vaste prijs, meteen te kopen.'}]" :key="form.v">
+                                        <button type="button" class="fn-option" :class="meta.sale_type === form.v && 'is-on'" :aria-pressed="meta.sale_type === form.v" @click="set('sale_type', form.v)">
+                                            {{-- Het tarief is voor elke vorm hetzelfde: de staffel op je omzet. --}}
+                                            <b class="fn-option-fee tabular" x-text="fee.toString().replace('.', ',') + '%'"></b>
+                                            <span>bij verkoop</span>
+                                            <strong x-text="form.label" style="margin-top:10px"></strong>
+                                            <span x-text="form.hint"></span>
+                                        </button>
+                                    </template>
+                                </div>
                             </div>
 
-                            <div class="d-card" x-show="meta.sale_type" x-cloak>
+                            <div class="fn-block d-stack" x-show="meta.sale_type" x-cloak>
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Prijzen</h2>
+                                    <x-dashboard.help text="De reserveprijs is niet zichtbaar voor kopers; ze zien alleen óf hij gehaald is. Een veiling verlengt bij een laat bod." />
+                                </div>
+
                                 {{-- Veiling --}}
                                 <div x-show="meta.sale_type === 'auction'" x-cloak class="fn-fields is-three">
                                     <label class="d-field">Startprijs
@@ -535,7 +568,7 @@
                                         <span class="d-input-wrap"><i aria-hidden="true">&euro;</i>
                                             <input type="text" inputmode="decimal" class="d-input is-amount tabular" :value="euro(meta.reserve_price_cents)" @change="setEuro('reserve_price_cents', $event.target.value)">
                                         </span>
-                                        <span class="d-hint">Niet zichtbaar voor kopers; alleen óf hij gehaald is.</span>
+                                        <span class="d-hint">Daaronder verkoop je niet.</span>
                                     </label>
                                     <label class="d-field">Looptijd
                                         <select class="d-input" :value="meta.duration_days ?? 7" @change="set('duration_days', Number($event.target.value))">
@@ -543,7 +576,6 @@
                                             <option value="7">7 dagen</option>
                                             <option value="14">14 dagen</option>
                                         </select>
-                                        <span class="d-hint">Met verlenging bij een laat bod.</span>
                                     </label>
                                 </div>
 
@@ -594,23 +626,20 @@
                                         </select>
                                     </label>
                                 </div>
+
+                                {{-- De prijzencontrole uit de preflight, hier al zichtbaar; alleen als er iets niet klopt. --}}
+                                <template x-for="check in preflight.checks.filter((item) => item.key === 'price_order' && ! item.ok)" :key="check.key">
+                                    <p class="fn-note is-warn"><span><strong x-text="check.label"></strong> <span x-text="check.hint"></span></span></p>
+                                </template>
                             </div>
 
-                            {{-- De prijzencontrole uit de preflight, hier al zichtbaar. --}}
-                            <template x-for="check in preflight.checks.filter((item) => item.key === 'price_order' && meta.sale_type)" :key="check.key">
-                                <div :class="check.ok ? 'd-callout-ok' : 'd-callout-warn'">
-                                    <span class="mark" aria-hidden="true" x-text="check.ok ? '✓' : '!'"></span>
-                                    <div class="text">
-                                        <strong x-text="check.ok ? 'Prijzen staan in de juiste volgorde' : check.label"></strong>
-                                        <span x-text="check.ok ? 'Start, reserve en vaste prijs kloppen ten opzichte van elkaar.' : check.hint"></span>
-                                    </div>
-                                </div>
-                            </template>
-
                             {{-- Marge of btw (besluit Don, vraag 3): de verkoper kiest per kavel. --}}
-                            <fieldset class="fn-fieldset">
-                                <legend class="fn-h2">Btw op deze kavel</legend>
-                                <div class="fn-options is-two" style="margin-top:8px">
+                            <fieldset class="fn-block fn-fieldset">
+                                <legend class="sr-only">Btw op deze kavel</legend>
+                                <div class="d-titleline" aria-hidden="true">
+                                    <h2 class="d-h2">Btw op deze kavel</h2>
+                                </div>
+                                <div class="fn-options is-two">
                                     <label class="fn-option" :class="(draft?.vat_regime ?? 'margin') === 'margin' && 'is-on'">
                                         <input type="radio" name="vat_regime" value="margin" class="sr-only" :checked="(draft?.vat_regime ?? 'margin') === 'margin'" @change="set('vat_regime', 'margin')">
                                         <strong>Margeregeling</strong>
@@ -627,9 +656,11 @@
 
                         {{-- 6 · Promotie -------------------------------------------- --}}
                         <section x-show="step === 5" x-cloak aria-label="Promotie" class="d-stack">
-                            <div>
-                                <h2 class="fn-h2">Altijd inbegrepen</h2>
-                                <div class="fn-checklist" style="margin-top:10px">
+                            <div class="fn-block">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Altijd inbegrepen</h2>
+                                </div>
+                                <div class="fn-checklist">
                                     <div><span class="ok" aria-hidden="true"><x-v4.icon name="check" :size="14" stroke="3" /></span><span><strong>Aucvy zoekresultaten</strong><span>Je kavel is vindbaar voor alle kopers.</span></span></div>
                                     <div><span class="ok" aria-hidden="true"><x-v4.icon name="check" :size="14" stroke="3" /></span><span><strong>Categoriepagina</strong><span x-text="'Bij ' + (({{ Js::from($categoryNames) }})[draft?.category_id] ?? 'de categorie die je kiest') + '.'"></span></span></div>
                                     <div><span class="ok" aria-hidden="true"><x-v4.icon name="check" :size="14" stroke="3" /></span><span><strong>Alerts van kopers</strong><span>Kopers met een passende zoekopdracht krijgen een seintje.</span></span></div>
@@ -637,117 +668,129 @@
                             </div>
 
                             {{-- Verspreiden (briefing nieuwe functies): de deelkit dekt elk kanaal vanaf dag één; koppelingen komen per kanaal. --}}
-                            <div>
-                                <h2 class="fn-h2">Extra kanalen</h2>
-                                <p class="d-sub">Zodra de kavel live staat, krijg je per kanaal een tekst van Nova, een beeld in drie formaten en een link met herkomst. Je plaatst zelf en ziet de klikken per kanaal.</p>
+                            <div class="fn-block">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Extra kanalen</h2>
+                                    <x-dashboard.help text="Social push: één planning met drie momenten (start, dag voor sluiting, laatste uur) die je in één keer goedkeurt. Een gekoppeld kanaal plaatst Aucvy zelf; koppelen doe je bij Instellingen, Koppelingen." />
+                                </div>
+                                <p class="d-lead">Zodra de kavel live staat, krijg je per kanaal een tekst van Nova, een beeld in drie formaten en een link met herkomst. Je plaatst zelf en ziet de klikken per kanaal.</p>
                                 <div class="fn-channels">
                                     @foreach (['Marktplaats', 'Facebook', 'Instagram', 'LinkedIn', 'WhatsApp', 'Mail'] as $channel)
                                         <div><span>{{ $channel }}</span><span class="d-tag tone-grey">Deelkit</span></div>
                                     @endforeach
                                 </div>
-                                <p class="d-hint">Social push: één planning met drie momenten (start, dag voor sluiting, laatste uur) die je in één keer goedkeurt. Een gekoppeld kanaal plaatst Aucvy zelf; koppelen doe je bij Instellingen, Koppelingen.</p>
                             </div>
                         </section>
 
                         {{-- 7 · Kosten ---------------------------------------------- --}}
                         <section x-show="step === 6" x-cloak aria-label="Kosten" class="d-stack">
-                            <div class="d-tiles" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
-                                <div class="d-tile tone-green"><div class="d-tile-label" style="color:#177249">Plaatsen</div><div class="d-tile-value">Gratis</div><div class="d-tile-sub">geen kosten vooraf</div></div>
-                                <div class="d-tile tone-purple"><div class="d-tile-label" style="color:#6d28d9">Succesfee</div><div class="d-tile-value tabular" x-text="fee.toString().replace('.', ',') + '%'"></div><div class="d-tile-sub">alleen bij verkoop</div></div>
-                                <div class="d-tile tone-blue"><div class="d-tile-label" style="color:#1e56e0">Opgeld koper</div><div class="d-tile-value">€ 0</div><div class="d-tile-sub">kopers betalen geen opgeld</div></div>
+                            <div class="fn-block">
+                                <div class="fn-stats">
+                                    <div><span>Plaatsen</span><b>Gratis</b><small>geen kosten vooraf</small></div>
+                                    <div><span>Succesfee</span><b class="tabular" x-text="fee.toString().replace('.', ',') + '%'"></b><small>alleen bij verkoop</small></div>
+                                    <div><span>Opgeld koper</span><b>€ 0</b><small>kopers betalen geen opgeld</small></div>
+                                </div>
                             </div>
 
                             {{-- Rekenvoorbeeld op de startprijs, de vaste prijs of anders € 3.000: geen belofte, wel de som. --}}
-                            <div class="d-soft" style="padding:16px" x-data="{ get basis() { return meta.buy_now_price_cents || meta.start_price_cents || meta.dutch_start_cents || 300000; } }">
-                                <strong style="font-size:14px">Rekenvoorbeeld bij een eindbod van <span class="tabular" x-text="money(basis)"></span></strong>
-                                <div class="d-rows" style="margin-top:8px">
+                            <div class="fn-block" x-data="{ get basis() { return meta.buy_now_price_cents || meta.start_price_cents || meta.dutch_start_cents || 300000; } }">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Rekenvoorbeeld</h2>
+                                    <x-dashboard.help text="Het tarief is een staffel op je omzet van de laatste twaalf maanden en ligt vast op het moment van verkoop. Het voorbeeld rekent met je startprijs of vaste prijs; het is geen belofte." />
+                                </div>
+                                <p class="d-lead">Bij een eindbod van <b class="tabular" x-text="money(basis)"></b> ontvang jij <b class="tabular" x-text="money(basis - Math.round(basis * fee / 100) - Math.round(Math.round(basis * fee / 100) * {{ $vatPercent }} / 100))"></b>.</p>
+                                <div class="d-rows">
                                     <div class="d-row"><span>Eindbod</span><strong x-text="money(basis)"></strong></div>
                                     <div class="d-row"><span x-text="'Succesfee (' + fee.toString().replace('.', ',') + '%)'"></span><strong x-text="'- ' + money(Math.round(basis * fee / 100))"></strong></div>
-                                    <div class="d-row"><span>Btw over succesfee ({{ rtrim(rtrim(number_format(\App\Support\Money\Money::vatRatePercent(), 1, ',', ''), '0'), ',') }}%)</span><strong x-text="'- ' + money(Math.round(Math.round(basis * fee / 100) * {{ \App\Support\Money\Money::vatRatePercent() }} / 100))"></strong></div>
-                                    <div class="d-row" style="font-size:15px;font-weight:800"><span>Jij ontvangt</span><strong x-text="money(basis - Math.round(basis * fee / 100) - Math.round(Math.round(basis * fee / 100) * {{ \App\Support\Money\Money::vatRatePercent() }} / 100))"></strong></div>
+                                    <div class="d-row"><span>Btw over succesfee ({{ rtrim(rtrim(number_format($vatPercent, 1, ',', ''), '0'), ',') }}%)</span><strong x-text="'- ' + money(Math.round(Math.round(basis * fee / 100) * {{ $vatPercent }} / 100))"></strong></div>
+                                    <div class="d-row" style="font-size:15px;font-weight:800"><span>Jij ontvangt</span><strong x-text="money(basis - Math.round(basis * fee / 100) - Math.round(Math.round(basis * fee / 100) * {{ $vatPercent }} / 100))"></strong></div>
                                 </div>
-                                <p class="d-hint">Het tarief is een staffel op je omzet van de laatste twaalf maanden en ligt vast op het moment van verkoop.</p>
                             </div>
 
-                            <div class="d-card">
-                                <h2 class="fn-h2">Bezichtigen en ophalen</h2>
-                                <div class="d-stack-tight" style="margin-top:10px">
-                                    <label class="fn-check">
-                                        <input type="checkbox" :checked="draft?.viewing_available" @change="set('viewing_available', $event.target.checked)">
-                                        <span><strong>Bezichtiging mogelijk (kijkdag)</strong><span>Kopers stellen een moment voor; jij bevestigt, daarna krijgen ze het adres.</span></span>
-                                    </label>
-                                    <label class="fn-check">
-                                        <input type="checkbox" :checked="draft?.pickup_only" @change="set('pickup_only', $event.target.checked)">
-                                        <span><strong>Alleen zelf ophalen</strong><span>Geen transport via Aucvy.</span></span>
-                                    </label>
-                                    <label class="d-field" style="max-width:260px" x-show="! draft?.pickup_only" x-cloak>Transport vanaf
-                                        <span class="d-input-wrap"><i aria-hidden="true">&euro;</i>
-                                            <input type="text" inputmode="decimal" class="d-input is-amount tabular" :value="euro(draft?.transport_from_cents)" @change="setEuro('transport_from_cents', $event.target.value)">
-                                        </span>
-                                    </label>
+                            <div class="fn-block d-stack">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Bezichtigen en ophalen</h2>
+                                    <x-dashboard.help text="Bij een kijkdag stellen kopers een moment voor; jij bevestigt, daarna krijgen ze het adres." />
                                 </div>
+                                <label class="fn-check">
+                                    <input type="checkbox" :checked="draft?.viewing_available" @change="set('viewing_available', $event.target.checked)">
+                                    <span><strong>Bezichtiging mogelijk (kijkdag)</strong></span>
+                                </label>
+                                <label class="fn-check">
+                                    <input type="checkbox" :checked="draft?.pickup_only" @change="set('pickup_only', $event.target.checked)">
+                                    <span><strong>Alleen zelf ophalen</strong><span>Geen transport via Aucvy.</span></span>
+                                </label>
+                                <label class="d-field" style="max-width:260px" x-show="! draft?.pickup_only" x-cloak>Transport vanaf
+                                    <span class="d-input-wrap"><i aria-hidden="true">&euro;</i>
+                                        <input type="text" inputmode="decimal" class="d-input is-amount tabular" :value="euro(draft?.transport_from_cents)" @change="setEuro('transport_from_cents', $event.target.value)">
+                                    </span>
+                                </label>
                             </div>
                         </section>
 
                         {{-- 8 · Live ------------------------------------------------ --}}
                         <section x-show="step === 7" x-cloak aria-label="Controleren en publiceren" class="d-stack">
-                            <div class="d-callout-ok" x-show="loggedIn && canPublish" x-cloak>
-                                <span class="mark" aria-hidden="true"><x-v4.icon name="check" :size="20" stroke="3" /></span>
-                                <div>
-                                    <strong>Je kavel staat klaar</strong>
-                                    <span>Klopt alles, dan staat hij meteen live. Anders hoor je wat er nog nodig is.</span>
-                                </div>
-                            </div>
-                            <div class="d-callout-warn" x-show="! loggedIn" x-cloak>
-                                <span class="mark" aria-hidden="true">!</span>
-                                <div class="text">
-                                    <strong>Nog één stap: je zakelijke account</strong>
-                                    <span>Je concept is bewaard en gaat mee. Publiceren kan alleen met een geverifieerd zakelijk account. Heb je er al een? Log dan in.</span>
-                                </div>
-                            </div>
-                            <div class="d-callout-warn" x-show="loggedIn && ! canPublish" x-cloak>
-                                <span class="mark" aria-hidden="true">!</span>
-                                <div class="text">
-                                    <strong>Nog niet alles is in orde</strong>
-                                    <span>De punten met een uitroepteken hieronder moeten eerst af.</span>
-                                </div>
+                            <div class="fn-block d-stack">
+                                <p class="fn-note is-ok" x-show="loggedIn && canPublish" x-cloak>
+                                    <span><strong>Je kavel staat klaar.</strong> Klopt alles, dan staat hij meteen live. Anders hoor je wat er nog nodig is.</span>
+                                </p>
+                                <p class="fn-note is-warn" x-show="! loggedIn" x-cloak>
+                                    <span><strong>Nog één stap: je zakelijke account.</strong> Je concept is bewaard en gaat mee. Publiceren kan alleen met een geverifieerd zakelijk account. Heb je er al een? Log dan in.</span>
+                                </p>
+                                <p class="fn-note is-warn" x-show="loggedIn && ! canPublish" x-cloak>
+                                    <span><strong>Nog niet alles is in orde.</strong> De punten hieronder moeten eerst af.</span>
+                                </p>
+
+                                <article class="fn-lotline">
+                                    <span class="thumb" aria-hidden="true">
+                                        <template x-if="draft?.media?.length"><img :src="draft.media[0].url" alt=""></template>
+                                        <template x-if="! draft?.media?.length"><x-v4.icon name="image" :size="22" stroke="1.6" /></template>
+                                    </span>
+                                    <div class="text">
+                                        <strong x-text="draft?.title || 'Nog zonder titel'"></strong>
+                                        <span class="d-muted" x-text="[({auction: 'Veiling', dutch: 'Afslag', buy_now: 'Koop direct'})[meta.sale_type], (meta.duration_days ?? 7) + ' dagen', ({{ Js::from($categoryNames) }})[draft?.category_id]].filter(Boolean).join(' · ')"></span>
+                                    </div>
+                                    <div class="amount" x-show="meta.start_price_cents || meta.dutch_start_cents || meta.buy_now_price_cents">
+                                        <b class="tabular" x-text="money(meta.buy_now_price_cents && meta.sale_type === 'buy_now' ? meta.buy_now_price_cents : (meta.sale_type === 'dutch' ? meta.dutch_start_cents : meta.start_price_cents))"></b>
+                                        <span x-text="meta.sale_type === 'buy_now' ? 'Vaste prijs' : 'Startprijs'"></span>
+                                    </div>
+                                </article>
                             </div>
 
-                            <article class="d-listrow">
-                                <template x-if="draft?.media?.length"><img class="d-listrow-thumb" :src="draft.media[0].url" alt=""></template>
-                                <template x-if="! draft?.media?.length"><span class="d-listrow-thumb" aria-hidden="true"></span></template>
-                                <div class="d-listrow-body">
-                                    <strong x-text="draft?.title || 'Nog zonder titel'"></strong>
-                                    <span class="d-listrow-meta" x-text="[({auction: 'Veiling', dutch: 'Afslag', buy_now: 'Koop direct'})[meta.sale_type], (meta.duration_days ?? 7) + ' dagen', ({{ Js::from($categoryNames) }})[draft?.category_id]].filter(Boolean).join(' · ')"></span>
+                            {{-- Preflight (briefing sectie 5, stap 8): dezelfde lijst als de server afdwingt. Wat nog moet staat open, wat in orde is klapt uit. --}}
+                            <div class="fn-block" x-data="{ showOk: false }">
+                                <div class="d-titleline">
+                                    <h2 class="d-h2">Controle vóór publicatie</h2>
+                                    <span class="d-count tabular" x-text="preflight.checks.filter((item) => item.ok).length + ' van ' + preflight.checks.length"></span>
+                                    <x-dashboard.help text="Dit is dezelfde lijst die Aucvy bij het publiceren afdwingt. Een rood punt is verplicht, een oranje punt is aanbevolen." />
                                 </div>
-                                <div class="d-listrow-right" x-show="meta.start_price_cents || meta.dutch_start_cents || meta.buy_now_price_cents">
-                                    <b x-text="money(meta.buy_now_price_cents && meta.sale_type === 'buy_now' ? meta.buy_now_price_cents : (meta.sale_type === 'dutch' ? meta.dutch_start_cents : meta.start_price_cents))"></b>
-                                    <span x-text="meta.sale_type === 'buy_now' ? 'Vaste prijs' : 'Startprijs'"></span>
-                                </div>
-                            </article>
-
-                            {{-- Preflight (briefing sectie 5, stap 8): dezelfde lijst als de server afdwingt. --}}
-                            <div>
-                                <h2 class="fn-h2">Controle vóór publicatie</h2>
-                                <div class="fn-checklist" style="margin-top:10px" aria-label="Controlepunten">
-                                    <template x-for="check in preflight.checks" :key="check.key">
+                                <div class="fn-checklist" aria-label="Controlepunten">
+                                    <template x-for="check in preflight.checks.filter((item) => ! item.ok)" :key="check.key">
                                         <div>
-                                            <span :class="check.ok ? 'ok' : (check.blocking ? 'fail' : 'warn')" aria-hidden="true" x-text="check.ok ? '✓' : '!'"></span>
+                                            <span :class="check.blocking ? 'fail' : 'warn'" aria-hidden="true">!</span>
                                             <span>
                                                 <strong x-text="check.label"></strong>
-                                                <span x-show="check.ok">In orde</span>
-                                                <span x-show="! check.ok" x-text="check.hint ?? (check.blocking ? 'Nodig om te publiceren' : 'Aanbevolen, niet verplicht')"></span>
+                                                <span x-text="check.hint ?? (check.blocking ? 'Nodig om te publiceren' : 'Aanbevolen, niet verplicht')"></span>
                                             </span>
-                                            <template x-if="! check.ok && check.route">
-                                                <a :href="check.route" class="d-link">Regelen</a>
+                                            <template x-if="check.route">
+                                                <a :href="check.route" class="d-iconbtn" data-tip="Regelen" :aria-label="check.label + ' regelen'"><x-v4.icon name="pencil" :size="17" stroke="2" /></a>
                                             </template>
-                                            <template x-if="! check.ok && ! check.route && check.key !== 'account'">
-                                                <button type="button" class="d-link" @click="step = check.step">Aanpassen</button>
+                                            <template x-if="! check.route && check.key !== 'account'">
+                                                <button type="button" class="d-iconbtn" data-tip="Aanpassen" :aria-label="check.label + ' aanpassen'" @click="step = check.step"><x-v4.icon name="pencil" :size="17" stroke="2" /></button>
                                             </template>
                                         </div>
                                     </template>
+                                    <template x-for="check in preflight.checks.filter((item) => item.ok)" :key="check.key">
+                                        <div x-show="showOk">
+                                            <span class="ok" aria-hidden="true">✓</span>
+                                            <span><strong x-text="check.label"></strong><span>In orde</span></span>
+                                        </div>
+                                    </template>
                                 </div>
-                                <p class="d-hint" x-show="! canPublish" x-cloak>Publiceren kan zodra alle verplichte punten hierboven in orde zijn.</p>
+                                <div class="d-more" x-show="preflight.checks.some((item) => item.ok)">
+                                    <button type="button" class="d-btn d-btn-secondary d-btn-sm" :aria-expanded="showOk" @click="showOk = ! showOk"
+                                            x-text="showOk ? 'Verberg wat in orde is' : 'Toon wat in orde is (' + preflight.checks.filter((item) => item.ok).length + ')'">Toon wat in orde is</button>
+                                </div>
                             </div>
                         </section>
 
@@ -771,7 +814,7 @@
 
                         {{-- Stap 4: zo komt hij in de lijst te staan. --}}
                         <div class="fn-preview" x-show="step === 3" x-cloak>
-                            <div class="fn-preview-media"><template x-if="draft?.media?.length"><img :src="draft.media[0].url" alt=""></template></div>
+                            <div class="fn-preview-media" x-show="draft?.media?.length"><template x-if="draft?.media?.length"><img :src="draft.media[0].url" alt=""></template></div>
                             <div class="fn-preview-body">
                                 <span class="d-tag tone-warn">Voorbeeld</span>
                                 <strong x-text="draft?.title || 'Je titel komt hier'"></strong>
@@ -779,28 +822,47 @@
                             </div>
                         </div>
 
-                        {{-- Stap 5: de waarde-indicatie van Atlas naast de prijzen. --}}
-                        <div class="d-soft" style="padding:16px" x-show="step === 4 && draft?.value_min_cents != null" x-cloak>
-                            <span class="d-muted">Waarde-indicatie van Atlas</span>
-                            <div class="d-big" style="font-size:20px;margin-top:4px" x-text="money(draft?.value_min_cents) + ' – ' + money(draft?.value_max_cents)"></div>
-                            <p class="d-hint">Uit vergelijkbare verkopen. Een range, geen belofte.</p>
-                        </div>
-
-                        {{-- Stap 6: zo staat hij in de resultaten. --}}
-                        <div class="d-card" style="padding:12px" x-show="step === 5" x-cloak>
-                            <template x-if="draft?.media?.length"><img :src="draft.media[0].url" alt="" style="width:92px;height:72px;object-fit:cover;border-radius:10px"></template>
-                            <div style="display:flex;justify-content:space-between;gap:10px;margin-top:10px">
-                                <div style="min-width:0"><strong style="display:block;font-size:14px" x-text="draft?.title || 'Je titel komt hier'"></strong><span class="d-muted">Zo staat hij in de resultaten</span></div>
-                                <div style="text-align:right;flex:none" x-show="meta.start_price_cents || meta.dutch_start_cents || meta.buy_now_price_cents">
-                                    <b class="tabular" x-text="money(meta.buy_now_price_cents && meta.sale_type === 'buy_now' ? meta.buy_now_price_cents : (meta.sale_type === 'dutch' ? meta.dutch_start_cents : meta.start_price_cents))"></b>
-                                    <span class="d-muted" style="display:block" x-text="meta.sale_type === 'buy_now' ? 'Vaste prijs' : 'Startprijs'"></span>
-                                </div>
+                        {{-- Stap 4: zo ziet het eruit in Google: slug en meta-omschrijving uit titel en tekst. --}}
+                        <div class="fn-sidecard" x-show="step === 3 && draft?.title" x-cloak>
+                            <h2 class="d-h3">Zo sta je in Google</h2>
+                            <div class="seo-preview">
+                                <span class="seo-url">{{ rtrim(config('app.url'), '/') }}/kavel/<span x-text="seoSlug"></span></span>
+                                <span class="seo-title" x-text="draft?.title"></span>
+                                <span class="seo-desc" x-text="seoDescription || 'Schrijf een omschrijving; de eerste 155 tekens worden de samenvatting in Google.'"></span>
                             </div>
                         </div>
 
+                        {{-- Stap 5: de waarde-indicatie van Atlas naast de prijzen. --}}
+                        <div class="fn-sidecard" x-show="step === 4 && draft?.value_min_cents != null" x-cloak>
+                            <div class="d-titleline">
+                                <h2 class="d-h3">Waarde-indicatie van Atlas</h2>
+                                <x-dashboard.help class="is-end" text="Uit vergelijkbare verkopen. Een range, geen belofte." />
+                            </div>
+                            <div class="d-big tabular" style="font-size:20px;margin-top:6px" x-text="money(draft?.value_min_cents) + ' – ' + money(draft?.value_max_cents)"></div>
+                        </div>
+
+                        {{-- Stap 6: zo staat hij in de resultaten. --}}
+                        <div class="fn-sidecard" x-show="step === 5" x-cloak>
+                            <h2 class="d-h3">Zo staat hij in de resultaten</h2>
+                            <article class="fn-lotline is-small" style="margin-top:12px">
+                                <span class="thumb" aria-hidden="true">
+                                    <template x-if="draft?.media?.length"><img :src="draft.media[0].url" alt=""></template>
+                                    <template x-if="! draft?.media?.length"><x-v4.icon name="image" :size="20" stroke="1.6" /></template>
+                                </span>
+                                <div class="text">
+                                    <strong x-text="draft?.title || 'Je titel komt hier'"></strong>
+                                    <span class="d-muted" x-show="meta.start_price_cents || meta.dutch_start_cents || meta.buy_now_price_cents">
+                                        <span x-text="meta.sale_type === 'buy_now' ? 'Vaste prijs' : 'Startprijs'"></span>
+                                        <b class="tabular" style="color:#0e1526" x-text="money(meta.buy_now_price_cents && meta.sale_type === 'buy_now' ? meta.buy_now_price_cents : (meta.sale_type === 'dutch' ? meta.dutch_start_cents : meta.start_price_cents))"></b>
+                                    </span>
+                                </div>
+                            </article>
+                        </div>
+
                         {{-- Stap 8: de samenvatting. --}}
-                        <div class="d-soft" style="padding:6px 16px" x-show="step === 7" x-cloak>
-                            <div class="d-rows">
+                        <div class="fn-sidecard" x-show="step === 7" x-cloak>
+                            <h2 class="d-h3">Samenvatting</h2>
+                            <div class="d-rows" style="margin-top:6px">
                                 <div class="d-row"><span class="d-muted">Verkoopvorm</span><strong x-text="({auction: 'Veiling', dutch: 'Afslag', buy_now: 'Koop direct'})[meta.sale_type] ?? '-'"></strong></div>
                                 <div class="d-row"><span class="d-muted">Foto's</span><strong x-text="draft?.media.length ?? 0"></strong></div>
                                 <div class="d-row"><span class="d-muted">Documenten</span><strong x-text="draft?.documents.length ?? 0"></strong></div>
@@ -821,21 +883,31 @@
                             <p class="d-prose" style="margin-top:10px;color:#0e1526" x-text="step === 7 && ! canPublish ? (loggedIn ? 'Bijna. Loop de punten met een uitroepteken nog even na, dan kan je kavel live.' : 'Je concept blijft bewaard. Log in met je zakelijke account, dan zetten we hem samen live.') : ({{ Js::from($ivyLines) }})[step]">{{ $ivyLines[0] }}</p>
                         </div>
 
-                        <div class="d-card" style="padding:16px">
-                            <h2 class="d-h3" style="font-size:15px">Compleetheid</h2>
-                            <div class="d-depth-bar" style="height:8px;border-radius:4px;margin-top:10px" role="progressbar" :aria-valuenow="completeness.score" aria-valuemin="0" aria-valuemax="100">
-                                <i style="transition:width .5s;border-radius:4px" :style="'width:' + completeness.score + '%'"></i>
+                        {{-- Compleetheid: een ring met het percentage, en wat er nog bij kan. --}}
+                        <div class="fn-sidecard" x-data="{ allMissing: false }">
+                            <div class="fn-complete">
+                                <span class="d-ring" role="progressbar" :aria-valuenow="completeness.score" aria-valuemin="0" aria-valuemax="100" aria-label="Compleetheid">
+                                    <svg viewBox="0 0 100 100" aria-hidden="true">
+                                        <circle class="track" cx="50" cy="50" r="38"></circle>
+                                        <circle class="value" cx="50" cy="50" r="38" pathLength="100" style="transition:stroke-dasharray .5s" :stroke-dasharray="Math.max(4, completeness.score) + ' 100'"></circle>
+                                    </svg>
+                                    <b class="d-ring-center tabular" x-text="completeness.score + '%'"></b>
+                                </span>
+                                <div>
+                                    <h2 class="d-h3">Compleetheid</h2>
+                                    <p class="d-sub" style="margin-top:4px" x-text="completeness.hint"></p>
+                                </div>
                             </div>
-                            <p class="tabular" style="margin:10px 0 0;font-size:16px;font-weight:800" x-text="completeness.score + '%'"></p>
-                            <p class="d-sub" x-text="completeness.hint"></p>
 
                             <div class="fn-divide" x-show="completeness.missing.length" x-cloak>
                                 <h3 style="margin:0;font-size:13px;font-weight:700">Wat nog ontbreekt</h3>
                                 <ul class="fn-missing">
-                                    <template x-for="key in completeness.missing" :key="key">
-                                        <li x-text="({{ Js::from(__('funnel.missing')) }})[key] ?? key"></li>
+                                    <template x-for="(key, index) in completeness.missing" :key="key">
+                                        <li x-show="allMissing || index < 3" x-text="({{ Js::from(__('funnel.missing')) }})[key] ?? key"></li>
                                     </template>
                                 </ul>
+                                <button type="button" class="d-link" style="margin-top:8px" x-show="! allMissing && completeness.missing.length > 3" @click="allMissing = true"
+                                        x-text="'En nog ' + (completeness.missing.length - 3) + ' ' + (completeness.missing.length - 3 === 1 ? 'punt' : 'punten')"></button>
                             </div>
                         </div>
                     </aside>
