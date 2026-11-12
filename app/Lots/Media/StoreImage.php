@@ -24,6 +24,30 @@ final class StoreImage
 
     private const EXTENSIONS = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
 
+    /**
+     * Een concept voor meerdere objecten of een inventaris bevat nog de foto's
+     * van alle producten samen; Ivy verdeelt ze daarna over kavels van elk
+     * hooguit twintig (SplitDraft).
+     */
+    public const MAX_PER_INVENTORY = 60;
+
+    public static function isInventory(Lot $lot): bool
+    {
+        return $lot->isDraft() && in_array($lot->draft_meta['scope'] ?? null, ['multiple', 'inventory'], true);
+    }
+
+    public static function maxFor(Lot $lot): int
+    {
+        return self::isInventory($lot) ? self::MAX_PER_INVENTORY : self::MAX_PER_LOT;
+    }
+
+    public static function limitMessage(Lot $lot): string
+    {
+        return self::isInventory($lot)
+            ? 'Maximaal '.self::MAX_PER_INVENTORY.' foto\'s tegelijk. Laat Ivy deze eerst verdelen en begin daarna een nieuw concept voor de rest.'
+            : 'Maximaal '.self::MAX_PER_LOT.' foto\'s per kavel.';
+    }
+
     public function handle(Lot $lot, string $localPath): LotMedia
     {
         $mime = (string) (@mime_content_type($localPath) ?: '');
@@ -38,8 +62,8 @@ final class StoreImage
             throw ValidationException::withMessages(['file' => 'Groter dan 10 MB.']);
         }
 
-        if ($lot->media()->count() >= self::MAX_PER_LOT) {
-            throw ValidationException::withMessages(['file' => 'Maximaal 20 foto\'s per kavel.']);
+        if ($lot->media()->count() >= self::maxFor($lot)) {
+            throw ValidationException::withMessages(['file' => self::limitMessage($lot)]);
         }
 
         $stored = 'lots/'.$lot->public_id.'/'.Str::random(40).'.'.$extension;

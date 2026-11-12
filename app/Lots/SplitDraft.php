@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Lots;
 
 use App\Enums\LotStatus;
+use App\Lots\Media\StoreImage;
 use App\Models\Lot;
 use App\Models\LotMedia;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,11 @@ final class SplitDraft
 
         if (count($groups) < 2 || array_diff($named, $owned) !== [] || count($named) !== count(array_unique($named))) {
             throw ValidationException::withMessages(['groups' => 'Deze verdeling past niet bij de foto\'s van dit concept.']);
+        }
+
+        // Na het verdelen is elk kavel een gewoon kavel, met hooguit twintig foto's.
+        if (max(array_map('count', $groups)) > StoreImage::MAX_PER_LOT) {
+            throw ValidationException::withMessages(['groups' => 'Een kavel heeft hooguit '.StoreImage::MAX_PER_LOT.' foto\'s. Verwijder er een paar bij het grootste product.']);
         }
 
         return DB::transaction(function () use ($lot, $groups): array {

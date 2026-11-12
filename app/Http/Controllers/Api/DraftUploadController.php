@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Lots\CompletenessScore;
 use App\Lots\Documents\DocumentVisibility;
 use App\Lots\DraftAccess;
+use App\Lots\Media\StoreImage;
 use App\Models\Lot;
 use App\Models\LotDocument;
 use App\Models\LotMedia;
@@ -43,8 +44,8 @@ final class DraftUploadController extends Controller
             'file' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'],
         ]);
 
-        if ($lot->media()->count() >= 20) {
-            return response()->json(['message' => 'Maximaal 20 foto\'s per kavel.'], 422);
+        if ($lot->media()->count() >= StoreImage::maxFor($lot)) {
+            return response()->json(['message' => StoreImage::limitMessage($lot)], 422);
         }
 
         $file = $request->file('file');

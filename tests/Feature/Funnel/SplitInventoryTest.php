@@ -6,6 +6,7 @@ use App\Ivy\Tasks\GroupPhotos;
 use App\Lots\DraftAccess;
 use App\Models\Lot;
 use App\Models\LotMedia;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 /*
@@ -103,4 +104,27 @@ it('weigert een verdeling met een foto van een ander concept', function () {
         ->assertStatus(422);
 
     expect(Lot::query()->where('draft_token', $this->lot->draft_token)->count())->toBe(1);
+});
+
+it('neemt in een inventaris meer dan twintig foto\'s aan, en in een gewoon kavel niet', function () {
+    LotMedia::factory()->count(18)->create(['lot_id' => $this->lot->id]);
+    $as = fn () => $this->withCookie(DraftAccess::COOKIE, $this->lot->draft_token);
+
+    // Drie plus achttien: de 22e foto past nog in een inventaris.
+    $as()->post("/api/drafts/{$this->lot->id}/media", ['file' => UploadedFile::fake()->image('extra.jpg', 400, 300)])->assertCreated();
+
+    $this->lot->update(['draft_meta' => ['scope' => 'single']]);
+
+    $as()->post("/api/drafts/{$this->lot->id}/media", ['file' => UploadedFile::fake()->image('teveel.jpg', 400, 300)])
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Maximaal 20 foto\'s per kavel.');
+});
+
+it('weigert een verdeling met een product van meer dan twintig foto\'s', function () {
+    $extra = LotMedia::factory()->count(20)->create(['lot_id' => $this->lot->id])->pluck('id')->all();
+
+    $this->withCookie(DraftAccess::COOKIE, $this->lot->draft_token)
+        ->postJson("/api/drafts/{$this->lot->id}/split", ['groups' => [[...$extra, $this->photos[0]->id], [$this->photos[1]->id]]])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('groups');
 });

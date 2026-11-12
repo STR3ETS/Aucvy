@@ -34,7 +34,8 @@
             <p class="fn-split-lead">Maak van elk product een eigen kavel, met een eigen advertentie en waarde-indicatie. Ivy gaat ze daarna een voor een af. Bundelen tot één veiling doe je bij Veilingen.</p>
             <div class="d-chips">
                 <button type="button" class="d-btn d-btn-sq" @click="split()" x-text="'Maak er ' + (ivy.proposal?.length ?? 0) + ' kavels van'">Maak er losse kavels van</button>
-                <button type="button" class="d-btn d-btn-secondary d-btn-sq" @click="keepTogether()">Houd het één kavel</button>
+                {{-- Meer dan twintig foto's past niet in één kavel. --}}
+                <button type="button" class="d-btn d-btn-secondary d-btn-sq" @click="keepTogether()" x-show="(draft?.media?.length ?? 0) <= {{ $lotPhotoMax }}">Houd het één kavel</button>
             </div>
         </div>
     </div>

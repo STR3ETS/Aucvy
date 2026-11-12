@@ -28,7 +28,7 @@ final class ModelImage
     /**
      * @return array{mime: string, data: string}|null
      */
-    public static function encode(string $path): ?array
+    public static function encode(string $path, int $longEdge = self::LONG_EDGE): ?array
     {
         if (! is_file($path)) {
             return null;
@@ -42,18 +42,18 @@ final class ModelImage
 
         [$width, $height] = @getimagesize($path) ?: [0, 0];
         $orientation = self::orientation($path, $mime);
-        $fits = filesize($path) <= self::PASS_BYTES && max($width, $height) <= self::LONG_EDGE;
+        $fits = filesize($path) <= self::PASS_BYTES && max($width, $height) <= $longEdge;
 
         if ($fits && $orientation <= 1) {
             return ['mime' => $mime, 'data' => base64_encode((string) file_get_contents($path))];
         }
 
-        $resized = self::resize($path, $orientation);
+        $resized = self::resize($path, $orientation, $longEdge);
 
         return $resized === null ? null : ['mime' => 'image/jpeg', 'data' => base64_encode($resized)];
     }
 
-    private static function resize(string $path, int $orientation): ?string
+    private static function resize(string $path, int $orientation, int $longEdge): ?string
     {
         if (! function_exists('imagecreatefromstring')) {
             return null;
@@ -74,7 +74,7 @@ final class ModelImage
 
         $width = imagesx($image);
         $height = imagesy($image);
-        $scale = min(1, self::LONG_EDGE / max($width, $height));
+        $scale = min(1, $longEdge / max($width, $height));
 
         if ($scale < 1) {
             $image = imagescale($image, (int) round($width * $scale), (int) round($height * $scale)) ?: $image;

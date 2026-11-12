@@ -40,6 +40,9 @@
     $documentKinds = ['invoice' => 'Factuur', 'warranty' => 'Garantiebewijs', 'ownership' => 'Eigendomsbewijs', 'manual' => 'Handleiding', 'inspection' => 'Keuringscertificaat', 'maintenance' => 'Onderhoudsrapport', 'logbook' => 'Logboek', 'pickup_instruction' => 'Ophaalinstructie', 'nameplate' => 'Typeplaat met serienummer (foto)', 'other' => 'Overig'];
     $closeUrl = auth()->check() ? route('dashboard.lots') : route('home');
     $vatPercent = \App\Support\Money\Money::vatRatePercent();
+    // Foto's: twintig per kavel, zestig in een inventaris die Ivy nog moet verdelen.
+    $lotPhotoMax = \App\Lots\Media\StoreImage::MAX_PER_LOT;
+    $inventoryPhotoMax = \App\Lots\Media\StoreImage::MAX_PER_INVENTORY;
     $conditionLabels = collect(\App\Enums\LotCondition::cases())->mapWithKeys(fn ($condition) => [$condition->value => $condition->label()])->all();
     // De knop onderaan zegt wat er na deze stap komt.
     $nextLabels = [0 => 'Volgende: foto\'s', 1 => $ivyEnabled ? 'Laat Ivy kijken' : 'Volgende: advertentie', 2 => 'Door naar de advertentie', 3 => 'Volgende: verkoopvorm', 4 => 'Volgende: promotie', 5 => 'Door naar de kosten', 6 => 'Laatste controle'];
@@ -209,7 +212,7 @@
                             <div class="fn-block d-stack">
                                 <div class="d-titleline">
                                     <h2 class="d-h2">Foto's</h2>
-                                    <span class="d-count tabular" x-show="draft?.media.length" x-cloak x-text="draft?.media.length ?? 0"></span>
+                                    <span class="d-count tabular" x-show="draft?.media.length" x-cloak x-text="(draft?.media.length ?? 0) + (pickingPhotos ? ' van {{ $inventoryPhotoMax }}' : '')"></span>
                                     <x-dashboard.help text="JPG, PNG of WebP, maximaal 10 MB per stuk. De hoofdfoto is wat kopers in de lijst zien. Een foto van de barcode of de typeplaat vult merk, model en bouwjaar voor je in; die foto blijft intern." />
                                 </div>
 
@@ -267,12 +270,19 @@
                                     </template>
                                 </ul>
 
+                                {{-- Een inventaris: de foto's van alle producten samen. Een hoofdfoto kiest elk kavel pas na het verdelen. --}}
+                                <p class="fn-note" x-show="pickingPhotos" x-cloak>
+                                    <span><strong>Foto's van al je producten, door elkaar.</strong>
+                                        Ivy verdeelt ze in de volgende stap per product; elk kavel krijgt dan zijn eigen hoofdfoto.
+                                        Hooguit {{ $inventoryPhotoMax }} foto's tegelijk en {{ $lotPhotoMax }} per product.</span>
+                                </p>
+
                                 <ul class="photo-grid" x-show="draft?.media.length" x-cloak>
                                     <template x-for="(item, index) in draft?.media ?? []" :key="item.id">
-                                        <li class="photo" :class="index === 0 && 'is-cover'">
+                                        <li class="photo" :class="index === 0 && ! pickingPhotos && 'is-cover'">
                                             <img :src="item.url" alt="">
-                                            <span class="cover-tag" x-show="index === 0">Hoofdfoto</span>
-                                            <button type="button" class="photo-cover" x-show="index !== 0" @click="setCover(item)">Als hoofdfoto</button>
+                                            <span class="cover-tag" x-show="index === 0 && ! pickingPhotos">Hoofdfoto</span>
+                                            <button type="button" class="photo-cover" x-show="index !== 0 && ! pickingPhotos" @click="setCover(item)">Als hoofdfoto</button>
                                             <button type="button" class="photo-remove" @click="removePhoto(item)" aria-label="Foto verwijderen">
                                                 <x-v4.icon name="x" :size="14" stroke="2.4" />
                                             </button>

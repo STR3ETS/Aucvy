@@ -835,6 +835,14 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             await this.runTasks();
         },
 
+        /**
+         * Meerdere objecten of een inventaris, nog niet verdeeld: de foto's
+         * horen bij verschillende producten, dus er is nog geen hoofdfoto.
+         */
+        get pickingPhotos() {
+            return ['multiple', 'inventory'].includes(this.meta.scope) && ! (this.draft?.siblings?.length) && ! this.ivy.keepTogether;
+        },
+
         /** De foto's van een groep uit het voorstel, voor de miniaturen. */
         groupPhotos(group) {
             return (this.draft?.media ?? []).filter((item) => group.media.includes(item.id));

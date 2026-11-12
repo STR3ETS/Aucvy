@@ -9,6 +9,7 @@ use App\Ivy\AiResult;
 use App\Ivy\Contracts\AiTask;
 use App\Ivy\Contracts\LlmProvider;
 use App\Ivy\ModelImage;
+use App\Lots\Media\StoreImage;
 
 /**
  * De echte multimodale API, via de officiële Anthropic PHP SDK.
@@ -26,7 +27,12 @@ final class AnthropicProvider implements LlmProvider
      */
     private const LONG_TEXT_TASKS = ['draft_listing', 'translate_listing'];
 
-    /** Foto's per product groeperen kan alleen als het model ze allemaal ziet (max 20 per kavel). */
+    /**
+     * Foto's per product groeperen kan alleen als het model ze allemaal ziet:
+     * een inventaris telt tot zestig foto's (StoreImage). Welke foto bij welk
+     * product hoort, ziet het model ook op 768 pixels; dat houdt zestig foto's
+     * betaalbaar.
+     */
     private const ALL_PHOTO_TASKS = ['group_photos'];
 
     public function complete(AiTask $task, string $prompt): AiResult
@@ -43,10 +49,11 @@ final class AnthropicProvider implements LlmProvider
         // te laten mislukken.
         // Elke foto krijgt zijn nummer mee, zodat het model ernaar kan
         // verwijzen; een overgeslagen foto verschuift de nummers niet.
-        $limit = in_array($task->name(), self::ALL_PHOTO_TASKS, true) ? 20 : 8;
+        $allPhotos = in_array($task->name(), self::ALL_PHOTO_TASKS, true);
+        $limit = $allPhotos ? StoreImage::MAX_PER_INVENTORY : 8;
 
         foreach (array_slice($task->images(), 0, $limit) as $index => $path) {
-            $image = ModelImage::encode($path);
+            $image = $allPhotos ? ModelImage::encode($path, 768) : ModelImage::encode($path);
 
             if ($image === null) {
                 continue;

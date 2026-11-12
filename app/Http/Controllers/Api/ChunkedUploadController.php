@@ -48,8 +48,8 @@ final class ChunkedUploadController extends Controller
             'chunks' => ['required', 'integer', 'min:1', 'max:'.self::MAX_CHUNKS],
         ]);
 
-        if ($lot->media()->count() >= StoreImage::MAX_PER_LOT) {
-            return response()->json(['message' => 'Maximaal 20 foto\'s per kavel.'], 422);
+        if ($lot->media()->count() >= StoreImage::maxFor($lot)) {
+            return response()->json(['message' => StoreImage::limitMessage($lot)], 422);
         }
 
         if (count(Storage::disk('local')->directories('chunks/'.$lot->id)) >= self::MAX_OPEN_UPLOADS) {
