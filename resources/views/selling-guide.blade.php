@@ -18,6 +18,8 @@
 {{-- Geen over-hero: de pagina heeft geen donkere hero, dus de header hoort
      hier de vaste witte variant te zijn. De layout levert de inhoudskolom. --}}
 <x-layouts.public title="Verkooproute" eyebrow="Verkopen op Aucvy"
+    meta-title="Bedrijfsgoederen verkopen via een veiling · Aucvy"
+    description="Verkoop machines, inventaris en overtollig materieel via een veiling, afslag of vaste prijs. Jij levert de foto's, Ivy en haar team doen de rest."
     intro="Dit is het echte systeem in het klein. Jij levert de foto's en het akkoord; Ivy en haar team doen de rest.">
     <x-slot:headline>Van foto <span class="g">tot uitbetaling.</span></x-slot:headline>
     <x-slot:lead>

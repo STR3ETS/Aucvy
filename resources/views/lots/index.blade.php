@@ -3,9 +3,36 @@
 @php
     // Een categoriepagina heeft een eigen kop; de lijst eronder is dezelfde.
     $categoryPage ??= null;
+
+    // De zoektitel en -beschrijving per soort lijst: een categorie, direct kopen of alle veilingen.
+    [$seoTitle, $seoDescription] = match (true) {
+        $categoryPage !== null => [
+            $categoryPage->name.': zakelijke veilingen en kavels · Aucvy',
+            'Bied op '.mb_strtolower($categoryPage->name).' van bedrijven: alle lopende kavels in '.$categoryPage->name.' op Aucvy, met de stand, de sluittijd en een waarde-indicatie.',
+        ],
+        request()->routeIs('lots.buy-now') => [
+            'Direct kopen tegen een vaste prijs · Aucvy',
+            'Zakelijke goederen die je meteen koopt tegen een vaste prijs, zonder te bieden. Van geverifieerde verkopers, met een waarde-indicatie per kavel.',
+        ],
+        default => [
+            'Veilingen: machines, inventaris en bedrijfsgoederen · Aucvy',
+            'Alle lopende zakelijke veilingen op Aucvy: machines, horeca, kantoor, bouw en meer, van geverifieerde verkopers en met een waarde-indicatie per kavel.',
+        ],
+    };
 @endphp
 
-<x-layouts.public :title="$pageTitle ?? ($categoryPage?->name ?? 'Veilingen')" :eyebrow="$categoryPage ? 'Categorie' : 'Ontdek'" :noindex="$noindex ?? false"
+@if ($categoryPage)
+    @push('head')
+        <x-seo.breadcrumbs :items="array_values(array_filter([
+            ['Aucvy', route('home')],
+            ['Veilingen', route('lots.index')],
+            $categoryPage->parent ? [$categoryPage->parent->name, route('lots.category', $categoryPage->parent)] : null,
+            [$categoryPage->name, route('lots.category', $categoryPage)],
+        ]))" />
+    @endpush
+@endif
+
+<x-layouts.public :title="$pageTitle ?? ($categoryPage?->name ?? 'Veilingen')" :meta-title="$seoTitle" :description="$seoDescription" :eyebrow="$categoryPage ? 'Categorie' : 'Ontdek'" :noindex="$noindex ?? false"
     :intro="$pageIntro ?? 'Kavels van geverifieerde verkopers, met de waarde-indicatie van Ivy erbij. Zoek, filter of vraag het gewoon in je eigen woorden.'">
 
     @if ($categoryPage)

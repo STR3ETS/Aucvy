@@ -44,7 +44,7 @@ it('zet canonical en open graph op elke publieke pagina', function () {
     $this->get('/veilingen')
         ->assertOk()
         ->assertSee('<link rel="canonical" href="'.url('/veilingen').'">', escape: false)
-        ->assertSee('<meta property="og:title" content="Veilingen · Aucvy">', escape: false)
+        ->assertSee('<meta property="og:title" content="Veilingen: machines, inventaris en bedrijfsgoederen · Aucvy">', escape: false)
         ->assertSee('<meta property="og:type" content="website">', escape: false);
 });
 
@@ -66,4 +66,39 @@ it('wijst zoekmachines met robots.txt naar de sitemap en weg van het dashboard',
         ->assertOk()
         ->assertSee('Sitemap: '.route('sitemap'))
         ->assertSee('Disallow: /dashboard');
+});
+
+it('geeft elke vaste pagina een eigen zoektitel en een beschrijving van hooguit 155 tekens', function (string $route) {
+    $html = $this->get(route($route))->assertOk()->getContent();
+
+    preg_match('/<meta name="description" content="([^"]*)"/', $html, $description);
+    preg_match('/<title>([^<]*)<\/title>/', $html, $title);
+
+    expect($description[1] ?? '')->not->toBe('')
+        ->and(mb_strlen(html_entity_decode($description[1] ?? '')))->toBeLessThanOrEqual(155)
+        ->and(mb_strlen(html_entity_decode($title[1] ?? '')))->toBeLessThanOrEqual(60);
+})->with(['home', 'lots.index', 'lots.buy-now', 'categories.index', 'how-it-works', 'selling.guide', 'pricing', 'business', 'assurance', 'faq', 'contact', 'sell']);
+
+it('beschrijft de site, de veelgestelde vragen en het kruimelpad voor zoekmachines', function () {
+    $lot = Lot::factory()->live()->create();
+
+    $this->get(route('home'))->assertOk()
+        ->assertSee('"@type":"Organization"', false)
+        ->assertSee('"@type":"SearchAction"', false);
+
+    $this->get(route('faq'))->assertOk()
+        ->assertSee('"@type":"FAQPage"', false)
+        ->assertSee('"@type":"Question"', false);
+
+    $this->get(route('lots.show', $lot))->assertOk()
+        ->assertSee('"@type":"BreadcrumbList"', false)
+        ->assertSee('"item":"'.route('lots.show', $lot).'"', false);
+});
+
+it('zet verkopersprofielen in de sitemap en houdt account en privé deellinks buiten de index', function () {
+    $lot = Lot::factory()->live()->create();
+    Cache::forget('sitemap.xml');
+
+    $this->get('/sitemap.xml')->assertOk()->assertSee('<loc>'.route('sellers.show', $lot->seller).'</loc>', false);
+    $this->get('/robots.txt')->assertOk()->assertSee('Disallow: /account')->assertSee('Disallow: /kavel/*/d/');
 });

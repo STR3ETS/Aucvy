@@ -10,7 +10,9 @@
     en de subcategorieën als links; de foto komt uit het aanbod en anders uit
     het ontwerp. Daaronder wat er nu onder de hamer gaat.
 --}}
-<x-layouts.public title="Categorieën" eyebrow="Ontdek">
+<x-layouts.public title="Categorieën" eyebrow="Ontdek"
+    meta-title="Alle categorieën zakelijke goederen · Aucvy"
+    description="Van machines en voertuigen tot horeca, kantoor en bouw: alle categorieën zakelijke goederen op Aucvy, met het aantal lopende kavels per categorie.">
     <x-slot:headline>{{ $worlds }} <span class="g">Eén veilinghuis.</span></x-slot:headline>
     <x-slot:lead>
         <p style="margin:0">{{ $amount }} hoofdcategorieën, elk met eigen subcategorieën en specificaties. Klik door naar het aanbod of zoek meteen in je eigen woorden.</p>

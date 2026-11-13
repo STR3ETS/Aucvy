@@ -78,8 +78,8 @@ it('zet noindex op gefilterde en gepagineerde zoekpagina\'s, niet op de schone',
     $lot = Lot::factory()->live()->create();
     Auction::factory()->create(['lot_id' => $lot->id]);
 
-    $this->get('/veilingen')->assertOk()->assertDontSee('name="robots"', false);
+    $this->get('/veilingen')->assertOk()->assertDontSee('noindex', false);
     $this->get('/veilingen?vorm=dutch')->assertOk()->assertSee('<meta name="robots" content="noindex,follow">', false);
     $this->get('/veilingen?page=2')->assertOk()->assertSee('<meta name="robots" content="noindex,follow">', false);
-    $this->get(route('lots.category', $lot->category))->assertOk()->assertDontSee('name="robots"', false);
+    $this->get(route('lots.category', $lot->category))->assertOk()->assertDontSee('noindex', false);
 });

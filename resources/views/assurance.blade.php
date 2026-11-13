@@ -12,6 +12,8 @@
 @endphp
 
 <x-layouts.public title="Zekerheid" eyebrow="Zekerheid"
+    meta-title="Zekerheid bij zakelijk kopen en verkopen · Aucvy"
+    description="Wat er bij elke kavel op Aucvy vaststaat: geverifieerde verkopers, alle kosten vooraf en vaste termijnen voor betalen, melden en uitbetalen."
     intro="Wat er bij elke kavel vaststaat, met de termijnen erbij. En wat er nog niet is.">
     <x-slot:headline>Bij elke kavel <span class="g">geregeld.</span></x-slot:headline>
     <x-slot:lead>

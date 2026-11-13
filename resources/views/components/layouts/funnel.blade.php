@@ -19,14 +19,8 @@
         <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
     @endif
 
-    <title>{{ $title ? $title.' · '.config('app.name') : config('app.name') }}</title>
-    @if ($description)
-        <meta name="description" content="{{ $description }}">
-    @endif
-    <link rel="canonical" href="{{ url()->current() }}">
-    <meta property="og:site_name" content="{{ config('app.name') }}">
-    <meta property="og:locale" content="nl_NL">
-    <meta property="og:title" content="{{ $title ? $title.' · '.config('app.name') : config('app.name') }}">
+    {{-- Dezelfde zoek- en deelkop als de rest van de site; een concept (?concept=) is geen eigen pagina. --}}
+    <x-head.meta :title="$title ? $title.' · '.config('app.name') : null" :description="$description" :canonical="route('sell')" :noindex="request()->hasAny(['concept', 'nieuw'])" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

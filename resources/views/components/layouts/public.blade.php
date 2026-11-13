@@ -1,5 +1,7 @@
 @props([
     'title' => null,
+    // De titel in de zoekresultaten, als die moet afwijken van de kop op de pagina.
+    'metaTitle' => null,
     'description' => null,
     // Op de home ligt de header transparant óver de blauwe hero (het ontwerp).
     // Op binnenpagina's krijgt hij de vaste witte variant.
@@ -61,37 +63,9 @@
         <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
     @endif
 
-    <title>{{ $title ? $title . ' · ' . config('app.name') : 'Aucvy - Upload. Ivy regelt de rest.' }}</title>
-
-    @if ($description)
-        <meta name="description" content="{{ $description }}">
-    @endif
-
-    @php
-        $canonicalUrl = $canonical ?? url()->current();
-        $shareImage = $image ?? asset('images/v4/footer-gavel.jpg');
-        $shareTitle = $title ? $title.' · '.config('app.name') : 'Aucvy - Upload. Ivy regelt de rest.';
-    @endphp
-    <link rel="canonical" href="{{ $canonicalUrl }}">
-    @if ($noindex)
-        <meta name="robots" content="noindex,follow">
-    @endif
-    <meta property="og:site_name" content="{{ config('app.name') }}">
-    <meta property="og:locale" content="nl_NL">
-    <meta property="og:type" content="{{ $ogType }}">
-    <meta property="og:url" content="{{ $canonicalUrl }}">
-    <meta property="og:title" content="{{ $shareTitle }}">
-    @if ($description)
-        <meta property="og:description" content="{{ $description }}">
-    @endif
-    <meta property="og:image" content="{{ $shareImage }}">
-    @if ($imageWidth && $imageHeight)
-        <meta property="og:image:width" content="{{ $imageWidth }}">
-        <meta property="og:image:height" content="{{ $imageHeight }}">
-    @endif
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $shareTitle }}">
-    <meta name="twitter:image" content="{{ $shareImage }}">
+    {{-- De zoek- en deelkop (x-head.meta): een eigen zoektitel mag, anders de paginatitel; de beschrijving valt terug op de introzin. --}}
+    <x-head.meta :title="$metaTitle ?? ($title ? $title.' · '.config('app.name') : null)" :description="$description ?? (is_string($intro) ? $intro : null)"
+                 :canonical="$canonical" :image="$image" :image-width="$imageWidth" :image-height="$imageHeight" :og-type="$ogType" :noindex="$noindex" />
 
     {{-- Exact de fontlaad-regels uit aucvy-home.html. Google serveert Manrope
          als variabel font en dat rendert zichtbaar lichter dan de statische

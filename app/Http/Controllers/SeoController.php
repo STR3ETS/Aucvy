@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Lot;
 use App\Models\Sale;
+use App\Models\User;
 use App\Support\Blog\BlogClient;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
@@ -29,6 +30,10 @@ final class SeoController extends Controller
             'Disallow: /dev',
             'Disallow: /api',
             'Disallow: /ab-test',
+            'Disallow: /account',
+            'Disallow: /ivy/',
+            // Privé deellinks van een kavel (met token).
+            'Disallow: /kavel/*/d/',
             '',
             'Sitemap: '.route('sitemap'),
             '',
@@ -84,6 +89,14 @@ final class SeoController extends Controller
             ->get(['id', 'slug', 'updated_at'])
             ->each(function (Sale $sale) use (&$entries): void {
                 $entries[] = $this->entry(route('sales.show', $sale), $sale->updated_at?->toAtomString(), 'hourly', '0.7');
+            });
+
+        // Verkopersprofielen: alleen wie iets openbaars in de verkoop heeft (of had).
+        User::query()
+            ->whereIn('id', Lot::query()->public()->select('seller_id'))
+            ->get(['id', 'updated_at'])
+            ->each(function (User $seller) use (&$entries): void {
+                $entries[] = $this->entry(route('sellers.show', $seller), $seller->updated_at?->toAtomString(), 'weekly', '0.4');
             });
 
         // De blog uit het CMS van Eazyonline: de index en de nieuwste berichten.

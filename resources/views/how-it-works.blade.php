@@ -35,6 +35,8 @@
     voorbeeld.
 --}}
 <x-layouts.public title="Hoe het werkt" eyebrow="Hoe het werkt" heading="Het verhaal van één heftruck"
+    meta-title="Hoe werkt Aucvy? Zakelijk kopen en verkopen · Aucvy"
+    description="Zo werkt Aucvy: foto's uploaden, Ivy schrijft de advertentie en schat de waarde, kopers bieden, en daarna betalen, ophalen of laten bezorgen."
     intro="Hij staat stil in een hal in Nijmegen. Een ander bedrijf kan hem net goed gebruiken. Zo komen ze op Aucvy bij elkaar.">
 
     <div class="d-story">

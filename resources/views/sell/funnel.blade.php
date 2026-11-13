@@ -56,7 +56,7 @@
     per scherm één blauwe knop: verder. Het gedrag staat in
     resources/js/funnel.js.
 --}}
-<x-layouts.funnel title="Kavel plaatsen" description="Plaats je kavel in acht stappen. Geen account nodig om te beginnen: je ziet eerst wat Ivy voor je maakt.">
+<x-layouts.funnel title="Kavel plaatsen" description="Plaats gratis een zakelijke kavel. Upload een paar foto's; Ivy schrijft de advertentie en schat de waarde. Geen account nodig om te beginnen.">
     <div class="fn-page fn-flow" x-data="funnel({{ Js::from($initial) }}, {{ $feePercentage }}, {{ Js::from($schemas) }})">
 
         {{-- De balk bovenin: het logo, de acht stappen en rechts de compleetheid, de concepten en sluiten. --}}

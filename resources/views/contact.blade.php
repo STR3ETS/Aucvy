@@ -1,4 +1,5 @@
 <x-layouts.public title="Contact" eyebrow="Hulp"
+    description="Vragen over een kavel, een bod of verkopen op Aucvy? Stel ze per mail; je krijgt meestal binnen één werkdag antwoord."
     intro="Je krijgt per mail antwoord, meestal binnen één werkdag.">
     <x-slot:headline>Stel je vraag. <span class="g">Een mens leest mee.</span></x-slot:headline>
     <x-slot:actions>

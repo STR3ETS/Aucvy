@@ -23,7 +23,9 @@
     De FAQ (briefing hfst. 2b: "statisch, met een accordeon"). Native
     details/summary: toegankelijk zonder JavaScript.
 --}}
-<x-layouts.public title="Veelgestelde vragen" eyebrow="Veelgestelde vragen">
+<x-layouts.public title="Veelgestelde vragen" eyebrow="Veelgestelde vragen"
+    meta-title="Veelgestelde vragen over bieden en verkopen · Aucvy"
+    description="Antwoorden op de meest gestelde vragen over Aucvy: bieden, betalen, ophalen en transport, en zakelijk verkopen met Ivy.">
     <x-slot:headline>Alles wat je wilt <span class="g">weten,</span> op één plek.</x-slot:headline>
     <x-slot:lead>
         <p style="margin:0">Van bieden en verkoopvormen tot verificatie, kosten en zekerheid. Staat je vraag er niet bij? Vraag het Ivy.</p>
@@ -46,7 +48,9 @@
 
     <div class="d-faq">
 
-        @foreach ([
+        @php
+            // De vragen staan één keer: op de pagina en als FAQPage voor zoekmachines.
+            $faq = [
             'Algemeen' => [
                 ['Wat is Aucvy?', 'Een online veilingplatform voor zakelijke goederen: machines, inventaris, horeca- en kantoorinrichting. Bedrijven verkopen per veiling, afslag of vaste prijs; iedereen met een account kan kopen.'],
                 ['Wie is Ivy, en zijn er meer assistenten?', 'Ivy is de AI-assistent van Aucvy. Ze werkt met vijf specialisten: Atlas voor de markt en de waarde-indicatie, Nova voor de advertentietekst, Finn voor het geld, Flow voor de logistiek en Lex voor de documenten. Het zijn AI-assistenten, geen mensen; bij een geschil beslist altijd een medewerker.'],
@@ -83,7 +87,10 @@
                 ['Hoe betrouwbaar is de waarde-indicatie?', 'Het is een range op basis van vergelijkbare verkopen, altijd met een zekerheidslabel. Bij lage zekerheid tonen we bewust geen vergelijking met het huidige bod en raden we een bezichtiging aan.'],
                 ['Wat gebeurt er met mijn foto\'s en documenten?', 'Die worden alleen gebruikt om jouw kavel te verwerken. Documenten staan op afgeschermde opslag en zijn nooit publiek te downloaden.'],
             ],
-        ] as $sectie => $vragen)
+        ];
+        @endphp
+
+        @foreach ($faq as $sectie => $vragen)
             <section aria-label="{{ $sectie }}">
                 <h2 class="d-faq-label">{{ $sectie }}</h2>
                 @foreach ($vragen as [$vraag, $antwoord])
@@ -97,5 +104,13 @@
                 @endforeach
             </section>
         @endforeach
+
+        @push('head')
+            <x-seo.schema :data="[
+                '@context' => 'https://schema.org',
+                '@type' => 'FAQPage',
+                'mainEntity' => collect($faq)->flatten(1)->map(fn (array $item): array => ['@type' => 'Question', 'name' => $item[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $item[1]]])->values()->all(),
+            ]" />
+        @endpush
     </div>
 </x-layouts.public>

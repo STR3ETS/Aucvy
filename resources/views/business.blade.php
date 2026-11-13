@@ -24,6 +24,8 @@
 @endphp
 
 <x-layouts.public title="Zakelijk" eyebrow="Zakelijk verkopen"
+    meta-title="Zakelijk verkopen: inventaris en liquidaties · Aucvy"
+    description="Voor bedrijven met doorlopende inventaris, overtollig materieel of een liquidatie. Veil alles in één veiling met één sluitschema en één bezichtiging."
     intro="Voor bedrijven met een doorlopende stroom aan inventaris, overtollig materieel of een liquidatie. Ivy coördineert en jij houdt de regie.">
     <x-slot:headline>Een verkoopteam dat <span class="g">nooit slaapt.</span></x-slot:headline>
     <x-slot:lead>

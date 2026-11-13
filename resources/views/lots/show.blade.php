@@ -67,6 +67,13 @@
 
 @push('head')
     <script type="application/ld+json">{!! json_encode(array_filter($structured, fn ($value) => $value !== null), JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    <x-seo.breadcrumbs :items="array_values(array_filter([
+        ['Aucvy', route('home')],
+        ['Veilingen', route('lots.index')],
+        $lot->category?->parent ? [$lot->category->parent->name, route('lots.category', $lot->category->parent)] : null,
+        $lot->category ? [$lot->category->name, route('lots.category', $lot->category)] : null,
+        [$lot->title, route('lots.show', $lot)],
+    ]))" />
 @endpush
 
 <x-layouts.public :title="$lot->title" :heading="$translation['title'] ?? $lot->title" :description="Str::limit($lot->description, 155)"

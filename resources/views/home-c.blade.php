@@ -76,8 +76,13 @@
     vragen. Aantallen, termijnen en drempels komen uit de code; de bedragen
     in de probeerblokken zijn voorbeelden en staan er zo bij.
 --}}
+@push('head')
+    <x-seo.site-schema />
+@endpush
+
 <x-layouts.public over-hero theme="c"
-    description="Aucvy is het AI-commerceplatform voor zakelijke goederen. Upload een foto en het AI-team van Ivy herkent, schrijft en waardeert. Verkopen via veiling, afslag of koop direct, met geverifieerde verkopers en kosten vooraf - je betaalt alleen bij resultaat.">
+    meta-title="Aucvy: zakelijke veilingen voor bedrijfsgoederen"
+    description="Koop en verkoop bedrijfsgoederen op Aucvy, het zakelijke veilingplatform met AI. Upload een paar foto's; Ivy schrijft de advertentie en schat de waarde.">
 
     {{-- De kop. --}}
     <section class="page-hero d-home-hero" id="top" aria-labelledby="hero-title">

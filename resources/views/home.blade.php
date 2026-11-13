@@ -6,8 +6,13 @@
     komt letterlijk uit het ontwerp - wijzigingen dáár horen eerst in het
     ontwerpbestand, dan hier.
 --}}
+@push('head')
+    <x-seo.site-schema />
+@endpush
+
 <x-layouts.public over-hero theme=""
-    description="Aucvy is het AI-commerceplatform voor zakelijke goederen. Upload een foto en het AI-team van Ivy herkent, schrijft en waardeert. Verkopen via veiling, afslag of koop direct, met geverifieerde verkopers en kosten vooraf - je betaalt alleen bij resultaat.">
+    meta-title="Aucvy: zakelijke veilingen voor bedrijfsgoederen"
+    description="Koop en verkoop bedrijfsgoederen op Aucvy, het zakelijke veilingplatform met AI. Upload een paar foto's; Ivy schrijft de advertentie en schat de waarde.">
 
 <div class="home">
 

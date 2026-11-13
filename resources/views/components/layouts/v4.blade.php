@@ -1,5 +1,6 @@
 @props([
     'title' => null,
+    'metaTitle' => null,
     'description' => null,
     // De variant en de demo-vlag van de A/B-test (HomeController).
     'variant' => null,
@@ -22,11 +23,8 @@
         <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
     @endif
 
-    <title>{{ $title ? $title . ' · ' . config('app.name') : 'Aucvy - Upload. Ivy regelt de rest.' }}</title>
-
-    @if ($description)
-        <meta name="description" content="{{ $description }}">
-    @endif
+    {{-- Dezelfde zoek- en deelkop als de andere layouts, met dezelfde canonical voor elke variant van de home-test. --}}
+    <x-head.meta :title="$metaTitle ?? ($title ? $title.' · '.config('app.name') : null)" :description="$description" />
 
     {{-- Preview v4 zet in Inter, niet in Manrope. --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

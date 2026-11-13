@@ -33,6 +33,8 @@
     "volgt".
 --}}
 <x-layouts.public title="Prijzen" eyebrow="Tarieven"
+    meta-title="Prijzen: gratis plaatsen, succesfee bij verkoop · Aucvy"
+    description="Geen abonnement en geen plaatsingskosten. Kopers betalen geen opgeld; verkopende bedrijven betalen een succesfee over een geslaagde verkoop."
     intro="Geen abonnement en geen plaatsingskosten. Kopers betalen geen opgeld; verkopende bedrijven een succesfee over een geslaagde verkoop.">
     <x-slot:headline>Plaatsen is gratis. <span class="g">Je betaalt bij verkoop.</span></x-slot:headline>
     <x-slot:lead>
