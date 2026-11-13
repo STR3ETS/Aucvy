@@ -40,7 +40,7 @@ final class IvyInboxController extends Controller
         }
 
         return view('dashboard.ivy-inbox', $inbox + [
-            'proposals' => IvyActionProposal::query()->where('user_id', $user->id)->with('lot')->latest('id')->limit(10)->get(),
+            'proposals' => IvyActionProposal::query()->where('user_id', $user->id)->with('lot.media')->latest('id')->limit(10)->get(),
             'watching' => [
                 'modes' => IvyLotMode::query()->where('user_id', $user->id)->whereNull('ended_at')->with('lot')->get(),
                 'searches' => SavedSearch::query()->where('user_id', $user->id)->whereNull('paused_at')->get(),
