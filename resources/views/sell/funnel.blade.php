@@ -49,93 +49,124 @@
 @endphp
 
 {{--
-    Kavel plaatsen in acht stappen. De opzet volgt het dashboard: een navy kop,
-    daaronder losse kaarten op een zachte vloer. Per stap staat elk onderwerp
+    Kavel plaatsen in acht stappen, schermvullend: bovenin een balk met de
+    stappen, midden in beeld de vraag, daaronder losse kaarten op een zachte vloer. Per stap staat elk onderwerp
     in een eigen kaart, de uitleg staat achter een vraagteken en bijzaken
     (foto maken, barcode, typeplaat, dicteren) zijn pictogramknoppen. Er is
     per scherm één blauwe knop: verder. Het gedrag staat in
     resources/js/funnel.js.
 --}}
 <x-layouts.funnel title="Kavel plaatsen" description="Plaats je kavel in acht stappen. Geen account nodig om te beginnen: je ziet eerst wat Ivy voor je maakt.">
-    <div class="fn-page" x-data="funnel({{ Js::from($initial) }}, {{ $feePercentage }}, {{ Js::from($schemas) }})">
-        <div class="fn-card">
+    <div class="fn-page fn-flow" x-data="funnel({{ Js::from($initial) }}, {{ $feePercentage }}, {{ Js::from($schemas) }})">
 
-            {{-- De navy kop: het concept, de andere concepten, opslaan en sluiten, en de titel van de stap. --}}
-            <header class="fn-head" style="background-image:url('{{ asset('images/design/dash-head.png') }}')">
-                <div class="fn-head-top">
-                    <a class="fn-brand" href="{{ route('home') }}" aria-label="Aucvy - home">
-                        <svg width="20" height="20" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg>
-                        Aucvy
-                    </a>
-                    <div class="fn-head-status">
-                        <span x-show="draft" x-cloak>
-                            Concept <b class="tabular" x-text="'#' + draft?.public_id">#{{ $initial['draft']['public_id'] ?? '' }}</b>
-                            · <span x-text="saving ? 'opslaan…' : 'automatisch opgeslagen'">automatisch opgeslagen</span>
+        {{-- De balk bovenin: het logo, de acht stappen en rechts de compleetheid, de concepten en sluiten. --}}
+        <header class="fn-bar">
+            <a class="fn-brand" href="{{ route('home') }}" aria-label="Aucvy - home">
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg>
+                <span class="fn-brand-name">Aucvy</span>
+            </a>
+
+            {{-- De acht stappen op een rij (briefing 13.4): klikbaar; wat achter je ligt krijgt een vinkje. --}}
+            <nav aria-label="Stappen" class="fn-stepper">
+                <template x-for="(name, index) in steps" :key="index">
+                    <button type="button" @click="step = index" class="fn-stepper-item"
+                            :class="{ 'is-on': step === index, 'is-done': index < step }"
+                            :aria-current="step === index ? 'step' : null" :aria-label="'Stap ' + (index + 1) + ': ' + name">
+                        <span class="dot" aria-hidden="true">
+                            <svg x-show="index < step" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            <span x-show="index >= step" x-text="index + 1"></span>
                         </span>
+                        <span class="name" x-text="name"></span>
+                    </button>
+                </template>
+            </nav>
 
-                        {{-- Conceptoverzicht (briefing sectie 5): hervatten, nieuw beginnen of opruimen. --}}
-                        @auth
-                            @php($deleteUrl = route('dashboard.lots.destroy-draft', ['lot' => '__LOT__']))
-                            <details class="fn-draftmenu" x-data @click.outside="$el.removeAttribute('open')">
-                                <summary class="fn-head-btn is-quiet">{{ match ($drafts->count()) { 0 => 'Concepten', 1 => 'Nog één ander concept', default => 'Nog '.$drafts->count().' andere concepten' } }}</summary>
-                                <div class="fn-draftmenu-panel">
-                                    @if ($drafts->isNotEmpty())
-                                        <ul>
-                                            @foreach ($drafts as $other)
-                                                <li>
-                                                    <a href="{{ route('sell', ['concept' => $other->id]) }}">
-                                                        <strong>{{ $other->title ?: 'Zonder titel' }}</strong>
-                                                        <span class="tabular">#{{ $other->public_id }} · {{ $other->completeness_score }}% · {{ $other->updated_at->timezone(config('aucvy.display_timezone'))->diffForHumans() }}</span>
-                                                    </a>
-                                                    <form method="POST" action="{{ route('dashboard.lots.destroy-draft', $other) }}" onsubmit="return confirm('Dit concept verwijderen? Dat kan niet ongedaan worden gemaakt.')">
-                                                        @csrf
-                                                        <input type="hidden" name="terug" value="verkopen">
-                                                        <input type="hidden" name="concept" :value="draft?.id ?? ''">
-                                                        <button type="submit" class="d-iconbtn is-danger" data-tip="Verwijderen" aria-label="Concept {{ $other->title ?: 'zonder titel' }} verwijderen"><x-v4.icon name="trash" :size="16" stroke="2" /></button>
-                                                    </form>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    @endif
-                                    <div class="fn-draftmenu-actions">
-                                        <a href="{{ route('sell', ['nieuw' => 1]) }}" class="d-btn d-btn-secondary d-btn-sm">Nieuw concept</a>
-                                        <form method="POST" x-show="draft" :action="@js($deleteUrl).replace('__LOT__', draft?.id)" onsubmit="return confirm('Dit concept verwijderen? Dat kan niet ongedaan worden gemaakt.')">
-                                            @csrf
-                                            <input type="hidden" name="terug" value="verkopen">
-                                            <button type="submit" class="d-btn d-btn-secondary d-btn-sm is-danger">Dit concept verwijderen</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </details>
-                        @endauth
-
-                        <a class="fn-head-btn" href="{{ $closeUrl }}" @click.prevent="flush().finally(() => window.location.assign(@js($closeUrl)))">Opslaan en sluiten</a>
+            <div class="fn-bar-end">
+                {{-- Compleetheid: een kleine ring; wat er nog ontbreekt klapt uit. --}}
+                <details class="fn-pop fn-complete-pop" x-data="{ allMissing: false }" @click.outside="$el.removeAttribute('open')">
+                    <summary class="fn-bar-btn" :aria-label="'Compleetheid ' + completeness.score + '%'">
+                        <span class="d-ring is-sm" aria-hidden="true">
+                            <svg viewBox="0 0 100 100">
+                                <circle class="track" cx="50" cy="50" r="38"></circle>
+                                <circle class="value" cx="50" cy="50" r="38" pathLength="100" style="transition:stroke-dasharray .5s" :stroke-dasharray="Math.max(4, completeness.score) + ' 100'"></circle>
+                            </svg>
+                        </span>
+                        <b class="tabular" x-text="completeness.score + '%'">0%</b>
+                    </summary>
+                    <div class="fn-pop-panel">
+                        <h2 class="d-h3">Compleetheid</h2>
+                        <p class="d-sub" style="margin-top:4px" x-text="completeness.hint"></p>
+                        <div class="fn-divide" x-show="completeness.missing.length" x-cloak>
+                            <h3 style="margin:0;font-size:13px;font-weight:700">Wat nog ontbreekt</h3>
+                            <ul class="fn-missing">
+                                <template x-for="(key, index) in completeness.missing" :key="key">
+                                    <li x-show="allMissing || index < 5" x-text="({{ Js::from(__('funnel.missing')) }})[key] ?? key"></li>
+                                </template>
+                            </ul>
+                            <button type="button" class="d-link" style="margin-top:8px" x-show="! allMissing && completeness.missing.length > 5" @click="allMissing = true"
+                                    x-text="'En nog ' + (completeness.missing.length - 5) + ' ' + (completeness.missing.length - 5 === 1 ? 'punt' : 'punten')"></button>
+                        </div>
                     </div>
-                </div>
-                <p class="fn-kicker">Kavel plaatsen · stap <span x-text="step + 1">1</span> van 8</p>
+                </details>
+
+                {{-- Conceptoverzicht (briefing sectie 5): hervatten, nieuw beginnen of opruimen. --}}
+                @auth
+                    @php($deleteUrl = route('dashboard.lots.destroy-draft', ['lot' => '__LOT__']))
+                    <details class="fn-draftmenu" x-data @click.outside="$el.removeAttribute('open')">
+                        <summary class="fn-bar-btn"><span class="is-long">{{ match ($drafts->count()) { 0 => 'Concepten', 1 => 'Nog één ander concept', default => 'Nog '.$drafts->count().' andere concepten' } }}</span><span class="is-short">Concepten</span></summary>
+                        <div class="fn-draftmenu-panel">
+                            @if ($drafts->isNotEmpty())
+                                <ul>
+                                    @foreach ($drafts as $other)
+                                        <li>
+                                            <a href="{{ route('sell', ['concept' => $other->id]) }}">
+                                                <strong>{{ $other->title ?: 'Zonder titel' }}</strong>
+                                                <span class="tabular">#{{ $other->public_id }} · {{ $other->completeness_score }}% · {{ $other->updated_at->timezone(config('aucvy.display_timezone'))->diffForHumans() }}</span>
+                                            </a>
+                                            <form method="POST" action="{{ route('dashboard.lots.destroy-draft', $other) }}" onsubmit="return confirm('Dit concept verwijderen? Dat kan niet ongedaan worden gemaakt.')">
+                                                @csrf
+                                                <input type="hidden" name="terug" value="verkopen">
+                                                <input type="hidden" name="concept" :value="draft?.id ?? ''">
+                                                <button type="submit" class="d-iconbtn is-danger" data-tip="Verwijderen" aria-label="Concept {{ $other->title ?: 'zonder titel' }} verwijderen"><x-v4.icon name="trash" :size="16" stroke="2" /></button>
+                                            </form>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                            <div class="fn-draftmenu-actions">
+                                <a href="{{ route('sell', ['nieuw' => 1]) }}" class="d-btn d-btn-secondary d-btn-sm">Nieuw concept</a>
+                                <form method="POST" x-show="draft" :action="@js($deleteUrl).replace('__LOT__', draft?.id)" onsubmit="return confirm('Dit concept verwijderen? Dat kan niet ongedaan worden gemaakt.')">
+                                    @csrf
+                                    <input type="hidden" name="terug" value="verkopen">
+                                    <button type="submit" class="d-btn d-btn-secondary d-btn-sm is-danger">Dit concept verwijderen</button>
+                                </form>
+                            </div>
+                        </div>
+                    </details>
+                @endauth
+
+                <a class="fn-bar-btn is-solid" href="{{ $closeUrl }}" @click.prevent="flush().finally(() => window.location.assign(@js($closeUrl)))"><span class="is-long">Opslaan en sluiten</span><span class="is-short">Sluiten</span></a>
+            </div>
+        </header>
+
+        <div class="fn-stage">
+            {{-- De vraag van deze stap, midden in beeld, met één zin van Ivy erbij. --}}
+            <div class="fn-question">
+                <p class="fn-kicker">
+                    Stap <span x-text="step + 1">1</span> van 8
+                    <span x-show="draft" x-cloak> · Concept <b class="tabular" x-text="'#' + draft?.public_id">#{{ $initial['draft']['public_id'] ?? '' }}</b> · <span x-text="saving ? 'opslaan…' : 'automatisch opgeslagen'">automatisch opgeslagen</span></span>
+                </p>
                 <h1 x-text="({{ Js::from($titles) }})[step]">{{ $titles[0] }}</h1>
                 <p class="fn-lead" x-text="({{ Js::from($leads) }})[step]">{{ $leads[0] }}</p>
-            </header>
+                <p class="fn-ivyline">
+                    <img src="{{ asset('images/agents/ivy.jpg') }}" alt="Ivy, je AI-verkoopassistent">
+                    <span x-text="step === 7 && ! canPublish ? (loggedIn ? 'Bijna. Loop de punten met een uitroepteken nog even na, dan kan je kavel live.' : 'Je concept blijft bewaard. Log in met je zakelijke account, dan zetten we hem samen live.') : ({{ Js::from($ivyLines) }})[step]">{{ $ivyLines[0] }}</span>
+                </p>
+            </div>
 
-            <div class="fn-body">
-
-                {{-- De acht stappen op een rij (briefing 13.4): klikbaar; wat achter je ligt krijgt een vinkje. --}}
-                <nav aria-label="Stappen" class="fn-stepper">
-                    <template x-for="(name, index) in steps" :key="index">
-                        <button type="button" @click="step = index" class="fn-stepper-item"
-                                :class="{ 'is-on': step === index, 'is-done': index < step }"
-                                :aria-current="step === index ? 'step' : null">
-                            <span class="dot" aria-hidden="true">
-                                <svg x-show="index < step" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                                <span x-show="index >= step" x-text="index + 1"></span>
-                            </span>
-                            <span class="name" x-text="name"></span>
-                        </button>
-                    </template>
-                </nav>
-
-                <div class="fn-grid">
-                    <div class="fn-main">
+            {{-- Een zijkolom alleen waar die iets toont (voorbeeld, waarde, samenvatting); anders één kolom in het midden. --}}
+            <div class="fn-grid" :class="{ 'has-aside': [3, 5, 7].includes(step) || (step === 4 && draft?.value_min_cents != null) }">
+                <div class="fn-main">
 
                         {{-- 1 · Wat ------------------------------------------------- --}}
                         <section x-show="step === 0" x-cloak aria-label="Wat wil je verkopen" class="d-stack">
@@ -948,47 +979,8 @@
                             </div>
                         </div>
 
-                        <div class="d-insight">
-                            <div class="d-insight-head">
-                                <img src="{{ asset('images/agents/ivy.jpg') }}" alt="">
-                                <div>
-                                    <strong style="color:#0e1526;font-size:15px">Ivy</strong>
-                                    <span style="font-weight:500;color:#4d5566;font-size:13px">Je AI-verkoopassistent</span>
-                                </div>
-                            </div>
-                            <p class="d-prose" style="margin-top:10px;color:#0e1526" x-text="step === 7 && ! canPublish ? (loggedIn ? 'Bijna. Loop de punten met een uitroepteken nog even na, dan kan je kavel live.' : 'Je concept blijft bewaard. Log in met je zakelijke account, dan zetten we hem samen live.') : ({{ Js::from($ivyLines) }})[step]">{{ $ivyLines[0] }}</p>
-                        </div>
-
-                        {{-- Compleetheid: een ring met het percentage, en wat er nog bij kan. --}}
-                        <div class="fn-sidecard" x-data="{ allMissing: false }">
-                            <div class="fn-complete">
-                                <span class="d-ring" role="progressbar" :aria-valuenow="completeness.score" aria-valuemin="0" aria-valuemax="100" aria-label="Compleetheid">
-                                    <svg viewBox="0 0 100 100" aria-hidden="true">
-                                        <circle class="track" cx="50" cy="50" r="38"></circle>
-                                        <circle class="value" cx="50" cy="50" r="38" pathLength="100" style="transition:stroke-dasharray .5s" :stroke-dasharray="Math.max(4, completeness.score) + ' 100'"></circle>
-                                    </svg>
-                                    <b class="d-ring-center tabular" x-text="completeness.score + '%'"></b>
-                                </span>
-                                <div>
-                                    <h2 class="d-h3">Compleetheid</h2>
-                                    <p class="d-sub" style="margin-top:4px" x-text="completeness.hint"></p>
-                                </div>
-                            </div>
-
-                            <div class="fn-divide" x-show="completeness.missing.length" x-cloak>
-                                <h3 style="margin:0;font-size:13px;font-weight:700">Wat nog ontbreekt</h3>
-                                <ul class="fn-missing">
-                                    <template x-for="(key, index) in completeness.missing" :key="key">
-                                        <li x-show="allMissing || index < 3" x-text="({{ Js::from(__('funnel.missing')) }})[key] ?? key"></li>
-                                    </template>
-                                </ul>
-                                <button type="button" class="d-link" style="margin-top:8px" x-show="! allMissing && completeness.missing.length > 3" @click="allMissing = true"
-                                        x-text="'En nog ' + (completeness.missing.length - 3) + ' ' + (completeness.missing.length - 3 === 1 ? 'punt' : 'punten')"></button>
-                            </div>
-                        </div>
                     </aside>
                 </div>
             </div>
-        </div>
     </div>
 </x-layouts.funnel>

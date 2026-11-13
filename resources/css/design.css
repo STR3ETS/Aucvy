@@ -2037,3 +2037,67 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
 .d-btn.is-danger:hover{border-color:#e7b3ad;background:#fbecea}
 .fn-resume{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:14px 18px;border-radius:16px;background:#fff;box-shadow:var(--d-lift);font-size:14px;color:#2a3242}
 .fn-resume strong{color:#0e1526}
+
+/* ---------- kavel plaatsen, schermvullend: een balk met de stappen, de vraag midden in beeld ---------- */
+.fn-flow{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;padding:0}
+.fn-bar{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px 24px;padding:12px clamp(16px,3vw,32px);background:rgba(232,236,244,.88);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid rgba(14,21,38,.06)}
+.fn-flow .fn-brand{color:#0e1526}
+.fn-flow .fn-stepper{justify-self:center;width:min(100%,720px);padding:0;border-radius:0;background:transparent;box-shadow:none}
+.fn-flow .fn-stepper-item{gap:5px;font-size:12px}
+.fn-flow .fn-stepper-item::before{top:11px}
+.fn-flow .fn-stepper-item .dot{width:24px;height:24px;font-size:11px;background:#fff}
+.fn-flow .fn-stepper-item.is-done .dot{background:#2f6bff}
+.fn-flow .fn-stepper-item.is-on .dot{box-shadow:0 0 0 3px #dbe5ff}
+.fn-bar-end{display:flex;align-items:center;gap:8px}
+.fn-bar-btn{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border:1px solid rgba(14,21,38,.12);border-radius:999px;background:#fff;font-size:13px;font-weight:700;color:#0e1526;white-space:nowrap;list-style:none;cursor:pointer;transition:border-color .15s,background .15s}
+.fn-bar-btn::-webkit-details-marker{display:none}
+.fn-bar-btn:hover{border-color:rgba(14,21,38,.32)}
+.fn-bar-btn.is-solid{border-color:#0e1526;background:#0e1526;color:#fff}
+.fn-bar-btn.is-solid:hover{background:#26304a}
+.fn-bar-btn .d-ring.is-sm{width:22px;height:22px}
+.fn-complete-pop .fn-bar-btn{padding-left:8px}
+.fn-pop{position:relative}
+.fn-pop summary{list-style:none}
+.fn-pop-panel{position:absolute;z-index:40;top:calc(100% + 8px);right:0;width:min(300px,86vw);padding:16px;border-radius:16px;background:#fff;color:#0e1526;box-shadow:0 24px 60px -24px rgba(12,19,38,.45)}
+.fn-pop-panel .fn-divide{margin-top:14px;padding-top:14px}
+
+.fn-stage{flex:1 1 auto;display:flex;flex-direction:column;justify-content:safe center;gap:28px;width:100%;max-width:1120px;margin:0 auto;padding:clamp(28px,6vh,72px) clamp(16px,3vw,32px) 56px}
+.fn-question{width:100%;max-width:760px;margin:0 auto;text-align:center}
+.fn-flow .fn-kicker{margin:0;font-size:13px;font-weight:700;color:#2f6bff}
+.fn-flow .fn-kicker b{color:inherit;font-weight:800}
+.fn-question h1{margin:10px 0 0;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.025em;line-height:1.1;color:#0e1526;text-wrap:balance}
+.fn-flow .fn-lead{max-width:58ch;margin:12px auto 0;font-size:16px;line-height:1.55;color:#4d5566}
+.fn-ivyline{display:inline-flex;align-items:center;gap:10px;max-width:640px;margin:18px auto 0;padding:7px 16px 7px 7px;border-radius:999px;background:#f1edff;font-size:14px;line-height:1.4;color:#2a2346;text-align:left}
+.fn-ivyline img{width:30px;height:30px;flex:0 0 auto;border-radius:50%;object-fit:cover}
+.c.funnel .fn-flow .fn-grid{grid-template-columns:minmax(0,760px);justify-content:center;width:100%;margin-top:0}
+.c.funnel .fn-flow .fn-grid.has-aside{grid-template-columns:minmax(0,760px) 300px}
+.fn-flow .fn-grid:not(.has-aside)>.fn-aside{display:none}
+@media (max-width:1240px){
+  .fn-flow .fn-stepper-item .name{display:none}
+}
+@media (max-width:1100px){
+  .c.funnel .fn-flow .fn-grid.has-aside{grid-template-columns:minmax(0,760px)}
+}
+@media (max-width:760px){
+  .fn-bar{grid-template-columns:auto minmax(0,1fr)}
+  .fn-bar-end{justify-self:end}
+  .fn-flow .fn-stepper{grid-column:1/-1;grid-row:2;width:100%}
+  .fn-draftmenu>.fn-bar-btn{max-width:140px;overflow:hidden;text-overflow:ellipsis}
+  .fn-ivyline{border-radius:16px}
+}
+.fn-bar{grid-template-columns:minmax(max-content,1fr) minmax(0,720px) minmax(max-content,1fr)}
+.fn-bar-end{justify-self:end}
+.fn-ivyline{border-radius:18px}
+@media (max-width:760px){
+  .fn-bar{grid-template-columns:auto minmax(0,1fr)}
+}
+.fn-bar-btn .is-short{display:none}
+@media (max-width:760px){
+  .fn-bar-btn .is-long,.fn-brand-name{display:none}
+  .fn-bar-btn .is-short{display:inline}
+  .fn-bar-end{gap:6px}
+  .fn-bar-btn{min-height:36px;padding:0 12px}
+}
+
+/* Een gesloten uitlegballon telt niet mee voor de breedte: anders schuift een pagina op de telefoon opzij. */
+.d-help:not(:hover):not(:focus-within) .d-help-tip{display:none}
