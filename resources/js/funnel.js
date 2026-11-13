@@ -153,6 +153,13 @@ export default function funnel(initial, feePercentage, schemas = {}) {
             this._creating ??= this.request('/api/drafts', 'POST', {}).then((response) => {
                 if (response) {
                     this.apply(response);
+
+                    // Het adres wijst voortaan naar dit concept: verversen opent
+                    // het weer, in plaats van een nieuw leeg concept.
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('nieuw');
+                    url.searchParams.set('concept', this.draft.id);
+                    window.history.replaceState(null, '', url);
                 } else {
                     // Mislukt: de volgende aanroep probeert het opnieuw in
                     // plaats van eeuwig op deze mislukte belofte te wachten.

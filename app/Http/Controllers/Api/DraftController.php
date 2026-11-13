@@ -251,6 +251,9 @@ final class DraftController extends Controller
         $lot = $this->access->resolve($request, $lot);
 
         if ($user === null) {
+            // Na het inloggen terug naar precies dit concept: zonder parameter begint de funnel leeg.
+            $request->session()->put('url.intended', route('sell', ['concept' => $lot->id]));
+
             return response()->json([
                 'message' => __('funnel.errors.login_required'),
                 'login_url' => route('login'),

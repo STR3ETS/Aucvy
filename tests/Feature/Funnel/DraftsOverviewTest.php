@@ -32,13 +32,22 @@ it('geeft 404 op het concept van iemand anders', function () {
     $this->actingAs(User::factory()->create())->get('/verkopen?concept='.$other->id)->assertNotFound();
 });
 
-it('hervat op een ander apparaat via het account, zonder cookie', function () {
+it('begint ingelogd altijd leeg; een bestaand concept open je zelf, ook op een ander apparaat', function () {
     $seller = User::factory()->verified()->create();
     $draft = Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id, 'title' => 'Compressor']);
 
+    // Kavel plaatsen: geen concept open, wel in het menu om zelf te kiezen.
     $this->actingAs($seller)->get('/verkopen')
         ->assertOk()
-        ->assertSee('#'.$draft->public_id);
+        ->assertSee('Nog één ander concept')
+        ->assertSee(route('sell', ['concept' => $draft->id]), escape: false)
+        ->assertDontSee('Je gaat verder met een concept')
+        ->assertViewHas('initial', fn (array $initial): bool => $initial['draft'] === null);
+
+    // Gekozen: dan opent het, zonder cookie, via het account.
+    $this->actingAs($seller)->get(route('sell', ['concept' => $draft->id]))
+        ->assertOk()
+        ->assertViewHas('initial', fn (array $initial): bool => $initial['draft']['id'] === $draft->id);
 });
 
 it('begint leeg met ?nieuw=1 en laat de bestaande concepten staan', function () {
@@ -110,18 +119,28 @@ it('toont de flow als losse kaarten, met de bijzaken als pictogram en één rij 
         ->assertDontSee('Upload foto');
 });
 
-it('zegt erbij dat je een bestaand concept hervat, met de weg naar een nieuw', function () {
-    $seller = User::factory()->verified()->create();
-    Lot::factory()->anonymousDraft()->create(['seller_id' => $seller->id, 'title' => 'JBL-speakers']);
+it('hervat voor een gast via de cookie, en zegt dat erbij met de weg naar een nieuw', function () {
+    $this->withCredentials()->postJson('/api/drafts')->assertCreated();
+    $draft = Lot::sole();
 
-    $this->actingAs($seller)->get('/verkopen')
+    $this->withCookie(DraftAccess::COOKIE, $draft->draft_token)->get('/verkopen')
         ->assertOk()
         ->assertSee('Je gaat verder met een concept')
         ->assertSee('Begin een nieuw concept');
 
-    $this->actingAs($seller)->get('/verkopen?nieuw=1')
+    $this->withCookie(DraftAccess::COOKIE, $draft->draft_token)->get('/verkopen?nieuw=1')
         ->assertOk()
         ->assertDontSee('Je gaat verder met een concept');
+});
+
+it('brengt een gast na het inloggen terug naar het concept dat hij wilde publiceren', function () {
+    $this->withCredentials()->postJson('/api/drafts')->assertCreated();
+    $draft = Lot::sole();
+
+    $this->withCookie(DraftAccess::COOKIE, $draft->draft_token)
+        ->postJson("/api/drafts/{$draft->id}/publish")
+        ->assertStatus(401)
+        ->assertSessionHas('url.intended', route('sell', ['concept' => $draft->id]));
 });
 
 it('verwijdert een concept vanaf Mijn kavels en uit het conceptmenu, maar niets anders', function () {

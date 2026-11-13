@@ -25,7 +25,8 @@ final class FunnelController extends Controller
      *
      * `?concept={id}` opent een specifiek concept (uit het conceptoverzicht of
      * vanaf een ander apparaat), `?nieuw=1` begint leeg naast de bestaande
-     * concepten (briefing sectie 5: conceptoverzicht en hervatten).
+     * concepten (briefing sectie 5: conceptoverzicht en hervatten). Ingelogd
+     * zonder parameter is ook leeg; alleen een gast hervat vanzelf.
      */
     public function __invoke(Request $request, DraftAccess $access, DraftPayload $payload): View
     {
@@ -34,6 +35,10 @@ final class FunnelController extends Controller
         $current = match (true) {
             $request->boolean('nieuw') => null,
             $request->filled('concept') => $access->resolve($request, Lot::query()->findOrFail((int) $request->query('concept'))),
+            // Ingelogd begint "Kavel plaatsen" altijd leeg: een bestaand concept
+            // open je zelf, via Mijn kavels of het conceptmenu in de kop.
+            $user !== null => null,
+            // Een gast heeft dat menu niet; zijn concept komt terug via de cookie.
             default => $access->current($request),
         };
 
