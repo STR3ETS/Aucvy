@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AccountSettingsController;
+use App\Http\Controllers\AccountUpgradeController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -389,6 +390,10 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard/meldingen/paneel', [NotificationCenterController::class, 'panel'])->name('notifications.panel');
     Route::post('/dashboard/meldingen/gelezen', [NotificationCenterController::class, 'readAll'])->name('notifications.read-all');
     Route::get('/dashboard/meldingen/{id}', [NotificationCenterController::class, 'open'])->name('notifications.open');
+
+    // Eén account: een particulier wordt hier zakelijk om te kunnen verkopen.
+    Route::get('/account/zakelijk-worden', [AccountUpgradeController::class, 'show'])->name('account.business');
+    Route::post('/account/zakelijk-worden', [AccountUpgradeController::class, 'store'])->middleware('throttle:5,10')->name('account.business.store');
 
     Route::get('/account', [AccountSettingsController::class, 'show'])->name('account.settings');
     Route::get('/account/{section}', [AccountSettingsController::class, 'section'])->whereIn('section', AccountSettingsController::SECTIONS)->name('account.settings.section');

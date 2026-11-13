@@ -142,7 +142,7 @@ it('toont Team bij de instellingen voor bedrijfsaccounts en niet voor particulie
     $this->actingAs($this->owner)->get(route('account.settings'))->assertOk()->assertSee(route('team.index'));
     $private = User::factory()->verified()->create();
     $this->actingAs($private)->get(route('account.settings'))->assertOk()->assertDontSee(route('team.index'));
-    $this->actingAs($private)->get(route('dashboard'))->assertOk()->assertSee(route('dashboard.finance'));
+    $this->actingAs($private)->get(route('dashboard'))->assertOk()->assertDontSee(route('dashboard.finance'));
 
     $editor = colleague($this->company, CompanyRole::Editor);
     $this->actingAs($editor)->get(route('dashboard'))->assertOk()->assertDontSee(route('dashboard.finance'));

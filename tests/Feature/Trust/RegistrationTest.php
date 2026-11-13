@@ -108,9 +108,9 @@ it('vraagt akkoord op de voorwaarden en één keer het wachtwoord', function () 
 
     $this->get('/registreren')
         ->assertOk()
-        ->assertSee('Ik wil kopen')
-        ->assertSee('Ik wil verkopen')
-        ->assertSee('Alleen voor bedrijven')
+        ->assertSee('Particulier')
+        ->assertSee('Kopen én verkopen, met KvK')
+        ->assertSee('een tweede account is niet nodig')
         ->assertDontSee('nog een keer');
 
     // Zonder akkoord komt er geen account.

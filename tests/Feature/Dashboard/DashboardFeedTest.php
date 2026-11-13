@@ -103,7 +103,7 @@ it('linkt de snelle acties naar de veilingen en de wizard', function () {
     $this->actingAs(User::factory()->create())->get(route('dashboard'))
         ->assertOk()
         ->assertSee(route('lots.index'), escape: false)
-        ->assertSee(route('sell'), escape: false);
+        ->assertSee(route('account.business'), escape: false);
 });
 
 it('zet wat nog niet gelezen is bovenaan, ook als het ouder is', function () {

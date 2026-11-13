@@ -25,11 +25,13 @@
     </x-slot:tiles>
 
     <div x-data>
-        {{-- Als verkoper of als koper: dezelfde pagina, een andere bril. --}}
-        <nav class="d-seg dash-page-switch" aria-label="Weergave">
-            <a href="{{ route('dashboard', ['rol' => 'verkoper']) }}" class="{{ $isSeller ? 'is-on' : '' }}" @if ($isSeller) aria-current="page" @endif>Als verkoper</a>
-            <a href="{{ route('dashboard', ['rol' => 'koper']) }}" class="{{ $isSeller ? '' : 'is-on' }}" @unless ($isSeller) aria-current="page" @endunless>Als koper</a>
-        </nav>
+        {{-- Als verkoper of als koper: dezelfde pagina, een andere bril. Een particulier koopt alleen. --}}
+        @if ($user->isBusiness())
+            <nav class="d-seg dash-page-switch" aria-label="Weergave">
+                <a href="{{ route('dashboard', ['rol' => 'verkoper']) }}" class="{{ $isSeller ? 'is-on' : '' }}" @if ($isSeller) aria-current="page" @endif>Als verkoper</a>
+                <a href="{{ route('dashboard', ['rol' => 'koper']) }}" class="{{ $isSeller ? '' : 'is-on' }}" @unless ($isSeller) aria-current="page" @endunless>Als koper</a>
+            </nav>
+        @endif
 
         @if ($isNew)
             {{-- Nieuwe gebruikers zien startstappen in plaats van lege blokken. --}}
@@ -39,8 +41,13 @@
                 <ol class="mt-4 space-y-3 text-sm">
                     <li class="flex items-start gap-3">
                         <span class="tabular font-extrabold text-aj-blue-text">1</span>
-                        <span>{{ __('dashboard.start.step_sell') }}
-                            <a href="{{ route('sell') }}" class="font-bold text-aj-blue-text underline">Kavel plaatsen</a></span>
+                        <span>{{ $user->isBusiness() ? __('dashboard.start.step_sell') : 'Wil je ook verkopen? Dat kan met een zakelijk account, hetzelfde account als waarmee je koopt.' }}
+                            @if ($user->isBusiness())
+                                <a href="{{ route('sell') }}" class="font-bold text-aj-blue-text underline">Kavel plaatsen</a>
+                            @else
+                                <a href="{{ route('account.business') }}" class="font-bold text-aj-blue-text underline">Maak je account zakelijk</a>
+                            @endif
+                        </span>
                     </li>
                     <li class="flex items-start gap-3">
                         <span class="tabular font-extrabold text-aj-blue-text">2</span>

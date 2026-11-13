@@ -2145,3 +2145,11 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
   .d-ivyrow{grid-template-columns:44px minmax(0,1fr) 40px}
   .d-ivyrow .d-tag,.d-ivyrow .when{display:none}
 }
+
+/* Zakelijk worden: het formulier en wat er verandert. */
+.d-upgrade{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:var(--d-gap,24px);align-items:start;max-width:980px}
+.d-upgrade .d-lead{margin:0}
+.d-upgrade-list{display:grid;gap:10px;margin:12px 0 0;padding:0;list-style:none;font-size:14px;line-height:1.5}
+.d-upgrade-list li{display:flex;gap:10px;align-items:flex-start}
+.d-upgrade-list svg{flex:0 0 auto;margin-top:3px;color:#2f9e68}
+@media (max-width:980px){.d-upgrade{grid-template-columns:minmax(0,1fr)}}

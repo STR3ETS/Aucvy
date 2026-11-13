@@ -67,9 +67,11 @@ final class DashboardController extends Controller
         /*
          | Standaard verkopersmodus alleen bij échte kavels: wie enkel een
          | concept in de la heeft, is (nog) een koper en ziet geen lege
-         | verkoopblokken. De toggle blijft voor iedereen werken.
+         | verkoopblokken. De toggle werkt voor elk zakelijk account.
          */
-        $isSeller = $request->query('rol') !== 'koper'
+        // Een particulier koopt alleen: die ziet altijd de kopersbril.
+        $isSeller = $user->isBusiness()
+            && $request->query('rol') !== 'koper'
             && (Lot::query()->whereIn('seller_id', $user->lotSellerIds())->whereNot('status', LotStatus::Draft)->exists()
                 || $request->query('rol') === 'verkoper');
 

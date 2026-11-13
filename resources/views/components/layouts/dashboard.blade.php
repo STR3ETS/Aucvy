@@ -34,21 +34,25 @@
         ->map(fn (string $part): string => mb_strtoupper(mb_substr($part, 0, 1)))
         ->take(2)
         ->implode('');
+    // Eén account: zakelijk koopt en verkoopt, een particulier koopt. Verkoopmenu's
+    // alleen voor zakelijk; Kavels ook voor een particulier met een concept.
+    $isBusiness = $user->isBusiness();
+    $hasLots = $isBusiness || \App\Models\Lot::query()->where('seller_id', $user->id)->exists();
     $groups = [
-        'Dagelijks' => [
-            ['dashboard.lots', ['dashboard.lots'], 'Kavels', 'gavel'],
-            ['dashboard.sales', ['dashboard.sales', 'dashboard.sales.*'], 'Veilingen', 'clock'],
+        'Dagelijks' => array_values(array_filter([
+            $hasLots ? ['dashboard.lots', ['dashboard.lots'], 'Kavels', 'gavel'] : null,
+            $isBusiness ? ['dashboard.sales', ['dashboard.sales', 'dashboard.sales.*'], 'Veilingen', 'clock'] : null,
             ['dashboard.bids', ['dashboard.bids'], 'Biedingen', 'trending-up'],
             ['orders.index', ['orders.*'], 'Bestellingen', 'shopping-bag'],
             ['messages.index', ['messages.*'], 'Berichten', 'message-circle'],
-        ],
+        ])),
         'Volgen' => [
             ['dashboard.watchlist', ['dashboard.watchlist'], 'Volglijst', 'heart'],
             ['dashboard.alerts', ['dashboard.alerts'], 'Alerts', 'search'],
         ],
         'Geld en zekerheid' => array_values(array_filter([
-            $user->canSeeCompanyFinance() ? ['dashboard.payouts', ['dashboard.payouts'], 'Uitbetalingen', 'banknote'] : null,
-            $user->canSeeCompanyFinance() ? ['dashboard.finance', ['dashboard.finance', 'dashboard.finance.*'], 'Financiën', 'file-text'] : null,
+            $isBusiness && $user->canSeeCompanyFinance() ? ['dashboard.payouts', ['dashboard.payouts'], 'Uitbetalingen', 'banknote'] : null,
+            $isBusiness && $user->canSeeCompanyFinance() ? ['dashboard.finance', ['dashboard.finance', 'dashboard.finance.*'], 'Financiën', 'file-text'] : null,
             ['dashboard.disputes', ['dashboard.disputes'], 'Geschillen', 'shield-check'],
         ])),
         // Eén item, zoals in het ontwerp van november: koppelingen, organisatie
@@ -144,7 +148,11 @@
             </nav>
 
             <div class="dash-side-foot">
-                <a class="btn btn-primary" href="{{ route('sell') }}">Kavel plaatsen</a>
+                @if ($isBusiness)
+                    <a class="btn btn-primary" href="{{ route('sell') }}">Kavel plaatsen</a>
+                @else
+                    <a class="btn btn-primary" href="{{ route('account.business') }}">Zakelijk verkopen</a>
+                @endif
             </div>
         </aside>
 

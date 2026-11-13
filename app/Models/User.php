@@ -242,6 +242,16 @@ class User extends Authenticatable implements MustVerifyEmail
      * geen weergavenaam heeft gekozen.
      */
     /**
+     * Een zakelijk account kan kopen én verkopen; een particulier alleen
+     * kopen (besluit Raph, 2 november 2026). Eén account: een particulier
+     * wordt zakelijk via AccountUpgradeController, niet met een tweede account.
+     */
+    public function isBusiness(): bool
+    {
+        return $this->type === UserType::Business && $this->company_id !== null;
+    }
+
+    /**
      * Heeft een publiek verkopersprofiel: ooit een kavel in de verkoop gehad
      * of een review als verkoper. Kopers en medewerkers hebben geen profiel.
      */

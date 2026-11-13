@@ -204,6 +204,14 @@
                                         <span><strong>Verkopen op Aucvy is alleen voor bedrijven.</strong> Geen account nodig om een concept te maken. Om te publiceren heb je een geverifieerd zakelijk account nodig.</span>
                                     </p>
                                 @endguest
+                                @auth
+                                    @unless (auth()->user()->isBusiness())
+                                        {{-- Eén account: een particulier maakt zijn eigen account zakelijk om te verkopen. --}}
+                                        <p class="fn-note is-warn">
+                                            <span><strong>Verkopen kan alleen met een zakelijk account.</strong> Je concept wordt bewaard. <a class="d-link" href="{{ route('account.business') }}">Maak je account zakelijk</a>; kopen en bieden blijft gewoon werken.</span>
+                                        </p>
+                                    @endunless
+                                @endauth
 
                                 <p class="fn-note" x-show="['multiple', 'inventory'].includes(meta.scope)" x-cloak>
                                     <span>

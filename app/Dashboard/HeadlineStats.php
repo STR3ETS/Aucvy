@@ -65,7 +65,7 @@ final class HeadlineStats
 
         // Een redacteur zonder financiële rol krijgt op /dashboard/uitbetalingen
         // een 403; zijn tegel wijst dan naar de bestellingen.
-        $financeUrl = $user->canSeeCompanyFinance() ? route('dashboard.payouts') : route('orders.index');
+        $financeUrl = $user->isBusiness() && $user->canSeeCompanyFinance() ? route('dashboard.payouts') : route('orders.index');
 
         $trendText = $trend === null
             ? 'afgeronde verkopen'

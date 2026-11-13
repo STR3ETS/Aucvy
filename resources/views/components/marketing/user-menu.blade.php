@@ -31,10 +31,15 @@
             <a href="{{ url('/admin') }}"><x-v4.icon name="building" :size="16" stroke="2" /> Backoffice</a>
         @endif
         <a href="{{ route('dashboard') }}"><x-v4.icon name="target" :size="16" stroke="2" /> Dashboard</a>
-        <a href="{{ route('dashboard.lots') }}"><x-v4.icon name="gavel" :size="16" stroke="2" /> Mijn kavels</a>
+        {{-- Eén account: zakelijk koopt en verkoopt, een particulier koopt. --}}
+        @if ($user->isBusiness())
+            <a href="{{ route('dashboard.lots') }}"><x-v4.icon name="gavel" :size="16" stroke="2" /> Mijn kavels</a>
+        @endif
         <a href="{{ route('dashboard.bids') }}"><x-v4.icon name="trending-up" :size="16" stroke="2" /> Mijn biedingen</a>
         <a href="{{ route('orders.index') }}"><x-v4.icon name="shopping-bag" :size="16" stroke="2" /> Bestellingen</a>
-        <a href="{{ route('dashboard.payouts') }}"><x-v4.icon name="banknote" :size="16" stroke="2" /> Uitbetalingen</a>
+        @if ($user->isBusiness())
+            <a href="{{ route('dashboard.payouts') }}"><x-v4.icon name="banknote" :size="16" stroke="2" /> Uitbetalingen</a>
+        @endif
 
         <div class="sep" role="separator"></div>
         <a href="{{ route('notifications.index') }}"><x-v4.icon name="bell" :size="16" stroke="2" /> Meldingen
@@ -45,7 +50,11 @@
         <a href="{{ route('account.settings') }}"><x-v4.icon name="settings" :size="16" stroke="2" /> Instellingen</a>
 
         <div class="sep" role="separator"></div>
-        <a href="{{ route('sell') }}"><x-v4.icon name="plus" :size="16" stroke="2" /> Kavel plaatsen</a>
+        @if ($user->isBusiness())
+            <a href="{{ route('sell') }}"><x-v4.icon name="plus" :size="16" stroke="2" /> Kavel plaatsen</a>
+        @else
+            <a href="{{ route('account.business') }}"><x-v4.icon name="building" :size="16" stroke="2" /> Zakelijk verkopen</a>
+        @endif
         @unless ($user->kyc_status->allowsBidding())
             <a href="{{ route('verification.overview') }}"><x-v4.icon name="badge-check" :size="16" stroke="2" /> Verificatie afronden</a>
         @endunless

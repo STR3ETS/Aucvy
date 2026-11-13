@@ -45,7 +45,9 @@ enum DenialReason: string
     public function resolutionRoute(): ?string
     {
         return match ($this) {
-            self::EmailUnverified, self::KycRequired, self::KycPending, self::KycRejected, self::BusinessAccountRequired, self::KybRequired, self::IbanRequired => 'verification.overview',
+            // Een particulier wordt zakelijk met hetzelfde account.
+            self::BusinessAccountRequired => 'account.business',
+            self::EmailUnverified, self::KycRequired, self::KycPending, self::KycRejected, self::KybRequired, self::IbanRequired => 'verification.overview',
             self::Blocked => null,
         };
     }

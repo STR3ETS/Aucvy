@@ -91,7 +91,7 @@ it('toont ingelogd een profielknop met de snelle acties', function () {
         ->assertSee('user-menu')
         ->assertSee('Anna de Vries')
         ->assertSee('Mijn biedingen')
-        ->assertSee('Uitbetalingen')
+        ->assertSee('Zakelijk verkopen')
         ->assertSee('Uitloggen')
         ->assertDontSee('class="link" href="'.route('lots.index').'">Zoeken', escape: false)
         ->assertDontSee('class="link" href="'.route('dashboard').'"', escape: false);

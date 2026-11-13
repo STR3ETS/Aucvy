@@ -21,7 +21,7 @@ use App\Orders\Actions\TransitionOrder;
 */
 
 it('toont een verkoper zijn werkplan met het team en wat er wacht', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     Lot::factory()->live()->create([
         'seller_id' => $seller->id,
         'pickup_only' => false,
@@ -135,7 +135,7 @@ describe('de cijferblokken', function () {
 });
 
 it('tekent de opbrengst als een vloeiende lijn zodra er verkopen zijn', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     Lot::factory()->live()->create(['seller_id' => $seller->id]);
     Order::factory()->completed()->create(['seller_id' => $seller->id, 'hammer_cents' => 250_000, 'completed_at' => now()->subMonths(2)]);
     Order::factory()->completed()->create(['seller_id' => $seller->id, 'hammer_cents' => 400_000, 'completed_at' => now()->subDays(3)]);
@@ -152,7 +152,7 @@ it('tekent de opbrengst als een vloeiende lijn zodra er verkopen zijn', function
 });
 
 it('toont de interesse per kavel als één tabel met de koppen één keer', function () {
-    $seller = User::factory()->verified()->create();
+    $seller = User::factory()->verified()->business()->create();
     Lot::factory()->live()->count(2)->create(['seller_id' => $seller->id]);
 
     $content = $this->actingAs($seller)

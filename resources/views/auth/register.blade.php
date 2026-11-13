@@ -9,21 +9,25 @@
                 <div role="alert" class="d-soft is-err" style="margin:0">{{ $errors->first() }}</div>
             @endif
 
-            {{-- Kopen kan iedereen; verkopen alleen als bedrijf (ontwerp van november). --}}
+            {{--
+                Eén account: particulier koopt, zakelijk koopt én verkoopt (besluit
+                Raph, 2 november 2026). Zakelijk worden kan later nog, met hetzelfde account.
+            --}}
             <fieldset class="fn-fieldset">
-                <legend class="d-field" style="margin-bottom:6px">Wat wil je doen?</legend>
+                <legend class="d-field" style="margin-bottom:6px">Hoe gebruik je Aucvy?</legend>
                 <div class="fn-options is-two" style="gap:8px">
                     <label class="fn-option" :class="type === 'private' && 'is-on'" style="padding:10px 12px">
                         <input type="radio" name="type" value="private" x-model="type" class="sr-only">
-                        <strong style="font-size:14px">Ik wil kopen</strong>
-                        <span style="font-size:12px">Bieden en direct kopen</span>
+                        <strong style="font-size:14px">Particulier</strong>
+                        <span style="font-size:12px">Bieden en kopen</span>
                     </label>
                     <label class="fn-option" :class="type === 'business' && 'is-on'" style="padding:10px 12px">
                         <input type="radio" name="type" value="business" x-model="type" class="sr-only">
-                        <strong style="font-size:14px">Ik wil verkopen</strong>
-                        <span style="font-size:12px">Alleen voor bedrijven</span>
+                        <strong style="font-size:14px">Zakelijk</strong>
+                        <span style="font-size:12px">Kopen én verkopen, met KvK</span>
                     </label>
                 </div>
+                <p class="d-hint" style="margin:6px 0 0" x-show="type === 'private'">Later toch verkopen? Je maakt dit account dan zakelijk; een tweede account is niet nodig.</p>
             </fieldset>
 
             <label class="d-field">Je naam
