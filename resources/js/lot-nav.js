@@ -36,6 +36,31 @@ export default function initLotNav() {
         prefetch(host.dataset.prev);
     };
 
+    // De paginakop staat buiten de wisselzone: kruimelpad, kenmerk, titel en
+    // de regel eronder komen uit de nieuwe pagina. Het stippenveld blijft staan.
+    const syncHero = (fresh) => {
+        const current = document.querySelector('.page-hero .wrap');
+        const next = fresh.querySelector('.page-hero .wrap');
+
+        if (current && next) current.replaceWith(next);
+    };
+
+    // Canonical, beschrijving, deelkaart en structured data horen bij de kavel die je ziet.
+    const syncHead = (fresh) => {
+        const selectors = [
+            'link[rel="canonical"]',
+            'meta[name="description"]',
+            'meta[property^="og:"]',
+            'meta[name^="twitter:"]',
+            'script[type="application/ld+json"]',
+        ];
+
+        for (const selector of selectors) {
+            document.head.querySelectorAll(selector).forEach((node) => node.remove());
+            fresh.head.querySelectorAll(selector).forEach((node) => document.head.append(node));
+        }
+    };
+
     const swap = async (url, direction) => {
         prefetch(url);
 
@@ -74,6 +99,8 @@ export default function initLotNav() {
         }
 
         document.title = fresh.title;
+        syncHead(fresh);
+        syncHero(fresh);
         window.scrollTo(0, 0);
 
         if (! reduce) content.classList.add(inClass);
