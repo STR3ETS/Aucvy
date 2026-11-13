@@ -14,6 +14,7 @@
     {{-- Ingelogde schermen horen niet in een zoekindex. --}}
     <meta name="robots" content="noindex, nofollow">
 
+    <x-head.icons />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>

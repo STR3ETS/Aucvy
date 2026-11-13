@@ -18,7 +18,7 @@
     de kavel gebeurde. Wisselen tussen gesprekken ververst alleen het gesprek
     en de kolom ernaast (messages-nav.js).
 --}}
-<x-layouts.dashboard :title="$lot->title" eyebrow="Berichten" heading="Berichten" intro="Elk gesprek hoort bij één kavel. Vragen, mail en status staan bij elkaar.">
+<x-layouts.dashboard :title="'Gesprek: '.$lot->title" :description="'Je gesprek over '.$lot->title.', met de kavel en het dossier ernaast.'" eyebrow="Berichten" heading="Berichten" intro="Elk gesprek hoort bij één kavel. Vragen, mail en status staan bij elkaar.">
     <x-slot:crumbs>
         <a href="{{ route('messages.index') }}">Berichten</a> <span aria-hidden="true">/</span> <span>{{ $lot->public_id }}</span>
     </x-slot:crumbs>

@@ -2,7 +2,7 @@
 @use('App\Models\LotActivity')
 @use('App\Support\Money\Money')
 
-<x-layouts.dashboard :title="$lot->title" eyebrow="Mijn kavels" :intro="$lot->public_id.' · '.$lot->status->label().($lot->auction ? ' · stand '.Money::format($lot->currentPriceCents()) : '')">
+<x-layouts.dashboard :title="'Dossier: '.$lot->title" :heading="$lot->title" :description="'Het dossier van kavel #'.$lot->public_id.': stand, biedingen, interesse, documenten en verspreiding.'" eyebrow="Mijn kavels" :intro="$lot->public_id.' · '.$lot->status->label().($lot->auction ? ' · stand '.Money::format($lot->currentPriceCents()) : '')">
     <x-slot:crumbs>
         <a href="{{ route('dashboard.lots') }}">Mijn kavels</a> <span aria-hidden="true">/</span> <span>{{ $lot->public_id }}</span>
     </x-slot:crumbs>

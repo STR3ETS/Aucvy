@@ -1,5 +1,7 @@
 @props([
     'title' => null,
+    // De beschrijving voor het browsertabblad en gedeelde links; standaard de introzin.
+    'description' => null,
     'ivyLot' => null,
     'ivyPage' => null,
     // De kop in de band; standaard de paginatitel.
@@ -79,11 +81,15 @@
     <meta name="robots" content="noindex, nofollow">
 
     <title>{{ $title ? $title . ' · ' . config('app.name') : config('app.name') }}</title>
+    <meta name="description" content="{{ $description ?? ($intro ? Str::limit(strip_tags($intro), 155) : 'Je Aucvy-dashboard: kavels, biedingen, bestellingen en Ivy op één plek.') }}">
+    <meta property="og:title" content="{{ $title ? $title . ' · ' . config('app.name') : config('app.name') }}">
+    <meta property="og:site_name" content="{{ config('app.name') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <x-head.icons />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {!! $pageHead !!}
 </head>

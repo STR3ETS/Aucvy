@@ -7,7 +7,7 @@
     $drafts = $sale->lots->where('status', LotStatus::Draft);
 @endphp
 
-<x-layouts.dashboard :title="$sale->title" eyebrow="Veilingen" :intro="$state->label().' · '.$sale->lots->count().' '.($sale->lots->count() === 1 ? 'kavel' : 'kavels').' · eerste sluiting '.$sale->ends_at->timezone($tz)->isoFormat('D MMM, HH:mm')">
+<x-layouts.dashboard :title="'Veiling: '.$sale->title" :heading="$sale->title" eyebrow="Veilingen" :intro="$state->label().' · '.$sale->lots->count().' '.($sale->lots->count() === 1 ? 'kavel' : 'kavels').' · eerste sluiting '.$sale->ends_at->timezone($tz)->isoFormat('D MMM, HH:mm')">
     <x-slot:crumbs>
         <a href="{{ route('dashboard.sales') }}">Veilingen</a> <span aria-hidden="true">/</span> <span>{{ $sale->public_id }}</span>
     </x-slot:crumbs>
