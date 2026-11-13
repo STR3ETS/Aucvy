@@ -19,7 +19,7 @@
             <span class="when">{{ $when }}</span>
             <ul>
                 @foreach ($points as [$plus, $point])
-                    <li @class(['is-min' => ! $plus])><i aria-hidden="true">{{ $plus ? '+' : '−' }}</i><span class="sr-only">{{ $plus ? 'Voordeel:' : 'Nadeel:' }}</span>{{ $point }}</li>
+                    <li @class(['is-min' => ! $plus])><i aria-hidden="true"><x-v4.icon :name="$plus ? 'check' : 'minus'" :size="12" stroke="3" /></i><span class="sr-only">{{ $plus ? 'Voordeel:' : 'Nadeel:' }}</span>{{ $point }}</li>
                 @endforeach
             </ul>
         </article>

@@ -920,14 +920,14 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-compare h3{margin:0;font-size:20px;font-weight:800}
 .d-compare .when{display:block;margin-top:4px;font-size:13px;font-weight:700;color:#1e56e0}
 .d-compare ul{margin:16px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:#47505f}
-.d-compare li{display:flex;gap:10px;align-items:baseline}
-.d-compare li i{flex:0 0 auto;width:12px;font-style:normal;font-weight:800;color:#177249}
-.d-compare li.is-min i{color:#8f5209}
+.d-compare li{display:flex;gap:10px;align-items:flex-start;line-height:20px}
+.d-compare li i{flex:0 0 auto;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#e3f4ea;color:#177249}
+.d-compare li.is-min i{background:#fbefdc;color:#8f5209}
 .d-compare article.is-dark{border-color:#0c1326;background:#0c1326;color:#fff;box-shadow:0 30px 60px -30px rgba(12,19,38,.7)}
 .d-compare article.is-dark .when{color:#9db8ff}
 .d-compare article.is-dark ul{color:#d5dae7}
-.d-compare article.is-dark li i{color:#6ee7a8}
-.d-compare article.is-dark li.is-min i{color:#f5c26b}
+.d-compare article.is-dark li i{background:rgba(110,231,168,.14);color:#6ee7a8}
+.d-compare article.is-dark li.is-min i{background:rgba(245,194,107,.14);color:#f5c26b}
 .d-compare .badge{position:absolute;top:18px;right:18px;padding:3px 10px;border-radius:99px;background:#2f6bff;color:#fff;font-size:11px;font-weight:800}
 .d-stepsband .d-hero-table{justify-self:stretch}
 @media (max-width:980px){.d-photocards,.d-teamcards,.d-compare{grid-template-columns:minmax(0,1fr)}}
@@ -1097,7 +1097,7 @@ button.d-hero-ivy:hover{border-color:rgba(255,255,255,.3);transform:translateY(-
 .d-home-wip p{margin:0;font-size:15px;line-height:1.5}
 .d-home-wip strong{color:#5c3a0c}
 .d-home-wip a{flex:0 0 auto;font-size:14px;font-weight:800;color:#5c3a0c;text-decoration:underline;text-underline-offset:3px}
-.d-home-buyers{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:58px;align-items:center}
+.d-home-buyers{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:58px;align-items:center;padding-top:88px}
 .d-home-buyers h2{margin:18px 0 0;font-size:clamp(30px,4vw,52px);line-height:1.06;letter-spacing:-.035em;font-weight:800;text-wrap:balance}
 .d-home-buyers .pic{position:relative;padding-bottom:34px}
 .d-home-buyers .pic img{display:block;width:100%;aspect-ratio:1/1;border-radius:24px;object-fit:cover}
@@ -2153,3 +2153,6 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
 .d-upgrade-list li{display:flex;gap:10px;align-items:flex-start}
 .d-upgrade-list svg{flex:0 0 auto;margin-top:3px;color:#2f9e68}
 @media (max-width:980px){.d-upgrade{grid-template-columns:minmax(0,1fr)}}
+
+/* Een uitklapvraag openen en sluiten selecteert nooit de tekst, ook niet bij snel dubbelklikken. */
+summary{-webkit-user-select:none;user-select:none}

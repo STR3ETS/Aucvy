@@ -58,6 +58,7 @@
         'arrow-up-right' => '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
         'arrow-down-right' => '<path d="m7 7 10 10"/><path d="M17 7v10H7"/>',
         'plus' => '<path d="M5 12h14"/><path d="M12 5v14"/>',
+        'minus' => '<path d="M5 12h14"/>',
         'sailboat' => '<path d="M22 18H2a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4Z"/><path d="M21 14 10 2 3 14h18Z"/><path d="M10 2v16"/>',
         'x' => '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
         'pencil' => '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
