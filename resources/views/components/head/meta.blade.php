@@ -18,7 +18,11 @@
         ? Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($description))), 152)
         : null;
     $canonicalUrl = $canonical ?? url()->current();
-    $shareImage = $image ?? asset('images/v4/footer-gavel.jpg');
+    // Zonder eigen beeld de deelafbeelding van Aucvy, op de maat die LinkedIn, WhatsApp en X verwachten.
+    $shareImage = $image ?? asset('images/design/deel-aucvy.jpg');
+    if ($image === null) {
+        [$imageWidth, $imageHeight] = [1200, 630];
+    }
 @endphp
 
 {{--

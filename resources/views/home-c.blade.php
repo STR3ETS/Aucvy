@@ -195,7 +195,7 @@
             </div>
             <div class="d-home-demo" aria-live="polite">
                 <div class="pic">
-                    <img src="{{ asset('images/design/cat-horeca-keuken.jpg') }}" alt="" loading="lazy" width="720" height="360">
+                    <img src="{{ asset('images/design/vb-combi-oven-breed.jpg') }}" alt="" loading="lazy" width="720" height="360">
                     <span class="badge" x-text="current.badge">Afslag</span>
                     <span class="stamp" x-show="done" x-cloak x-text="current.stamp"></span>
                 </div>
