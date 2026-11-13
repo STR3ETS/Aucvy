@@ -64,7 +64,8 @@ final class MailFields
                 'nummer' => $lot->public_id,
                 'bod' => $lot->auction ? Money::format($lot->currentPriceCents()) : '',
                 'sluit' => $lot->auction?->ends_at?->timezone(config('aucvy.display_timezone'))->isoFormat('dddd D MMMM, HH:mm') ?? '',
-                'link' => route('lots.show', $lot),
+                // Een concept heeft nog geen slug en geen openbare pagina: de link gaat dan terug naar de funnel.
+                'link' => filled($lot->slug) ? route('lots.show', $lot) : route('sell', ['concept' => $lot->id]),
                 'bewerken' => route('dashboard.lots.edit', $lot),
                 'dossier' => route('dashboard.lots.show', $lot),
                 'verspreiding' => route('dashboard.lots.show', [$lot, 'tab' => 'verspreiding']),
