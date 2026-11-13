@@ -214,7 +214,7 @@
             <div class="d-stepsband-text">
                 <span class="d-pill is-dark">Zo gaat het</span>
                 <h2 id="reis-title">Jij een foto. <span class="g">Ivy de rest.</span></h2>
-                <video class="d-home-clip" controls loop muted playsinline preload="none" poster="{{ asset('videos/verhaal/verkoop-2.jpg') }}" aria-label="Ivy herkent een heftruck op een foto">
+                <video class="d-home-clip" autoplay loop muted playsinline preload="auto" poster="{{ asset('videos/verhaal/verkoop-2.jpg') }}" aria-label="Ivy herkent een heftruck op een foto">
                     <source src="{{ asset('videos/verhaal/verkoop-2.mp4') }}" type="video/mp4">
                 </video>
                 <div class="d-cta-actions">
