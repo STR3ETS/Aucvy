@@ -22,9 +22,12 @@ it('geeft kavel plaatsen een eigen schil zonder sitemenu en voettekst', function
     $this->get('/verkopen')
         ->assertOk()
         ->assertSee('class="no-js c funnel"', escape: false)
-        ->assertSee('fn-card', escape: false)
+        // Schermvullend: een balk met de stappen, de vraag midden in beeld.
+        ->assertSee('class="fn-bar"', escape: false)
+        ->assertSee('class="fn-question"', escape: false)
+        ->assertDontSee('fn-card', escape: false)
         ->assertSee('Opslaan en sluiten')
-        ->assertSee('stap <span x-text="step + 1">1</span> van 8', escape: false)
+        ->assertSee('Stap <span x-text="step + 1">1</span> van 8', escape: false)
         ->assertDontSee('class="header', escape: false)
         ->assertDontSee('footer-c');
 });
