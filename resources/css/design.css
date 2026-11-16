@@ -415,7 +415,7 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-sheet-top h2{margin:0;font-size:20px;font-weight:800}
 .d-sheet-top .big{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1;text-align:right}
 .d-sheet-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:28px}
-.d-sheet-meta .kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4d5566;margin-bottom:6px}
+.d-sheet-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4d5566;margin-bottom:6px}
 .d-sheet-meta p{margin:0;font-size:14px}
 .d-sheet-kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:14px}
 .d-sheet-kv dt{color:#4d5566}
@@ -427,7 +427,9 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
 .d-sheet .totals td{border:0;padding:6px 8px}
 .d-sheet .totals .grand td{font-weight:800;font-size:17px;border-top:2px solid #0e1526}
 .d-sheet .note{margin-top:20px;padding:12px 14px;border-radius:10px;background:#f3f5f9;font-size:13px;font-weight:600}
-.d-sheet .foot{margin-top:24px;padding-top:16px;border-top:1px solid rgba(14,21,38,.09);font-size:12px;color:#4d5566}
+.d-sheet-foot{display:grid;gap:8px;margin-top:24px;padding-top:16px;border-top:1px solid rgba(14,21,38,.09);font-size:12.5px;line-height:1.55;color:#4d5566}
+.d-sheet-foot p{margin:0}
+.d-sheet-foot a{color:#1e56e0;font-weight:700}
 .d-aside-link{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 18px;border:1px solid rgba(14,21,38,.09);border-radius:14px;background:#fff;color:#0e1526;font-size:14px;font-weight:700}
 .d-aside-link:hover{border-color:#2f6bff;color:#1e56e0}
 @media (max-width:760px){
@@ -436,7 +438,7 @@ a.d-tile:hover{transform:translateY(-2px);box-shadow:0 14px 34px -22px rgba(14,2
   .d-listrow-thumb{width:64px;height:64px}
 }
 @media print{
-  .dash-side,.dash-top,.dash-hero,.dash-tiles,.d-foot,.ivy-launch,.ivy-root,.d-print-hide{display:none !important}
+  .dash-side,.dash-top,.dash-hero,.dash-band,.dash-tiles,.d-foot,.ivy-launch,.ivy-root,.d-print-hide{display:none !important}
   .c.dash{background:#fff}
   .c .dash-shell,.c .dash-body{padding:0;display:block}
   .c .dash-main{border-radius:0;box-shadow:none}
@@ -2156,3 +2158,24 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
 
 /* Een uitklapvraag openen en sluiten selecteert nooit de tekst, ook niet bij snel dubbelklikken. */
 summary{-webkit-user-select:none;user-select:none}
+
+/* ---------- factuur: kop met bedrag en acties, de facturen van de bestelling als tabs, dan het vel ---------- */
+.d-invoice{display:grid;gap:14px;max-width:940px}
+.d-invoice .d-tabs{margin:0}
+.d-tabs a{display:inline-flex;align-items:center;flex:none;min-height:44px;margin-bottom:-1px;padding:0 14px;border-bottom:2px solid transparent;color:#5c6577;font-size:14px;font-weight:700;transition:color .15s,border-color .15s}
+.d-tabs a:hover{color:#0e1526}
+.d-tabs a.is-on{color:#1e56e0;border-bottom-color:#2f6bff}
+.d-invoice .d-orderhead-top .thumb{background:#eef3ff;color:#2f6bff}
+.d-invoice .d-lotrow-actions .d-btn{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.d-sheet-scroll{overflow-x:auto}
+.d-sheet-scroll table{min-width:520px}
+.d-sheet-totals{display:grid;grid-template-columns:auto auto;justify-content:end;gap:8px 0;margin:16px 0 0;padding:0 8px;font-size:14px;font-variant-numeric:tabular-nums}
+.d-sheet-totals dt{padding-right:40px;text-align:right;color:#4d5566}
+.d-sheet-totals dd{margin:0;text-align:right}
+.d-sheet-totals .grand{padding-top:10px;border-top:2px solid #0e1526;font-size:17px;font-weight:800;color:#0e1526}
+@media (max-width:720px){
+  .d-invoice .d-lotrow-actions{flex:1 1 100%;justify-content:flex-start}
+}
+@media print{
+  .d-invoice{max-width:none}
+}

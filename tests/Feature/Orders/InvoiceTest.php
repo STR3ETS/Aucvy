@@ -74,7 +74,7 @@ it('toont de factuur alleen aan beide partijen en beheer, met alle verplichte ge
     $fee = $order->invoices->firstWhere('kind', 'fee');
 
     $this->actingAs($order->buyer)->get(route('invoices.show', $lot))->assertOk()
-        ->assertSee($lot->number)->assertSee('KVK '.$order->seller->company->kvk_number)->assertSee('Btw-nummer')->assertSee('factuurdatum')->assertSee('leverdatum')->assertSee('Bijzondere regeling');
+        ->assertSee($lot->number)->assertSee('KVK '.$order->seller->company->kvk_number)->assertSee('Btw-nummer')->assertSee('Factuurdatum')->assertSee('Datum vooruitbetaling')->assertSee('Bijzondere regeling');
     $this->actingAs($order->seller)->get(route('invoices.show', $fee))->assertOk()->assertSee('Succesfee');
     $this->actingAs(User::factory()->create(['is_staff' => true]))->get(route('invoices.show', $lot))->assertOk();
     $this->actingAs(User::factory()->verified()->create())->get(route('invoices.show', $lot))->assertNotFound();
