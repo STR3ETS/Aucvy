@@ -93,6 +93,28 @@ final class CloseAuction
         return $order;
     }
 
+    /**
+     * Het bestelnummer volgt de veiling. Sluit dezelfde veiling een tweede
+     * keer, na een heropening omdat de eerste bestelling niet doorging, dan
+     * krijgt de nieuwe bestelling een volgnummer: AUC-000009-2.
+     */
+    private function orderNumberFor(Auction $auction): string
+    {
+        $base = 'AUC-'.str_pad((string) $auction->id, 6, '0', STR_PAD_LEFT);
+        $taken = Order::query()->where('order_number', $base)->orWhere('order_number', 'like', $base.'-%')->pluck('order_number');
+
+        if (! $taken->contains($base)) {
+            return $base;
+        }
+
+        $suffix = 2;
+        while ($taken->contains($base.'-'.$suffix)) {
+            $suffix++;
+        }
+
+        return $base.'-'.$suffix;
+    }
+
     private function createOrder(Auction $auction, Bid $winningBid): Order
     {
         $lot = $auction->lot;
@@ -108,7 +130,7 @@ final class CloseAuction
         $costs = Money::forOrder($lot, $winningBid->amount_cents);
 
         return Order::create([
-            'order_number' => 'AUC-'.str_pad((string) $auction->id, 6, '0', STR_PAD_LEFT),
+            'order_number' => $this->orderNumberFor($auction),
             'lot_id' => $lot->id,
             'auction_id' => $auction->id,
             'buyer_id' => $winningBid->user_id,

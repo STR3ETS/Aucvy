@@ -63,6 +63,21 @@ describe('met een winnaar', function () {
             ->toBe(Money::forOrder($this->lot, 100_000)->totalCents);
     });
 
+    it('geeft een heropende veiling een eigen bestelnummer naast de geannuleerde bestelling', function () {
+        // De eerste keer sluiten ging niet door: de bestelling is geannuleerd en de veiling heropend.
+        Order::factory()->create([
+            'order_number' => 'AUC-'.str_pad((string) $this->auction->id, 6, '0', STR_PAD_LEFT),
+            'lot_id' => $this->lot->id,
+            'auction_id' => $this->auction->id,
+            'status' => OrderStatus::Cancelled,
+        ]);
+
+        $order = closeIt($this->auction->fresh());
+
+        expect($order)->not->toBeNull()
+            ->and($order->order_number)->toBe('AUC-'.str_pad((string) $this->auction->id, 6, '0', STR_PAD_LEFT).'-2');
+    });
+
     it('geeft de koper achtenveertig uur om te betalen', function () {
         $order = closeIt($this->auction->fresh());
 
