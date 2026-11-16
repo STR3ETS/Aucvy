@@ -2159,22 +2159,32 @@ label.d-iconbtn:focus-within{border-color:#2f6bff;background:#f1f5ff;color:#1e56
 /* Een uitklapvraag openen en sluiten selecteert nooit de tekst, ook niet bij snel dubbelklikken. */
 summary{-webkit-user-select:none;user-select:none}
 
-/* ---------- factuur: links het vel (met de facturen van de bestelling als tabs), rechts een meeschuivende kaart met bedrag en acties ---------- */
-.d-invoice{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
-.d-invoice-main{display:grid;gap:14px;min-width:0;grid-column:1;grid-row:1}
-.d-invoice-side{grid-column:2;grid-row:1;position:sticky;top:24px;display:grid;gap:18px}
-.d-invoice-side-head{display:flex;align-items:center;gap:12px}
-.d-invoice-side-head .thumb{display:flex;align-items:center;justify-content:center;width:48px;height:48px;flex:0 0 auto;border-radius:12px;background:#eef3ff;color:#2f6bff}
-.d-invoice-side-head>div{display:grid;gap:2px;min-width:0}
-.d-invoice-side-head strong{font-size:15.5px;font-weight:800;line-height:1.3}
-.d-invoice-side-amount{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:12px;background:var(--d-inset,#f3f5fa)}
-.d-invoice-side-amount b{font-size:24px;font-weight:800;letter-spacing:-.02em}
-.d-invoice-side-facts{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0;font-size:13.5px}
-.d-invoice-side-facts dt{color:#5c6577}
-.d-invoice-side-facts dd{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin:0;font-weight:700;text-align:right}
-.d-invoice-side-actions{display:flex;align-items:center;gap:8px}
-.d-invoice-side-actions .d-btn{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
-.d-invoice .d-tabs{margin:0}
+/* ---------- detailpagina (factuur, uitbetaling): links de inhoud, rechts een meeschuivende kaart met bedrag, gegevens en acties ---------- */
+.d-split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.d-split-main{display:grid;gap:14px;min-width:0;grid-column:1;grid-row:1}
+.d-split-side{grid-column:2;grid-row:1;position:sticky;top:24px;display:grid;gap:18px}
+.d-split-side-head{display:flex;align-items:center;gap:12px}
+.d-split-side-head .thumb{display:flex;align-items:center;justify-content:center;width:48px;height:48px;flex:0 0 auto;border-radius:12px;background:#eef3ff;color:#2f6bff}
+.d-split-side-head>div{display:grid;gap:2px;min-width:0}
+.d-split-side-head strong{font-size:15.5px;font-weight:800;line-height:1.3}
+.d-split-side-amount{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:12px;background:var(--d-inset,#f3f5fa)}
+.d-split-side-amount b{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.d-split-side-facts{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0;font-size:13.5px}
+.d-split-side-facts dt{color:#5c6577}
+.d-split-side-facts dd{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin:0;font-weight:700;text-align:right}
+.d-split-side-actions{display:flex;align-items:center;gap:8px}
+.d-split-side-actions .d-btn{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.d-split-side-actions.is-icons{justify-content:flex-start}
+.d-payout-lot{display:flex;align-items:center;gap:14px;margin-top:14px}
+.d-payout-lot>img,.d-payout-lot>span{width:56px;height:56px;flex:0 0 auto;border-radius:12px;object-fit:cover}
+.d-payout-lot>span{display:flex;align-items:center;justify-content:center;background:#e9edf5;color:#9aa3b5}
+.d-payout-lot>div{display:grid;gap:2px;min-width:0}
+.d-payout-lot strong{font-size:15px;font-weight:800}
+.d-payout-sum{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 0;margin:18px 0 0;padding-top:14px;border-top:1px solid rgba(14,21,38,.08);font-size:14px;font-variant-numeric:tabular-nums}
+.d-payout-sum dt{color:#4d5566}
+.d-payout-sum dd{margin:0;padding-left:24px;text-align:right;font-weight:700}
+.d-payout-sum .is-total{padding-top:12px;border-top:2px solid #0e1526;font-size:16px;font-weight:800;color:#0e1526}
+.d-split .d-tabs{margin:0}
 .d-tabs a{display:inline-flex;align-items:center;flex:none;min-height:44px;margin-bottom:-1px;padding:0 14px;border-bottom:2px solid transparent;color:#5c6577;font-size:14px;font-weight:700;transition:color .15s,border-color .15s}
 .d-tabs a:hover{color:#0e1526}
 .d-tabs a.is-on{color:#1e56e0;border-bottom-color:#2f6bff}
@@ -2185,10 +2195,10 @@ summary{-webkit-user-select:none;user-select:none}
 .d-sheet-totals dd{margin:0;text-align:right}
 .d-sheet-totals .grand{padding-top:10px;border-top:2px solid #0e1526;font-size:17px;font-weight:800;color:#0e1526}
 @media (max-width:1180px){
-  .d-invoice{grid-template-columns:minmax(0,1fr)}
-  .d-invoice-side{position:static;grid-column:1;grid-row:1}
-  .d-invoice-main{grid-row:2}
+  .d-split{grid-template-columns:minmax(0,1fr)}
+  .d-split-side{position:static;grid-column:1;grid-row:1}
+  .d-split-main{grid-row:2}
 }
 @media print{
-  .d-invoice{display:block}
+  .d-split{display:block}
 }

@@ -4,24 +4,40 @@
 @php
     $order = $payout->order;
     $lot = $order->lot;
+    $company = $payout->seller?->company ?? auth()->user()->company;
     $displayTimezone = config('aucvy.display_timezone');
     $at = fn ($moment): ?string => $moment?->timezone($displayTimezone)->isoFormat('D MMM, HH:mm');
+    $isOut = in_array($payout->status, [PayoutStatus::Paid, PayoutStatus::Released], true);
 
-    // Kop en melding per status: nooit "verzonden" beloven als het bedrag nog wordt vastgehouden.
-    [$title, $intro, $tone, $lead, $detail] = match ($payout->status) {
-        PayoutStatus::Paid => ['Uitbetaling verzonden', 'De opbrengst van je verkochte kavel is overgemaakt naar je bankrekening.', 'ok', 'Uitbetaling is verzonden', 'Het bedrag staat meestal binnen 1 tot 2 werkdagen op je rekening.'],
-        PayoutStatus::Released => ['Uitbetaling vrijgegeven', 'De houdtermijn is voorbij; het bedrag is vrijgegeven voor uitbetaling.', 'ok', 'Uitbetaling is vrijgegeven', 'Het bedrag is onderweg naar je rekening.'],
-        PayoutStatus::Held => ['Uitbetaling in de houdtermijn', 'De koper kan nog een probleem melden; daarna volgt je uitbetaling.', 'info', 'In de houdtermijn', $payout->hold_until ? 'Vrijgave op '.$payout->hold_until->timezone($displayTimezone)->isoFormat('D MMMM, HH:mm').', als er geen melding komt.' : 'De vrijgave volgt na de houdtermijn.'],
-        PayoutStatus::Failed => ['Uitbetaling niet gelukt', 'De overboeking is niet aangekomen. Hieronder staat waarom.', 'warn', 'De uitbetaling is niet gelukt', $payout->failure_reason ?: 'Controleer je bankrekening bij je bedrijfsgegevens of neem contact op.'],
-        default => ['Uitbetaling ingepland', 'Na de levering start de houdtermijn; daarna volgt je uitbetaling.', 'info', 'Uitbetaling staat ingepland', 'De houdtermijn start zodra de levering is bevestigd.'],
+    // Kop en stand per status: nooit "verzonden" beloven als het bedrag nog wordt vastgehouden.
+    [$title, $intro, $statusTone, $statusLabel] = match ($payout->status) {
+        PayoutStatus::Paid => ['Uitbetaling verzonden', 'De opbrengst van je verkochte kavel is overgemaakt naar je bankrekening.', 'tone-ok', 'Verzonden'],
+        PayoutStatus::Released => ['Uitbetaling vrijgegeven', 'De houdtermijn is voorbij; het bedrag is onderweg naar je rekening.', 'tone-ok', 'Vrijgegeven'],
+        PayoutStatus::Held => ['Uitbetaling in de houdtermijn', 'De koper kan nog een probleem melden; daarna volgt je uitbetaling.', 'tone-atlas', 'In houdtermijn'],
+        PayoutStatus::Failed => ['Uitbetaling niet gelukt', 'De overboeking is niet aangekomen. Hieronder staat waarom.', 'tone-warn', 'Niet gelukt'],
+        default => ['Uitbetaling ingepland', 'Na de levering start de houdtermijn; daarna volgt je uitbetaling.', 'tone-grey', 'Ingepland'],
     };
-    if ($payout->blocked_reason) {
-        [$tone, $lead, $detail] = ['warn', 'Deze uitbetaling wordt aangehouden', $payout->blocked_reason];
+
+    // Alleen als er iets mis is een melding bovenaan; de gewone stand staat in de kaart en de stappen.
+    $problem = match (true) {
+        $payout->blocked_reason !== null => ['Deze uitbetaling wordt aangehouden', $payout->blocked_reason],
+        $payout->status === PayoutStatus::Failed => ['De uitbetaling is niet gelukt', $payout->failure_reason ?: 'Controleer je bankrekening bij je bedrijfsgegevens of neem contact op.'],
+        default => null,
+    };
+    if ($payout->blocked_reason !== null) {
+        [$statusTone, $statusLabel] = ['tone-warn', 'Aangehouden'];
     }
+
+    // Wanneer het geld komt, of kwam.
+    [$whenLabel, $whenValue] = match (true) {
+        $payout->paid_at !== null => ['Verzonden', $at($payout->paid_at)],
+        $payout->released_at !== null => ['Vrijgegeven', $at($payout->released_at)],
+        $payout->hold_until !== null => ['Vrijgave', $at($payout->hold_until)],
+        default => ['Vrijgave', 'Na de houdtermijn'],
+    };
 
     $rank = match ($payout->status) {
         // Het aantal stappen dat af is; tijdens de houdtermijn is alleen de verkoop afgerond.
-        PayoutStatus::Scheduled, PayoutStatus::Held => 1,
         PayoutStatus::Released => 3,
         PayoutStatus::Paid => 4,
         default => 1,
@@ -29,92 +45,100 @@
     $steps = [
         ['Verkoop afgerond', $at($order->paid_at ?? $order->created_at)],
         ['Houdtermijn voorbij', $rank > 2 ? $at($payout->released_at ?? $payout->hold_until) : ($payout->hold_until ? 'Op '.$at($payout->hold_until) : 'Na de levering')],
-        ['Uitbetaling vrijgegeven', $at($payout->released_at) ?? 'Na de houdtermijn'],
-        ['Bijgeschreven op je rekening', $at($payout->paid_at) ?? 'Meestal binnen 1 tot 2 werkdagen na vrijgave'],
+        ['Vrijgegeven', $at($payout->released_at) ?? 'Na de houdtermijn'],
+        ['Op je rekening', $at($payout->paid_at) ?? '1 tot 2 werkdagen na vrijgave'],
     ];
     $feePercent = $order->hammer_cents > 0 ? rtrim(rtrim(number_format($payout->fee_cents / $order->hammer_cents * 100, 1, ',', '.'), '0'), ',') : null;
 @endphp
 
+{{--
+    Eén uitbetaling, in dezelfde opzet als de factuur: links de afrekening en
+    de stappen, rechts een meeschuivende kaart met het nettobedrag, de stand,
+    de rekening en de acties als pictogram.
+--}}
 <x-layouts.dashboard :title="$title" eyebrow="Uitbetalingen" :intro="$intro">
     <x-slot:crumbs>
         <a href="{{ route('dashboard.payouts') }}">Uitbetalingen</a> <span aria-hidden="true">/</span> <span>{{ $order->order_number }}</span>
     </x-slot:crumbs>
 
-    <div class="d-cols">
-        <div class="d-col-main" style="display:flex;flex-direction:column;gap:14px">
-            <div class="{{ $tone === 'ok' ? 'd-callout-ok' : ($tone === 'warn' ? 'd-callout-warn' : 'd-callout-info') }}">
-                <span class="mark" aria-hidden="true">@if ($tone === 'ok')<x-v4.icon name="check" :size="20" stroke="3" />@elseif ($tone === 'warn')!@else i @endif</span>
-                <div class="text" style="flex:1 1 240px;min-width:0">
-                    <strong>{{ $lead }}</strong>
-                    <span>{{ $detail }}</span>
+    <div class="d-split">
+        <aside class="d-card d-split-side" aria-label="Uitbetaling {{ $order->order_number }}">
+            <div class="d-split-side-head">
+                <span class="thumb" aria-hidden="true"><x-v4.icon name="banknote" :size="22" stroke="1.8" /></span>
+                <div>
+                    <span class="d-bid-meta">{{ $isOut ? 'Uitbetaald bedrag' : 'Uit te betalen' }}, netto</span>
+                    <strong>{{ $lot->title }}</strong>
                 </div>
-                @if ($payout->paid_at ?? $payout->released_at)
-                    <span class="d-muted" style="flex:0 0 auto">{{ $at($payout->paid_at ?? $payout->released_at) }}</span>
-                @endif
             </div>
 
-            <section class="d-card d-payout-amount" aria-label="Bedrag">
-                <span class="icon" aria-hidden="true"><x-v4.icon name="banknote" :size="22" stroke="2" /></span>
-                <div>
-                    <span class="d-muted">{{ in_array($payout->status, [PayoutStatus::Paid, PayoutStatus::Released], true) ? 'Uitbetaald bedrag' : 'Uit te betalen bedrag' }} (netto)</span>
-                    <div class="d-big" style="font-size:30px">{{ Money::format($payout->amount_cents) }}</div>
-                    <span class="d-muted">Na aftrek van de succesfee</span>
-                </div>
-            </section>
+            <div class="d-split-side-amount">
+                <b class="tabular">{{ Money::format($payout->amount_cents) }}</b>
+                <span class="d-tag {{ $statusTone }}">{{ $statusLabel }}</span>
+            </div>
 
-            <section aria-labelledby="overzicht">
-                <h2 id="overzicht" class="d-h3" style="margin:6px 0 10px">Overzicht</h2>
-                <article class="d-listrow">
-                    @if ($lot->media->isNotEmpty())
-                        <img class="d-listrow-thumb" src="{{ $lot->media->first()->path }}" alt="">
-                    @else
-                        <span class="d-listrow-thumb" aria-hidden="true"></span>
-                    @endif
-                    <div class="d-listrow-body">
-                        <strong>{{ $lot->title }}</strong>
-                        <span class="d-listrow-meta">Kavel #{{ $lot->public_id }} · bestelling {{ $order->order_number }}</span>
+            <dl class="d-split-side-facts">
+                <dt>{{ $whenLabel }}</dt><dd>{{ $whenValue }}</dd>
+                <dt>Naar rekening</dt>
+                <dd class="tabular">{{ $company?->payout_iban_last4 ? 'NL·· '.$company->payout_iban_last4 : 'Nog geen rekening' }}</dd>
+                <dt>Bestelling</dt><dd class="tabular">{{ $order->order_number }}</dd>
+            </dl>
+
+            <div class="d-split-side-actions is-icons">
+                @if ($invoice)
+                    <a class="d-iconbtn" href="{{ route('invoices.show', $invoice) }}" data-tip="Bekijk de factuur" aria-label="Factuur {{ $invoice->number }} bekijken"><x-v4.icon name="file-text" :size="17" stroke="2" /></a>
+                @endif
+                <a class="d-iconbtn" href="{{ route('orders.show', $order) }}" data-tip="Naar de bestelling" aria-label="Naar bestelling {{ $order->order_number }}"><x-v4.icon name="shopping-bag" :size="17" stroke="2" /></a>
+                <a class="d-iconbtn" href="{{ route('organisation.show') }}#rekening" data-tip="{{ $company?->payout_iban_last4 ? 'Rekening wijzigen' : 'Rekening toevoegen' }}" aria-label="{{ $company?->payout_iban_last4 ? 'Uitbetalingsrekening wijzigen' : 'Uitbetalingsrekening toevoegen' }}"><x-v4.icon name="pencil" :size="17" stroke="2" /></a>
+            </div>
+        </aside>
+
+        <div class="d-split-main">
+            @if ($problem)
+                <div class="d-callout-warn" role="alert">
+                    <span class="mark" aria-hidden="true">!</span>
+                    <div class="text" style="flex:1 1 240px;min-width:0">
+                        <strong>{{ $problem[0] }}</strong>
+                        <span>{{ $problem[1] }}</span>
                     </div>
-                    <div class="d-listrow-right">
-                        <b>{{ Money::format($order->hammer_cents) }}</b>
-                        <span>Verkocht voor</span>
-                    </div>
-                </article>
-
-                <div class="d-costs" style="margin-top:12px">
-                    <div class="d-row"><span>Succesfee{{ $feePercent ? ' ('.$feePercent.'%)' : '' }}</span><strong>- {{ Money::format($payout->fee_cents) }}</strong></div>
-                    <div class="d-row is-total"><span>{{ in_array($payout->status, [PayoutStatus::Paid, PayoutStatus::Released], true) ? 'Uitbetaald bedrag' : 'Uit te betalen' }} (netto)</span><strong>{{ Money::format($payout->amount_cents) }}</strong></div>
                 </div>
+            @endif
 
-                <div class="d-chips" style="margin-top:12px">
-                    @if ($invoice)
-                        <a class="d-btn d-btn-secondary d-btn-sq" href="{{ route('invoices.show', $invoice) }}">Bekijk de factuur</a>
-                    @endif
-                    <a class="d-btn d-btn-secondary d-btn-sq" href="{{ route('orders.show', $order) }}">Naar de bestelling</a>
+            <section class="d-card" aria-labelledby="stand">
+                <div class="d-titleline">
+                    <h2 id="stand" class="d-h3">Stand van de uitbetaling</h2>
+                    <x-dashboard.help text="Het bedrag staat meestal binnen 1 tot 2 werkdagen na vrijgave op je rekening. Na 3 werkdagen nog niets? Neem dan contact met ons op." />
                 </div>
-            </section>
-        </div>
-
-        <aside class="d-col-aside" style="border:0;background:none;display:flex;flex-direction:column;gap:14px">
-            <section class="d-card" aria-label="Status van de uitbetaling">
-                <h2 class="d-h3">Status van de uitbetaling</h2>
-                <ol class="d-steps">
+                <ol class="d-hsteps" aria-label="Stappen van de uitbetaling">
                     @foreach ($steps as $index => [$label, $when])
-                        @php $step = $index + 1; @endphp
-                        <li class="{{ $step <= $rank || $rank === 4 ? 'is-done' : ($step === $rank + 1 ? 'is-now' : '') }}">
-                            <span class="dot" aria-hidden="true">@if ($step <= $rank || $rank === 4)<x-v4.icon name="check" :size="12" stroke="3" />@endif</span>
-                            <div><strong>{{ $label }}</strong><span>{{ $when }}</span></div>
+                        @php $done = $index < $rank; @endphp
+                        <li class="{{ $done ? 'is-done' : ($index === $rank ? 'is-now' : '') }}">
+                            <span class="dot" aria-hidden="true">@if ($done)<x-v4.icon name="check" :size="13" stroke="3" />@endif</span>
+                            <strong>{{ $label }}</strong>
+                            <span>{{ $when }}</span>
                         </li>
                     @endforeach
                 </ol>
             </section>
 
-            <div class="d-callout-info">
-                <span class="mark" aria-hidden="true">i</span>
-                <div>
-                    <strong>Uitbetaling ontvangen?</strong>
-                    Het bedrag staat meestal binnen 1 tot 2 werkdagen na vrijgave op je rekening. Na 3 werkdagen nog niets? <a class="d-link" href="{{ route('contact') }}">Neem contact met ons op</a>.
+            <section class="d-card" aria-labelledby="afrekening">
+                <h2 id="afrekening" class="d-h3">Afrekening</h2>
+                <div class="d-payout-lot">
+                    @if ($lot->media->isNotEmpty())
+                        <img src="{{ $lot->media->first()->path }}" alt="" loading="lazy">
+                    @else
+                        <span aria-hidden="true"><x-v4.icon name="image" :size="20" stroke="1.6" /></span>
+                    @endif
+                    <div>
+                        <strong>{{ $lot->title }}</strong>
+                        <span class="d-bid-meta">Kavel #{{ $lot->public_id }} · bestelling {{ $order->order_number }}</span>
+                    </div>
                 </div>
-            </div>
-        </aside>
+                <dl class="d-payout-sum">
+                    <dt>Verkocht voor</dt><dd>{{ Money::format($order->hammer_cents) }}</dd>
+                    <dt>Succesfee{{ $feePercent ? ' ('.$feePercent.'%)' : '' }}</dt><dd>- {{ Money::format($payout->fee_cents) }}</dd>
+                    <dt class="is-total">{{ $isOut ? 'Uitbetaald' : 'Uit te betalen' }}, netto</dt><dd class="is-total">{{ Money::format($payout->amount_cents) }}</dd>
+                </dl>
+            </section>
+        </div>
     </div>
 </x-layouts.dashboard>

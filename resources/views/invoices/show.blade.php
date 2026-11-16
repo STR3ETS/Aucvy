@@ -55,10 +55,10 @@
         <span>{{ $invoice->kindLabel() }}</span>
     </x-slot:crumbs>
 
-    <div class="d-invoice">
+    <div class="d-split">
         {{-- Rechts, en op een smal scherm bovenaan: de gegevens, het bedrag en de acties. Schuift mee met het vel. --}}
-        <aside class="d-card d-invoice-side d-print-hide" aria-label="{{ $invoice->kindLabel() }} {{ $invoice->number }}">
-            <div class="d-invoice-side-head">
+        <aside class="d-card d-split-side d-print-hide" aria-label="{{ $invoice->kindLabel() }} {{ $invoice->number }}">
+            <div class="d-split-side-head">
                 <span class="thumb" aria-hidden="true"><x-v4.icon name="file-text" :size="22" stroke="1.8" /></span>
                 <div>
                     <span class="d-bid-meta">{{ $invoice->kindLabel() }}</span>
@@ -66,12 +66,12 @@
                 </div>
             </div>
 
-            <div class="d-invoice-side-amount">
+            <div class="d-split-side-amount">
                 <b class="tabular">{{ Money::format($invoice->total_cents) }}</b>
                 <span class="d-tag {{ $status[0] }}">{{ $status[1] }}</span>
             </div>
 
-            <dl class="d-invoice-side-facts">
+            <dl class="d-split-side-facts">
                 <dt>Factuurnummer</dt><dd class="tabular">{{ $invoice->number }}</dd>
                 <dt>Datum</dt><dd>{{ $invoice->issued_at->isoFormat('D MMM YYYY') }}</dd>
                 <dt>Btw</dt>
@@ -86,14 +86,14 @@
                 @endif
             </dl>
 
-            <div class="d-invoice-side-actions">
+            <div class="d-split-side-actions">
                 <button type="button" class="d-btn d-btn-sq" onclick="window.print()"><x-v4.icon name="download" :size="16" stroke="2.2" /> Download pdf</button>
                 <a href="{{ route('orders.show', $order) }}" class="d-iconbtn" data-tip="Naar de bestelling" aria-label="Naar bestelling {{ $order->order_number }}"><x-v4.icon name="shopping-bag" :size="17" stroke="2" /></a>
                 <a href="{{ route('orders.show', $order) }}#berichten" class="d-iconbtn" data-tip="Vraag over deze factuur" aria-label="Een vraag stellen over deze factuur"><x-v4.icon name="message-circle" :size="17" stroke="2" /></a>
             </div>
         </aside>
 
-        <div class="d-invoice-main">
+        <div class="d-split-main">
             @if ($siblings->count() > 1)
                 <nav class="d-tabs d-print-hide" aria-label="Facturen bij deze bestelling">
                     @foreach ($siblings as $sibling)
