@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\LotStatus;
 use App\Enums\MediaType;
 use App\Models\Lot;
 use App\Models\LotMedia;
@@ -12,68 +13,83 @@ use Illuminate\Database\Seeder;
 /**
  * Foto's bij de demokavels. Lokaal en op een demo-omgeving, nooit op productie.
  *
- * Elke kavel zonder media krijgt twee foto's die bij zijn (sub)categorie
- * passen, deterministisch gekozen op kavel-id zodat een pagina er bij elke
- * run hetzelfde uitziet. De foto's komen van Unsplash, per URL: geen
- * bestanden in de repo. `path` is in alle views de bron van de <img>, dus
- * een absolute URL werkt net als een opgeslagen bestand.
+ * Elke demokavel krijgt twee foto's van wat er in de titel staat (een
+ * heftruck, een trilplaat, bureaustoelen), en pas als de titel niets
+ * herkenbaars heeft een foto bij zijn (sub)categorie. De keuze is
+ * deterministisch op kavel-id, zodat een pagina er bij elke run hetzelfde
+ * uitziet. De foto's komen van Pexels (vrij voor commercieel gebruik, geen
+ * naamsvermelding nodig), per URL: geen bestanden in de repo.
  *
- * Idempotent: kavels die al media hebben worden overgeslagen.
+ * Opnieuw draaien vervangt alleen eerdere demofoto's (Unsplash of Pexels per
+ * URL). Foto's die een verkoper zelf uploadde blijven altijd staan.
  */
 final class DemoPhotoSeeder extends Seeder
 {
     /**
-     * Unsplash-foto-id's per categorieslug (subcategorie gaat vóór de
-     * hoofdcategorie; '*' is de uitwijk). Handmatig gekozen op wat erop staat.
+     * Pexels-foto-id's per soort product, op volgorde van specifiek naar
+     * algemeen: de eerste regel waarvan het patroon in de titel past, wint.
      *
-     * @var array<string, list<string>>
+     * @var list<array{0: string, 1: list<int>}>
      */
-    private const PHOTOS = [
-        'machines-techniek' => ['photo-1581091226825-a6a2a5aee158', 'photo-1486262715619-67b85e0b08d3', 'photo-1504917595217-d4dc5ebe6122', 'photo-1558618666-fcd25c85cd64', 'photo-1513828583688-c52646db42da'],
-        'machines-techniek-graafmachines' => ['photo-1504307651254-35680f356dfd', 'photo-1541888946425-d81bb19240f5'],
-        'machines-techniek-heftrucks' => ['photo-1586528116311-ad8dd3c8310d', 'photo-1553413077-190dd305871c', 'photo-1558618666-fcd25c85cd64'],
-        'machines-techniek-metaalbewerking' => ['photo-1504917595217-d4dc5ebe6122', 'photo-1581091226825-a6a2a5aee158'],
-        'machines-techniek-houtbewerking' => ['photo-1503387762-592deb58ef4e', 'photo-1530124566582-a618bc2615dc'],
-        'machines-techniek-compressoren-pompen' => ['photo-1486262715619-67b85e0b08d3', 'photo-1513828583688-c52646db42da'],
+    private const BY_TITLE = [
+        ['/heftruck|vorkheftruck|loadtest/', [29491402, 6026765, 14688876]],
+        ['/trilplaat/', [11564532, 5669019]],
+        ['/steiger/', [10134469, 2079615, 154141]],
+        ['/aanhanger|oplegger/', [10304035, 943930]],
+        ['/afkortzaag|zaag/', [8817827, 8820186, 9049467]],
+        ['/compressor/', [9754814]],
+        ['/minigraaf|graafmachine/', [14846286, 5668922]],
+        ['/bouwcontainer|container/', [13415135, 3704162]],
+        ['/palletstelling|stelling 40/', [4487383, 4170172]],
+        ['/boot|sloep|jacht/', [10955648, 296236]],
+        ['/camera|sony fx3/', [2873486, 10395639]],
+        ['/playstation/', [5961216]],
+        ['/laptop/', [265144, 7437087]],
+        ['/monitor|presentatiescherm/', [8353774, 326512]],
+        ['/vergaderinventaris|vergadertafel/', [4985341, 7648040, 3767172]],
+        ['/barkruk|statafel|roltafel/', [5530260, 5858030, 12756679]],
+        ['/horecastoel|restaurantstoel/', [11572926, 9773757, 10916355]],
+        ['/bureaustoel|kantoorstoel|vergaderstoel|herman miller/', [9300769, 295480, 273671]],
+        ['/zit-sta|flexplek/', [6326260, 39178037, 273671]],
+        ['/werkkleding|kleding/', [6045285]],
+        ['/toonbank|winkelinrichting/', [30948318, 14201321]],
+        ['/receptiebalie/', [14036251]],
+        ['/espresso|marzocco|barista/', [12155110, 6612589, 4349954]],
+        ['/koffiemolen|bonenmolen/', [9146682, 9151941]],
+        ['/combisteamer|combi-oven/', [5953578]],
+        ['/bakoven/', [10481790]],
+        ['/mixer/', [27564591, 10481790]],
+        ['/gasfornuis|fornuis/', [13422435, 6375553]],
+        ['/vaatwasser/', [3829549]],
+        ['/ijsblokjes/', [7254237]],
+        ['/koelvitrine/', [2524171, 11449152]],
+        ['/koelwerkbank|werkbank rvs|horecakeuken/', [6375553, 27685507]],
+        ['/designkeuken|keuken/', [2089698, 18285887]],
+        ['/verlichting|hanglamp/', [9628657, 6925111, 7108120]],
+        ['/akoestische/', [8425988]],
+        ['/archiefkast|lockerkast|kastenwand/', [1370294, 4162587, 17116895]],
+        ['/loungebank|lounge-set|bank velours/', [4846097, 5824901]],
+        ['/tuinset|teak/', [12715508]],
+        ['/vloer|visgraat/', [36178801]],
+        ['/kantoorinventaris|bureaus/', [273671, 9300769, 4985341]],
+    ];
 
-        'horeca-keuken' => ['photo-1556911220-bff31c812dba', 'photo-1497366216548-37526070297c', 'photo-1555396273-367ea4eb4db5'],
-        'horeca-keuken-koeling-vriescellen' => ['photo-1497366216548-37526070297c', 'photo-1513828583688-c52646db42da'],
-        'horeca-keuken-complete-keukens' => ['photo-1556911220-bff31c812dba', 'photo-1497366216548-37526070297c'],
-        'horeca-keuken-kookapparatuur' => ['photo-1497366216548-37526070297c', 'photo-1556911220-bff31c812dba'],
-        'horeca-keuken-horecameubilair' => ['photo-1414235077428-338989a2e8c0', 'photo-1555396273-367ea4eb4db5', 'photo-1567521464027-f127ff144326'],
-
-        'kantoor-inventaris' => ['photo-1524758631624-e2822e304c36', 'photo-1497366811353-6870744d04b2', 'photo-1559136555-9303baea8ebd'],
-        'kantoor-inventaris-bureaustoelen' => ['photo-1524758631624-e2822e304c36', 'photo-1559136555-9303baea8ebd'],
-        'kantoor-inventaris-bureaus-kasten' => ['photo-1497366811353-6870744d04b2', 'photo-1524758631624-e2822e304c36'],
-        'kantoor-inventaris-it-elektronica' => ['photo-1519389950473-47ba0277781c', 'photo-1516321318423-f06f85e504b3', 'photo-1518770660439-4636190af475'],
-        'kantoor-inventaris-complete-inventaris' => ['photo-1497366811353-6870744d04b2', 'photo-1559136555-9303baea8ebd', 'photo-1524758631624-e2822e304c36'],
-
-        'voertuigen-transport' => ['photo-1601584115197-04ecc0da31d7', 'photo-1541899481282-d53bffe3c35d', 'photo-1503376780353-7e6692767b70'],
-        'voertuigen-transport-bestelwagens' => ['photo-1601584115197-04ecc0da31d7'],
-        'voertuigen-transport-personenautos' => ['photo-1541899481282-d53bffe3c35d', 'photo-1503376780353-7e6692767b70'],
-        'voertuigen-transport-aanhangers-opleggers' => ['photo-1601584115197-04ecc0da31d7', 'photo-1565793298595-6a879b1d9492'],
-
-        'bouw-materieel' => ['photo-1504307651254-35680f356dfd', 'photo-1541888946425-d81bb19240f5', 'photo-1504148455328-c376907d081c'],
-        'bouw-materieel-steigers' => ['photo-1504307651254-35680f356dfd', 'photo-1541888946425-d81bb19240f5'],
-        'bouw-materieel-gereedschap' => ['photo-1504148455328-c376907d081c', 'photo-1530124566582-a618bc2615dc', 'photo-1621905251189-08b45d6a269e'],
-        'bouw-materieel-grondverzet' => ['photo-1541888946425-d81bb19240f5', 'photo-1504307651254-35680f356dfd'],
-
-        'winkel-voorraad' => ['photo-1586528116311-ad8dd3c8310d', 'photo-1553413077-190dd305871c', 'photo-1441986300917-64674bd600d8'],
-        'winkel-voorraad-kleding-mode' => ['photo-1441986300917-64674bd600d8', 'photo-1567401893414-76b7b1e5a7a5'],
-        'winkel-voorraad-restpartijen' => ['photo-1586528116311-ad8dd3c8310d', 'photo-1553413077-190dd305871c'],
-        'winkel-voorraad-displays-inrichting' => ['photo-1441986300917-64674bd600d8', 'photo-1567521464027-f127ff144326'],
-
-        'boten-recreatie' => ['photo-1567899378494-47b22a2ae96a', 'photo-1540946485063-a40da27545f8', 'photo-1523987355523-c7b5b0dd90a7'],
-        'boten-recreatie-zeil-motorjachten' => ['photo-1567899378494-47b22a2ae96a', 'photo-1540946485063-a40da27545f8'],
-        'boten-recreatie-sloepen' => ['photo-1540946485063-a40da27545f8', 'photo-1567899378494-47b22a2ae96a'],
-        'boten-recreatie-campers-caravans' => ['photo-1523987355523-c7b5b0dd90a7'],
-
-        'elektronica' => ['photo-1518770660439-4636190af475', 'photo-1517336714731-489689fd1ca8', 'photo-1495707902641-75cac588d2e9'],
-        'elektronica-cameras-optiek' => ['photo-1495707902641-75cac588d2e9', 'photo-1498049794561-7780e7231661'],
-        'elektronica-computers' => ['photo-1517336714731-489689fd1ca8', 'photo-1531297484001-80022131f5a1', 'photo-1516321318423-f06f85e504b3', 'photo-1518770660439-4636190af475'],
-        'elektronica-audio-video' => ['photo-1498049794561-7780e7231661', 'photo-1517336714731-489689fd1ca8'],
-
-        '*' => ['photo-1524758631624-e2822e304c36', 'photo-1586528116311-ad8dd3c8310d', 'photo-1581091226825-a6a2a5aee158'],
+    /**
+     * Uitwijk per categorieslug als de titel niets herkenbaars heeft
+     * (subcategorie gaat vóór de hoofdcategorie; '*' is de laatste uitwijk).
+     *
+     * @var array<string, list<int>>
+     */
+    private const BY_CATEGORY = [
+        'machines-techniek' => [17229385, 9754814],
+        'horeca-keuken' => [39556646, 6375553],
+        'kantoor-inventaris' => [12703093, 273671],
+        'voertuigen-transport' => [4620555, 10304035],
+        'bouw-materieel' => [5125783, 10134469],
+        'winkel-voorraad' => [28846853, 4487383],
+        'boten-recreatie' => [17324998, 10955648],
+        'elektronica' => [20501862, 8353774],
+        '*' => [4170172, 12703093],
     ];
 
     public function run(): void
@@ -85,22 +101,28 @@ final class DemoPhotoSeeder extends Seeder
         }
 
         $lots = Lot::query()
-            ->doesntHave('media')
-            ->with('category.parent')
-            ->get();
+            ->with(['category.parent', 'media'])
+            ->get()
+            // Alleen kavels met uitsluitend demofoto's, of zonder foto's maar wel buiten de concepten:
+            // een concept zonder foto's is van iemand die nog aan het uploaden is.
+            ->filter(fn (Lot $lot): bool => $lot->media->isEmpty()
+                ? $lot->status !== LotStatus::Draft
+                : $lot->media->every(fn (LotMedia $media): bool => self::isDemoPhoto($media->path)));
 
         foreach ($lots as $lot) {
             $ids = $this->photosFor($lot);
             $offset = $lot->id % count($ids);
 
             // Twee foto's als de lijst er twee heeft, anders één.
-            $chosen = array_unique([$ids[$offset], $ids[($offset + 1) % count($ids)]]);
+            $chosen = array_values(array_unique([$ids[$offset], $ids[($offset + 1) % count($ids)]]));
 
-            foreach (array_values($chosen) as $position => $id) {
+            $lot->media()->delete();
+
+            foreach ($chosen as $position => $id) {
                 LotMedia::create([
                     'lot_id' => $lot->id,
                     'type' => MediaType::Image,
-                    'path' => "https://images.unsplash.com/{$id}?q=80&w=1200&h=900&auto=format&fit=crop",
+                    'path' => "https://images.pexels.com/photos/{$id}/pexels-photo-{$id}.jpeg?auto=compress&cs=tinysrgb&w=1200&h=900&fit=crop",
                     'variants' => [],
                     'width' => 1200,
                     'height' => 900,
@@ -112,22 +134,38 @@ final class DemoPhotoSeeder extends Seeder
             }
         }
 
-        $this->command?->info("Demofoto's toegevoegd aan {$lots->count()} kavels.");
+        $this->command?->info("Demofoto's gezet bij {$lots->count()} kavels.");
     }
 
     /**
-     * @return list<string>
+     * Een demofoto staat als URL bij een fotobank; een upload van een verkoper is een pad op de eigen schijf.
+     */
+    public static function isDemoPhoto(string $path): bool
+    {
+        return str_starts_with($path, 'https://images.unsplash.com/') || str_starts_with($path, 'https://images.pexels.com/');
+    }
+
+    /**
+     * @return list<int>
      */
     private function photosFor(Lot $lot): array
     {
-        $category = $lot->category;
+        $title = mb_strtolower((string) $lot->title);
 
-        foreach ([$category?->slug, $category?->parent?->slug] as $slug) {
-            if ($slug !== null && isset(self::PHOTOS[$slug])) {
-                return self::PHOTOS[$slug];
+        foreach (self::BY_TITLE as [$pattern, $ids]) {
+            if (preg_match($pattern, $title) === 1) {
+                return $ids;
             }
         }
 
-        return self::PHOTOS['*'];
+        $category = $lot->category;
+
+        foreach ([$category?->slug, $category?->parent?->slug] as $slug) {
+            if ($slug !== null && isset(self::BY_CATEGORY[$slug])) {
+                return self::BY_CATEGORY[$slug];
+            }
+        }
+
+        return self::BY_CATEGORY['*'];
     }
 }
