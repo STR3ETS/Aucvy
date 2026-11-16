@@ -1,7 +1,7 @@
 {{--
     Interesseblok voor kopers (hoofdbriefing p. 7): alleen Hot als de regel
     daaraan voldoet, nooit "Rustig". Tellers: Bekeken, Opgeslagen, Gedeeld,
-    Bieders (bij een veiling) en Kijken nu. In de biedkaart, zoals in het
+    Bieders (bij een veiling). Wie nu kijkt staat al op de foto en boven de prijs. In de biedkaart, zoals in het
     ontwerp van november: roze als de kavel hot is.
 --}}
 @php
@@ -11,7 +11,6 @@
         ['Opgeslagen', $interest['saved']],
         ['Gedeeld', $interest['shared']],
         $lot->sale_type === \App\Enums\SaleType::Auction ? ['Bieders', $interest['bidders']] : null,
-        $interest['now'] > 0 ? ['Kijken nu', $interest['now']] : null,
     ]));
 @endphp
 

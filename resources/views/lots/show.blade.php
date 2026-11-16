@@ -24,7 +24,7 @@
             'price' => number_format($lot->currentPriceCents() / 100, 2, '.', ''),
             'availability' => $isLive ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
             'itemCondition' => 'https://schema.org/UsedCondition',
-            'seller' => ['@type' => 'Organization', 'name' => $lot->seller?->publicName() ?? config('app.name')],
+            'seller' => ['@type' => 'Organization', 'name' => $lot->company?->name ?? $lot->seller?->sellerName() ?? config('app.name')],
         ],
     ];
 

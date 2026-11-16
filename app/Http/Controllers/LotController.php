@@ -146,35 +146,50 @@ final class LotController extends Controller
 
     /**
      * Vergelijkbare kavels: eerst dezelfde categorie, aangevuld met de nieuwste
-     * andere kavels als dat er te weinig zijn. Nooit een lege sectie.
+     * andere kavels als dat er te weinig zijn. Nooit een lege sectie, en nooit
+     * twee keer hetzelfde product (ook niet het product dat je al bekijkt).
      *
      * @return Collection<int, Lot>
      */
     private function similarLots(Lot $lot): Collection
     {
         $relations = ['media', 'auction', 'category', 'location'];
+        $seen = [mb_strtolower(trim((string) $lot->title))];
+        $distinct = function (Collection $lots) use (&$seen): Collection {
+            return $lots->filter(function (Lot $candidate) use (&$seen): bool {
+                $title = mb_strtolower(trim((string) $candidate->title));
 
-        $similar = Lot::query()
+                if (in_array($title, $seen, true)) {
+                    return false;
+                }
+
+                $seen[] = $title;
+
+                return true;
+            })->values();
+        };
+
+        $similar = $distinct(Lot::query()
             ->public()
             ->whereKeyNot($lot->id)
             ->where('category_id', $lot->category_id)
             ->with($relations)
             ->latest('published_at')
-            ->limit(3)
-            ->get();
+            ->limit(12)
+            ->get())->take(3);
 
         if ($similar->count() < 3) {
-            $similar = $similar->concat(Lot::query()
+            $similar = $similar->concat($distinct(Lot::query()
                 ->public()
                 ->whereKeyNot($lot->id)
                 ->whereNotIn('id', $similar->modelKeys())
                 ->with($relations)
                 ->latest('published_at')
-                ->limit(3 - $similar->count())
-                ->get());
+                ->limit(12)
+                ->get())->take(3 - $similar->count()));
         }
 
-        return $similar;
+        return $similar->values();
     }
 
     /**

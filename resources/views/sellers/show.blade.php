@@ -17,9 +17,9 @@
     het aanbod en de reviews, met rechts wat er gecontroleerd is en hoe de
     Trust Index is opgebouwd. Geen contactgegevens, geen adres.
 --}}
-<x-layouts.public :title="$seller->publicName()" eyebrow="Verkoper"
-    :meta-title="$seller->publicName().': verkoper op Aucvy'"
-    :description="'Bekijk de kavels, veilingen en reviews van '.$seller->publicName().' op Aucvy, het zakelijke veilingplatform.'">
+<x-layouts.public :title="$seller->sellerName()" eyebrow="Verkoper"
+    :meta-title="$seller->sellerName().': verkoper op Aucvy'"
+    :description="'Bekijk de kavels, veilingen en reviews van '.$seller->sellerName().' op Aucvy, het zakelijke veilingplatform.'">
     <x-slot:crumbs>
         <a href="{{ route('lots.index') }}">Veilingen</a> <span aria-hidden="true">/</span> <span>Verkopers</span>
     </x-slot:crumbs>
@@ -71,7 +71,7 @@
                         <img class="logo" src="{{ $company->logo_path }}" alt="">
                     @endif
                     <div>
-                        <h2>{{ $company?->name ?? $seller->publicName() }}</h2>
+                        <h2>{{ $company?->name ?? $seller->sellerName() }}</h2>
                         @if ($company?->description)
                             <p>{{ $company->description }}</p>
                         @else

@@ -97,7 +97,7 @@
     </template>
 
     <p class="d-note">
-        <strong>Koop direct:</strong> vaste prijs, geen bieden. Wie het eerst koopt, koopt.
+        Een aankoop is bindend, net als een bod.
         <a href="{{ route('assurance') }}">Hoe werkt dit?</a>
     </p>
 </div>

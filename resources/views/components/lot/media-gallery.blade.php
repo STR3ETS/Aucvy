@@ -135,14 +135,16 @@
         </div>
     @endif
 
-    {{-- Wat er naast foto's nog is: documenten en bezichtiging. --}}
-    <div class="d-chips">
-        <span class="d-chip is-blue">Foto's <span class="tabular" style="color:#4d5566">{{ $media->count() }}</span></span>
-        @if ($lot->documents->isNotEmpty())
-            <a href="#documenten" class="d-chip">Documenten <span class="tabular" style="color:#4d5566">{{ $lot->documents->count() }}</span></a>
-        @endif
-        @if ($lot->viewing_available)
-            <a href="#bezichtiging" class="d-chip"><x-v4.icon name="clock" :size="15" stroke="2.2" /> Bezichtiging plannen</a>
-        @endif
-    </div>
+    {{-- Wat er naast foto's nog is: documenten en bezichtiging. Zonder iets anders geen rij met alleen "Foto's". --}}
+    @if ($lot->documents->isNotEmpty() || $lot->viewing_available)
+        <div class="d-chips">
+            <span class="d-chip is-blue">Foto's <span class="tabular" style="color:#4d5566">{{ $media->count() }}</span></span>
+            @if ($lot->documents->isNotEmpty())
+                <a href="#documenten" class="d-chip">Documenten <span class="tabular" style="color:#4d5566">{{ $lot->documents->count() }}</span></a>
+            @endif
+            @if ($lot->viewing_available)
+                <a href="#bezichtiging" class="d-chip"><x-v4.icon name="clock" :size="15" stroke="2.2" /> Bezichtiging plannen</a>
+            @endif
+        </div>
+    @endif
 </div>

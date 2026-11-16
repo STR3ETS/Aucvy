@@ -1,7 +1,7 @@
 @props(['lot', 'stats'])
 
 @php
-    $sellerName = $lot->company?->name ?? $lot->seller->publicName();
+    $sellerName = $lot->company?->name ?? $lot->seller->sellerName();
     $initials = collect(explode(' ', $sellerName))
         ->filter()
         ->take(2)

@@ -2,7 +2,7 @@
 
 @php
     $tz = config('aucvy.display_timezone');
-    $sellerName = $sale->company?->name ?? $sale->seller->publicName();
+    $sellerName = $sale->company?->name ?? $sale->seller->sellerName();
     $intro = $lots->count().' '.($lots->count() === 1 ? 'kavel' : 'kavels').' van '.$sellerName.' · '.($state === SaleState::Closed ? 'gesloten' : 'sluit vanaf '.$sale->ends_at->timezone($tz)->isoFormat('dddd D MMMM, HH:mm'));
 @endphp
 

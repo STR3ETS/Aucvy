@@ -292,6 +292,23 @@ class User extends Authenticatable implements MustVerifyEmail
         return 'Bieder '.$this->bidderNumber();
     }
 
+    /**
+     * De naam waaronder iemand verkoopt: het bedrijf, anders de eigen
+     * schermnaam, en nooit "Bieder" (dat is de naam aan de koperskant).
+     */
+    public function sellerName(): string
+    {
+        if ($this->company_id !== null && filled($this->company?->name)) {
+            return $this->company->name;
+        }
+
+        if ($this->display_name !== null && $this->display_name !== '') {
+            return $this->display_name;
+        }
+
+        return 'Verkoper '.$this->bidderNumber();
+    }
+
     public function bidderNumber(): int
     {
         $number = $this->getAttributes()['bidder_number'] ?? null;

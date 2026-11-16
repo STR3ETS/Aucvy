@@ -137,7 +137,7 @@ class Conversation extends Model
 
     public function sellerLabel(): string
     {
-        return $this->company?->name ?? $this->seller?->publicName() ?? 'Verkoper';
+        return $this->company?->name ?? $this->seller?->sellerName() ?? 'Verkoper';
     }
 
     public function kindLabel(): string
