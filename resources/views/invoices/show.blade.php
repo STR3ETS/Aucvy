@@ -56,119 +56,127 @@
     </x-slot:crumbs>
 
     <div class="d-invoice">
-        <section class="d-card d-orderhead d-print-hide" aria-label="{{ $invoice->kindLabel() }} {{ $invoice->number }}">
-            <div class="d-orderhead-top">
-                <span class="thumb" aria-hidden="true"><x-v4.icon name="file-text" :size="24" stroke="1.8" /></span>
-
-                <div class="text">
-                    <strong class="d-orderhead-title">{{ $order->lot?->title ?? $invoice->kindLabel() }}</strong>
-                    <span class="d-lotrow-tags">
-                        <span class="d-tag {{ $status[0] }}">{{ $status[1] }}</span>
-                        <span class="d-bid-meta">{{ $tabLabel($invoice) }} · {{ $isMargin ? 'Margeregeling' : $vatLabel }} · {{ $invoice->issued_at->isoFormat('D MMM YYYY') }}</span>
-                        @if ($isMargin)
-                            <x-dashboard.help text="Bij de margeregeling mag de btw niet apart op de factuur staan. Je betaalt het totaalbedrag, zonder btw erbovenop." />
-                        @endif
-                        @if ($invoice->credits)
-                            <a class="d-bid-meta d-link" href="{{ route('invoices.show', $invoice->credits) }}">Op factuur {{ $invoice->credits->number }}</a>
-                        @endif
-                    </span>
-                </div>
-
-                <div class="d-orderhead-amount">
-                    <b class="tabular">{{ Money::format($invoice->total_cents) }}</b>
-                    <span>{{ $invoice->vat_regime->isDeductible() ? 'Totaal, met btw' : 'Totaal' }}</span>
-                </div>
-
-                <div class="d-lotrow-actions">
-                    <a href="{{ route('orders.show', $order) }}" class="d-iconbtn" data-tip="Naar de bestelling" aria-label="Naar bestelling {{ $order->order_number }}"><x-v4.icon name="shopping-bag" :size="17" stroke="2" /></a>
-                    <a href="{{ route('orders.show', $order) }}#berichten" class="d-iconbtn" data-tip="Vraag over deze factuur" aria-label="Een vraag stellen over deze factuur"><x-v4.icon name="message-circle" :size="17" stroke="2" /></a>
-                    <button type="button" class="d-btn d-btn-sq" onclick="window.print()"><x-v4.icon name="download" :size="16" stroke="2.2" /> Download pdf</button>
-                </div>
-            </div>
-        </section>
-
-        @if ($siblings->count() > 1)
-            <nav class="d-tabs d-print-hide" aria-label="Facturen bij deze bestelling">
-                @foreach ($siblings as $sibling)
-                    <a href="{{ route('invoices.show', $sibling) }}" @class(['is-on' => $sibling->is($invoice)]) @if ($sibling->is($invoice)) aria-current="page" @endif>{{ $tabLabel($sibling) }}</a>
-                @endforeach
-            </nav>
-        @endif
-
-        <article class="d-sheet">
-            <div class="d-sheet-top">
+        {{-- Rechts, en op een smal scherm bovenaan: de gegevens, het bedrag en de acties. Schuift mee met het vel. --}}
+        <aside class="d-card d-invoice-side d-print-hide" aria-label="{{ $invoice->kindLabel() }} {{ $invoice->number }}">
+            <div class="d-invoice-side-head">
+                <span class="thumb" aria-hidden="true"><x-v4.icon name="file-text" :size="22" stroke="1.8" /></span>
                 <div>
-                    <h2>{{ $issuer['name'] }}</h2>
-                    @if (! empty($issuer['contact']))<p class="d-muted" style="margin:4px 0 0">t.a.v. {{ $issuer['contact'] }}</p>@endif
-                    <p class="d-muted" style="margin:4px 0 0">{{ $party($issuer) }}</p>
-                    @if (! empty($issuer['note']))<p class="d-hint">{{ $issuer['note'] }}</p>@endif
-                </div>
-                <div style="text-align:right">
-                    <div class="big">{{ $invoice->isCredit() ? 'Creditnota' : 'Factuur' }}</div>
-                    <span class="d-tag {{ $status[0] }}" style="margin-top:10px">{{ $status[1] }}</span>
+                    <span class="d-bid-meta">{{ $invoice->kindLabel() }}</span>
+                    <strong>{{ $order->lot?->title ?? $invoice->number }}</strong>
                 </div>
             </div>
 
-            <div class="d-sheet-meta">
-                <div>
-                    <div class="d-sheet-kicker">Aan</div>
-                    <p><strong>{{ $recipient['name'] }}</strong></p>
-                    @if (! empty($recipient['contact']))<p>t.a.v. {{ $recipient['contact'] }}</p>@endif
-                    <p>{{ $party($recipient) }}</p>
-                    @if (! empty($recipient['note']))<p class="d-hint">{{ $recipient['note'] }}</p>@endif
-                </div>
-                <dl class="d-sheet-kv">
-                    <dt>Factuurnummer</dt><dd>{{ $invoice->number }}</dd>
-                    <dt>Factuurdatum</dt><dd>{{ $invoice->issued_at->isoFormat('D MMM YYYY') }}</dd>
-                    @if ($invoice->delivery_date)
-                        <dt>{{ $invoice->isCredit() ? 'Correctiedatum' : ($order->delivered_at ? 'Leverdatum' : 'Datum vooruitbetaling') }}</dt><dd>{{ $invoice->delivery_date->isoFormat('D MMM YYYY') }}</dd>
+            <div class="d-invoice-side-amount">
+                <b class="tabular">{{ Money::format($invoice->total_cents) }}</b>
+                <span class="d-tag {{ $status[0] }}">{{ $status[1] }}</span>
+            </div>
+
+            <dl class="d-invoice-side-facts">
+                <dt>Factuurnummer</dt><dd class="tabular">{{ $invoice->number }}</dd>
+                <dt>Datum</dt><dd>{{ $invoice->issued_at->isoFormat('D MMM YYYY') }}</dd>
+                <dt>Btw</dt>
+                <dd>
+                    {{ $isMargin ? 'Margeregeling' : $vatLabel }}
+                    @if ($isMargin)
+                        <x-dashboard.help text="Bij de margeregeling mag de btw niet apart op de factuur staan. Je betaalt het totaalbedrag, zonder btw erbovenop." />
                     @endif
-                    <dt>Bestelling</dt><dd>{{ $order->order_number }}</dd>
-                    @if ($order->lot)
-                        <dt>Kavel</dt><dd>#{{ $order->lot->public_id }}</dd>
-                    @endif
-                </dl>
-            </div>
-
-            <div class="d-sheet-scroll">
-                <table>
-                    <thead><tr><th>Omschrijving</th><th class="num">Aantal</th><th class="num">Prijs excl. btw</th><th class="num">Btw</th><th class="num">Bedrag</th></tr></thead>
-                    <tbody>
-                        @foreach ($invoice->lines as $line)
-                            <tr>
-                                <td>{{ $line['description'] }}</td>
-                                <td class="num">{{ $line['quantity'] }}</td>
-                                <td class="num">{{ Money::format((int) $line['unit_cents']) }}</td>
-                                <td class="num">{{ $line['vat_rate'] > 0 ? rtrim(rtrim(number_format((float) $line['vat_rate'], 1, ',', ''), '0'), ',').'%' : '0%' }}</td>
-                                <td class="num">{{ Money::format((int) $line['total_cents']) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <dl class="d-sheet-totals">
-                <dt>Subtotaal excl. btw</dt><dd>{{ Money::format($invoice->subtotal_cents) }}</dd>
-                <dt>{{ $vatLabel }}</dt><dd>{{ Money::format($invoice->vat_cents) }}</dd>
-                <dt class="grand">Totaal</dt><dd class="grand">{{ Money::format($invoice->total_cents) }}</dd>
+                </dd>
+                @if ($invoice->credits)
+                    <dt>Verrekent</dt><dd><a class="d-link" href="{{ route('invoices.show', $invoice->credits) }}">Op factuur {{ $invoice->credits->number }}</a></dd>
+                @endif
             </dl>
 
-            @if ($notes !== [])
-                <p class="note">{{ implode(' ', $notes) }}</p>
+            <div class="d-invoice-side-actions">
+                <button type="button" class="d-btn d-btn-sq" onclick="window.print()"><x-v4.icon name="download" :size="16" stroke="2.2" /> Download pdf</button>
+                <a href="{{ route('orders.show', $order) }}" class="d-iconbtn" data-tip="Naar de bestelling" aria-label="Naar bestelling {{ $order->order_number }}"><x-v4.icon name="shopping-bag" :size="17" stroke="2" /></a>
+                <a href="{{ route('orders.show', $order) }}#berichten" class="d-iconbtn" data-tip="Vraag over deze factuur" aria-label="Een vraag stellen over deze factuur"><x-v4.icon name="message-circle" :size="17" stroke="2" /></a>
+            </div>
+        </aside>
+
+        <div class="d-invoice-main">
+            @if ($siblings->count() > 1)
+                <nav class="d-tabs d-print-hide" aria-label="Facturen bij deze bestelling">
+                    @foreach ($siblings as $sibling)
+                        <a href="{{ route('invoices.show', $sibling) }}" @class(['is-on' => $sibling->is($invoice)]) @if ($sibling->is($invoice)) aria-current="page" @endif>{{ $tabLabel($sibling) }}</a>
+                    @endforeach
+                </nav>
             @endif
 
-            <div class="d-sheet-foot">
-                <p>
-                    @if ($invoice->isCredit())
-                        Deze creditnota verrekent de genoemde factuur. Een terugbetaling loopt via het platform.
-                    @elseif (! $isPaid && $order->payment_deadline_at)
-                        Betaal uiterlijk {{ $order->payment_deadline_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM YYYY, HH:mm') }} via het platform. De verkoper ontvangt het geld na de houdtermijn.
-                    @else
-                        Betaald via Aucvy. De verkoper ontvangt het geld na de houdtermijn.
-                    @endif
-                </p>
-                <p>Vragen over deze factuur? Stel ze via je bestelling of <a href="{{ route('contact') }}">neem contact op</a>.</p>
-            </div>
-        </article>
+            <article class="d-sheet">
+                <div class="d-sheet-top">
+                    <div>
+                        <h2>{{ $issuer['name'] }}</h2>
+                        @if (! empty($issuer['contact']))<p class="d-muted" style="margin:4px 0 0">t.a.v. {{ $issuer['contact'] }}</p>@endif
+                        <p class="d-muted" style="margin:4px 0 0">{{ $party($issuer) }}</p>
+                        @if (! empty($issuer['note']))<p class="d-hint">{{ $issuer['note'] }}</p>@endif
+                    </div>
+                    <div style="text-align:right">
+                        <div class="big">{{ $invoice->isCredit() ? 'Creditnota' : 'Factuur' }}</div>
+                        <span class="d-tag {{ $status[0] }}" style="margin-top:10px">{{ $status[1] }}</span>
+                    </div>
+                </div>
+
+                <div class="d-sheet-meta">
+                    <div>
+                        <div class="d-sheet-kicker">Aan</div>
+                        <p><strong>{{ $recipient['name'] }}</strong></p>
+                        @if (! empty($recipient['contact']))<p>t.a.v. {{ $recipient['contact'] }}</p>@endif
+                        <p>{{ $party($recipient) }}</p>
+                        @if (! empty($recipient['note']))<p class="d-hint">{{ $recipient['note'] }}</p>@endif
+                    </div>
+                    <dl class="d-sheet-kv">
+                        <dt>Factuurnummer</dt><dd>{{ $invoice->number }}</dd>
+                        <dt>Factuurdatum</dt><dd>{{ $invoice->issued_at->isoFormat('D MMM YYYY') }}</dd>
+                        @if ($invoice->delivery_date)
+                            <dt>{{ $invoice->isCredit() ? 'Correctiedatum' : ($order->delivered_at ? 'Leverdatum' : 'Datum vooruitbetaling') }}</dt><dd>{{ $invoice->delivery_date->isoFormat('D MMM YYYY') }}</dd>
+                        @endif
+                        <dt>Bestelling</dt><dd>{{ $order->order_number }}</dd>
+                        @if ($order->lot)
+                            <dt>Kavel</dt><dd>#{{ $order->lot->public_id }}</dd>
+                        @endif
+                    </dl>
+                </div>
+
+                <div class="d-sheet-scroll">
+                    <table>
+                        <thead><tr><th>Omschrijving</th><th class="num">Aantal</th><th class="num">Prijs excl. btw</th><th class="num">Btw</th><th class="num">Bedrag</th></tr></thead>
+                        <tbody>
+                            @foreach ($invoice->lines as $line)
+                                <tr>
+                                    <td>{{ $line['description'] }}</td>
+                                    <td class="num">{{ $line['quantity'] }}</td>
+                                    <td class="num">{{ Money::format((int) $line['unit_cents']) }}</td>
+                                    <td class="num">{{ $line['vat_rate'] > 0 ? rtrim(rtrim(number_format((float) $line['vat_rate'], 1, ',', ''), '0'), ',').'%' : '0%' }}</td>
+                                    <td class="num">{{ Money::format((int) $line['total_cents']) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <dl class="d-sheet-totals">
+                    <dt>Subtotaal excl. btw</dt><dd>{{ Money::format($invoice->subtotal_cents) }}</dd>
+                    <dt>{{ $vatLabel }}</dt><dd>{{ Money::format($invoice->vat_cents) }}</dd>
+                    <dt class="grand">Totaal</dt><dd class="grand">{{ Money::format($invoice->total_cents) }}</dd>
+                </dl>
+
+                @if ($notes !== [])
+                    <p class="note">{{ implode(' ', $notes) }}</p>
+                @endif
+
+                <div class="d-sheet-foot">
+                    <p>
+                        @if ($invoice->isCredit())
+                            Deze creditnota verrekent de genoemde factuur. Een terugbetaling loopt via het platform.
+                        @elseif (! $isPaid && $order->payment_deadline_at)
+                            Betaal uiterlijk {{ $order->payment_deadline_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM YYYY, HH:mm') }} via het platform. De verkoper ontvangt het geld na de houdtermijn.
+                        @else
+                            Betaald via Aucvy. De verkoper ontvangt het geld na de houdtermijn.
+                        @endif
+                    </p>
+                    <p>Vragen over deze factuur? Stel ze via je bestelling of <a href="{{ route('contact') }}">neem contact op</a>.</p>
+                </div>
+            </article>
+        </div>
     </div>
 </x-layouts.dashboard>
