@@ -2,16 +2,24 @@
     Delen door een koper (briefing nieuwe functies): altijd een menu met
     WhatsApp, e-mail, link kopiëren en het deelmenu van het apparaat, met een
     optionele notitie. Elke deling krijgt een eigen link met token en UTM.
+    Met compact is de knop een ronde pictogramknop (kavelpagina).
 --}}
-<div class="relative flex-1" x-data="shareMenu({{ Js::from(route('lots.share', $lot)) }}, {{ Js::from($lot->title) }})" @keydown.escape.window="open = false">
+@php $compact = $compact ?? false; @endphp
+<div class="relative {{ $compact ? '' : 'flex-1' }}" x-data="shareMenu({{ Js::from(route('lots.share', $lot)) }}, {{ Js::from($lot->title) }})" @keydown.escape.window="open = false">
+    @if ($compact)
+        <button type="button" class="d-iconbtn" :class="open && 'is-on'" @click="open = ! open" :aria-expanded="open" aria-haspopup="true" :data-tip="done === 'link' ? 'Gekopieerd' : 'Delen'" data-tip="Delen" aria-label="Deze kavel delen">
+            <x-v4.icon name="share" :size="17" stroke="2" />
+        </button>
+    @else
     <button type="button" class="btn btn-ghost w-full" @click="open = ! open" :aria-expanded="open" aria-haspopup="true">
         <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="5" cy="10" r="2.2"/><circle cx="15" cy="4.5" r="2.2"/><circle cx="15" cy="15.5" r="2.2"/><path d="m7 9 6-3.6M7 11l6 3.6"/>
         </svg>
         <span x-text="done === 'link' ? 'Gekopieerd!' : 'Delen'"></span>
     </button>
+    @endif
 
-    <div x-show="open" x-cloak @click.outside="open = false" class="absolute right-0 z-20 mt-2 w-72 rounded-aj-s border border-aj-border bg-aj-surface p-3 shadow-lg" role="menu" aria-label="Delen">
+    <div x-show="open" x-cloak @click.outside="open = false" class="absolute {{ $compact ? 'left-0' : 'right-0' }} z-20 mt-2 w-72 rounded-aj-s border border-aj-border bg-aj-surface p-3 shadow-lg" role="menu" aria-label="Delen">
         <label class="block text-xs font-bold" for="share-note-{{ $lot->id }}">Notitie voor de ontvanger (mag leeg)</label>
         <input id="share-note-{{ $lot->id }}" type="text" x-model="note" maxlength="200" placeholder="Wat vind jij van de staat?" class="mt-1 w-full rounded-aj-sm border border-aj-border-strong px-2 text-sm" style="min-height:36px">
         <p class="mt-1 text-[11px] text-aj-muted">De ontvanger ziet de kavel en je notitie, nooit je bod of biednaam.</p>

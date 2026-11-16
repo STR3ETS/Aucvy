@@ -12,7 +12,7 @@
     </div>
 
     <div>
-        <div class="d-muted">Vaste prijs · geen bieden, wie het eerst koopt<template x-if="(state.watching_now ?? 0) > 0"><span> · <span x-text="state.watching_now"></span> kijken nu</span></template></div>
+        <div class="d-muted">Vaste prijs, wie het eerst koopt</div>
         <div class="d-bidcard-price" x-text="formatCents(state.buy_now?.price_cents ?? state.price_cents)"></div>
     </div>
 

@@ -2202,3 +2202,31 @@ summary{-webkit-user-select:none;user-select:none}
 @media print{
   .d-split{display:block}
 }
+
+/* ---------- kavelpagina, rustig: interesse als pictogrammen, kosten ingeklapt, acties als ronde knoppen, inhoud in tabs ---------- */
+.d-interest-line{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(14,21,38,.08);border-bottom:1px solid rgba(14,21,38,.08)}
+.d-interest-line ul{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;flex:1 1 auto;margin:0;padding:0;list-style:none}
+.d-interest-line li{display:inline-flex;align-items:center;gap:5px;color:#5c6577;font-size:13px}
+.d-interest-line li b{color:#0e1526;font-weight:700}
+.d-interest-line .d-help-tip{left:auto;right:-8px}
+.d-costfold{border-radius:12px;background:#f3f5f9}
+.d-costfold>summary{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;cursor:pointer;list-style:none;font-size:13.5px;color:#4d5566}
+.d-costfold>summary::-webkit-details-marker{display:none}
+.d-costfold>summary>span{flex:1 1 auto}
+.d-costfold>summary>strong{color:#0e1526;font-size:15px;font-weight:800}
+.d-costfold>summary>svg{flex:0 0 auto;color:#6b7385;transition:transform .18s}
+.d-costfold[open]>summary>svg{transform:rotate(180deg)}
+.d-costfold>.d-costs{margin:0 8px;background:#fff}
+.d-costfold>.d-hint{margin:8px 14px 12px}
+.d-costfold[open]{padding-bottom:8px}
+.d-lotactions{display:flex;align-items:center;gap:8px}
+.d-lottabs{padding:6px 22px 22px;border:1px solid rgba(14,21,38,.09);border-radius:16px;background:#fff}
+.d-lottabs>.d-tabs{margin:0 -22px 18px;padding:0 12px}
+.d-lottabs-panel{display:grid;gap:22px}
+.d-lottabs-panel .d-h2-page{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.d-lottabs-panel .d-specs{margin-top:0}
+.d-lotside-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;align-items:start}
+.d-trustline{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;padding:14px 0;border-top:1px solid rgba(14,21,38,.08)}
+.d-trustline ul{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0;padding:0;list-style:none;font-size:13px;color:#47505f}
+.d-trustline li{display:inline-flex;align-items:center;gap:6px}
+.d-trustline li svg{color:#177249}

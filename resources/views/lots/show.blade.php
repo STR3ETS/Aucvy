@@ -183,6 +183,23 @@
                 {{-- Documenten staan op een private disk (hfst. 15); hier staat wát er is en of Lex het bekeken heeft. --}}
                 @include('lots.partials.documents', ['lot' => $lot])
 
+                @php
+                    $hasHistory = $state !== null && $lot->sale_type !== SaleType::BuyNow;
+                    $lotTabs = array_values(array_filter([
+                        ['omschrijving', $translation ? 'Description' : 'Omschrijving'],
+                        ['specificaties', 'Specificaties'],
+                        $hasHistory ? ['biedhistorie', 'Biedhistorie'] : null,
+                    ]));
+                @endphp
+                {{-- Omschrijving, specificaties en biedhistorie als tabs in één kaart; alles staat in de pagina, alleen niet tegelijk zichtbaar. --}}
+                <section class="d-lottabs" x-data="{ tab: 'omschrijving' }" aria-label="Over deze kavel">
+                    <div class="d-tabs" role="tablist">
+                        @foreach ($lotTabs as [$key, $label])
+                            <button type="button" role="tab" id="tab-{{ $key }}" aria-controls="paneel-{{ $key }}" :aria-selected="tab === '{{ $key }}'" :class="tab === '{{ $key }}' && 'is-on'" @click="tab = '{{ $key }}'" @class(['is-on' => $loop->first])>{{ $label }}</button>
+                        @endforeach
+                    </div>
+
+                <div id="paneel-omschrijving" role="tabpanel" aria-labelledby="tab-omschrijving" x-show="tab === 'omschrijving'" class="d-lottabs-panel">
                 <div>
                     <h2 class="d-h2-page">{{ $translation ? 'Description' : 'Omschrijving' }}</h2>
                     {{-- Vertaling door Ivy (briefing stap 4): op verzoek, met de Nederlandse tekst als bindende versie. --}}
@@ -210,6 +227,7 @@
                         </ul>
                     </div>
                 @endif
+                </div>
 
                 @php
                     $specRows = [];
@@ -236,6 +254,7 @@
                     }
                     $specRows[] = ['Btw-regeling', $lot->vat_regime?->label() ?? 'Volgens factuur', false];
                 @endphp
+                <div id="paneel-specificaties" role="tabpanel" aria-labelledby="tab-specificaties" x-show="tab === 'specificaties'" x-cloak class="d-lottabs-panel">
                 @if ($specRows !== [])
                     <div>
                         <h2 class="d-h2-page" style="margin-bottom:8px">Specificaties</h2>
@@ -250,13 +269,35 @@
                         </dl>
                     </div>
                 @endif
+                </div>
+
+                {{-- Bij koop direct valt er geen biedhistorie te tonen. --}}
+                @if ($hasHistory)
+                    <div id="paneel-biedhistorie" role="tabpanel" aria-labelledby="tab-biedhistorie" x-show="tab === 'biedhistorie'" x-cloak class="d-lottabs-panel">
+                        <x-auction.bid-history />
+                    </div>
+                @endif
+                </section>
 
                 @include('lots.partials.ask-answers', ['lot' => $lot])
 
-                {{-- Bij koop direct valt er geen biedhistorie te tonen. --}}
-                @if ($state !== null && $lot->sale_type !== SaleType::BuyNow)
-                    <x-auction.bid-history />
+                {{-- Vragen, bezichtiging en transport: naast elkaar onder de inhoud, niet meer als losse kaarten in de zijkolom. --}}
+                @if ($state !== null)
+                    <div class="d-lotside-grid">
+                        @include('lots.partials.ask', ['lot' => $lot])
+                        @include('lots.partials.viewing-and-transport', ['lot' => $lot])
+                    </div>
                 @endif
+
+                {{-- Wat vaststaat bij deze kavel: één rustige regel. --}}
+                <section class="d-trustline" aria-label="Vertrouwen">
+                    <ul>
+                        @foreach ($trustPoints as $point)
+                            <li><x-v4.icon name="check" :size="14" stroke="3" /> {{ $point }}</li>
+                        @endforeach
+                    </ul>
+                    <a href="{{ route('assurance') }}" class="d-link">Hoe werkt zekerheid bij Aucvy?</a>
+                </section>
             </div>
 
             {{-- Zijkolom ---------------------------------------------------- --}}
@@ -276,30 +317,34 @@
                             body="Er is nog geen verkooproute gekoppeld." />
                     @endif
                 @else
-                    {{-- Eén verkoopvorm tegelijk (hfst. 12). De interesse staat in de kaart, onder de stand. --}}
+                    {{-- Eén verkoopvorm tegelijk (hfst. 12). In de kaart: de interesse als pictogrammen en de kosten als één ingeklapte regel. --}}
                     @if ($lot->sale_type === SaleType::Dutch)
                         <x-auction.dutch-panel>
                             @include('lots.partials.interest', ['lot' => $lot, 'interest' => $interest])
+                            <x-lot.cost-breakdown id="kosten" fold :costs="$costs" title="Jij betaalt nu" :note="__('money.notes.estimate')" transport-note="Vanaf-tarief - bereken je postcode bij transport" />
                         </x-auction.dutch-panel>
                     @elseif ($lot->sale_type === SaleType::BuyNow)
                         <x-auction.buy-now-hero>
                             @include('lots.partials.interest', ['lot' => $lot, 'interest' => $interest])
+                            <x-lot.cost-breakdown id="kosten" fold :costs="$costs" :note="__('money.notes.estimate')" transport-note="Vanaf-tarief - bereken je postcode bij transport" />
                         </x-auction.buy-now-hero>
                     @else
                         <x-auction.bid-panel :auction="$auction">
                             @include('lots.partials.interest', ['lot' => $lot, 'interest' => $interest])
 
-                            {{-- De kostenopbouw bij dit bod, met het vanaf-tarief voor transport; na een postcode komt de verse opbouw ervoor in de plaats (hfst. 13.3). --}}
+                            {{-- De kosten bij dit bod, ingeklapt tot het totaal, met het vanaf-tarief voor transport; na een postcode komt de verse opbouw ervoor in de plaats (hfst. 13.3). --}}
                             <div x-data="{ liveCosts: null }" @shipping-quoted.window="liveCosts = $event.detail">
                                 <template x-if="! liveCosts">
-                                    <div>
-                                        <x-lot.cost-breakdown id="kosten" :costs="$costs" title="Kostenopbouw bij dit bod" :note="__('money.notes.estimate')" transport-note="Vanaf-tarief - bereken hieronder je postcode" />
-                                    </div>
+                                    <x-lot.cost-breakdown id="kosten" fold :costs="$costs" title="Jij betaalt bij dit bod" :note="__('money.notes.estimate')" transport-note="Vanaf-tarief - bereken je postcode bij transport" />
                                 </template>
                                 <template x-if="liveCosts">
-                                    <div id="kosten">
-                                        <h3 class="d-h3" style="font-size:14px;font-weight:700">Kostenopbouw bij dit bod</h3>
-                                        <div class="d-costs" style="margin-top:8px">
+                                    <details id="kosten" class="d-costfold" open>
+                                        <summary>
+                                            <span>Jij betaalt bij dit bod</span>
+                                            <strong class="tabular" x-text="liveCosts.total_formatted"></strong>
+                                            <x-v4.icon name="chevron-down" :size="16" stroke="2.2" />
+                                        </summary>
+                                        <div class="d-costs">
                                             <template x-for="line in liveCosts.lines" :key="line.key">
                                                 <div class="d-row">
                                                     <span><span x-text="line.label"></span><template x-if="line.note"><small x-text="line.note"></small></template></span>
@@ -309,7 +354,7 @@
                                             <div class="d-row is-total"><span>Jij betaalt</span><strong x-text="liveCosts.total_formatted"></strong></div>
                                         </div>
                                         <p class="d-hint" style="margin-top:8px">Met jouw transportindicatie - definitief na bevestiging.</p>
-                                    </div>
+                                    </details>
                                 </template>
                             </div>
 
@@ -343,11 +388,10 @@
                         @endif
                     @endif
 
-                    {{-- Volgen en delen: licht, naast de zware koopacties. --}}
-                    <div class="d-pair"
+                    {{-- Volgen, delen en meldingen: ronde pictogramknoppen onder de koopkaart, met de naam bij aanwijzen. --}}
+                    <div class="d-lotactions"
                          x-data="{
                             watching: {{ $isWatching ? 'true' : 'false' }},
-                            count: {{ $watcherCount }},
                             busy: false,
                             async toggle() {
                                 if (this.busy) return;
@@ -362,7 +406,6 @@
                                     });
                                     if (response.ok) {
                                         this.watching = ! this.watching;
-                                        this.count += this.watching ? 1 : -1;
                                     }
                                 } catch (error) {
                                     // Geen verbinding: de knop blijft bruikbaar.
@@ -371,39 +414,34 @@
                             },
                          }">
                         @auth
-                            <button type="button" class="d-btn d-btn-secondary" @click="toggle()" :aria-pressed="watching">
-                                <svg class="size-4" viewBox="0 0 20 20" :fill="watching ? 'currentColor' : 'none'"
+                            <button type="button" class="d-iconbtn" :class="watching && 'is-on'" @click="toggle()" :aria-pressed="watching"
+                                    :data-tip="watching ? 'Je volgt deze kavel' : 'Volgen'" data-tip="Volgen" aria-label="Deze kavel volgen">
+                                <svg width="17" height="17" viewBox="0 0 20 20" :fill="watching ? 'currentColor' : 'none'"
                                      stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M10 17s-6.5-4.1-6.5-8.6a3.6 3.6 0 0 1 6.5-2.1 3.6 3.6 0 0 1 6.5 2.1C16.5 12.9 10 17 10 17Z"/>
                                 </svg>
-                                <span x-text="watching ? 'Gevolgd' : 'Volgen'"></span>
-                                <span class="tabular d-muted" x-show="count > 0" x-text="count"></span>
                             </button>
                         @endauth
                         @guest
-                            <a href="{{ route('login') }}" class="d-btn d-btn-secondary">
-                                <svg class="size-4" viewBox="0 0 20 20" fill="none" stroke="currentColor"
-                                     stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M10 17s-6.5-4.1-6.5-8.6a3.6 3.6 0 0 1 6.5-2.1 3.6 3.6 0 0 1 6.5 2.1C16.5 12.9 10 17 10 17Z"/>
-                                </svg>
-                                Volgen
+                            <a href="{{ route('login') }}" class="d-iconbtn" data-tip="Volgen" aria-label="Log in om deze kavel te volgen">
+                                <x-v4.icon name="heart" :size="17" stroke="2" />
                             </a>
                         @endguest
 
-                        @include('lots.partials.share-menu', ['lot' => $lot, 'ownShares' => $ownShares ?? collect()])
-                    </div>
+                        @include('lots.partials.share-menu', ['lot' => $lot, 'ownShares' => $ownShares ?? collect(), 'compact' => true])
 
-                    {{-- Web push (hfst. 14): "overboden" hoort binnen twee seconden op je scherm, ook met de site dicht. --}}
-                    @auth
-                        <button type="button" class="d-btn d-btn-secondary d-btn-wide" x-data="pushToggle"
-                                x-show="supported && ! denied" x-cloak
-                                :disabled="busy" @click="toggle()"
-                                :aria-pressed="enabled"
-                                :title="enabled ? 'Meldingen staan aan op dit apparaat' : 'Krijg direct een melding als je overboden wordt'">
-                            <x-v4.icon name="bell" :size="16" stroke="2" />
-                            <span x-text="enabled ? 'Meldingen aan' : 'Meldingen bij overboden'"></span>
-                        </button>
-                    @endauth
+                        {{-- Web push (hfst. 14): "overboden" hoort binnen twee seconden op je scherm, ook met de site dicht. --}}
+                        @auth
+                            <button type="button" class="d-iconbtn" x-data="pushToggle"
+                                    x-show="supported && ! denied" x-cloak
+                                    :disabled="busy" @click="toggle()"
+                                    :aria-pressed="enabled" :class="enabled && 'is-on'"
+                                    :data-tip="enabled ? 'Meldingen staan aan' : 'Melding bij overboden'"
+                                    aria-label="Meldingen op dit apparaat">
+                                <x-v4.icon name="bell" :size="17" stroke="2" />
+                            </button>
+                        @endauth
+                    </div>
 
                     @auth
                         @if ($lot->seller_id === auth()->id())
@@ -419,32 +457,10 @@
                         @endif
                     @endauth
 
-                    @include('lots.partials.ask', ['lot' => $lot])
-
-                    @include('lots.partials.viewing-and-transport', ['lot' => $lot])
-
                     @if ($lot->sale_type === SaleType::Auction && ! $auction->isClosed() && config('aucvy.ai.enabled'))
                         <x-auction.ivy-advice :lot="$lot" />
                     @endif
-
-                    @if ($lot->sale_type !== SaleType::Auction)
-                        <x-lot.cost-breakdown id="kosten" class="d-side-card" :costs="$costs" :note="__('money.notes.estimate')" transport-note="Vanaf-tarief - bereken hierboven je postcode" />
-                    @endif
                 @endif
-
-                <div class="d-trust" aria-label="Vertrouwen">
-                    <h3>Vertrouwen</h3>
-                    <p class="d-note">Dit staat vast bij deze kavel.</p>
-                    <ul>
-                        @foreach ($trustPoints as $point)
-                            <li>
-                                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.7-9.8a.8.8 0 0 0-1.2-1l-3.3 4-1.6-1.6a.8.8 0 1 0-1.2 1.1l2.3 2.3a.8.8 0 0 0 1.2-.1l3.8-4.7Z" clip-rule="evenodd"/></svg>
-                                <span>{{ $point }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                    <a href="{{ route('assurance') }}" class="d-link" style="display:inline-flex;align-items:center;min-height:44px">Hoe werkt zekerheid bij Aucvy?</a>
-                </div>
             </aside>
         </div>
 

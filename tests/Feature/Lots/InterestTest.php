@@ -74,7 +74,7 @@ it('toont kopers de tellers en Hot alleen als de regel daaraan voldoet', functio
         ->and($quiet->fresh()->is_hot)->toBeFalse()
         ->and($hot->fresh()->interest_score)->toBeGreaterThan($quiet->fresh()->interest_score);
 
-    $this->get(route('lots.show', $hot))->assertOk()->assertSee('Veel interesse in deze kavel')->assertSee('Bieders')->assertSee('Hoe meten we dit?');
+    $this->get(route('lots.show', $hot))->assertOk()->assertSee('Veel interesse in deze kavel')->assertSee('Bieders')->assertSee('Alleen gemeten aantallen');
     $this->get(route('lots.show', $quiet))->assertOk()->assertSee('Interesse in deze kavel')->assertDontSee('Rustig');
     $this->get(route('lots.index'))->assertOk()->assertSee('Hot');
 });

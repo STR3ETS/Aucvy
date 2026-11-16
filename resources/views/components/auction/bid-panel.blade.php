@@ -42,7 +42,7 @@
     {{-- Stand -------------------------------------------------------------- --}}
     <div>
         <div class="d-muted">
-            Huidig bod · <span x-text="state.bidder_count"></span> bieders<template x-if="state.extension_count > 0"><span> · <span x-text="state.extension_count"></span>× verlengd</span></template><template x-if="(state.watching_now ?? 0) > 0"><span> · <span x-text="state.watching_now"></span> kijken nu</span></template>
+            Huidig bod · <span x-text="state.bidder_count"></span> bieders<template x-if="state.extension_count > 0"><span> · <span x-text="state.extension_count"></span>× verlengd</span></template>
         </div>
         <div class="d-bidcard-price" x-text="formatCents(state.price_cents)"></div>
         @if ($lot !== null && $lot->mayShowValueComparison())
