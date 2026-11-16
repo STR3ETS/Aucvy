@@ -2,9 +2,9 @@
 
 <x-layouts.admin :title="'Dossier · '.$lot->title" :subtitle="$lot->public_id.' · '.$lot->status->label().' · '.($lot->seller?->name ?? '').($lot->company ? ' · '.$lot->company->name : '')">
     <p class="text-sm text-aj-muted">
-        <a href="{{ route('admin.lots') }}" class="underline">Kavels</a> · <a href="{{ route('admin.lots.show', $lot) }}" class="underline">{{ $lot->public_id }}</a> · Dossier
+        <a href="{{ route('admin.lots') }}" class="d-tablelink">Kavels</a> · <a href="{{ route('admin.lots.show', $lot) }}" class="d-tablelink">{{ $lot->public_id }}</a> · Dossier
         @if ($lot->order)
-            · <a href="{{ route('admin.orders.show', $lot->order) }}" class="underline">Order {{ $lot->order->order_number }}</a>
+            · <a href="{{ route('admin.orders.show', $lot->order) }}" class="d-tablelink">Order {{ $lot->order->order_number }}</a>
         @endif
     </p>
 

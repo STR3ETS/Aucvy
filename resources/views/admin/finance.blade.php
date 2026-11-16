@@ -2,35 +2,35 @@
 
 <x-layouts.admin title="Financiën" subtitle="Wat er via het platform ging, wat Aucvy daaraan verdient en wat er overblijft.">
     @if (session('status'))
-        <p class="mt-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">
+        <p class="mt-4 d-soft is-ok">
             {{ session('status') }}
-            @if (session('export_url')) <a href="{{ session('export_url') }}" class="font-bold underline">Download de export (csv, 24 uur geldig)</a>@endif
+            @if (session('export_url')) <a href="{{ session('export_url') }}" class="d-tablelink">Download de export (csv, 24 uur geldig)</a>@endif
         </p>
     @endif
     @if ($errors->any())
-        <div role="alert" class="mt-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">{{ $errors->first() }}</div>
+        <div role="alert" class="mt-4 d-soft is-err">{{ $errors->first() }}</div>
     @endif
 
     <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
         <nav class="flex flex-wrap gap-1.5 text-sm" aria-label="Maand">
             @foreach ($months->take(6) as $option)
-                <a href="{{ route('admin.finance', ['maand' => $option->format('Y-m')]) }}" @class(['rounded-full px-3 py-1 font-bold', 'bg-aj-navy text-white' => $option->format('Y-m') === $month->format('Y-m'), 'border border-aj-border bg-aj-surface' => $option->format('Y-m') !== $month->format('Y-m')])>{{ ucfirst($option->isoFormat('MMMM YYYY')) }}</a>
+                <a href="{{ route('admin.finance', ['maand' => $option->format('Y-m')]) }}" @class(['d-chip', 'is-on' => $option->format('Y-m') === $month->format('Y-m')])>{{ ucfirst($option->isoFormat('MMMM YYYY')) }}</a>
             @endforeach
         </nav>
-        <form method="POST" action="{{ route('admin.finance.export', ['maand' => $month->format('Y-m')]) }}">@csrf<button type="submit" class="btn btn-dark" style="height:38px;font-size:13px">Exporteren voor de boekhouding</button></form>
+        <form method="POST" action="{{ route('admin.finance.export', ['maand' => $month->format('Y-m')]) }}">@csrf<button type="submit" class="d-btn d-btn-dark d-btn-sq" style="height:38px;font-size:13px">Exporteren voor de boekhouding</button></form>
     </div>
 
     <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <a href="{{ route('admin.transactions') }}" class="rounded-aj-s border border-aj-border bg-aj-surface p-4"><p class="text-xs font-bold text-aj-muted">Omzet van transacties</p><p class="tabular mt-1 text-2xl font-extrabold">{{ Money::format($volume) }}</p><p class="text-xs text-aj-muted">{{ $transactions }} bestellingen</p></a>
-        <div class="rounded-aj-s border border-aj-border bg-aj-surface p-4"><p class="text-xs font-bold text-aj-muted">Platformomzet</p><p class="tabular mt-1 text-2xl font-extrabold">{{ Money::format($revenue) }}</p><p class="text-xs text-aj-muted">{{ $volume > 0 ? 'gemiddeld '.number_format($revenue / $volume * 100, 1, ',', '.').'% van de omzet' : 'nog geen omzet' }}</p></div>
-        <div class="rounded-aj-s border border-aj-border bg-aj-surface p-4"><p class="text-xs font-bold text-aj-muted">Kosten</p><p class="tabular mt-1 text-2xl font-extrabold">{{ Money::format($costsTotal) }}</p><p class="text-xs text-aj-muted">{{ $revenue > 0 ? number_format($costsTotal / $revenue * 100, 0).'% van de platformomzet' : '' }}</p></div>
-        <div class="rounded-aj-s border border-aj-border bg-aj-surface p-4"><p class="text-xs font-bold text-aj-muted">Winst</p><p class="tabular mt-1 text-2xl font-extrabold">{{ Money::format($profit) }}</p><p class="text-xs text-aj-muted">{{ $revenue > 0 ? 'marge '.number_format($profit / $revenue * 100, 0).'%' : '' }}</p></div>
+        <a href="{{ route('admin.transactions') }}" class="d-card"><p class="text-xs font-bold text-aj-muted">Omzet van transacties</p><p class="tabular mt-1 text-2xl font-extrabold">{{ Money::format($volume) }}</p><p class="text-xs text-aj-muted">{{ $transactions }} bestellingen</p></a>
+        <div class="d-card"><p class="text-xs font-bold text-aj-muted">Platformomzet</p><p class="tabular mt-1 text-2xl font-extrabold">{{ Money::format($revenue) }}</p><p class="text-xs text-aj-muted">{{ $volume > 0 ? 'gemiddeld '.number_format($revenue / $volume * 100, 1, ',', '.').'% van de omzet' : 'nog geen omzet' }}</p></div>
+        <div class="d-card"><p class="text-xs font-bold text-aj-muted">Kosten</p><p class="tabular mt-1 text-2xl font-extrabold">{{ Money::format($costsTotal) }}</p><p class="text-xs text-aj-muted">{{ $revenue > 0 ? number_format($costsTotal / $revenue * 100, 0).'% van de platformomzet' : '' }}</p></div>
+        <div class="d-card"><p class="text-xs font-bold text-aj-muted">Winst</p><p class="tabular mt-1 text-2xl font-extrabold">{{ Money::format($profit) }}</p><p class="text-xs text-aj-muted">{{ $revenue > 0 ? 'marge '.number_format($profit / $revenue * 100, 0).'%' : '' }}</p></div>
     </div>
 
     <div class="mt-5 grid gap-5 lg:grid-cols-[1fr_360px] lg:items-start">
         <div class="space-y-5">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="winst">
-                <h2 id="winst" class="text-sm font-extrabold">Van omzet naar winst</h2>
+            <section class="d-card" aria-labelledby="winst">
+                <h2 id="winst" class="d-h3">Van omzet naar winst</h2>
                 <p class="text-xs text-aj-muted">Excl. btw. Het geld van de transacties zelf is niet van Aucvy en telt hier niet mee.</p>
                 @php $scale = max(1, abs($revenue), ...array_map(fn ($line) => abs($line['cents']), [...$lines, ...$costLines])); @endphp
                 <dl class="mt-3 space-y-1.5 text-sm">
@@ -46,8 +46,8 @@
                 <p class="mt-3 text-xs text-aj-muted">Winst is een stuurcijfer, geen jaarcijfer. Betaal- en AI-kosten komen automatisch binnen; de andere posten komen uit de boekhouding.</p>
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="vast">
-                <h2 id="vast" class="text-sm font-extrabold">Vastgezet <span class="tabular text-aj-muted">{{ $blockedPayouts->count() }} open · {{ Money::format((int) $blockedPayouts->sum('amount_cents')) }}</span></h2>
+            <section class="d-card" aria-labelledby="vast">
+                <h2 id="vast" class="d-h3">Vastgezet <span class="tabular text-aj-muted">{{ $blockedPayouts->count() }} open · {{ Money::format((int) $blockedPayouts->sum('amount_cents')) }}</span></h2>
                 @if ($blockedPayouts->isEmpty())
                     <p class="mt-2 text-sm text-aj-muted">Geen vastgezette uitbetalingen.</p>
                 @else
@@ -55,7 +55,7 @@
                         @foreach ($blockedPayouts as $payout)
                             <li class="flex flex-wrap items-center justify-between gap-2 py-2">
                                 <span><span class="font-bold">{{ $payout->seller?->company?->name ?? $payout->seller?->name }}</span> <span class="tabular">{{ Money::format($payout->amount_cents) }}</span><span class="block text-xs text-aj-muted">{{ $payout->blocked_reason ?? $payout->failure_reason ?? $payout->status->label() }}</span></span>
-                                <form method="POST" action="{{ route('admin.finance.iban', $payout) }}">@csrf<button type="submit" class="btn btn-ghost" style="height:32px;font-size:12px">Klant vragen om nieuw IBAN</button></form>
+                                <form method="POST" action="{{ route('admin.finance.iban', $payout) }}">@csrf<button type="submit" class="d-btn d-btn-secondary d-btn-sq" style="height:32px;font-size:12px">Klant vragen om nieuw IBAN</button></form>
                             </li>
                         @endforeach
                     </ul>
@@ -64,8 +64,8 @@
         </div>
 
         <aside class="space-y-5">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="klantgeld">
-                <h2 id="klantgeld" class="text-sm font-extrabold">Geld van klanten</h2>
+            <section class="d-card" aria-labelledby="klantgeld">
+                <h2 id="klantgeld" class="d-h3">Geld van klanten</h2>
                 <p class="text-xs text-aj-muted">Staat bij de betaalpartij en is geen omzet.</p>
                 <dl class="mt-2 space-y-1 text-sm">
                     <div class="flex justify-between gap-3"><dt class="text-aj-muted">Vastgehouden tot levering</dt><dd class="tabular font-semibold">{{ Money::format($customerMoney['held']) }}</dd></div>
@@ -78,17 +78,17 @@
                 </p>
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="kosten">
-                <h2 id="kosten" class="text-sm font-extrabold">Kostenpost boeken</h2>
+            <section class="d-card" aria-labelledby="kosten">
+                <h2 id="kosten" class="d-h3">Kostenpost boeken</h2>
                 <form method="POST" action="{{ route('admin.finance.costs') }}" class="mt-2 space-y-2 text-sm">
                     @csrf
-                    <select name="category" class="w-full rounded-aj-sm border border-aj-border-strong px-2" style="min-height:38px">
+                    <select name="category" class="w-full d-select" style="min-height:38px">
                         @foreach ($costCategories as $category)@continue($category === 'payment')<option value="{{ $category }}">{{ __('admin.costs.'.$category) }}</option>@endforeach
                     </select>
-                    <input type="number" name="amount" step="0.01" min="0" required placeholder="Bedrag in euro, excl. btw" class="w-full rounded-aj-sm border border-aj-border-strong px-2" style="min-height:38px">
-                    <input type="month" name="period" value="{{ $month->format('Y-m') }}" required class="w-full rounded-aj-sm border border-aj-border-strong px-2" style="min-height:38px">
-                    <input type="text" name="note" maxlength="300" placeholder="Toelichting (mag leeg)" class="w-full rounded-aj-sm border border-aj-border-strong px-2" style="min-height:38px">
-                    <button type="submit" class="btn btn-dark w-full justify-center" style="height:38px;font-size:13px">Boeken</button>
+                    <input type="number" name="amount" step="0.01" min="0" required placeholder="Bedrag in euro, excl. btw" class="w-full d-input" style="min-height:38px">
+                    <input type="month" name="period" value="{{ $month->format('Y-m') }}" required class="w-full d-input" style="min-height:38px">
+                    <input type="text" name="note" maxlength="300" placeholder="Toelichting (mag leeg)" class="w-full d-input" style="min-height:38px">
+                    <button type="submit" class="d-btn d-btn-dark d-btn-sq w-full justify-center" style="height:38px;font-size:13px">Boeken</button>
                 </form>
             </section>
         </aside>

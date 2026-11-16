@@ -4,7 +4,7 @@
     <x-admin.table :items="$users" searchable placeholder="Naam of e-mail">
         <x-slot:filters>
             <label><span class="sr-only">KYC-status</span>
-                <select name="kyc" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+                <select name="kyc" class="d-select" style="min-height:44px">
                     <option value="">Alle KYC-statussen</option>
                     @foreach (KycStatus::cases() as $status)
                         <option value="{{ $status->value }}" @selected(request('kyc') === $status->value)>{{ $status->label() }}</option>
@@ -12,7 +12,7 @@
                 </select>
             </label>
             <label><span class="sr-only">Rol</span>
-                <select name="rol" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+                <select name="rol" class="d-select" style="min-height:44px">
                     <option value="">Iedereen</option>
                     <option value="beheer" @selected(request('rol') === 'beheer')>Alleen beheer</option>
                 </select>
@@ -25,7 +25,7 @@
             <tr @class(['opacity-50' => $user->trashed()])>
                 <td class="tabular text-aj-muted">{{ $user->id }}</td>
                 <td class="font-semibold">
-                    <a href="{{ route('admin.users.show', $user) }}" class="text-aj-blue-text underline">{{ $user->name }}</a>@if ($user->trashed()) <span class="text-xs text-aj-muted">(geanonimiseerd)</span>@endif
+                    <a href="{{ route('admin.users.show', $user) }}" class="d-tablelink">{{ $user->name }}</a>@if ($user->trashed()) <span class="text-xs text-aj-muted">(geanonimiseerd)</span>@endif
                 </td>
                 <td class="text-aj-muted">{{ $user->email }}</td>
                 <td>{{ $user->type?->value }}</td>

@@ -23,17 +23,17 @@
 @if ($stats['overdue'] > 0 || $stats['realtime_lag'] > 0)
     <div class="mt-3 space-y-2">
         @if ($stats['overdue'] > 0)
-            <p class="rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">{{ $stats['overdue'] }} {{ $stats['overdue'] === 1 ? 'veiling is' : 'veilingen zijn' }} over tijd en nog niet gesloten. Het vangnet (<code>auctions:close-overdue</code>) hoort elke minuut te draaien; controleer de scheduler.</p>
+            <p class="d-soft is-err">{{ $stats['overdue'] }} {{ $stats['overdue'] === 1 ? 'veiling is' : 'veilingen zijn' }} over tijd en nog niet gesloten. Het vangnet (<code>auctions:close-overdue</code>) hoort elke minuut te draaien; controleer de scheduler.</p>
         @endif
         @if ($stats['realtime_lag'] > 0)
-            <p class="rounded-aj-sm border border-aj-warn/40 bg-aj-warn/10 p-3 text-sm text-aj-warn-text">{{ $stats['realtime_lag'] }} realtime-{{ $stats['realtime_lag'] === 1 ? 'bericht wacht' : 'berichten wachten' }} langer dan een minuut: bieders zien de stand pas na een refresh. Controleer de worker en Reverb. <a class="underline" href="{{ route('admin.queue') }}">Naar de wachtrij</a>.</p>
+            <p class="rounded-aj-sm border border-aj-warn/40 bg-aj-warn/10 p-3 text-sm text-aj-warn-text">{{ $stats['realtime_lag'] }} realtime-{{ $stats['realtime_lag'] === 1 ? 'bericht wacht' : 'berichten wachten' }} langer dan een minuut: bieders zien de stand pas na een refresh. Controleer de worker en Reverb. <a class="d-tablelink" href="{{ route('admin.queue') }}">Naar de wachtrij</a>.</p>
         @endif
     </div>
 @endif
 
 <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
     @foreach ($tiles as [$label, $value])
-        <div class="rounded-aj-s border border-aj-border bg-aj-surface p-4">
+        <div class="d-card">
             <p class="text-xs font-bold text-aj-muted">{{ $label }}</p>
             <p class="tabular mt-1 text-2xl font-extrabold">{{ $value }}</p>
         </div>
@@ -41,11 +41,11 @@
 </div>
 
 <div class="mt-6 grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
-    <section class="overflow-x-auto rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Lopende veilingen">
-        <h2 class="text-sm font-extrabold">Lopende veilingen</h2>
+    <section class="overflow-x-auto d-card" aria-label="Lopende veilingen">
+        <h2 class="d-h3">Lopende veilingen</h2>
         <p class="mt-1 text-xs text-aj-muted">Op sluittijd. In de antisnipe-periode krijgt een bod er {{ (int) config('aucvy.auctions.anti_snipe_extend_seconds', 60) }} seconden bij.</p>
         @if ($room['auctions']->isEmpty())
-            <p class="mt-4 rounded-aj-s border border-dashed border-aj-border-strong p-6 text-center text-sm text-aj-muted">Geen lopende veilingen.</p>
+            <p class="mt-4 d-card d-admin-empty">Geen lopende veilingen.</p>
         @else
             <table class="admin-table mt-3">
                 <thead><tr><th>Kavel</th><th>Stand</th><th>Biedingen</th><th>Sluit</th><th>Verlengd</th><th></th></tr></thead>
@@ -61,7 +61,7 @@
                             <td class="tabular">{{ $row['bids'] }} <span class="text-xs text-aj-muted">van {{ $row['bidders'] }}</span></td>
                             <td class="tabular {{ $row['in_window'] ? 'font-bold text-aj-warn-text' : '' }}">{{ $leftText }}</td>
                             <td class="tabular">{{ $row['extensions'] > 0 ? $row['extensions'].'×' : '-' }}</td>
-                            <td class="whitespace-nowrap text-right"><a href="{{ $row['public_url'] }}" class="text-xs font-bold underline" target="_blank" rel="noopener">Bekijk</a></td>
+                            <td class="whitespace-nowrap text-right"><a href="{{ $row['public_url'] }}" class="d-iconbtn" target="_blank" rel="noopener" data-tip="Bekijk op de site" aria-label="Bekijk op de site"><x-v4.icon name="eye" :size="17" stroke="2" /></a></td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -69,8 +69,8 @@
         @endif
     </section>
 
-    <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-label="Laatste biedingen">
-        <h2 class="text-sm font-extrabold">Laatste biedingen</h2>
+    <section class="d-card" aria-label="Laatste biedingen">
+        <h2 class="d-h3">Laatste biedingen</h2>
         @if ($room['bids']->isEmpty())
             <p class="mt-3 text-sm text-aj-muted">Nog geen biedingen.</p>
         @else

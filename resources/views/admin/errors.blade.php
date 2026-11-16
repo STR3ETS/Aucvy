@@ -1,21 +1,18 @@
 <x-layouts.admin title="Foutlog" :subtitle="$openCount.' '.($openCount === 1 ? 'open fout' : 'open fouten').': dezelfde soort fout telt op in één regel'">
-    @if (session('status'))
-        <p class="mt-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">{{ session('status') }}</p>
-    @endif
 
     <nav class="mt-6 flex gap-2 text-sm" aria-label="Filter">
-        <a href="{{ route('admin.errors') }}" @class(['rounded-full px-3 py-1 font-bold', 'bg-aj-navy text-white' => ! $showResolved, 'bg-aj-surface border border-aj-border' => $showResolved])>Open</a>
-        <a href="{{ route('admin.errors', ['status' => 'afgehandeld']) }}" @class(['rounded-full px-3 py-1 font-bold', 'bg-aj-navy text-white' => $showResolved, 'bg-aj-surface border border-aj-border' => ! $showResolved])>Afgehandeld</a>
+        <a href="{{ route('admin.errors') }}" @class(['d-chip', 'is-on' => ! $showResolved])>Open</a>
+        <a href="{{ route('admin.errors', ['status' => 'afgehandeld']) }}" @class(['d-chip', 'is-on' => $showResolved])>Afgehandeld</a>
     </nav>
 
     @if ($events->isEmpty())
-        <p class="mt-4 rounded-aj-s border border-dashed border-aj-border-strong bg-aj-surface p-6 text-center text-sm text-aj-muted">
+        <p class="mt-4 d-card d-admin-empty">
             {{ $showResolved ? 'Nog niets afgehandeld.' : 'Geen open fouten.' }}
         </p>
     @else
         <ul class="mt-4 space-y-3">
             @foreach ($events as $event)
-                <li class="rounded-aj-s border border-aj-border bg-aj-surface p-5" x-data="{ resolve: false }">
+                <li class="d-card" x-data="{ resolve: false }">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0 flex-1">
                             <p class="text-xs font-bold uppercase tracking-wide text-aj-muted">{{ class_basename($event->class) }} · {{ $event->file }}:{{ $event->line }}</p>
@@ -38,11 +35,11 @@
                             @endif
                         </div>
                         @if ($event->isOpen())
-                            <button type="button" class="btn btn-dark" style="height:36px;font-size:13px" @click="resolve = ! resolve" :aria-expanded="resolve">Afhandelen</button>
+                            <button type="button" class="d-btn d-btn-dark d-btn-sq" style="height:36px;font-size:13px" @click="resolve = ! resolve" :aria-expanded="resolve">Afhandelen</button>
                         @else
                             <form method="POST" action="{{ route('admin.errors.reopen', $event) }}">
                                 @csrf
-                                <button type="submit" class="btn btn-ghost" style="height:36px;font-size:13px">Heropenen</button>
+                                <button type="submit" class="d-btn d-btn-secondary d-btn-sq" style="height:36px;font-size:13px">Heropenen</button>
                             </form>
                         @endif
                     </div>
@@ -52,9 +49,9 @@
                             <label class="min-w-0 flex-1">
                                 <span class="text-sm font-bold">Wat is er gedaan?</span>
                                 <input type="text" name="note" maxlength="500" placeholder="Bijvoorbeeld: opgelost in de release van vandaag"
-                                       class="mt-1 w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:40px">
+                                       class="mt-1 w-full d-input" style="min-height:40px">
                             </label>
-                            <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px">Markeer als afgehandeld</button>
+                            <button type="submit" class="d-btn d-btn-sq" style="height:40px;font-size:13px">Markeer als afgehandeld</button>
                         </form>
                     @endif
                 </li>

@@ -1,8 +1,8 @@
 {{-- Ivy-statusmeldingen (besluit Raph, 2 november 2026: zoals Izzy bij Eazy). --}}
-<section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="ivy-status" x-data="{ all: false }">
+<section class="d-card" aria-labelledby="ivy-status" x-data="{ all: false }">
     <div class="flex items-center gap-2">
         <span class="grid size-8 place-items-center rounded-full bg-aj-navy text-xs font-extrabold text-white" aria-hidden="true">Ivy</span>
-        <h2 id="ivy-status" class="text-lg font-extrabold">
+        <h2 id="ivy-status" class="d-h3">
             {{ $signals === [] ? 'Alles loopt' : 'Dit vraagt aandacht' }}
         </h2>
     </div>
@@ -29,7 +29,7 @@
             @endforeach
         </ul>
         @if (count($signals) > 3)
-            <button type="button" class="mt-2 text-xs font-semibold underline" @click="all = ! all"
+            <button type="button" class="d-link mt-2 text-xs" @click="all = ! all"
                     x-text="all ? 'Minder tonen' : 'Nog {{ count($signals) - 3 }} meer'"></button>
         @endif
     @endif

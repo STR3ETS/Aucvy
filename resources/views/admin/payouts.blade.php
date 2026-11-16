@@ -5,7 +5,7 @@
     <x-admin.table :items="$payouts" searchable placeholder="Verkoper">
         <x-slot:filters>
             <label><span class="sr-only">Status</span>
-                <select name="status" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+                <select name="status" class="d-select" style="min-height:44px">
                     <option value="">Alle statussen</option>
                     @foreach (PayoutStatus::cases() as $status)
                         <option value="{{ $status->value }}" @selected(request('status') === $status->value)>{{ $status->label() }}</option>
@@ -19,12 +19,12 @@
         @foreach ($payouts as $payout)
             <tr>
                 <td class="tabular font-semibold">
-                    <a href="{{ route('admin.orders.show', $payout->order) }}" class="text-aj-blue-text underline">{{ $payout->order->order_number }}</a>
+                    <a href="{{ route('admin.orders.show', $payout->order) }}" class="d-tablelink">{{ $payout->order->order_number }}</a>
                 </td>
                 <td class="max-w-[22ch] truncate">
-                    <a href="{{ route('admin.lots.show', $payout->order->lot) }}" class="underline">{{ $payout->order->lot->title }}</a>
+                    <a href="{{ route('admin.lots.show', $payout->order->lot) }}" class="d-tablelink">{{ $payout->order->lot->title }}</a>
                 </td>
-                <td><a href="{{ route('admin.users.show', $payout->seller) }}" class="underline">{{ $payout->seller->name }}</a></td>
+                <td><a href="{{ route('admin.users.show', $payout->seller) }}" class="d-tablelink">{{ $payout->seller->name }}</a></td>
                 <td class="tabular text-right font-semibold">{{ Money::format($payout->amount_cents) }}</td>
                 <td class="tabular text-right text-aj-muted">{{ Money::format($payout->fee_cents) }}</td>
                 <td>{{ $payout->status->label() }}</td>

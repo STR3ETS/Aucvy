@@ -11,7 +11,7 @@
         <x-slot:filters>
             <label>
                 <span class="sr-only">Status</span>
-                <select name="status" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm"
+                <select name="status" class="d-select"
                         style="min-height:44px">
                     <option value="">Alle statussen</option>
                     @foreach (AiRunStatus::cases() as $status)

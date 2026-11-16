@@ -2,7 +2,7 @@
     <x-admin.table :items="$companies" searchable placeholder="Naam of KVK">
         <x-slot:filters>
             <label><span class="sr-only">Verificatie</span>
-                <select name="status" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+                <select name="status" class="d-select" style="min-height:44px">
                     <option value="">Alle bedrijven</option>
                     <option value="geverifieerd" @selected(request('status') === 'geverifieerd')>Geverifieerd</option>
                     <option value="ongeverifieerd" @selected(request('status') === 'ongeverifieerd')>Nog niet geverifieerd</option>
@@ -16,7 +16,7 @@
             <tr>
                 <td class="tabular text-aj-muted">{{ $company->id }}</td>
                 <td class="font-semibold">
-                    <a href="{{ route('admin.companies.show', $company) }}" class="text-aj-blue-text underline">{{ $company->name }}</a>
+                    <a href="{{ route('admin.companies.show', $company) }}" class="d-tablelink">{{ $company->name }}</a>
                 </td>
                 <td class="tabular">{{ $company->kvk_number }}</td>
                 <td class="tabular text-aj-muted">{{ $company->vat_number }}</td>

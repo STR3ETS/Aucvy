@@ -10,30 +10,32 @@
     'bulkIds' => [],
 ])
 
-{{-- De standaard backoffice-lijst: zoeken, filters, bulk, paginering. --}}
-<div class="mt-6" @if ($bulkAction) x-data="{ selected: [] }" @endif>
+{{--
+    De standaard backoffice-lijst in de stijl van het dashboard: één kaart
+    met bovenin zoeken en filters, daaronder de tabel, onderaan de paginering.
+--}}
+<div class="d-admintable" @if ($bulkAction) x-data="{ selected: [] }" @endif>
 
     @if ($searchable || isset($filters))
         {{-- Een filterkeuze verstuurt meteen; het zoekveld pas op de knop. --}}
         <form method="GET" x-data
               @change="if ($event.target.tagName === 'SELECT') $el.requestSubmit()"
-              class="mb-3 flex flex-wrap items-center gap-2">
+              class="d-admintable-bar">
             @if ($searchable)
-                <label class="w-full max-w-60">
+                <label class="d-admintable-search">
                     <span class="sr-only">Zoeken</span>
-                    <input type="search" name="q" value="{{ request('q') }}" placeholder="{{ $placeholder }}"
-                           class="w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm"
-                           style="min-height:44px">
+                    <x-v4.icon name="search" :size="16" stroke="2.2" />
+                    <input type="search" name="q" value="{{ request('q') }}" placeholder="{{ $placeholder }}" class="d-input">
                 </label>
             @endif
 
             {{ $filters ?? '' }}
 
             @if ($searchable)
-                <button type="submit" class="btn btn-ghost" style="height:44px;font-size:13px">Zoeken</button>
+                <button type="submit" class="d-btn d-btn-secondary d-btn-sq">Zoeken</button>
             @endif
             @if (request()->query())
-                <a href="{{ url()->current() }}" class="btn btn-ghost" style="height:44px;font-size:13px">Wissen</a>
+                <a href="{{ url()->current() }}" class="d-link">Wissen</a>
             @endif
         </form>
     @endif
@@ -44,7 +46,7 @@
             @csrf
     @endif
 
-    <div class="overflow-x-auto rounded-aj-s border border-aj-border bg-aj-surface">
+    <div class="d-admintable-scroll">
         <table class="admin-table">
             <thead>
                 <tr>
@@ -61,19 +63,19 @@
         </table>
     </div>
 
+    @if ($items !== null && $items->isEmpty())
+        <p class="d-admintable-empty">Niets gevonden.</p>
+    @endif
+
     @if ($bulkAction)
-            <div class="mt-3 flex items-center gap-3" x-show="selected.length" x-cloak>
-                <p class="text-sm font-semibold"><span x-text="selected.length"></span> geselecteerd</p>
-                <button type="submit" class="btn btn-primary" style="height:40px;font-size:13px">{{ $bulkLabel }}</button>
+            <div class="d-admintable-bulk" x-show="selected.length" x-cloak>
+                <p><span x-text="selected.length"></span> geselecteerd</p>
+                <button type="submit" class="d-btn d-btn-sq">{{ $bulkLabel }}</button>
             </div>
         </form>
     @endif
 
     @if ($items !== null && $items->hasPages())
-        <div class="mt-4">{{ $items->links() }}</div>
-    @endif
-
-    @if ($items !== null && $items->isEmpty())
-        <p class="mt-3 text-sm text-aj-muted">Niets gevonden.</p>
+        <div class="d-admintable-pages">{{ $items->links() }}</div>
     @endif
 </div>

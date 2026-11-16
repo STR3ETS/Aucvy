@@ -1,7 +1,7 @@
 <x-layouts.admin :title="$dispute->order->lot->title" :subtitle="'Geschil bij order '.$dispute->order->order_number">
     <div class="max-w-3xl">
         <p class="text-sm text-aj-muted">
-            <a href="{{ route('staff.disputes.index') }}" class="underline">Geschillen</a>
+            <a href="{{ route('staff.disputes.index') }}" class="d-tablelink">Geschillen</a>
             · {{ $dispute->order->order_number }}
         </p>
 
@@ -43,10 +43,10 @@
               class="mt-6 space-y-4 d-card"
               x-data="{ resolution: {{ Js::from(old('resolution', 'alsnog_leveren')) }} }">
             @csrf
-            <h2 class="text-lg font-extrabold">Uitkomst</h2>
+            <h2 class="d-h3">Uitkomst</h2>
 
             @if ($errors->any())
-                <div role="alert" class="rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">
+                <div role="alert" class="d-soft is-err">
                     {{ $errors->first() }}
                 </div>
             @endif
@@ -77,7 +77,7 @@
                           class="mt-1 w-full d-textarea"></textarea>
             </label>
 
-            <button type="submit" class="btn btn-primary">Uitkomst vastleggen</button>
+            <button type="submit" class="d-btn d-btn-sq">Uitkomst vastleggen</button>
         </form>
     </div>
 </x-layouts.admin>

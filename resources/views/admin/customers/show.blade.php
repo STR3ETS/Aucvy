@@ -2,25 +2,22 @@
 
 <x-layouts.admin :title="$customer->name" :subtitle="($customer->company ? 'Zakelijk · '.$customer->company->name : 'Particulier').' · '.$customer->kyc_status->label().' · klant sinds '.$customer->created_at->isoFormat('D MMM YYYY')">
     <p class="text-sm text-aj-muted">
-        <a href="{{ route('admin.customers') }}" class="underline">Klanten</a> · klantkaart ·
-        <a href="{{ route('admin.users.show', $customer) }}" class="underline">accountacties</a>
-        @if ($customer->company) · <a href="{{ route('admin.companies.show', $customer->company) }}" class="underline">bedrijf</a> @endif
+        <a href="{{ route('admin.customers') }}" class="d-tablelink">Klanten</a> · klantkaart ·
+        <a href="{{ route('admin.users.show', $customer) }}" class="d-tablelink">accountacties</a>
+        @if ($customer->company) · <a href="{{ route('admin.companies.show', $customer->company) }}" class="d-tablelink">bedrijf</a> @endif
     </p>
 
-    @if (session('status'))
-        <p class="mt-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">{{ session('status') }}</p>
-    @endif
 
     <div class="mt-4 grid gap-3 sm:grid-cols-4">
-        <div class="rounded-aj-s border border-aj-border bg-aj-surface p-4"><p class="text-xs font-bold text-aj-muted">Gekocht</p><p class="tabular mt-1 text-xl font-extrabold">{{ Money::format($bought) }}</p></div>
-        <div class="rounded-aj-s border border-aj-border bg-aj-surface p-4"><p class="text-xs font-bold text-aj-muted">Verkocht</p><p class="tabular mt-1 text-xl font-extrabold">{{ Money::format($sold) }}</p></div>
-        <div class="rounded-aj-s border border-aj-border bg-aj-surface p-4"><p class="text-xs font-bold text-aj-muted">Kavels</p><p class="tabular mt-1 text-xl font-extrabold">{{ $customer->lots_count }}</p></div>
-        <div class="rounded-aj-s border border-aj-border bg-aj-surface p-4"><p class="text-xs font-bold text-aj-muted">Biedingen</p><p class="tabular mt-1 text-xl font-extrabold">{{ $customer->bids_count }}</p></div>
+        <div class="d-card"><p class="text-xs font-bold text-aj-muted">Gekocht</p><p class="tabular mt-1 text-xl font-extrabold">{{ Money::format($bought) }}</p></div>
+        <div class="d-card"><p class="text-xs font-bold text-aj-muted">Verkocht</p><p class="tabular mt-1 text-xl font-extrabold">{{ Money::format($sold) }}</p></div>
+        <div class="d-card"><p class="text-xs font-bold text-aj-muted">Kavels</p><p class="tabular mt-1 text-xl font-extrabold">{{ $customer->lots_count }}</p></div>
+        <div class="d-card"><p class="text-xs font-bold text-aj-muted">Biedingen</p><p class="tabular mt-1 text-xl font-extrabold">{{ $customer->bids_count }}</p></div>
     </div>
 
     <div class="mt-5 grid gap-5 lg:grid-cols-[1fr_340px] lg:items-start">
-        <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="tijdlijn">
-            <h2 id="tijdlijn" class="text-sm font-extrabold">Tijdlijn</h2>
+        <section class="d-card" aria-labelledby="tijdlijn">
+            <h2 id="tijdlijn" class="d-h3">Tijdlijn</h2>
             <p class="text-xs text-aj-muted">Bestellingen, tickets, mail en het dossier van zijn kavels; geen eigen kopie van gegevens.</p>
             @if ($timeline->isEmpty())
                 <p class="mt-3 text-sm text-aj-muted">Nog niets gebeurd.</p>
@@ -38,13 +35,13 @@
 
         <aside class="space-y-5">
             @if ($role?->seesCustomerNotes())
-                <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="notities">
-                    <h2 id="notities" class="text-sm font-extrabold">Notities</h2>
+                <section class="d-card" aria-labelledby="notities">
+                    <h2 id="notities" class="d-h3">Notities</h2>
                     @can('admin-area', ['customers', 'write'])
                         <form method="POST" action="{{ route('admin.customers.note', $customer) }}" class="mt-2">
                             @csrf
-                            <textarea name="body" rows="2" required class="w-full rounded-aj-sm border border-aj-border-strong p-2 text-sm" placeholder="Notitie voor het team"></textarea>
-                            <button type="submit" class="btn btn-dark mt-2" style="height:34px;font-size:12px">Opslaan</button>
+                            <textarea name="body" rows="2" required class="w-full d-textarea" placeholder="Notitie voor het team"></textarea>
+                            <button type="submit" class="d-btn d-btn-dark d-btn-sq mt-2" style="height:34px;font-size:12px">Opslaan</button>
                         </form>
                     @endcan
                     <ul class="mt-3 space-y-2 text-sm">
@@ -57,14 +54,14 @@
                 </section>
             @endif
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="taken">
-                <h2 id="taken" class="text-sm font-extrabold">Taken</h2>
+            <section class="d-card" aria-labelledby="taken">
+                <h2 id="taken" class="d-h3">Taken</h2>
                 @can('admin-area', ['customers', 'write'])
                     <form method="POST" action="{{ route('admin.customers.task', $customer) }}" class="mt-2 space-y-2 text-sm">
                         @csrf
-                        <input type="text" name="title" required minlength="3" maxlength="200" placeholder="Wat moet er gebeuren?" class="w-full rounded-aj-sm border border-aj-border-strong px-2" style="min-height:36px">
-                        <input type="datetime-local" name="due_at" class="w-full rounded-aj-sm border border-aj-border-strong px-2" style="min-height:36px">
-                        <button type="submit" class="btn btn-dark" style="height:34px;font-size:12px">Taak aanmaken</button>
+                        <input type="text" name="title" required minlength="3" maxlength="200" placeholder="Wat moet er gebeuren?" class="w-full d-input" style="min-height:36px">
+                        <input type="datetime-local" name="due_at" class="w-full d-input" style="min-height:36px">
+                        <button type="submit" class="d-btn d-btn-dark d-btn-sq" style="height:34px;font-size:12px">Taak aanmaken</button>
                     </form>
                 @endcan
                 <ul class="mt-3 space-y-2 text-sm">
@@ -73,7 +70,7 @@
                             <span>{{ $task->title }}<span class="block text-xs text-aj-muted">{{ $task->due_at ? 'voor '.$task->due_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') : 'geen deadline' }}{{ $task->assignee ? ' · '.$task->assignee->name : '' }}</span></span>
                             @if (! $task->done_at)
                                 @can('admin-area', ['customers', 'write'])
-                                    <form method="POST" action="{{ route('admin.customers.task.complete', [$customer, $task]) }}">@csrf<button type="submit" class="text-xs font-bold underline">Klaar</button></form>
+                                    <form method="POST" action="{{ route('admin.customers.task.complete', [$customer, $task]) }}">@csrf<button type="submit" class="d-link text-xs">Klaar</button></form>
                                 @endcan
                             @endif
                         </li>
@@ -83,8 +80,8 @@
                 </ul>
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="voorkeuren">
-                <h2 id="voorkeuren" class="text-sm font-extrabold">Mailvoorkeuren</h2>
+            <section class="d-card" aria-labelledby="voorkeuren">
+                <h2 id="voorkeuren" class="d-h3">Mailvoorkeuren</h2>
                 <ul class="mt-2 space-y-1 text-xs">
                     @foreach ($preferences as $key => $enabled)
                         <li class="flex justify-between"><span>{{ $key }}</span><span class="font-bold">{{ $enabled ? 'aan' : 'uit' }}</span></li>
@@ -92,8 +89,8 @@
                 </ul>
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="inzage">
-                <h2 id="inzage" class="text-sm font-extrabold">Inzage</h2>
+            <section class="d-card" aria-labelledby="inzage">
+                <h2 id="inzage" class="d-h3">Inzage</h2>
                 <ul class="mt-2 space-y-1 text-xs text-aj-muted">
                     @foreach ($accessLogs as $log)
                         <li>{{ $log->staff?->name }} · {{ $log->opened_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') }}</li>

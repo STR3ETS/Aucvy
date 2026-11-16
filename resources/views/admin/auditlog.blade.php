@@ -17,7 +17,7 @@
 <x-layouts.admin title="Auditlog" subtitle="Elke overgang die geld, status of eigendom raakt. Alleen lezen: de rijen zijn bewijs.">
     <form method="GET" class="mt-6 flex flex-wrap items-end gap-2" x-data @change="if ($event.target.tagName === 'SELECT') $el.requestSubmit()">
         <label><span class="sr-only">Actie</span>
-            <select name="action" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+            <select name="action" class="d-select" style="min-height:44px">
                 <option value="">Alle acties</option>
                 @foreach ($actions as $action)
                     <option value="{{ $action }}" @selected(($filters['action'] ?? null) === $action)>{{ $action }}</option>
@@ -25,7 +25,7 @@
             </select>
         </label>
         <label><span class="sr-only">Onderwerp</span>
-            <select name="subject" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+            <select name="subject" class="d-select" style="min-height:44px">
                 <option value="">Alle onderwerpen</option>
                 @foreach ($subjects as $subject)
                     <option value="{{ $subject }}" @selected(($filters['subject'] ?? null) === $subject)>{{ $subjectLabel($subject) }}</option>
@@ -34,17 +34,17 @@
         </label>
         <label class="w-full max-w-56"><span class="sr-only">Wie</span>
             <input type="search" name="actor" value="{{ $filters['actor'] ?? '' }}" placeholder="Naam of e-mail van wie"
-                   class="w-full rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+                   class="w-full d-input" style="min-height:44px">
         </label>
         <label><span class="sr-only">Vanaf</span>
-            <input type="date" name="from" value="{{ $filters['from'] ?? '' }}" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+            <input type="date" name="from" value="{{ $filters['from'] ?? '' }}" class="d-input" style="min-height:44px">
         </label>
         <label><span class="sr-only">Tot en met</span>
-            <input type="date" name="to" value="{{ $filters['to'] ?? '' }}" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+            <input type="date" name="to" value="{{ $filters['to'] ?? '' }}" class="d-input" style="min-height:44px">
         </label>
-        <button type="submit" class="btn btn-ghost" style="height:44px;font-size:13px">Filteren</button>
+        <button type="submit" class="d-btn d-btn-secondary d-btn-sq" style="height:44px;font-size:13px">Filteren</button>
         @if ($filters !== [])
-            <a href="{{ route('admin.auditlog') }}" class="btn btn-ghost" style="height:44px;font-size:13px">Wissen</a>
+            <a href="{{ route('admin.auditlog') }}" class="d-btn d-btn-secondary d-btn-sq" style="height:44px;font-size:13px">Wissen</a>
         @endif
     </form>
 
@@ -58,14 +58,14 @@
                         <td><code class="text-xs font-bold">{{ $entry->action }}</code></td>
                         <td>
                             @if ($entry->actor)
-                                <a href="{{ route('admin.users.show', $entry->actor) }}" class="underline">{{ $entry->actor->name }}</a>
+                                <a href="{{ route('admin.users.show', $entry->actor) }}" class="d-tablelink">{{ $entry->actor->name }}</a>
                             @else
                                 <span class="text-aj-muted">systeem</span>
                             @endif
                         </td>
                         <td>
                             @if ($url = $subjectUrl($entry))
-                                <a href="{{ $url }}" class="underline">{{ $subjectLabel($entry->subject_type) }} #{{ $entry->subject_id }}</a>
+                                <a href="{{ $url }}" class="d-tablelink">{{ $subjectLabel($entry->subject_type) }} #{{ $entry->subject_id }}</a>
                             @else
                                 {{ $subjectLabel($entry->subject_type) }} #{{ $entry->subject_id }}
                             @endif

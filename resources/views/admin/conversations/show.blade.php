@@ -3,15 +3,12 @@
 
 <x-layouts.admin :title="$conversation->lot->title" :subtitle="$conversation->sellerLabel().' en '.$conversation->buyerLabel().($conversation->flag ? '. '.__('messaging.signals.'.$conversation->flag) : '')">
     <p class="text-sm text-aj-muted">
-        <a href="{{ route('admin.conversations') }}" class="underline">Gesprekken</a> · <a href="{{ route('admin.lots.dossier', $conversation->lot) }}" class="underline">Volledig dossier</a>
-        @if ($conversation->order) · <a href="{{ route('admin.orders.show', $conversation->order) }}" class="underline">Order {{ $conversation->order->order_number }}</a> @endif
+        <a href="{{ route('admin.conversations') }}" class="d-tablelink">Gesprekken</a> · <a href="{{ route('admin.lots.dossier', $conversation->lot) }}" class="d-tablelink">Volledig dossier</a>
+        @if ($conversation->order) · <a href="{{ route('admin.orders.show', $conversation->order) }}" class="d-tablelink">Order {{ $conversation->order->order_number }}</a> @endif
     </p>
 
-    @if (session('status'))
-        <p class="mt-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm text-aj-success-text">{{ session('status') }}</p>
-    @endif
     @if ($errors->any())
-        <div role="alert" class="mt-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm text-aj-error">{{ $errors->first() }}</div>
+        <div role="alert" class="mt-4 d-soft is-err">{{ $errors->first() }}</div>
     @endif
 
     <p class="mt-4 rounded-aj-sm border border-aj-blue/30 bg-aj-blue/5 p-3 text-sm">
@@ -32,8 +29,8 @@
                             <x-messaging.bubble :message="$message" :viewer="null" :conversation="$conversation" :as-staff="true" />
                             @if ($message->state === ConversationMessage::HELD)
                                 <li class="flex flex-wrap gap-2 pl-2">
-                                    <form method="POST" action="{{ route('admin.conversations.release', [$conversation, $message]) }}">@csrf<button type="submit" class="btn btn-ghost" style="height:34px;font-size:12px">Toch vrijgeven</button></form>
-                                    <form method="POST" action="{{ route('admin.conversations.confirm', [$conversation, $message]) }}">@csrf<button type="submit" class="btn btn-dark" style="height:34px;font-size:12px">Tegenhouden bevestigen</button></form>
+                                    <form method="POST" action="{{ route('admin.conversations.release', [$conversation, $message]) }}">@csrf<button type="submit" class="d-btn d-btn-secondary d-btn-sq" style="height:34px;font-size:12px">Toch vrijgeven</button></form>
+                                    <form method="POST" action="{{ route('admin.conversations.confirm', [$conversation, $message]) }}">@csrf<button type="submit" class="d-btn d-btn-dark d-btn-sq" style="height:34px;font-size:12px">Tegenhouden bevestigen</button></form>
                                 </li>
                             @endif
                         @endif
@@ -41,28 +38,28 @@
                 </ol>
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="reageren" x-data="{ mode: 'reply' }">
-                <h2 id="reageren" class="text-sm font-extrabold">Reageren</h2>
+            <section class="d-card" aria-labelledby="reageren" x-data="{ mode: 'reply' }">
+                <h2 id="reageren" class="d-h3">Reageren</h2>
                 <div class="mt-2 flex gap-2 text-sm">
-                    <button type="button" class="rounded-full px-3 py-1 font-bold" :class="mode === 'reply' ? 'bg-aj-navy text-white' : 'border border-aj-border'" @click="mode = 'reply'">Reageren in het gesprek</button>
-                    <button type="button" class="rounded-full px-3 py-1 font-bold" :class="mode === 'note' ? 'bg-aj-navy text-white' : 'border border-aj-border'" @click="mode = 'note'">Interne notitie</button>
+                    <button type="button" class="d-chip" :class="mode === 'reply' && 'is-on'" @click="mode = 'reply'">Reageren in het gesprek</button>
+                    <button type="button" class="d-chip" :class="mode === 'note' && 'is-on'" @click="mode = 'note'">Interne notitie</button>
                 </div>
                 <form method="POST" action="{{ route('admin.conversations.reply', $conversation) }}" x-show="mode === 'reply'" class="mt-3">
                     @csrf
-                    <textarea name="body" rows="3" required class="w-full rounded-aj-sm border border-aj-border-strong p-3 text-sm" placeholder="Bericht aan beide partijen"></textarea>
-                    <button type="submit" class="btn btn-primary mt-2" style="height:40px;font-size:13px">Deelnemen en versturen</button>
+                    <textarea name="body" rows="3" required class="w-full d-textarea" placeholder="Bericht aan beide partijen"></textarea>
+                    <button type="submit" class="d-btn d-btn-sq mt-2" style="height:40px;font-size:13px">Deelnemen en versturen</button>
                 </form>
                 <form method="POST" action="{{ route('admin.conversations.note', $conversation) }}" x-show="mode === 'note'" x-cloak class="mt-3">
                     @csrf
-                    <textarea name="body" rows="3" required class="w-full rounded-aj-sm border border-aj-border-strong p-3 text-sm" placeholder="Notitie voor het team"></textarea>
-                    <button type="submit" class="btn btn-dark mt-2" style="height:40px;font-size:13px">Notitie opslaan</button>
+                    <textarea name="body" rows="3" required class="w-full d-textarea" placeholder="Notitie voor het team"></textarea>
+                    <button type="submit" class="d-btn d-btn-dark d-btn-sq mt-2" style="height:40px;font-size:13px">Notitie opslaan</button>
                 </form>
             </section>
         </div>
 
         <aside class="space-y-4">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="bot">
-                <h2 id="bot" class="text-sm font-extrabold">Waarom de bot dit tegenhield</h2>
+            <section class="d-card" aria-labelledby="bot">
+                <h2 id="bot" class="d-h3">Waarom de bot dit tegenhield</h2>
                 @php $moderations = $conversation->messages->flatMap->moderations->sortByDesc('id'); @endphp
                 @if ($moderations->isEmpty())
                     <p class="mt-1 text-xs text-aj-muted">Geen botbeslissing; {{ $conversation->reported_at ? 'gemeld door een deelnemer' : 'geopend met een reden' }}.</p>
@@ -82,8 +79,8 @@
                 @endif
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="transactie">
-                <h2 id="transactie" class="text-sm font-extrabold">Transactie</h2>
+            <section class="d-card" aria-labelledby="transactie">
+                <h2 id="transactie" class="d-h3">Transactie</h2>
                 <dl class="mt-2 space-y-1 text-sm">
                     <div class="flex justify-between gap-3"><dt class="text-aj-muted">Kavel</dt><dd class="font-semibold">{{ $conversation->lot->status->label() }}</dd></div>
                     @if ($conversation->lot->auction)
@@ -99,32 +96,32 @@
                 </dl>
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="acties">
-                <h2 id="acties" class="text-sm font-extrabold">Acties</h2>
+            <section class="d-card" aria-labelledby="acties">
+                <h2 id="acties" class="d-h3">Acties</h2>
                 <div class="mt-2 space-y-3">
                     @if ($conversation->order && $conversation->dispute_id === null)
                         <form method="POST" action="{{ route('admin.conversations.dispute', $conversation) }}" x-data="{ open: false }">
                             @csrf
-                            <button type="button" class="btn btn-ghost w-full justify-center" style="height:38px;font-size:13px" @click="open = ! open">Geschil starten</button>
+                            <button type="button" class="d-btn d-btn-secondary d-btn-sq w-full justify-center" style="height:38px;font-size:13px" @click="open = ! open">Geschil starten</button>
                             <div x-show="open" x-cloak class="mt-2">
-                                <textarea name="reason" rows="2" required minlength="10" class="w-full rounded-aj-sm border border-aj-border-strong p-2 text-sm" placeholder="Waarom, voor beide partijen"></textarea>
-                                <button type="submit" class="btn btn-dark mt-2 w-full justify-center" style="height:36px;font-size:12px">Geschil starten met dit gesprek als bewijs</button>
+                                <textarea name="reason" rows="2" required minlength="10" class="w-full d-textarea" placeholder="Waarom, voor beide partijen"></textarea>
+                                <button type="submit" class="d-btn d-btn-dark d-btn-sq mt-2 w-full justify-center" style="height:36px;font-size:12px">Geschil starten met dit gesprek als bewijs</button>
                             </div>
                         </form>
                     @endif
                     <form method="POST" action="{{ route('admin.conversations.warn', $conversation) }}" x-data="{ open: false }">
                         @csrf
-                        <button type="button" class="btn btn-ghost w-full justify-center" style="height:38px;font-size:13px" @click="open = ! open">Verkoper waarschuwen</button>
+                        <button type="button" class="d-btn d-btn-secondary d-btn-sq w-full justify-center" style="height:38px;font-size:13px" @click="open = ! open">Verkoper waarschuwen</button>
                         <div x-show="open" x-cloak class="mt-2">
-                            <textarea name="note" rows="2" required minlength="10" class="w-full rounded-aj-sm border border-aj-border-strong p-2 text-sm" placeholder="Wat moet de verkoper weten"></textarea>
-                            <button type="submit" class="btn btn-dark mt-2 w-full justify-center" style="height:36px;font-size:12px">Waarschuwing sturen</button>
+                            <textarea name="note" rows="2" required minlength="10" class="w-full d-textarea" placeholder="Wat moet de verkoper weten"></textarea>
+                            <button type="submit" class="d-btn d-btn-dark d-btn-sq mt-2 w-full justify-center" style="height:36px;font-size:12px">Waarschuwing sturen</button>
                         </div>
                     </form>
                 </div>
             </section>
 
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="inzage">
-                <h2 id="inzage" class="text-sm font-extrabold">Inzage</h2>
+            <section class="d-card" aria-labelledby="inzage">
+                <h2 id="inzage" class="d-h3">Inzage</h2>
                 <ul class="mt-2 space-y-1 text-xs text-aj-muted">
                     @foreach ($conversation->accessLogs->sortByDesc('opened_at')->take(5) as $log)
                         <li>{{ $log->staff?->name }} · {{ $log->opened_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') }}{{ $log->reason ? ' · '.$log->reason : '' }}</li>

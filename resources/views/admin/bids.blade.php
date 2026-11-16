@@ -5,7 +5,7 @@
     <x-admin.table :items="$bids" searchable placeholder="Bieder of kavel">
         <x-slot:filters>
             <label><span class="sr-only">Status</span>
-                <select name="status" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+                <select name="status" class="d-select" style="min-height:44px">
                     <option value="">Alle statussen</option>
                     @foreach (BidStatus::cases() as $status)
                         <option value="{{ $status->value }}" @selected(request('status') === $status->value)>{{ $status->label() }}</option>
@@ -20,9 +20,9 @@
             <tr>
                 <td class="tabular text-aj-muted">{{ $bid->id }}</td>
                 <td class="max-w-[26ch] truncate font-semibold">
-                    <a href="{{ route('admin.lots.show', $bid->auction->lot) }}" class="text-aj-blue-text underline">{{ $bid->auction->lot->title }}</a>
+                    <a href="{{ route('admin.lots.show', $bid->auction->lot) }}" class="d-tablelink">{{ $bid->auction->lot->title }}</a>
                 </td>
-                <td><a href="{{ route('admin.users.show', $bid->user) }}" class="underline">{{ $bid->user->name }}</a></td>
+                <td><a href="{{ route('admin.users.show', $bid->user) }}" class="d-tablelink">{{ $bid->user->name }}</a></td>
                 <td class="tabular text-right font-semibold">{{ Money::format($bid->amount_cents) }}</td>
                 <td>{{ $bid->type->label() }}</td>
                 <td>{{ $bid->status->label() }}</td>

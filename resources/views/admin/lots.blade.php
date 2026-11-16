@@ -10,7 +10,7 @@
         <x-slot:filters>
             <label>
                 <span class="sr-only">Status</span>
-                <select name="status" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm"
+                <select name="status" class="d-select"
                         style="min-height:44px">
                     <option value="">Alle statussen</option>
                     @foreach (LotStatus::cases() as $status)
@@ -28,14 +28,14 @@
                            aria-label="Selecteer {{ $lot->title }}"></td>
                 <td class="tabular text-aj-muted">{{ $lot->public_id }}</td>
                 <td class="max-w-[30ch] truncate font-semibold">
-                    <a href="{{ route('admin.lots.show', $lot) }}" class="text-aj-blue-text underline">{{ $lot->title }}</a>
+                    <a href="{{ route('admin.lots.show', $lot) }}" class="d-tablelink">{{ $lot->title }}</a>
                 </td>
-                <td><a href="{{ route('admin.users.show', $lot->seller) }}" class="underline">{{ $lot->seller->name }}</a></td>
+                <td><a href="{{ route('admin.users.show', $lot->seller) }}" class="d-tablelink">{{ $lot->seller->name }}</a></td>
                 <td>{{ $lot->category?->name }}</td>
                 <td>{{ $lot->status->label() }}</td>
                 <td class="tabular text-right font-semibold">{{ $lot->auction ? Money::format($lot->currentPriceCents()) : '-' }}</td>
                 <td class="text-right">
-                    <a href="{{ route('admin.lots.show', $lot) }}" class="font-bold text-aj-blue-text underline">Bekijk</a>
+                    <a href="{{ route('admin.lots.show', $lot) }}" class="d-iconbtn" data-tip="Bekijk" aria-label="Bekijk"><x-v4.icon name="eye" :size="17" stroke="2" /></a>
                 </td>
             </tr>
         @endforeach

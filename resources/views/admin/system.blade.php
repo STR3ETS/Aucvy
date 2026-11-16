@@ -24,11 +24,11 @@
     </div>
 
     <div class="mt-6 grid gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
-        <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="fouten">
-            <h2 id="fouten" class="text-sm font-extrabold">Laatste fouten uit het log</h2>
+        <section class="d-card" aria-labelledby="fouten">
+            <h2 id="fouten" class="d-h3">Laatste fouten uit het log</h2>
             <p class="mt-1 text-xs text-aj-muted">De eerste regel per fout, nieuwste eerst; de volledige trace staat in storage/logs.</p>
             @if ($errors === [])
-                <p class="mt-4 rounded-aj-s border border-dashed border-aj-border-strong p-6 text-center text-sm text-aj-muted">Geen fouten in de staart van het log.</p>
+                <p class="mt-4 d-card d-admin-empty">Geen fouten in de staart van het log.</p>
             @else
                 <ol class="mt-3 divide-y divide-aj-border text-sm">
                     @foreach ($errors as $error)
@@ -39,12 +39,12 @@
                     @endforeach
                 </ol>
             @endif
-            <p class="mt-3 text-xs"><a href="{{ route('admin.errors') }}" class="font-semibold underline">Naar het foutlog</a>, waar je fouten afhandelt.</p>
+            <p class="mt-3 text-xs"><a href="{{ route('admin.errors') }}" class="d-tablelink">Naar het foutlog</a>, waar je fouten afhandelt.</p>
         </section>
 
         {{-- Afleverlog van mail (Mailgun, besluit Raph 2 november 2026). --}}
-        <section id="mail" class="rounded-aj-s border border-aj-border bg-aj-surface p-5 lg:col-start-1" aria-labelledby="mail-kop">
-            <h2 id="mail-kop" class="text-sm font-extrabold">Mail</h2>
+        <section id="mail" class="d-card lg:col-start-1" aria-labelledby="mail-kop">
+            <h2 id="mail-kop" class="d-h3">Mail</h2>
             <p class="mt-1 text-xs text-aj-muted">
                 Laatste 7 dagen: {{ $mail['sent'] }} verstuurd, {{ $mail['delivered'] }} afgeleverd, {{ $mail['problems'] }} niet aangekomen.
                 @if (config('mail.default') !== 'mailgun')
@@ -52,7 +52,7 @@
                 @endif
             </p>
             @if ($mail['recent']->isEmpty())
-                <p class="mt-4 rounded-aj-s border border-dashed border-aj-border-strong p-6 text-center text-sm text-aj-muted">Nog geen mail verstuurd.</p>
+                <p class="mt-4 d-card d-admin-empty">Nog geen mail verstuurd.</p>
             @else
                 <div class="mt-3 overflow-x-auto">
                     <table class="admin-table">
@@ -83,16 +83,16 @@
         </section>
 
         <aside class="space-y-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="feiten">
-                <h2 id="feiten" class="text-sm font-extrabold">Instellingen</h2>
+            <section class="d-card" aria-labelledby="feiten">
+                <h2 id="feiten" class="d-h3">Instellingen</h2>
                 <dl class="mt-2 space-y-1 text-sm">
                     @foreach ($facts as $label => $value)
                         <div class="flex justify-between gap-3"><dt class="text-aj-muted">{{ $label }}</dt><dd class="font-semibold">{{ $value }}</dd></div>
                     @endforeach
                 </dl>
             </section>
-            <section class="rounded-aj-s border border-aj-border bg-aj-surface p-5" aria-labelledby="cron">
-                <h2 id="cron" class="text-sm font-extrabold">Op de server</h2>
+            <section class="d-card" aria-labelledby="cron">
+                <h2 id="cron" class="d-h3">Op de server</h2>
                 <p class="mt-1 text-xs text-aj-muted">Twee processen horen altijd te draaien; de hartslagen hierboven laten zien of dat zo is.</p>
                 <pre class="mt-2 overflow-x-auto rounded-aj-sm bg-aj-bg p-3 text-xs">* * * * * php artisan schedule:run
 php artisan queue:work database --queue=realtime,ai,default --tries=3</pre>

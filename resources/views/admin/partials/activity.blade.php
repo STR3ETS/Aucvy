@@ -1,6 +1,6 @@
 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
     @foreach ($stats as [$label, $value, $url])
-        <a href="{{ $url }}" class="rounded-aj-s border border-aj-border bg-aj-surface p-4 hover:border-aj-border-strong">
+        <a href="{{ $url }}" class="d-card hover:border-aj-border-strong">
             <p class="text-xs font-bold text-aj-muted">{{ $label }}</p>
             <p class="tabular mt-1 text-2xl font-extrabold">{{ $value }}</p>
         </a>
@@ -9,7 +9,7 @@
 
 <section class="mt-8" aria-label="Live activiteit">
     <div class="flex items-center gap-2">
-        <h2 class="text-lg font-extrabold">Live activiteit</h2>
+        <h2 class="d-h3">Live activiteit</h2>
         <span class="relative flex size-2" aria-hidden="true">
             <span class="absolute inline-flex size-full animate-ping rounded-full bg-aj-success opacity-60"></span>
             <span class="relative inline-flex size-2 rounded-full bg-aj-success"></span>

@@ -2230,3 +2230,41 @@ summary{-webkit-user-select:none;user-select:none}
 .d-trustline ul{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0;padding:0;list-style:none;font-size:13px;color:#47505f}
 .d-trustline li{display:inline-flex;align-items:center;gap:6px}
 .d-trustline li svg{color:#177249}
+
+/* ---------- beheer: dezelfde schil als het dashboard (body .c.dash.is-admin) ---------- */
+.is-admin .dash-profile{cursor:default}
+.is-admin .dash-bar{justify-content:space-between}
+.is-admin .dash-body>.mt-6:first-child,.is-admin .dash-body>.mt-4:first-child,.is-admin .dash-body>.mt-8:first-child{margin-top:0}
+.d-admintable{margin-top:20px;border-radius:16px;background:#fff;box-shadow:var(--d-lift,0 1px 2px rgba(12,19,38,.05));overflow:hidden}
+.d-admintable-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(14,21,38,.08)}
+.d-admintable-search{position:relative;flex:1 1 220px;max-width:320px}
+.d-admintable-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6b7385;pointer-events:none}
+.d-admintable-search .d-input{margin:0;padding-left:36px;height:40px}
+.d-admintable-bar .d-select{margin:0;height:40px}
+.d-admintable-bar .d-btn{height:40px}
+.d-admintable-scroll{overflow-x:auto}
+.d-admintable-empty{margin:0;padding:22px 18px;font-size:14px;color:#5c6577}
+.d-admintable-bulk{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid rgba(14,21,38,.08);background:#f6f7fa;font-size:13px;font-weight:700}
+.d-admintable-bulk p{margin:0}
+.d-admintable-pages{padding:12px 16px;border-top:1px solid rgba(14,21,38,.08)}
+.admin-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.admin-table th{padding:12px 16px;background:#f6f7fa;border-bottom:0;text-align:left;font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:#47505f;white-space:nowrap}
+.admin-table td{padding:12px 16px;border-top:1px solid rgba(14,21,38,.07);vertical-align:middle;color:#0e1526}
+.admin-table tbody tr:hover td{background:#fafbfd}
+.admin-table a.underline,.admin-table a.text-aj-blue-text{color:#0e1526;font-weight:700;text-decoration:none}
+.admin-table a.underline:hover,.admin-table a.text-aj-blue-text:hover{color:#1e56e0}
+.admin-table td .d-iconbtn{width:34px;height:34px}
+.d-admin-empty{padding:28px 22px;text-align:center;font-size:14px;color:#5c6577}
+.is-admin .d-input,.is-admin .d-select{display:inline-block;width:auto;margin-top:0;height:40px}
+.is-admin .d-input.w-full,.is-admin .w-full>.d-input,.is-admin label.grid .d-input,.is-admin label.grid .d-select,.is-admin .d-textarea{display:block;width:100%}
+.is-admin .d-textarea{margin-top:0}
+.is-admin .d-card .d-h3{margin:0;font-size:15px;font-weight:800}
+.is-admin .d-chip{min-height:38px}
+.admin-table .tnum,.admin-table .tabular{font-variant-numeric:tabular-nums}
+.d-tablelink{color:#0e1526;font-weight:700;text-decoration:none}
+.d-tablelink:hover,.d-tablelink:focus-visible{color:#1e56e0;text-decoration:underline;text-underline-offset:3px}
+/* Het beheermenu is lang: compactere regels, en het menu scrolt binnen de zijbalk. */
+.is-admin .dash-side .dash-nav{min-height:0;gap:10px}
+.is-admin .dash-side .dash-nav a{min-height:36px}
+.is-admin .dash-side .dash-nav-label{padding-bottom:2px}
+.admin-table td.tabular,.admin-table td.tnum,.admin-table td .tabular{white-space:nowrap}

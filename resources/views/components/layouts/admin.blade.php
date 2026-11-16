@@ -1,16 +1,87 @@
-@props(['title', 'subtitle' => null])
+@props([
+    'title',
+    'subtitle' => null,
+    // Een kop in de band als die anders is dan de titel in het tabblad.
+    'heading' => null,
+])
 
 {{--
-    De backoffice-layout: hetzelfde ontwerp als de rest van het platform,
-    maar met het menu links in het navy van de donkere vlakken. Geen eigen
-    designsysteem - gewoon de aj-tokens en Manrope.
+    De backoffice in dezelfde schil als het dashboard: links de witte zijbalk
+    met het menu in groepen (elk item een pictogram), rechts het navy vlak met
+    het kruimelpad en de kopband, en daaronder de werkruimte op de zachte
+    vloer. Kaarten (d-card), tabellen en knoppen krijgen zo vanzelf dezelfde
+    opmaak als het dashboard van de klant.
+
+    Slots: actions (knoppen rechts in de band), crumbs (kruimelpad), tiles
+    (cijfertegels half over de rand).
 --}}
+@php
+    $user = auth()->user();
+    // Het control center (briefing nieuwe functies), gefilterd op de rol
+    // van de medewerker. Wat al in /admin werkte, staat in dezelfde zijbalk.
+    $staffRole = App\Admin\StaffRole::of($user);
+    $allowed = fn (string $area): bool => $staffRole?->can($area) ?? false;
+    $groups = array_filter(array_map(fn (array $items) => array_values(array_filter($items)), [
+        'Werkruimte' => [
+            ['admin.index', 'Vandaag', 'layout'],
+            $allowed('transactions') ? ['admin.transactions', 'Transacties', 'banknote'] : null,
+            $allowed('lots') ? ['admin.lots', 'Kavels', 'gavel'] : null,
+            $allowed('lots') ? ['admin.moderation', 'Moderatie', 'shield-check'] : null,
+            $allowed('customers') ? ['admin.customers', 'Klanten', 'users'] : null,
+            ['admin.live', 'Live', 'monitor'],
+        ],
+        'Klantenservice' => [
+            $allowed('service') ? ['admin.service', 'Tickets en klachten', 'help'] : null,
+            $allowed('service') ? ['staff.disputes.index', 'Geschillen', 'flag'] : null,
+            $allowed('conversations') ? ['admin.conversations', 'Gesprekken', 'message-circle'] : null,
+            $allowed('lots') ? ['admin.reviews', 'Reviews', 'badge-check'] : null,
+            $allowed('lots') ? ['admin.viewings', 'Bezichtigingen', 'eye'] : null,
+        ],
+        'Marketing' => [
+            $allowed('mail') ? ['admin.mail', 'Mail Builder', 'send'] : null,
+        ],
+        'Geld en cijfers' => [
+            $allowed('finance') ? ['admin.finance', 'Financiën', 'file-text'] : null,
+            $allowed('finance') ? ['admin.payouts', 'Uitbetalingen', 'banknote'] : null,
+            $allowed('finance') ? ['admin.orders', 'Orders', 'shopping-bag'] : null,
+            $allowed('reports') ? ['admin.reports', 'Rapportages', 'trending-up'] : null,
+        ],
+        'Veilingen' => [
+            $allowed('lots') ? ['admin.auctions', 'Veilingen', 'clock'] : null,
+            $allowed('lots') ? ['admin.sales', 'Gebundeld', 'layers'] : null,
+            $allowed('lots') ? ['admin.bids', 'Biedingen', 'target'] : null,
+            $allowed('lots') ? ['admin.risk', 'Risico', 'ban'] : null,
+        ],
+        'Mensen' => [
+            $allowed('customers') ? ['admin.users', 'Gebruikers', 'user'] : null,
+            $allowed('customers') ? ['admin.companies', 'Bedrijven', 'building'] : null,
+            $allowed('customers') ? ['admin.compliance', 'Compliance', 'badge-check'] : null,
+        ],
+        'Systeem' => $staffRole === App\Admin\StaffRole::Owner ? [
+            ['admin.ivy', 'Ivy', 'sparkles'],
+            ['admin.categories', 'Categorieën', 'tag'],
+            ['admin.redirects', 'Doorverwijzingen', 'refresh'],
+            ['admin.ai-runs', 'AI-runs', 'wand-sparkles'],
+            ['admin.auditlog', 'Auditlog', 'file'],
+            ['admin.errors', 'Foutlog', 'flag'],
+            ['admin.queue', 'Wachtrij', 'layers'],
+            ['admin.system', 'Systeem', 'settings'],
+        ] : [],
+    ]));
+    $isOn = fn (string $routeName): bool => request()->routeIs($routeName, $routeName.'.*')
+        || ($routeName === 'staff.disputes.index' && request()->routeIs('staff.disputes.*'));
+    $current = collect($groups)->flatten(1)->first(fn (array $item): bool => $isOn($item[0]));
+    $initials = collect(explode(' ', (string) $user->name))->filter()->take(2)->map(fn (string $word): string => mb_strtoupper(mb_substr($word, 0, 1)))->implode('');
+    $hasTiles = isset($tiles);
+@endphp
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="robots" content="noindex, nofollow">
     <title>{{ $title }} · Aucvy Backoffice</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,160 +91,115 @@
     <x-head.icons />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-aj-bg text-aj-text" style="font-family:'Manrope',Inter,system-ui,sans-serif">
+<body class="no-js c dash is-admin" data-soft-nav="off">
 
-    @php
-        // Het control center (briefing nieuwe functies), gefilterd op de rol
-        // van de medewerker. Wat al in /admin werkte, staat in dezelfde zijbalk.
-        $staffRole = App\Admin\StaffRole::of(auth()->user());
-        $allowed = fn (string $area): bool => $staffRole?->can($area) ?? false;
-        $groups = array_filter(array_map(fn (array $items) => array_values(array_filter($items)), [
-            'Werkruimte' => [
-                ['admin.index', 'Vandaag'],
-                $allowed('transactions') ? ['admin.transactions', 'Transacties'] : null,
-                $allowed('lots') ? ['admin.lots', 'Kavels'] : null,
-                $allowed('lots') ? ['admin.moderation', 'Moderatie'] : null,
-                $allowed('customers') ? ['admin.customers', 'Klanten'] : null,
-                ['admin.live', 'Live'],
-            ],
-            'Klantenservice' => [
-                $allowed('service') ? ['admin.service', 'Tickets en klachten'] : null,
-                $allowed('conversations') ? ['admin.conversations', 'Gesprekken'] : null,
-                $allowed('lots') ? ['admin.reviews', 'Reviews'] : null,
-                $allowed('lots') ? ['admin.viewings', 'Bezichtigingen'] : null,
-            ],
-            'Marketing' => [
-                $allowed('mail') ? ['admin.mail', 'Mail Builder'] : null,
-            ],
-            'Geld en cijfers' => [
-                $allowed('finance') ? ['admin.finance', 'Financiën'] : null,
-                $allowed('finance') ? ['admin.payouts', 'Uitbetalingen'] : null,
-                $allowed('finance') ? ['admin.orders', 'Orders'] : null,
-                $allowed('reports') ? ['admin.reports', 'Rapportages'] : null,
-            ],
-            'Veilingen' => [
-                $allowed('lots') ? ['admin.auctions', 'Veilingen'] : null,
-                $allowed('lots') ? ['admin.sales', 'Gebundeld'] : null,
-                $allowed('lots') ? ['admin.bids', 'Biedingen'] : null,
-                $allowed('lots') ? ['admin.risk', 'Risico'] : null,
-            ],
-            'Mensen' => [
-                $allowed('customers') ? ['admin.users', 'Gebruikers'] : null,
-                $allowed('customers') ? ['admin.companies', 'Bedrijven'] : null,
-                $allowed('customers') ? ['admin.compliance', 'Compliance'] : null,
-            ],
-            'Systeem' => $staffRole === App\Admin\StaffRole::Owner ? [
-                ['admin.ivy', 'Ivy'],
-                ['admin.categories', 'Categorieën'],
-                ['admin.redirects', 'Doorverwijzingen'],
-                ['admin.ai-runs', 'AI-runs'],
-                ['admin.auditlog', 'Auditlog'],
-                ['admin.errors', 'Foutlog'],
-                ['admin.queue', 'Wachtrij'],
-                ['admin.system', 'Systeem'],
-            ] : [],
-        ]));
-    @endphp
+    <a href="#hoofdinhoud" class="skip-link">Naar de hoofdinhoud</a>
 
-    <div class="flex min-h-screen">
+    <div class="dash-shell">
 
-        {{-- Linkermenu ------------------------------------------------------ --}}
-        <aside class="hidden w-60 shrink-0 flex-col bg-aj-navy text-white lg:flex">
-            <a href="{{ route('admin.index') }}" class="flex items-center gap-2.5 px-5 pb-4 pt-5">
-                <span class="size-2.5 rotate-45 rounded-[2px] bg-aj-blue" aria-hidden="true"></span>
-                <span class="text-lg font-extrabold tracking-tight">Aucvy</span>
+        {{-- De zijbalk ------------------------------------------------------ --}}
+        <aside class="dash-side">
+            <a class="brand" href="{{ route('admin.index') }}" aria-label="Aucvy Backoffice - vandaag">
+                <svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg>
             </a>
 
-            <nav class="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="Beheer">
+            <div class="dash-profile" aria-label="Ingelogd als {{ $user->name }}">
+                <span class="avatar" aria-hidden="true">{{ $initials !== '' ? $initials : 'A' }}</span>
+                <span class="dash-profile-text">
+                    <b>{{ $user->name }}</b>
+                    <span class="line">Backoffice · {{ $staffRole?->label() ?? 'medewerker' }}</span>
+                </span>
+            </div>
+
+            <nav class="dash-nav" aria-label="Beheer">
                 @foreach ($groups as $label => $items)
-                    <div>
-                        <p class="px-2 pb-1.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#9DB9FF]/80">{{ $label }}</p>
-                        <ul class="space-y-0.5">
-                            @foreach ($items as [$routeName, $itemLabel])
-                                @php $isActive = request()->routeIs($routeName, $routeName.'.*'); @endphp
-                                <li>
-                                    <a href="{{ route($routeName) }}"
-                                       @class([
-                                           'block rounded-aj-sm px-3 py-2 text-sm font-semibold',
-                                           'bg-aj-blue text-white' => $isActive,
-                                           'text-white/70 hover:bg-white/5 hover:text-white' => ! $isActive,
-                                       ])
-                                       @if ($isActive) aria-current="page" @endif>{{ $itemLabel }}</a>
-                                </li>
-                            @endforeach
-                            @if ($label === 'Klantenservice' && $allowed('service'))
-                                <li>
-                                    <a href="{{ route('staff.disputes.index') }}"
-                                       @class([
-                                           'block rounded-aj-sm px-3 py-2 text-sm font-semibold',
-                                           'bg-aj-blue text-white' => request()->routeIs('staff.disputes.*'),
-                                           'text-white/70 hover:bg-white/5 hover:text-white' => ! request()->routeIs('staff.disputes.*'),
-                                       ])>Geschillen</a>
-                                </li>
-                            @endif
-                        </ul>
+                    <div class="dash-nav-group">
+                        <p class="dash-nav-label">{{ $label }}</p>
+                        @foreach ($items as [$routeName, $itemLabel, $icon])
+                            <a href="{{ route($routeName) }}"{!! $isOn($routeName) ? ' class="is-on" aria-current="page"' : '' !!}>
+                                <span class="ic"><x-v4.icon :name="$icon" :size="17" stroke="2.2" /></span>
+                                {{ $itemLabel }}
+                            </a>
+                        @endforeach
                     </div>
                 @endforeach
             </nav>
 
-            <div class="space-y-1 border-t border-white/10 px-3 py-4">
-                <a href="{{ route('home') }}" class="block rounded-aj-sm px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/5 hover:text-white">Naar de site</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="block w-full rounded-aj-sm px-3 py-2 text-left text-sm font-semibold text-white/70 hover:bg-white/5 hover:text-white">Uitloggen</button>
-                </form>
+            <div class="dash-side-foot">
+                <a class="btn btn-ghost" href="{{ route('home') }}">Naar de site</a>
             </div>
         </aside>
 
-        {{-- Inhoud ----------------------------------------------------------- --}}
-        <div class="min-w-0 flex-1">
+        <div class="dash-main">
 
-            {{-- Mobiel: het menu als scrollende chips bovenaan. --}}
-            <div class="border-b border-aj-border bg-aj-navy px-4 py-3 lg:hidden">
-                <a href="{{ route('admin.index') }}" class="flex items-center gap-2 text-white">
-                    <span class="size-2 rotate-45 rounded-[2px] bg-aj-blue" aria-hidden="true"></span>
-                    <span class="font-extrabold">Aucvy</span>
-                    <span class="text-[10px] font-bold uppercase tracking-[0.12em] text-white/50">Backoffice</span>
-                </a>
-                <nav class="chip-row -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4" aria-label="Beheer">
+            {{-- Smal scherm: het merk en het menu bovenaan. ----------------- --}}
+            <div class="dash-top">
+                <div class="dash-top-row">
+                    <a class="brand" href="{{ route('admin.index') }}" aria-label="Aucvy Backoffice">
+                        <svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8.8 40.8 L24 10 L39.2 40.8" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="35.6" r="6.9" fill="currentColor"/></svg>
+                        Backoffice
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="link">Uitloggen</button>
+                    </form>
+                </div>
+                <nav class="dash-nav" aria-label="Beheer">
                     @foreach (collect($groups)->flatten(1) as [$routeName, $itemLabel])
-                        @php $isActive = request()->routeIs($routeName, $routeName.'.*'); @endphp
-                        <a href="{{ route($routeName) }}"
-                           @class([
-                               'shrink-0 rounded-aj-sm px-3 py-1.5 text-xs font-bold',
-                               'bg-aj-blue text-white' => $isActive,
-                               'bg-white/10 text-white/80' => ! $isActive,
-                           ])>{{ $itemLabel }}</a>
+                        <a href="{{ route($routeName) }}"{!! $isOn($routeName) ? ' class="is-on" aria-current="page"' : '' !!}>{{ $itemLabel }}</a>
                     @endforeach
                 </nav>
             </div>
 
-            <main class="px-4 py-6 sm:px-6 lg:px-8">
-                <div class="mx-auto max-w-6xl">
-                    {{-- De paginakop als heroband: het blauwe verloop met de
-                         ademende stipjes, net als op het platform zelf. --}}
-                    <div class="panel-hero rounded-aj-s p-6">
-                        <canvas class="dots" x-data="dotField" aria-hidden="true"></canvas>
-                        <h1 class="text-2xl font-extrabold tracking-[-0.03em] text-white sm:text-3xl">{{ $title }}</h1>
-                        @if ($subtitle)
-                            <p class="mt-1 text-sm text-white/75">{{ $subtitle }}</p>
-                        @endif
+            {{-- Het navy vlak: de bovenbalk met het kruimelpad, de band eronder. --}}
+            <div class="dash-hero{{ $hasTiles ? '' : ' no-tiles' }}" style="background-image:url('{{ asset('images/design/dash-head.png') }}')">
+                <header class="dash-bar">
+                    <nav class="dash-crumbs" aria-label="Kruimelpad">
+                        <a href="{{ route('admin.index') }}">Backoffice</a>
+                        <span aria-hidden="true">/</span>
+                        @isset($crumbs)
+                            {{ $crumbs }}
+                        @else
+                            <span>{{ $title }}</span>
+                        @endisset
+                    </nav>
+                    <form method="POST" action="{{ route('logout') }}" class="dash-bar-logout">
+                        @csrf
+                        <button type="submit" class="dash-bar-link">Uitloggen</button>
+                    </form>
+                </header>
+
+                <section class="dash-band" aria-labelledby="page-title">
+                    <div class="dash-band-row">
+                        <div class="dash-band-text">
+                            @if ($current && ($heading ?? $title) !== $current[1])
+                                <span class="eyebrow">{{ $current[1] }}</span>
+                            @endif
+                            <h1 id="page-title">{{ $heading ?? $title }}</h1>
+                            @if ($subtitle)
+                                <p class="lead">{{ $subtitle }}</p>
+                            @endif
+                        </div>
+                        @isset($actions)
+                            <div class="page-actions">{{ $actions }}</div>
+                        @endisset
                     </div>
+                </section>
+            </div>
+            @if ($hasTiles)
+                <div class="dash-tiles">{{ $tiles }}</div>
+            @endif
 
-                    @if (session('status'))
-                        <p class="mt-4 rounded-aj-sm border border-aj-success/30 bg-aj-success/5 p-3 text-sm font-semibold text-aj-success-text">
-                            {{ session('status') }}
-                        </p>
-                    @endif
+            <main id="hoofdinhoud" tabindex="-1" class="dash-body">
+                @if (session('status'))
+                    <p class="d-soft is-ok" role="status" style="margin:0 0 14px">{{ session('status') }}</p>
+                @endif
 
-                    @if ($errors->any())
-                        <p role="alert" class="mt-4 rounded-aj-sm border border-aj-error/30 bg-aj-error/5 p-3 text-sm font-semibold text-aj-error">
-                            {{ $errors->first() }}
-                        </p>
-                    @endif
+                @if ($errors->any())
+                    <p role="alert" class="d-soft is-err" style="margin:0 0 14px">{{ $errors->first() }}</p>
+                @endif
 
-                    {{ $slot }}
-                </div>
+                {{ $slot }}
             </main>
         </div>
     </div>

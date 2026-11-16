@@ -4,7 +4,7 @@
     <x-admin.table :items="$viewings">
         <x-slot:filters>
             <label><span class="sr-only">Status</span>
-                <select name="status" class="rounded-aj-sm border border-aj-border-strong bg-aj-surface px-3 text-sm" style="min-height:44px">
+                <select name="status" class="d-select" style="min-height:44px">
                     <option value="">Alle statussen</option>
                     @foreach (ViewingStatus::cases() as $status)
                         <option value="{{ $status->value }}" @selected(request('status') === $status->value)>{{ $status->label() }}</option>
@@ -19,9 +19,9 @@
             <tr>
                 <td class="tabular text-aj-muted">{{ $viewing->id }}</td>
                 <td class="max-w-[26ch] truncate font-semibold">
-                    <a href="{{ route('admin.lots.show', $viewing->lot) }}" class="text-aj-blue-text underline">{{ $viewing->lot->title }}</a>
+                    <a href="{{ route('admin.lots.show', $viewing->lot) }}" class="d-tablelink">{{ $viewing->lot->title }}</a>
                 </td>
-                <td><a href="{{ route('admin.users.show', $viewing->user) }}" class="underline">{{ $viewing->user->name }}</a></td>
+                <td><a href="{{ route('admin.users.show', $viewing->user) }}" class="d-tablelink">{{ $viewing->user->name }}</a></td>
                 <td class="whitespace-nowrap">{{ $viewing->slot_at->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') }}</td>
                 <td>{{ $viewing->status->label() }}</td>
                 <td class="whitespace-nowrap text-aj-muted">{{ $viewing->address_sent_at?->timezone(config('aucvy.display_timezone'))->isoFormat('D MMM, HH:mm') ?? '-' }}</td>
